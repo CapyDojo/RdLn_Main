@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ComparisonInterface } from './components/ComparisonInterface';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -42,14 +42,14 @@ function AppContent({
   const handleOverlayShow = () => {
     if (features.resultsOverlay) {
       setIsOverlayVisible(true);
-      console.log('🎯 App: Results overlay shown - hiding header');
+      console.log(' App: Results overlay shown - hiding header');
     }
   };
   
   const handleOverlayHide = () => {
     if (features.resultsOverlay) {
       setIsOverlayVisible(false);
-      console.log('🎯 App: Results overlay hidden - showing header');
+      console.log(' App: Results overlay hidden - showing header');
     }
   };
   
@@ -97,19 +97,19 @@ function AppContent({
             {/* Enhanced footer features with glassmorphic styling */}
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
-                <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm">🔒 Privacy First</h4>
+                <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Privacy First</h4>
                 <p className="text-xs text-theme-neutral-600">
                   Client-side processing ensures complete confidentiality
                 </p>
               </div>
               <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
-                <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm">⚡ Lightning Fast</h4>
+                <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Lightning Fast</h4>
                 <p className="text-xs text-theme-neutral-600">
                   Optimized Myers algorithm for instant results
                 </p>
               </div>
               <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
-                <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm">🌍 Multi-Language</h4>
+                <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Multi-Language</h4>
                 <p className="text-xs text-theme-neutral-600">
                   Advanced OCR supports 10+ languages
                 </p>
@@ -119,7 +119,7 @@ function AppContent({
             {/* Professional attribution */}
             <div className="mt-6 pt-4 border-t border-theme-neutral-200">
               <p className="text-xs text-theme-neutral-400 font-serif">
-                © 2025 RdLn - Professional Text Redlining with OCR
+                2025 RdLn - Professional Text Redlining with OCR
               </p>
             </div>
           </div>
@@ -222,11 +222,14 @@ function App() {
     setShowExtremeTestSuiteState(!showExtremeTestSuiteState);
   };
   
+  const isInProduction = process.env.NODE_ENV === 'production';
+
   return (
     <ThemeProvider>
       <LayoutProvider>
         <ExperimentalLayoutProvider>
-          {/* Conditional rendering for test pages */}
+          <div className="App">
+            {/* Conditional rendering for test pages */}
 {window.location.pathname === '/logo-test' ? (
             <LogoTestPage />
           ) : window.location.pathname === '/cupping-test' ? (
@@ -254,6 +257,7 @@ function App() {
               onToggleExtremeTestSuite={handleToggleExtremeTestSuite}
             />
           )}
+          </div>
         </ExperimentalLayoutProvider>
       </LayoutProvider>
     </ThemeProvider>

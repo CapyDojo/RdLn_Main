@@ -7,7 +7,7 @@ import { LanguageSettingsDropdown } from './LanguageSettingsDropdown';
 import { useLayout } from '../contexts/LayoutContext';
 import { BaseComponentProps } from '../types/components';
 import { useComponentPerformance } from '../utils/performanceUtils.tsx';
-import { formatPastedText, reconstructParagraphs } from '../utils/paragraphFormatting';
+import { formatPastedText } from '../utils/paragraphFormatting';
 
 interface TextInputPanelProps extends BaseComponentProps {
   title: string;
@@ -39,7 +39,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleReconstructParagraphs = () => {
-    const reconstructed = reconstructParagraphs(value);
+    const reconstructed = formatPastedText(value);
     if (onChange.length > 1) {
       (onChange as (value: string, isPasteAction?: boolean) => void)(reconstructed, false);
     } else {
