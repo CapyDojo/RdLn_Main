@@ -7,154 +7,126 @@
  * @returns The formatted text with unwanted line breaks removed.
  */
 export function formatPastedText(text: string): string {
-  if (!text) {
-    return '';
-  }
+  const debugMode = true;
+  const debugLog = (message: string) => {
+    if (debugMode) {
+      console.log(message);
+    }
+  };
 
-  const lines = text.replace(/\r\n|\r/g, '\n').split('\n');
+  debugLog(`--- Formatting Pasted Text ---`);
+  debugLog(`Original text: ${text}`);
+
+  const headerLabelRegex = /^(Attention|Email|By|In favour of|Date of deed poll):/i;
+  const signatoryRegex = /^(Sucasa|Blackstone|Steve Askew|Sam Young)/i;
+  const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+  const markerRegex = /^\s*(\d+\.|\([a-z]\)|\(i+\)|\•|\-)\s+/;
+  const indentRegex = /^\s{4,}/;
+  const definitionRegex = /^\s*"/;
+  const clauseHeadingRegex = /^\s*(\d+(\.\d+)*)\.?\s+[A-Z]/; // e.g., "1. Heading", "2.1 Sub-heading", or "3 Heading"
+  const headerEndRegex = /^(Definitions|1\.\s+Definitions)/i;
+
+  const lines = text.split('\n').filter(line => line.trim().length > 0);
+  debugLog(`Split into lines: [${lines.join(', ')}]`);
+
   if (lines.length <= 1) {
     return text;
   }
 
-  // Debug mode
-  const debug = true;
-  const debugLog = debug ? console.log : () => {};
-
-  debugLog('--- Formatting Pasted Text ---');
-  debugLog('Original text:', text);
-  debugLog('Split into lines:', lines);
-
-  // Define all heuristics for what marks the start of a new paragraph.
-  const markerRegex = /^(?:\d+(?:\.\d+)*\.?|\([a-zA-Z0-9]+\)|[\*\-•])\s+/;
-  const indentRegex = /^(?:\s{3,}|\t)/;
-  const definitionRegex = /^[A-Z][A-Za-z\s]*\s(?:means|has the meaning)/;
-  const signpostKeywords = [
-    'WHEREAS',
-    'NOW, THEREFORE,',
-    'IN WITNESS WHEREOF',
-    'FURTHERMORE',
-    'PROVIDED THAT',
-    'HENCEFORTH',
-    'NOTWITHSTANDING',
-    'BE IT RESOLVED',
-    // Contract header specific
-    'BETWEEN',
-    'AND',
-    'PARTIES',
-    'AGREEMENT',
-    'CONFIDENTIALITY',
-    'EFFECTIVE DATE',
-    'collectively referred to as',
-    'hereinafter'
-  ];
-  const signpostRegex = new RegExp(`^(${signpostKeywords.join('|')})`, 'i');
-
-  // Enhanced regexes for legal contract elements
-  const enhancedAddressRegex = /^(?:\d+[A-Za-z]*\b\s*[A-Za-z]*,?\s*)+/;
-  const emailRegex = /^\S+@\S+\.\S+$/;
-  const nameRegex = /^[A-Z][a-z]+ [A-Z][a-z]+$/;
-  const dateClauseRegex = /\b(?:Date|Dated)\s+of\b/i;
-
-  // Header detection with end marker
-  const headerEndRegex = /Date of deed poll:|Effective Date:/i;
-  let headerEndIndex = -1;
-  for (let i = 0; i < Math.min(lines.length, 30); i++) {
-    if (headerEndRegex.test(lines[i])) {
-      headerEndIndex = i;
-      break;
-    }
+  // Find the end of the header. First, look for an explicit marker. If not found, fall back to the first numbered clause.
+  let headerEndIndex = lines.findIndex(line => headerEndRegex.test(line));
+  if (headerEndIndex === -1) {
+    headerEndIndex = lines.findIndex(line => /^\s*1\.?\s+[A-Z]/.test(line));
   }
-  const isHeaderLine = (index: number) => 
-    headerEndIndex === -1 ? index < 20 : index <= headerEndIndex;
 
-  const isParagraphStart = (line: string): boolean => {
-    // Check for all-caps lines (like titles)
-    if (/^[A-Z\s]{2,}$/.test(line.trim())) {
-      debugLog('    isParagraphStart: all-caps title');
-      return true;
-    }
-    const result = (
-      markerRegex.test(line) ||
-      indentRegex.test(line) ||
-      signpostRegex.test(line) ||
-      definitionRegex.test(line) ||
-      enhancedAddressRegex.test(line.trim()) ||
-      emailRegex.test(line.trim()) ||
-      nameRegex.test(line) ||
-      dateClauseRegex.test(line)
-    );
-    if (result) {
-      debugLog(`    isParagraphStart: true for line "${line}"`);
-    }
-    return result;
+  const isHeaderLine = (index: number): boolean => {
+    // If no header boundary is found at all, assume the entire text is body content.
+    if (headerEndIndex === -1) return false;
+    return index < headerEndIndex;
   };
 
-  const reconstructedLines: string[] = [];
+  const isParagraphStart = (line: string, originalPreviousLine: string, index: number): boolean => {
+    const trimmedLine = line.trim();
+
+    // --- Universal Rules (Apply Everywhere) ---
+    if (markerRegex.test(line) || indentRegex.test(line) || definitionRegex.test(trimmedLine)) {
+      debugLog(`    isParagraphStart: true (Universal Rule) for line "${trimmedLine}"`);
+      return true;
+    }
+
+    // --- Header-Specific Rules ---
+    if (isHeaderLine(index)) {
+      // Rule: Break if the PREVIOUS line ended with a sign-off like (Discloser).
+      if (/\([A-Za-z]+\)$/.test(originalPreviousLine.trim())) {
+        debugLog(`    isParagraphStart: true (Header Rule), previous line ended with sign-off.`);
+        return true;
+      }
+      // Rule: Break if the CURRENT line is a label, name, or email.
+      if (headerLabelRegex.test(trimmedLine) || signatoryRegex.test(trimmedLine) || emailRegex.test(trimmedLine)) {
+        debugLog(`    isParagraphStart: true (Header Rule) for label/signatory/email: "${trimmedLine}"`);
+        return true;
+      }
+    }
+
+    // --- Body-Specific Rules ---
+    // Rule: A clause heading always starts a new paragraph.
+    if (clauseHeadingRegex.test(trimmedLine)) {
+      debugLog(`    isParagraphStart: true, current line is a clause heading.`);
+      return true;
+    }
+    // Rule: Break if the PREVIOUS line was a numbered clause heading.
+    if (clauseHeadingRegex.test(originalPreviousLine.trim())) {
+      debugLog(`    isParagraphStart: true, previous line was a clause heading.`);
+      return true;
+    }
+
+    return false;
+  };
+
+  const shouldContinue = (prevParagraph: string, currentLine: string): boolean => {
+    const trimmedPrev = prevParagraph.trim();
+    const trimmedCurr = currentLine.trim();
+
+    // Rule 1: Join if current line starts with a lowercase letter.
+    if (/^\p{Ll}/u.test(trimmedCurr)) {
+      debugLog(`      shouldContinue: true, starts with lowercase`);
+      return true;
+    }
+
+    // Rule 2: Join if the previous line does NOT end in sentence-ending punctuation.
+    if (!/[.:;]$/.test(trimmedPrev)) {
+      debugLog(`      shouldContinue: true, previous line does not end with a full stop.`);
+      return true;
+    }
+
+    return false;
+  };
+
+  let reconstructedLines: string[] = [];
   let currentParagraph = lines[0];
 
   for (let i = 1; i < lines.length; i++) {
     const currentLine = lines[i];
-    const previousLine = lines[i - 1];
+    const originalPreviousLine = lines[i - 1];
 
-    debugLog('\nProcessing line', i, ':', currentLine);
-    debugLog('Current paragraph:', currentParagraph);
-
-    // Special handling rules only apply in header
-    if (isHeaderLine(i)) {
-      // Special handling for address lines
-      if (enhancedAddressRegex.test(previousLine.trim()) && enhancedAddressRegex.test(currentLine.trim())) {
-        debugLog('  -> Address lines joined');
-        currentParagraph += ' ' + currentLine.trim();
-        continue;
-      }
-
-      // Special handling for standalone emails
-      if (emailRegex.test(currentLine.trim())) {
-        debugLog('  -> Email detected, starting new paragraph');
-        reconstructedLines.push(currentParagraph);
-        currentParagraph = currentLine.trim();
-        continue;
-      }
+    if (isParagraphStart(currentLine, originalPreviousLine, i)) {
+      // It's a definite paragraph start, so break.
+      reconstructedLines.push(currentParagraph);
+      currentParagraph = currentLine;
+      debugLog(`  -> New paragraph (isParagraphStart): "${currentLine}"`);
+    } else if (shouldContinue(currentParagraph, currentLine)) {
+      // It's not a start, but it is a continuation, so join.
+      currentParagraph += ' ' + currentLine.trim();
+      debugLog(`  -> Joining line: "${currentLine}"`);
+    } else {
+      // Default: Not a start, not a continuation. It's a new paragraph.
+      reconstructedLines.push(currentParagraph);
+      currentParagraph = currentLine;
+      debugLog(`  -> New paragraph (default): "${currentLine}"`);
     }
-
-    // Improved joining logic: join if not a hard break and the line appears to be a continuation
-    const isHardBreak = (
-      previousLine.trim().endsWith('.') ||
-      previousLine.trim().endsWith(':') ||
-      previousLine.trim().endsWith(';') ||
-      isParagraphStart(currentLine)
-    );
-
-    if (!isHardBreak) {
-      let isContinuation = false;
-      
-      if (isHeaderLine(i)) {
-        // Special header joining rules: join address and email lines
-        isContinuation = enhancedAddressRegex.test(currentLine.trim()) || emailRegex.test(currentLine.trim());
-      } else {
-        // Body joining rules: join clauses and lowercase starters
-        isContinuation = 
-          !/^[A-Z]/.test(currentLine.trim()) || 
-          /^\s*\(\w+\)/.test(currentLine.trim()) ||
-          /^[a-z]/.test(currentLine.trim()) ||
-          /[a-z0-9,]$/.test(previousLine.trim());
-      }
-      
-      if (isContinuation) {
-        debugLog('  -> Soft break, joining lines');
-        currentParagraph += ' ' + currentLine.trim();
-        continue;
-      }
-    }
-
-    debugLog('  -> Hard break (punctuation or paragraph start)');
-    reconstructedLines.push(currentParagraph);
-    currentParagraph = currentLine;
   }
-  // Add the last paragraph
+
   reconstructedLines.push(currentParagraph);
 
-  const result = reconstructedLines.join('\n\n').replace(/\n\n\s*\n\n/g, '\n\n'); // Clean up excess newlines
-  debugLog('Formatted result:', result);
-  return result;
+  return reconstructedLines.join('\n\n');
 }

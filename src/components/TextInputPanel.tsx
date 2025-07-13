@@ -113,28 +113,14 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     if (textItem && !imageItem) {
       e.preventDefault(); // Prevent default paste
 
-      const htmlContent = e.clipboardData.getData('text/html');
-      let formattedText = '';
+      // Get the plain text from the clipboard.
+      const plainText = e.clipboardData.getData('text/plain');
 
-      // First, try to parse HTML content for rich text from Word, etc.
-      if (htmlContent) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlContent, 'text/html');
-        const blocks = Array.from(doc.body.children);
-        
-        if (blocks.length > 0) {
-          formattedText = blocks
-            .map(block => formatPastedText(block.textContent || ''))
-            .filter(Boolean)
-            .join('\n\n');
-        }
-      }
+      // CRITICAL: Normalize line endings to ensure consistent behavior.
+      const normalizedText = plainText.replace(/\r\n/g, '\n');
 
-      // If HTML parsing fails or is not available, fall back to our smart plain text formatter.
-      if (!formattedText) {
-        const plainText = e.clipboardData.getData('text/plain');
-        formattedText = formatPastedText(plainText);
-      }
+      // Use the proven formatter, just like in SmartPasteTest.tsx.
+      const formattedText = formatPastedText(normalizedText);
 
       // Insert the formatted text at the current cursor position
       const textarea = textareaRef.current;

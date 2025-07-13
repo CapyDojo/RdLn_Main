@@ -6,12 +6,13 @@ import { useTheme } from './contexts/ThemeContext';
 import { LayoutProvider } from './contexts/LayoutContext';
 import { ExperimentalLayoutProvider, useExperimentalFeatures } from './contexts/ExperimentalLayoutContext';
 import { OCRService } from './services/OCRService';
-import { LogoTestPage } from './pages/LogoTestPage'; // Import the new LogoTestPage
-import { CuppingTestPage } from './pages/CuppingTestPage'; // Import the cupping test page
-import { DeveloperDashboard } from './pages/DeveloperDashboard'; // Import the developer dashboard
-import BoundaryFragmentTest from './pages/BoundaryFragmentTest'; // Import the boundary fragment test page
-import BoundaryFixTester from './components/BoundaryFixTester'; // Import the boundary fix tester component
-import './styles/resize-overrides.css'; // SSMR CSS resize fixes
+import { LogoTestPage } from './pages/LogoTestPage';
+import { CuppingTestPage } from './pages/CuppingTestPage';
+import { DeveloperDashboard } from './pages/DeveloperDashboard';
+import BoundaryFragmentTest from './pages/BoundaryFragmentTest';
+import BoundaryFixTester from './components/BoundaryFixTester';
+import { SmartPasteTest } from './components/SmartPasteTest';
+import './styles/resize-overrides.css';
 
 interface AppContentProps {
   showAdvancedOcrCard: boolean;
@@ -131,97 +132,47 @@ function AppContent({
 
 function App() {
   // State for developer mode toggles with localStorage persistence
-  const [showAdvancedOcrCardState, setShowAdvancedOcrCardState] = useState(() => {
-    try {
-      const saved = localStorage.getItem('developer-card-toggles');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.showAdvancedOcrCard ?? true;
-      }
-    } catch (error) {
-      console.warn('Failed to load developer card toggles from localStorage:', error);
-    }
-    return true;
-  });
-  
-  const [showPerformanceDemoCardState, setShowPerformanceDemoCardState] = useState(() => {
-    try {
-      const saved = localStorage.getItem('developer-card-toggles');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.showPerformanceDemoCard ?? true;
-      }
-    } catch (error) {
-      console.warn('Failed to load developer card toggles from localStorage:', error);
-    }
-    return true;
-  });
-  
-  const [showExtremeTestSuiteState, setShowExtremeTestSuiteState] = useState(() => {
-    try {
-      const saved = localStorage.getItem('developer-card-toggles');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.showExtremeTestSuite ?? false; // Default to false for extreme test suite
-      }
-    } catch (error) {
-      console.warn('Failed to load developer card toggles from localStorage:', error);
-    }
-    return false;
-  });
-  
-  // Save to localStorage whenever toggles change
-  useEffect(() => {
-    try {
-      const toggles = {
-        showAdvancedOcrCard: showAdvancedOcrCardState,
-        showPerformanceDemoCard: showPerformanceDemoCardState,
-        showExtremeTestSuite: showExtremeTestSuiteState
-      };
-      localStorage.setItem('developer-card-toggles', JSON.stringify(toggles));
-    } catch (error) {
-      console.warn('Failed to save developer card toggles to localStorage:', error);
-    }
-  }, [showAdvancedOcrCardState, showPerformanceDemoCardState, showExtremeTestSuiteState]);
-  
-  // Listen for storage events to sync changes across windows
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'developer-card-toggles' && event.newValue) {
-        try {
-          const newToggles = JSON.parse(event.newValue);
-          if (newToggles.showAdvancedOcrCard !== undefined) {
-            setShowAdvancedOcrCardState(newToggles.showAdvancedOcrCard);
-          }
-          if (newToggles.showPerformanceDemoCard !== undefined) {
-            setShowPerformanceDemoCardState(newToggles.showPerformanceDemoCard);
-          }
-          if (newToggles.showExtremeTestSuite !== undefined) {
-            setShowExtremeTestSuiteState(newToggles.showExtremeTestSuite);
-          }
-        } catch (error) {
-          console.warn('Failed to parse developer card toggles from storage event:', error);
-        }
-      }
-    };
+  const [showAdvancedOcrCardState, setShowAdvancedOcrCardState] = useState(false);
+  const [showPerformanceDemoCardState, setShowPerformanceDemoCardState] = useState(false);
+  const [showExtremeTestSuiteState, setShowExtremeTestSuiteState] = useState(false);
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+  // Load states from localStorage on initial render
+  useEffect(() => {
+    const savedAdvancedOcr = localStorage.getItem('showAdvancedOcrCard');
+    if (savedAdvancedOcr) {
+      setShowAdvancedOcrCardState(JSON.parse(savedAdvancedOcr));
+    }
+
+    const savedPerformanceDemo = localStorage.getItem('showPerformanceDemoCard');
+    if (savedPerformanceDemo) {
+      setShowPerformanceDemoCardState(JSON.parse(savedPerformanceDemo));
+    }
+
+    const savedExtremeTestSuite = localStorage.getItem('showExtremeTestSuite');
+    if (savedExtremeTestSuite) {
+      setShowExtremeTestSuiteState(JSON.parse(savedExtremeTestSuite));
+    }
   }, []);
-  
-  // Toggle functions for developer mode controls
+
+  // Handler toggles with localStorage persistence
   const handleToggleAdvancedOcr = () => {
-    setShowAdvancedOcrCardState(!showAdvancedOcrCardState);
+    const newState = !showAdvancedOcrCardState;
+    setShowAdvancedOcrCardState(newState);
+    localStorage.setItem('showAdvancedOcrCard', JSON.stringify(newState));
   };
-  
+
   const handleTogglePerformanceDemo = () => {
-    setShowPerformanceDemoCardState(!showPerformanceDemoCardState);
+    const newState = !showPerformanceDemoCardState;
+    setShowPerformanceDemoCardState(newState);
+    localStorage.setItem('showPerformanceDemoCard', JSON.stringify(newState));
   };
-  
+
   const handleToggleExtremeTestSuite = () => {
-    setShowExtremeTestSuiteState(!showExtremeTestSuiteState);
+    const newState = !showExtremeTestSuiteState;
+    setShowExtremeTestSuiteState(newState);
+    localStorage.setItem('showExtremeTestSuite', JSON.stringify(newState));
   };
-  
+
   const isInProduction = process.env.NODE_ENV === 'production';
 
   return (
@@ -230,33 +181,35 @@ function App() {
         <ExperimentalLayoutProvider>
           <div className="App">
             {/* Conditional rendering for test pages */}
-{window.location.pathname === '/logo-test' ? (
-            <LogoTestPage />
-          ) : window.location.pathname === '/cupping-test' ? (
-            <CuppingTestPage />
-          ) : window.location.pathname === '/dev-dashboard' ? (
-            <DeveloperDashboard
-              showAdvancedOcrCard={showAdvancedOcrCardState}
-              showPerformanceDemoCard={showPerformanceDemoCardState}
-              showExtremeTestSuite={showExtremeTestSuiteState}
-              onToggleAdvancedOcr={handleToggleAdvancedOcr}
-              onTogglePerformanceDemo={handleTogglePerformanceDemo}
-              onToggleExtremeTestSuite={handleToggleExtremeTestSuite}
-            />
-          ) : window.location.pathname === '/boundary-test' ? (
-            <BoundaryFragmentTest />
-          ) : window.location.pathname === '/test-fix' ? (
-            <BoundaryFixTester />
-          ) : (
-            <AppContent 
-              showAdvancedOcrCard={showAdvancedOcrCardState}
-              showPerformanceDemoCard={showPerformanceDemoCardState}
-              showExtremeTestSuite={showExtremeTestSuiteState}
-              onToggleAdvancedOcr={handleToggleAdvancedOcr}
-              onTogglePerformanceDemo={handleTogglePerformanceDemo}
-              onToggleExtremeTestSuite={handleToggleExtremeTestSuite}
-            />
-          )}
+            {window.location.pathname === '/logo-test' ? (
+              <LogoTestPage />
+            ) : window.location.pathname === '/cupping-test' ? (
+              <CuppingTestPage />
+            ) : window.location.pathname === '/dev-dashboard' ? (
+              <DeveloperDashboard
+                showAdvancedOcrCard={showAdvancedOcrCardState}
+                showPerformanceDemoCard={showPerformanceDemoCardState}
+                showExtremeTestSuite={showExtremeTestSuiteState}
+                onToggleAdvancedOcr={handleToggleAdvancedOcr}
+                onTogglePerformanceDemo={handleTogglePerformanceDemo}
+                onToggleExtremeTestSuite={handleToggleExtremeTestSuite}
+              />
+            ) : window.location.pathname === '/boundary-test' ? (
+              <BoundaryFragmentTest />
+            ) : window.location.pathname === '/test-fix' ? (
+              <BoundaryFixTester />
+            ) : window.location.pathname === '/smartpaste-test' ? (
+              <SmartPasteTest />
+            ) : (
+              <AppContent 
+                showAdvancedOcrCard={showAdvancedOcrCardState}
+                showPerformanceDemoCard={showPerformanceDemoCardState}
+                showExtremeTestSuite={showExtremeTestSuiteState}
+                onToggleAdvancedOcr={handleToggleAdvancedOcr}
+                onTogglePerformanceDemo={handleTogglePerformanceDemo}
+                onToggleExtremeTestSuite={handleToggleExtremeTestSuite}
+              />
+            )}
           </div>
         </ExperimentalLayoutProvider>
       </LayoutProvider>
