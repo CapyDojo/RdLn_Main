@@ -123,10 +123,9 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         const blocks = Array.from(doc.body.children);
         
         if (blocks.length > 0) {
-          // The correct hybrid approach: run our smart formatting on the text content of each block.
           formattedText = blocks
             .map(block => formatPastedText(block.textContent || ''))
-            .filter(Boolean) // Filter out any empty blocks
+            .filter(Boolean)
             .join('\n\n');
         }
       }
@@ -449,10 +448,10 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
               <Image className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm mb-1 font-serif libertinus-math-placeholder">Paste text or screenshot</p>
               
-              <p className="text-xs font-serif libertinus-math-placeholder"><i>
+              <p className="text-sm font-serif libertinus-math-placeholder"><i>
                 Take a screenshot and paste (Ctrl+V) to</i>   
               </p>
-              <p className="text-xs font-serif libertinus-math-placeholder">
+              <p className="text-sm font-serif libertinus-math-placeholder">
                 <i>extract text with OCR</i>             
               </p>
               <br></br>
