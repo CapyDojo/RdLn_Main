@@ -30,7 +30,7 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
       </div>
       
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-theme-secondary-50 border border-theme-secondary-200 rounded p-3 subtle-button">
+        <div className="bg-[#dcfce7] border border-[#bbf7d0] rounded p-3 subtle-button">
           <div className="flex items-center gap-2 text-theme-secondary-800">
             <Plus className="w-4 h-4" />
             <span className="text-sm font-medium">Additions</span>
@@ -39,7 +39,7 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
           <div className="text-xs text-theme-secondary-600">{additionPercent.toFixed(1)}% of total</div>
         </div>
         
-        <div className="bg-theme-accent-50 border border-theme-accent-200 rounded p-3 subtle-button">
+        <div className="bg-[#fee2e2] border border-[#fecaca] rounded p-3 subtle-button">
           <div className="flex items-center gap-2 text-theme-accent-800">
             <Minus className="w-4 h-4" />
             <span className="text-sm font-medium">Deletions</span>
@@ -81,15 +81,15 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
       <div className="mt-4">
         <div className="flex rounded-full overflow-hidden h-2 bg-theme-neutral-200">
           <div 
-            className="bg-theme-secondary-500" 
+            className="bg-[#34c759]" 
             style={{ width: `${additionPercent}%` }}
           ></div>
           <div 
-            className="bg-theme-accent-500" 
+            className="bg-[#ff3b3f]" 
             style={{ width: `${deletionPercent}%` }}
           ></div>
           <div 
-            className="bg-theme-accent-500" 
+            className="bg-[#ff3b3f]" 
             style={{ width: `${changedPercent}%` }}
           ></div>
         </div>

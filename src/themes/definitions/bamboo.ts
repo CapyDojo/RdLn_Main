@@ -10,95 +10,104 @@ export const bambooTheme: ThemeConfig = {
   name: 'bamboo',
   displayName: 'Bamboo Morning',
   description: 'Serene bamboo green theme with glassmorphic effects',
+  background: `
+    background-image: linear-gradient(45deg, #2d5016 0%,rgb(146, 183, 113) 25%,rgb(113, 155, 81) 63%,rgb(183, 203, 165) 85%, #7ba05f 100%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: 100% 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0 !important;
+  `,
   colors: {
     // Green primary palette - main nature colors
     primary: {
-      50: '#f0f9f0',   // Lightest green tint
-      100: '#dcf2dc',  // Very light green
-      200: '#bae5ba',  // Light green
-      300: '#8dd48d',  // Medium-light green
-      400: '#5cb85c',  // Medium green
-      500: '#3a9b3a',  // Base green - primary brand color
-      600: '#2d7d2d',  // Medium-dark green
-      700: '#256325',  // Dark green
-      800: '#1f4f1f',  // Darker green
-      900: '#1a3f1a',  // Darkest green
+      50: '#f0fdf4',
+      100: '#dcfce7',
+      200: '#bbf7d0',
+      300: '#86efac',
+      400: '#4ade80',
+      500: '#22c55e',
+      600: '#16a34a',
+      700: '#15803d',
+      800: '#166534',
+      900: '#14532d',
     },
-    // Complementary green palette - supporting colors
+    // Blue secondary palette - added for completeness
     secondary: {
-      50: '#f7fdf7',   // Softest green tint
-      100: '#edfbed',  // Very light secondary green
-      200: '#d3f5d3',  // Light secondary green
-      300: '#aae8aa',  // Medium-light secondary green
-      400: '#77d477',  // Medium secondary green
-      500: '#4aba4a',  // Base secondary green
-      600: '#359935',  // Medium-dark secondary green
-      700: '#2b7a2b',  // Dark secondary green
-      800: '#236123',  // Darker secondary green
-      900: '#1d4f1d',  // Darkest secondary green
+      50: '#f8fafc',
+      100: '#f1f5f9',
+      200: '#e2e8f0',
+      300: '#cbd5e1',
+      400: '#94a3b8',
+      500: '#64748b',
+      600: '#475569',
+      700: '#334155',
+      800: '#1e293b',
+      900: '#0f172a',
     },
     // Gold accent palette - highlight colors
     accent: {
-      50: '#fefdf0',   // Lightest gold tint
-      100: '#fdfad1',  // Very light gold
-      200: '#fbf4a3',  // Light gold
-      300: '#f7e96a',  // Medium-light gold
-      400: '#f1d73a',  // Medium gold
-      500: '#FF8C00',  // Dark orange - vibrant accent color
-      600: '#250b01',  // Medium-dark gold
-      700: '#1c0801',  // Dark gold
-      800: '#130600',  // Darker gold
-      900: '#0a0300',  // Darkest gold
+      50: '#fffbeb',
+      100: '#fef3c7',
+      200: '#fde68a',
+      300: '#fcd34d',
+      400: '#fbbf24',
+      500: '#f59e0b',
+      600: '#d97706',
+      700: '#b45309',
+      800: '#92400e',
+      900: '#78350f',
     },
     // High-contrast neutral palette - optimized for readability
     neutral: {
-      50: '#ffffff',   // Pure white for maximum contrast
-      100: '#f8f9f8',  // Very light neutral with green hint
-      200: '#e8ebe8',  // Light neutral with subtle green tint
-      300: '#d0d5d0',  // Medium-light neutral
-      400: '#8a948a',  // Medium neutral for better contrast
-      500: '#5a645a',  // Darker neutral for readable text
-      600: '#3d453d',  // Dark neutral for headings
-      700: '#2a322a',  // Very dark for strong contrast
-      800: '#FF8C00',  // Dark orange for input/output text
-      900: '#0f140f',  // Almost black for ultimate contrast
+      50: '#fafaf9',
+      100: '#f5f5f4',
+      200: '#e7e5e4',
+      300: '#d6d3d1',
+      400: '#a8a29e',
+      500: '#78716c',
+      600: '#57534e',
+      700: '#44403c',
+      800: '#292524',
+      900: '#1c1917',
     },
   },
   effects: GLASSMORPHISM_EFFECTS.premium,
-  // SSMR: Semantic color mappings - extracted from current CSS for pixel-perfect matching
+  // Semantic color mappings - REBUILT FOR ACCESSIBILITY AND CONSISTENCY
   semanticColors: {
-    // Text colors - exact matches from glassmorphism.css
-    textBody: '#471e01',        // Extremely dark ochre - line 113, 119, 126, 140
-    textHeader: '#471e01',      // Same dark ochre for headers - line 126
-    textSecondary: '#44403c',   // Brown-gray - line 133
-    textInteractive: '#471e01', // Same dark ochre for interactive elements - line 140
-    textSuccess: '#256325',     // Rich green - line 145
+    // Text colors - high contrast and clear hierarchy
+    textBody: '#1c1917',        // Deep charcoal for body text (neutral.900)
+    textHeader: '#14532d',      // Deep forest green for headers (primary.900)
+    textSecondary: '#57534e',   // Medium-dark stone for secondary text (neutral.600)
+    textInteractive: '#b45309', // Accessible dark gold for interactive elements (accent.700)
+    textSuccess: '#15803d',     // Dark forest green for success states (primary.700)
     
-    // Glass panel colors - using exact hardcoded values from CSS
-    glassPanelBg: '#ffffff',           // White background - line 108
-    glassPanelBorder: '#e8c41f',       // Golden bamboo border - rgba(232, 196, 31)
-    glassPanelShadow: '#e8c41f',       // Golden bamboo shadow - rgba(232, 196, 31)
-    glassPanelHover: '#f8f5f0',        // Light background on hover - rgba(248, 245, 240)
-    glassPanelHoverShadow: '#f1ac1d',  // Hover shadow - rgba(241, 172, 29)
+    // Glass panel colors - light and natural
+    glassPanelBg: '#fafaf9',           // Light stone background (neutral.50)
+    glassPanelBorder: '#fbbf24',       // Vibrant gold border (accent.400)
+    glassPanelShadow: '#f59e0b',       // Warm gold shadow (accent.500)
+    glassPanelHover: '#f5f5f4',        // Slightly darker stone on hover (neutral.100)
+    glassPanelHoverShadow: '#d97706',  // Darker gold hover shadow (accent.600)
     
-    // Input field colors - need to find in CSS or use defaults
-    inputBg: '#ffffff',         // White background
-    inputBorder: '#5d8a3a',     // Green border - rgba(93, 138, 58) from input field CSS
-    inputFocus: '#5d8a3a',      // Green focus - same as border
-    inputPlaceholder: '#2a322a', // Dark neutral for placeholder
+    // Input field colors - consistent and clear
+    inputBg: '#ffffff',         // Pure white background
+    inputBorder: '#16a34a',     // Accessible green border (primary.600)
+    inputFocus: '#b45309',      // Accessible dark gold focus (accent.700)
+    inputPlaceholder: '#78716c', // Medium stone for placeholder (neutral.500)
     
-    // Button colors - using theme colors
-    buttonPrimary: '#3a9b3a',   // primary-500
-    buttonSecondary: '#e8ebe8', // neutral-200
-    buttonText: '#ffffff',      // White text
-    buttonHover: '#2d7d2d',     // primary-600
+    // Button colors - ACCESSIBILITY FIXED
+    buttonPrimary: '#15803d',   // Dark, accessible forest green (primary.700)
+    buttonSecondary: '#e7e5e4', // Light stone secondary (neutral.200)
+    buttonText: '#fafaf9',      // Light stone text for high contrast (neutral.50)
+    buttonHover: '#166534',     // Darker forest green hover (primary.800)
     
-    // Resize handle colors - using theme colors for consistency
-    resizeHandleBg: '#bae5ba',   // primary-200
-    resizeHandleBorder: '#256325', // primary-700 (dark green)
-    resizeHandleShadow: '#256325', // primary-700 (dark green)
-    resizeHandleHoverBg: '#8dd48d', // primary-300
-    resizeHandleHoverBorder: '#256325', // primary-700 (dark green)
-    resizeHandleHoverShadow: '#256325', // primary-700 (dark green)
-  },
+    // Resize handle colors - consistent with theme
+    resizeHandleBg: '#bbf7d0',   // Light green (primary.200)
+    resizeHandleBorder: '#15803d', // Dark green border (primary.700)
+    resizeHandleShadow: '#15803d', // Dark green shadow (primary.700)
+    resizeHandleHoverBg: '#86efac', // Brighter green hover (primary.300)
+    resizeHandleHoverBorder: '#14532d', // Darkest green hover border (primary.900)
+    resizeHandleHoverShadow: '#14532d' // Darkest green hover shadow (primary.900)
+  }
 };

@@ -37,13 +37,7 @@ function AppContent({ isLogoTestPage }: AppContentProps) {
       <footer className="mt-16 glass-panel border-t border-theme-neutral-200 shadow-lg transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center text-theme-neutral-600">
-            <p className="text-sm font-serif libertinus-math-text leading-relaxed">
-              Built for legal professionals. All processing happens in your browser - your documents never leave your device.
-            </p>
-            <p className="text-xs mt-2 text-theme-neutral-500 font-serif libertinus-math-text leading-relaxed">
-              Proprietary algorithm tuned for semantically optimal redline readability. 
-              Features advanced OCR powered by Tesseract.js for screenshot-to-text conversion.
-            </p>
+            
             
             {/* Enhanced footer features with glassmorphic styling */}
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -69,9 +63,7 @@ function AppContent({ isLogoTestPage }: AppContentProps) {
             
             {/* Professional attribution */}
             <div className="mt-6 pt-4 border-t border-theme-neutral-200">
-              <p className="text-xs text-theme-neutral-400 font-serif">
-                Â© 2025 RdLn - Professional Text Redlining with OCR
-              </p>
+              <div style={{ fontFamily: 'inherit' }}>© 2025 RdLn - Professional Text Redlining with OCR. All rights reserved.</div>
             </div>
           </div>
         </div>

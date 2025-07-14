@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 // Import layout styles directly
 import '../styles/layouts/current-layout.css';
 
-export type LayoutMode = 'current';
+export type LayoutMode = 'current' | 'mobile';
 
 interface LayoutContextType {
   currentLayout: LayoutMode;

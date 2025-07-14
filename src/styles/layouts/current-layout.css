@@ -15,9 +15,21 @@
 
 .layout-current .footer-container {
   max-width: 1440px;
-  width: 95vw;
   margin: 0 auto;
-  padding: 0 0.75rem 1.5rem;
+  padding: 1rem 0.75rem;
+  z-index: 10;
+  background: var(--glass-background, rgba(255, 255, 255, 0.8));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.layout-current main {
+  padding-bottom: 0px; 
+}
+
+.layout-current .glass-panel {
+  margin-bottom: 0px; 
 }
 
 /* Fluid typography scaling */

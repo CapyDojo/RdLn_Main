@@ -10,94 +10,94 @@ export const professionalTheme: ThemeConfig = {
   name: 'professional',
   displayName: 'Professional Blue',
   description: 'Classic professional theme with blue, white, and orange accents',
+  background: `
+    background-image: 
+      linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%, #e2e8f0 100%),
+      linear-gradient(138deg, rgba(59, 130, 246, 0.35) 0%, rgba(147, 197, 253, 0.28) 22%, transparent 48%, rgba(219, 234, 254, 0.22) 73%, rgba(239, 246, 255, 0.15) 100%),
+      radial-gradient(ellipse at 28% 18%, rgba(226, 232, 240, 0.25) 0%, transparent 52%),
+      radial-gradient(ellipse at 78% 82%, rgba(203, 213, 225, 0.20) 0%, transparent 47%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: 100% 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0 !important;
+  `,
   colors: {
     // Blue primary palette - main brand colors
     primary: {
-      50: '#eff6ff',   // Lightest blue tint
-      100: '#dbeafe',  // Very light blue
-      200: '#bfdbfe',  // Light blue
-      300: '#93c5fd',  // Medium-light blue
-      400: '#60a5fa',  // Medium blue
-      500: '#3b82f6',  // Base blue - primary brand color
-      600: '#2563eb',  // Medium-dark blue
-      700: '#1d4ed8',  // Dark blue
-      800: '#1e40af',  // Darker blue
-      900: '#1e3c72',  // Darkest blue
+      50: '#eff6ff',
+      100: '#dbeafe',
+      200: '#bfdbfe',
+      300: '#93c5fd',
+      400: '#60a5fa',
+      500: '#3b82f6',
+      600: '#2563eb',
+      700: '#1d4ed8',
+      800: '#1e40af',
+      900: '#1e3c72',
     },
-    // Neutral gray palette - supporting colors
-    secondary: {
-      50: '#f8fafc',   // Almost white
-      100: '#f1f5f9',  // Very light gray
-      200: '#e2e8f0',  // Light gray
-      300: '#cbd5e1',  // Medium-light gray
-      400: '#94a3b8',  // Medium gray
-      500: '#64748b',  // Base gray
-      600: '#475569',  // Medium-dark gray
-      700: '#334155',  // Dark gray
-      800: '#1e293b',  // Darker gray
-      900: '#0f172a',  // Darkest gray
+    // Unified neutral gray palette
+    neutral: {
+      50: '#f8fafc',
+      100: '#f1f5f9',
+      200: '#e2e8f0',
+      300: '#cbd5e1',
+      400: '#94a3b8',
+      500: '#64748b',
+      600: '#475569',
+      700: '#334155',
+      800: '#1e293b',
+      900: '#0f172a',
     },
     // Orange accent palette - highlight colors
     accent: {
-      50: '#fff7ed',   // Lightest orange tint
-      100: '#ffedd5',  // Very light orange
-      200: '#fed7aa',  // Light orange
-      300: '#fdba74',  // Medium-light orange
-      400: '#fb923c',  // Medium orange
-      500: '#ff6b35',  // Base orange - accent color
-      600: '#ea580c',  // Medium-dark orange
-      700: '#c2410c',  // Dark orange
-      800: '#9a3412',  // Darker orange
-      900: '#7c2d12',  // Darkest orange
-    },
-    // True neutral palette - text and backgrounds
-    neutral: {
-      50: '#fafafa',   // Pure white alternative
-      100: '#f4f4f5',  // Very light neutral
-      200: '#e4e4e7',  // Light neutral
-      300: '#d4d4d8',  // Medium-light neutral
-      400: '#a1a1aa',  // Medium neutral
-      500: '#71717a',  // Base neutral - body text
-      600: '#52525b',  // Medium-dark neutral
-      700: '#3f3f46',  // Dark neutral - headings
-      800: '#27272a',  // Darker neutral
-      900: '#18181b',  // Darkest neutral
+      50: '#fff7ed',
+      100: '#ffedd5',
+      200: '#fed7aa',
+      300: '#fdba74',
+      400: '#fb923c',
+      500: '#ff6b35',
+      600: '#ea580c',
+      700: '#c2410c',
+      800: '#9a3412',
+      900: '#7c2d12',
     },
   },
   effects: GLASSMORPHISM_EFFECTS.enhanced,
-  // SSMR: Semantic color mappings - extracted from current CSS for pixel-perfect matching
+  // Semantic color mappings - REBUILT FOR ACCESSIBILITY AND CONSISTENCY
   semanticColors: {
-    // Text colors - exact matches from glassmorphism.css
-    textBody: '#1e293b',        // Deep charcoal - line 43, 49
-    textHeader: '#0f172a',      // Navy blue - line 56
-    textSecondary: '#475569',   // Medium gray - line 63
-    textInteractive: '#ea580c', // Orange accent - line 70
-    textSuccess: '#1d4ed8',     // Dark blue - line 75
+    // Text colors - high contrast and clear hierarchy
+    textBody: '#1e293b',        // Deep charcoal for body text (neutral.800)
+    textHeader: '#0f172a',      // Navy blue for headers (neutral.900)
+    textSecondary: '#475569',   // Medium gray for secondary text (neutral.600)
+    textInteractive: '#c2410c', // Accessible dark orange for interactive elements (accent.700)
+    textSuccess: '#1d4ed8',     // Dark blue for success states (primary.700)
     
-    // Glass panel colors - using existing variables and hard-coded values
+    // Glass panel colors - clean and professional
     glassPanelBg: '#ffffff',           // White background
-    glassPanelBorder: '#bfdbfe',       // primary-200 from theme
-    glassPanelShadow: '#1e40af',       // Hard-coded shadow color line 40
-    glassPanelHover: '#f8fafc',        // Light background on hover line 79
+    glassPanelBorder: '#bfdbfe',       // Light blue border (primary.200)
+    glassPanelShadow: '#1e40af',       // Dark blue shadow (primary.800)
+    glassPanelHover: '#f8fafc',        // Almost white on hover (neutral.50)
     
-    // Input field colors - from glass-input-field section
+    // Input field colors - consistent and clear
     inputBg: '#ffffff',         // White background
-    inputBorder: '#93c5fd',     // primary-300 from theme
-    inputFocus: '#3b82f6',      // primary-500 from theme
-    inputPlaceholder: '#52525b', // neutral-600 with opacity handled in CSS
+    inputBorder: '#93c5fd',     // Medium-light blue border (primary.300)
+    inputFocus: '#3b82f6',      // Bright blue focus (primary.500)
+    inputPlaceholder: '#64748b', // Medium gray placeholder (neutral.500)
     
-    // Button colors - using theme primary colors
-    buttonPrimary: '#3b82f6',   // primary-500
-    buttonSecondary: '#e2e8f0', // secondary-200
-    buttonText: '#ffffff',      // White text
-    buttonHover: '#2563eb',     // primary-600
+    // Button colors - ACCESSIBILITY FIXED
+    buttonPrimary: '#1d4ed8',   // Dark, accessible blue (primary.700)
+    buttonSecondary: '#e2e8f0', // Light gray secondary (neutral.200)
+    buttonText: '#ffffff',      // White text for high contrast on dark buttons
+    buttonHover: '#1e40af',     // Darker blue hover (primary.800)
     
-    // Resize handle colors - from output-resize-handle section
-    resizeHandleBg: '#bfdbfe',   // primary-200 (matches existing var(--color-primary-200-rgb))
-    resizeHandleBorder: '#1e40af', // Hard-coded border color line 394
-    resizeHandleShadow: '#1e40af', // Hard-coded shadow color line 395
-    resizeHandleHoverBg: '#93c5fd', // primary-300 (matches existing var(--color-primary-300-rgb))
-    resizeHandleHoverBorder: '#1e40af', // Hard-coded hover border line 400
-    resizeHandleHoverShadow: '#1e40af', // Hard-coded hover shadow line 401
+    // Resize handle colors - consistent with theme
+    resizeHandleBg: '#bfdbfe',   // Light blue (primary.200)
+    resizeHandleBorder: '#1e40af', // Dark blue border (primary.800)
+    resizeHandleShadow: '#1e40af', // Dark blue shadow (primary.800)
+    resizeHandleHoverBg: '#93c5fd', // Medium-light blue hover (primary.300)
+    resizeHandleHoverBorder: '#1e3c72', // Darkest blue hover border (primary.900)
+    resizeHandleHoverShadow: '#1e3c72', // Darkest blue hover shadow (primary.900)
   },
 };

@@ -8,7 +8,7 @@
 /** Supported language option with metadata */
 export interface LanguageOption {
   /** Language code (ISO 639-1 based) */
-  code: string;
+  code: OCRLanguage;
   /** Human-readable language name */
   name: string;
   /** Flag emoji for UI display */

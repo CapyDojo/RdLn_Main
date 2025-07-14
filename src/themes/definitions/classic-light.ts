@@ -2,14 +2,19 @@ import { ThemeConfig } from '../../types/theme';
 
 /**
  * Classic Light Theme
- * A sophisticated dark mode theme inspired by modern desktop applications,
- * featuring various shades of grey with light blue and orange accents.
+ * A clean, professional light theme with blue and orange accents.
  * Uses flat colors without gradients for a clean, professional appearance.
  */
 export const classicLightTheme: ThemeConfig = {
   name: 'classic-light',
   displayName: 'Classic Light',
-  description: 'A dark theme with grey tones, light blue and orange accents - inspired by modern desktop applications',
+  description: 'A clean, professional light theme with blue and orange accents.',
+  background: `
+    background: rgba(222, 220, 213, 0.8) !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  `,
   colors: {
     // Light blue primary palette - for highlights and interactive elements
     primary: {
@@ -70,7 +75,7 @@ export const classicLightTheme: ThemeConfig = {
     textBody: '#1e293b',           // Dark text for body
     textHeader: '#0f172a',         // Very dark for headers
     textSecondary: '#475569',      // Medium gray for secondary text
-    textInteractive: '#ea580c',    // Darker orange accent for interactive
+    textInteractive: '#c2410c',    // Dark orange for accessibility (from accent.700)
     textSuccess: '#0284c7',        // Dark blue for success/active
     
     // Glass panels - light theme with orange accents
@@ -88,8 +93,8 @@ export const classicLightTheme: ThemeConfig = {
     
     // Button colors - keeping orange accents
     buttonPrimary: '#f97316',      // Orange primary
-    buttonSecondary: '#757575',    // Gray secondary
-    buttonText: '#ffffff',         // White button text
+    buttonSecondary: '#64748b',    // Slate gray secondary (from secondary.500)
+    buttonText: '#0f172a',         // Dark text for accessibility on orange buttons
     buttonHover: '#ea580c',        // Darker orange hover
     
     // Resize handles - keeping coherence with theme

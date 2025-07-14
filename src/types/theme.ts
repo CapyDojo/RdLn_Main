@@ -1,9 +1,19 @@
-export type ThemeName = 'professional' | 'bamboo' | 'apple-dark' | 'kyoto' | 'new-york' | 'autumn' | 'classic-light' | 'classic-dark';
+export type ThemeName = 
+  | 'classic-light'
+  | 'classic-dark'
+  | 'bamboo'
+  | 'kyoto'
+  | 'new-york'
+  | 'neon-night'
+  | 'deep-dive'
+  | 'ocean-deep'
+  | 'professional';
 
 export interface ThemeConfig {
   name: ThemeName;
   displayName: string;
   description: string;
+  background: string;
   colors: {
     // Primary colors
     primary: {

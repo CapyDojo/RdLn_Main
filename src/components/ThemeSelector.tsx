@@ -23,8 +23,8 @@ const getThemeButtonStyle = (theme: ThemeConfig, isSelected: boolean) => {
   const themeConfigs = {
     'professional': {
       background: 'linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%, #e2e8f0 100%)',
-      textColor: '#4D61DF',
-      borderColor: isSelected ? '#4D61DF' : 'rgba(77, 97, 223, 0.5)'
+      textColor: '#3b82f6',
+      borderColor: isSelected ? '#3b82f6' : 'rgba(59, 130, 246, 0.5)'
     },
     'classic-light': {
       background: '#F2F5F9',
@@ -65,7 +65,22 @@ const getThemeButtonStyle = (theme: ThemeConfig, isSelected: boolean) => {
       background: 'linear-gradient(45deg, #7c2d12 0%, #ea580c 25%, #fb923c 50%, #fdba74 75%, #fed7aa 100%)',
       textColor: '#7c2d12',
       borderColor: isSelected ? '#7c2d12' : 'rgba(124, 45, 18, 0.5)'
-    }
+    },
+    'ocean-deep': {
+      background: 'linear-gradient(330deg, rgb(6, 28, 49) 0%, rgb(17, 44, 75) 25%, rgb(26, 53, 96) 63%, rgb(39, 69, 133) 85%, rgb(54, 84, 166) 100%)',
+      textColor: '#ffffff',
+      borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
+    },
+    'neon-night': {
+      background: 'linear-gradient(45deg, #1e1e1e 0%, #2d2d2d 25%, #3a3a3a 63%, #4a4a4a 85%, #5a5a5a 100%)',
+      textColor: '#ffffff',
+      borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
+    },
+    'deep-dive': {
+      background: 'linear-gradient(330deg, rgb(6, 28, 49) 0%, rgb(17, 44, 75) 25%, rgb(26, 53, 96) 63%, rgb(39, 69, 133) 85%, rgb(54, 84, 166) 100%)',
+      textColor: '#ffffff',
+      borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
+    },
   };
 
   const config = themeConfigs[theme.name as keyof typeof themeConfigs] || themeConfigs['professional'];

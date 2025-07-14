@@ -1,3 +1,4 @@
+
 import { ThemeConfig } from '../../types/theme';
 import { GLASSMORPHISM_EFFECTS } from '../utils/effects';
 
@@ -10,6 +11,16 @@ export const autumnTheme: ThemeConfig = {
   name: 'autumn',
   displayName: 'Autumn',
   description: 'A theme inspired by the colors of autumn.',
+  background: `
+    background-image: url('/images/autumn-background.jpg') !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    background-size: cover !important;
+    background-position: center !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  `,
   colors: {
     // Deep Forest Green primary palette
     primary: {
@@ -64,41 +75,42 @@ export const autumnTheme: ThemeConfig = {
       900: '#1c1917',
     },
   },
-  // Semantic color mappings for autumn garden theme
+  // Semantic color mappings for autumn garden theme - ACCESSIBILITY AND VIBRANCY FIXED
   semanticColors: {
     // Text hierarchy - autumn garden inspired colors
-    textBody: '#1c1917',           // Deepest charcoal for body text
-    textHeader: '#14532d',         // Deepest forest green for headers
-    textSecondary: '#44403c',      // Dark stone for secondary text
-    textInteractive: '#ef4444',    // Medium-bright maple red for interactive elements
-    textSuccess: '#15803d',        // Dark forest green for success states
+    textBody: '#1c1917',           // Deepest charcoal for body text (neutral.900)
+    textHeader: '#78350f',         // Rich, dark brown for headers (accent.900)
+    textSecondary: '#44403c',      // Dark stone for secondary text (neutral.700)
+    textInteractive: '#dc2626',    // Accessible maple red for interactive elements (secondary.600)
+    textSuccess: '#15803d',        // Dark forest green for success states (primary.700)
     
     // Glass panels - light autumn colors with natural accents
-    glassPanelBg: '#fafaf9',        // Light stone background
-    glassPanelBorder: '#22c55e',    // Forest green border accents
-    glassPanelShadow: '#f59e0b',    // Warm amber shadow
+    glassPanelBg: '#fafaf9',        // Light stone background (neutral.50)
+    glassPanelBorder: '#22c55e',    // Forest green border accents (primary.500)
+    glassPanelShadow: '#f59e0b',    // Warm amber shadow (accent.500)
     glassPanelHover: '#fafaf9',     // Same as bg - hover managed by opacity
-    glassPanelHoverShadow: '#22c55e', // Forest green hover shadow
+    glassPanelHoverShadow: '#16a34a', // Darker Forest green hover shadow (primary.600)
     
     // Input fields - consistent with autumn theme
-    inputBg: '#fafaf9',            // Light stone background
-    inputBorder: '#22c55e',        // Forest green border
-    inputFocus: '#ef4444',         // Maple red focus outline
-    inputPlaceholder: '#78716c',   // Stone neutral placeholder
+    inputBg: '#fafaf9',            // Light stone background (neutral.50)
+    inputBorder: '#22c55e',        // Forest green border (primary.500)
+    inputFocus: '#dc2626',         // Accessible maple red focus outline (secondary.600)
+    inputPlaceholder: '#78716c',   // Stone neutral placeholder (neutral.500)
     
     // Button colors - autumn accent inspired
-    buttonPrimary: '#22c55e',      // Forest green primary
-    buttonSecondary: '#78716c',    // Stone neutral secondary
-    buttonText: '#ffffff',         // White button text
-    buttonHover: '#16a34a',        // Darker forest green hover
+    buttonPrimary: '#15803d',      // Dark, accessible forest green primary (primary.700)
+    buttonSecondary: '#78716c',    // Stone neutral secondary (neutral.500)
+    buttonText: '#fafaf9',         // Light stone text for high contrast on dark buttons (neutral.50)
+    buttonHover: '#166534',        // Darker forest green hover (primary.800)
     
     // Resize handles - consistent with autumn aesthetic
-    resizeHandleBg: '#fafaf9',           // Light stone background
-    resizeHandleBorder: '#22c55e',       // Forest green border
-    resizeHandleShadow: '#f59e0b',       // Warm amber shadow
-    resizeHandleHoverBg: '#f5f5f4',      // Slightly darker stone hover
-    resizeHandleHoverBorder: '#16a34a',  // Darker forest green hover border
-    resizeHandleHoverShadow: '#22c55e',  // Forest green hover shadow
+    resizeHandleBg: '#fafaf9',           // Light stone background (neutral.50)
+    resizeHandleBorder: '#22c55e',       // Forest green border (primary.500)
+    resizeHandleShadow: '#f59e0b',       // Warm amber shadow (accent.500)
+    resizeHandleHoverBg: '#f5f5f4',      // Slightly darker stone hover (neutral.100)
+    resizeHandleHoverBorder: '#16a34a',  // Darker forest green hover border (primary.600)
+    resizeHandleHoverShadow: '#22c55e',  // Forest green hover shadow (primary.500)
   },
   effects: GLASSMORPHISM_EFFECTS.premium,
 };
+

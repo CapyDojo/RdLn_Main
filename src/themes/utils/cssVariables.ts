@@ -159,9 +159,9 @@ export const generateGlassmorphismVariables = (themeConfig: ThemeConfig): Array<
   // Generate gradient overlays efficiently
   if (effects.gradientOverlay) {
     // Use theme colors for vivid gradients
-    const primaryColor = Object.values(themeConfig.colors.primary)[5]; // 500 shade
-    const secondaryColor = Object.values(themeConfig.colors.secondary)[4]; // 400 shade
-    const accentColor = Object.values(themeConfig.colors.accent)[4]; // 400 shade
+    const primaryColor = themeConfig.colors?.primary ? Object.values(themeConfig.colors.primary)[5] : '#4f46e5';
+    const secondaryColor = themeConfig.colors?.secondary ? Object.values(themeConfig.colors.secondary)[4] : '#7c3aed';
+    const accentColor = themeConfig.colors?.accent ? Object.values(themeConfig.colors.accent)[4] : '#8b5cf6';
     
     glassVariables.push(['--gradient-start', hexToRgba(primaryColor, 0.35)]);
     glassVariables.push(['--gradient-middle', hexToRgba(secondaryColor, 0.25)]);

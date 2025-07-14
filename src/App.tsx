@@ -32,13 +32,13 @@ function AppContent({
   onToggleExtremeTestSuite
 }: AppContentProps) {
   const { themeConfig } = useTheme();
-  
+
   // Get experimental features to check if results overlay is enabled
   const { features } = useExperimentalFeatures();
-  
+
   // State for overlay visibility (only used when results overlay feature is enabled)
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
-  
+
   // Overlay visibility handlers (only used when results overlay feature is enabled)
   const handleOverlayShow = () => {
     if (features.resultsOverlay) {
@@ -46,14 +46,14 @@ function AppContent({
       console.log(' App: Results overlay shown - hiding header');
     }
   };
-  
+
   const handleOverlayHide = () => {
     if (features.resultsOverlay) {
       setIsOverlayVisible(false);
       console.log(' App: Results overlay hidden - showing header');
     }
   };
-  
+
 
   // Cleanup OCR worker on app unmount
   useEffect(() => {
@@ -64,13 +64,12 @@ function AppContent({
 
   // Determine if header should be hidden (only when results overlay feature is enabled AND overlay is visible)
   const shouldHideHeader = features.resultsOverlay && isOverlayVisible;
-  
+
   return (
-    <div className="min-h-screen">
-      {/* Conditionally render header - only hide when results overlay experimental feature is enabled AND overlay is visible */}
+    <div className="min-h-screen flex flex-col">
       {!shouldHideHeader && <Header />}
-      <main className={shouldHideHeader ? "pt-0" : "pt-36"}>
-        <ComparisonInterface 
+      <main className={`flex-1 overflow-y-auto ${shouldHideHeader ? "pt-0" : "pt-36"}`}>
+        <ComparisonInterface
           showAdvancedOcrCard={showAdvancedOcrCard}
           showPerformanceDemoCard={showPerformanceDemoCard}
           showExtremeTestSuite={showExtremeTestSuite}
@@ -81,51 +80,42 @@ function AppContent({
           onOverlayHide={handleOverlayHide}
         />
       </main>
-      
-      
-      {/* Footer - Enhanced with glassmorphism to match top sections */}
-      <footer className="mt-16 glass-panel border-t border-theme-neutral-200 shadow-lg transition-all duration-300">
-        <div className="footer-container">
-          <div className="text-center text-theme-neutral-600">
-            <p className="text-xs font-serif libertinus-math-text leading-relaxed">
-              Built for legal professionals. All processing happens in your browser - your documents never leave your device.
-            </p>
-            <p className="text-xs mt-1 text-theme-neutral-500 font-serif libertinus-math-text leading-relaxed">
-              Proprietary algorithm tuned for surgical, semantic redlines. 
-              Features advanced OCR powered by Tesseract.js for screenshot-to-text conversion.
-            </p>
-            
-            {/* Enhanced footer features with glassmorphic styling */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
-                <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Privacy First</h4>
-                <p className="text-xs text-theme-neutral-600">
-                  Client-side processing ensures complete confidentiality
-                </p>
-              </div>
-              <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
-                <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Lightning Fast</h4>
-                <p className="text-xs text-theme-neutral-600">
-                  Optimized Myers algorithm for instant results
-                </p>
-              </div>
-              <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
-                <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Multi-Language</h4>
-                <p className="text-xs text-theme-neutral-600">
-                  Advanced OCR supports 10+ languages
-                </p>
-              </div>
+
+      <div className="glass-panel border-t border-theme-neutral-200 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-4 text-center text-theme-neutral-600">
+
+
+          {/* Enhanced footer features with glassmorphic styling */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
+              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Privacy First</h4>
+              <p className="text-xs text-theme-neutral-600">
+                Client-side processing ensures complete confidentiality
+              </p>
             </div>
-            
-            {/* Professional attribution */}
-            <div className="mt-6 pt-4 border-t border-theme-neutral-200">
-              <p className="text-xs text-theme-neutral-400 font-serif">
-                2025 RdLn - Professional Text Redlining with OCR
+            <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
+              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Lightning Fast</h4>
+              <p className="text-xs text-theme-neutral-600">
+                Optimized Myers algorithm for instant results
+              </p>
+            </div>
+            <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
+              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Multi-Language</h4>
+              <p className="text-xs text-theme-neutral-600">
+                Advanced OCR supports 10+ languages
               </p>
             </div>
           </div>
+
+          {/* Professional attribution */}
+          <div className="mt-6 pt-4 border-t border-theme-neutral-200">
+            <div style={{ fontFamily: 'inherit' }}>
+              2025 RdLn - Professional Text Redlining with OCR.<br />
+              All rights reserved.<br /><br />
+            </div>
+          </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
@@ -201,7 +191,7 @@ function App() {
             ) : window.location.pathname === '/smartpaste-test' ? (
               <SmartPasteTest />
             ) : (
-              <AppContent 
+              <AppContent
                 showAdvancedOcrCard={showAdvancedOcrCardState}
                 showPerformanceDemoCard={showPerformanceDemoCardState}
                 showExtremeTestSuite={showExtremeTestSuiteState}

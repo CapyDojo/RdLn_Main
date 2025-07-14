@@ -1,6 +1,6 @@
-import React, { useRef, useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { FileText, Image, AlertCircle, Loader, ChevronDown, Languages } from 'lucide-react';
-import { MagicWand, Sparkles } from '../icons';
+import { Sparkles } from '../icons';
 import { useOCR } from '../hooks/useOCR';
 import { OCRLanguage } from '../types/ocr-types';
 import { LanguageSettingsDropdown } from './LanguageSettingsDropdown';
@@ -37,14 +37,10 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     autoTrackInteractions: true
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isAutoFormatEnabled, setIsAutoFormatEnabled] = useState(true);
 
-  const handleReconstructParagraphs = () => {
-    const reconstructed = formatPastedText(value);
-    if (onChange.length > 1) {
-      (onChange as (value: string, isPasteAction?: boolean) => void)(reconstructed, false);
-    } else {
-      onChange(reconstructed);
-    }
+  const toggleAutoFormat = () => {
+    setIsAutoFormatEnabled(prev => !prev);
   };
 
   const segmentedControlRef = useRef<HTMLDivElement>(null);
@@ -53,9 +49,52 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   
   // Detect layout to conditionally apply dynamic scaling behavior
   const { currentLayout } = useLayout();
-  const isDynamicScaling = currentLayout === 'option-c' || currentLayout === 'current';
+  const isDynamicScaling = currentLayout === 'current';
   
+  // Check for mobile viewport
+  const [isMobileView, setIsMobileView] = useState(false);
   
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 768); // Standard mobile breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Mobile view shows only emoji, desktop shows full instructions
+  const renderPlaceholderContent = () => {
+    if (isMobileView) {
+      return (
+        <div className="text-center">
+          <br />
+          <span className="text-4xl block" role="img" aria-label="Document">📜</span>
+          <p className="text-base mt-2 font-sans">Paste text or screenshot</p>
+        </div>
+      );
+    }
+    return (
+      <div className="text-center text-theme-neutral-400 max-w-sm">
+        <br />
+        <span className="text-4xl mb-3 block" role="img" aria-label="Document">📜</span>
+        <p className="text-base mb-2 font-sans">Paste text or screenshot</p>
+        
+        <p className="text-base font-sans"><i>
+          Take a screenshot and paste (Ctrl+V)</i>   
+        </p>
+        <p className="text-base font-sans">
+          <i>to extract text with OCR</i>             
+        </p>
+        <br></br>
+        <p className="text-sm mt-1 text-theme-primary-400 font-sans">
+          <i>Supports {supportedLanguages.length} languages including Chinese, German, French, Arabic, Japanese, Korean & more</i>
+        </p>
+      </div>
+    );
+  };
+
   const { 
     isProcessing, 
     progress, 
@@ -103,7 +142,6 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     const imageItem = items.find(item => item.type.startsWith('image/'));
     const textItem = items.find(item => item.type.startsWith('text/plain'));
     
-    // Track paste operation type
     performanceTracker.trackMetric('paste_operation', {
       hasImage: !!imageItem,
       hasText: !!textItem,
@@ -111,102 +149,74 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     });
     
     if (textItem && !imageItem) {
-      e.preventDefault(); // Prevent default paste
-
-      // Get the plain text from the clipboard.
+      e.preventDefault();
       const plainText = e.clipboardData.getData('text/plain');
-
-      // CRITICAL: Normalize line endings to ensure consistent behavior.
       const normalizedText = plainText.replace(/\r\n/g, '\n');
-
-      // Use the proven formatter, just like in SmartPasteTest.tsx.
-      const formattedText = formatPastedText(normalizedText);
-
-      // Insert the formatted text at the current cursor position
+      
+      const processedText = isAutoFormatEnabled ? formatPastedText(normalizedText) : normalizedText;
+      
       const textarea = textareaRef.current;
       if (textarea) {
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const currentValue = value;
-        const newValue = currentValue.substring(0, start) + formattedText + currentValue.substring(end);
-
+        const newValue = textarea.value.substring(0, start) + processedText + textarea.value.substring(end);
+        
         if (onChange.length > 1) {
           (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
         } else {
           onChange(newValue);
         }
-
-        // Set cursor position after the newly inserted text
+        
         setTimeout(() => {
-          const newCursorPos = start + formattedText.length;
-          textarea.setSelectionRange(newCursorPos, newCursorPos);
+          textarea.setSelectionRange(start + processedText.length, start + processedText.length);
           textarea.focus();
         }, 0);
       } else {
-        // Fallback if the ref is not available for some reason
-        onChange(value + formattedText);
+        onChange(processedText);
       }
     }
     
     if (imageItem) {
       e.preventDefault();
-      
       try {
         const imageFile = imageItem.getAsFile();
         if (!imageFile) return;
-
-        // Track OCR operation
+        
         const extractedText = await performanceTracker.trackOperation('ocr_extraction', async () => {
           return await extractTextFromImage(imageFile);
         });
         
-        performanceTracker.trackMetric('ocr_result', {
-          extractedLength: extractedText.length,
-          imageSize: imageFile.size
-        });
-        
-        // Insert extracted text at cursor position or append to existing text
         const textarea = textareaRef.current;
         if (textarea) {
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
-          const currentValue = value;
-          
           const newValue = 
-            currentValue.substring(0, start) + 
-            (start > 0 && currentValue[start - 1] !== '\n' ? '\n\n' : '') +
+            textarea.value.substring(0, start) + 
+            (start > 0 && textarea.value[start - 1] !== '\n' ? '\n\n' : '') +
             extractedText + 
-            (end < currentValue.length && currentValue[end] !== '\n' ? '\n\n' : '') +
-            currentValue.substring(end);
+            (end < textarea.value.length && textarea.value[end] !== '\n' ? '\n\n' : '') +
+            textarea.value.substring(end);
           
-          // Use enhanced onChange to trigger auto-compare
           if (onChange.length > 1) {
             (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
           } else {
             onChange(newValue);
           }
           
-          // Set cursor position after inserted text
           setTimeout(() => {
             const newCursorPos = start + extractedText.length + (start > 0 ? 2 : 0);
             textarea.setSelectionRange(newCursorPos, newCursorPos);
             textarea.focus();
           }, 0);
         } else {
-          // Fallback: append to existing text
-          const newValue = value + (value ? '\n\n' : '') + extractedText;
-          if (onChange.length > 1) {
-            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
-          } else {
-            onChange(newValue);
-          }
+          onChange(extractedText);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('OCR failed:', error);
         performanceTracker.trackMetric('ocr_error', { error: error.message });
       }
     }
-  }, [performanceTracker, extractTextFromImage, value, onChange]);
+  }, [performanceTracker, extractTextFromImage, onChange, isAutoFormatEnabled]);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
@@ -231,7 +241,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           extractedLength: extractedText.length,
           fileSize: imageFile.size
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('OCR failed:', error);
         performanceTracker.trackMetric('drop_ocr_error', { error: error.message });
       }
@@ -261,7 +271,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   };
 
   return (
-    <div className="glass-panel glass-content-panel overflow-hidden shadow-lg transition-all duration-300">
+    <div className="glass-panel glass-content-panel overflow-hidden shadow-lg transition-all duration-300" style={style}>
       <div className="glass-panel-header-footer px-4 py-3 border-b border-theme-neutral-200 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {iconEmoji ? (
@@ -271,11 +281,13 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           )}
           <h3 className="text-lg font-semibold text-theme-primary-900">{title}</h3>
           <button
-            onClick={handleReconstructParagraphs}
-            className="flex items-center justify-center p-2 rounded-lg bg-theme-neutral-100/70 backdrop-blur-sm border border-transparent hover:border-theme-neutral-300/50 transition-colors duration-200"
-            title="Reconstruct Paragraphs"
+            onClick={toggleAutoFormat}
+            className={`flex items-center justify-center p-3 rounded-lg backdrop-blur-sm border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] ${isAutoFormatEnabled
+                ? 'bg-theme-primary-500 border-transparent text-white hover:shadow-lg'
+                : 'bg-theme-neutral-200/70 border-transparent hover:border-theme-neutral-300/50 text-theme-neutral-800 hover:shadow-theme-neutral-200/50'}`}
+            title={`Auto-format paragraphs on paste: ${isAutoFormatEnabled ? 'ON' : 'OFF'}`}
           >
-            <Sparkles />
+            <Sparkles className={`w-5 h-5 transition-all duration-300 ${isAutoFormatEnabled ? 'text-white' : 'text-theme-neutral-500'}`} />
           </button>
           {isProcessing && (
             <div className="flex items-center gap-2">
@@ -350,18 +362,21 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       
       
 
-      <div className="glass-panel-inner-content relative" style={isDynamicScaling ? { minHeight: '200px' } : { height: `${height}px`, minHeight: '200px' }}>
+      <div className="glass-panel-inner-content relative" style={{
+        height: isDynamicScaling ? 'auto' : `${height}px`,
+        minHeight: '200px',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
         <textarea
           ref={textareaRef}
           value={value}
           onChange={(e) => {
             const newValue = e.target.value;
-            // Try to call enhanced onChange if it exists, otherwise use regular onChange
-            try {
-              onChange(newValue);
-            } catch (error) {
-              // Fallback to regular onChange if enhanced version doesn't work
-              onChange(newValue);
+            if (onChange.length > 1) {
+              (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, false);
+            } else {
+              (onChange as (value: string) => void)(newValue);
             }
           }}
           onPaste={handlePaste}
@@ -369,10 +384,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           onDragOver={handleDragOver}
           placeholder={isProcessing ? '' : placeholder}
           disabled={disabled || isProcessing}
-          className={`glass-input-field w-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 leading-relaxed disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent ${
-            isDynamicScaling ? '' : 'h-full'
-          }`}
-          style={isDynamicScaling ? {} : { height: '100%' }}
+          className="glass-input-field w-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 leading-relaxed disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent flex-1"
+          style={{ minHeight: '200px' }}
         />
         
         {/* Enhanced OCR Progress Bar */}
@@ -430,21 +443,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         {/* OCR Instructions - Only show when not processing and no content */}
         {!value && !isProcessing && (
           <div className="absolute inset-4 flex items-center justify-center pointer-events-none">
-            <div className="text-center text-theme-neutral-400 max-w-sm">
-              <Image className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm mb-1 font-serif libertinus-math-placeholder">Paste text or screenshot</p>
-              
-              <p className="text-sm font-serif libertinus-math-placeholder"><i>
-                Take a screenshot and paste (Ctrl+V) to</i>   
-              </p>
-              <p className="text-sm font-serif libertinus-math-placeholder">
-                <i>extract text with OCR</i>             
-              </p>
-              <br></br>
-              <p className="text-xs mt-1 text-theme-primary-400 font-serif libertinus-math-placeholder">
-                <i>Supports {supportedLanguages.length} languages including Chinese, German, French, Arabic, Japanese, Korean & more</i>
-              </p>
-            </div>
+            {renderPlaceholderContent()}
           </div>
         )}
         

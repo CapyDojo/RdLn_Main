@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ThemeName, ThemeConfig } from '../types/theme';
-import { themes, hexToRgb, hexToRgba, backgroundStyles } from '../themes';
+import { themes, hexToRgb, hexToRgba } from '../themes';
 import { generateColorVariables, generateGlassmorphismVariables, generateAllThemeVariables, applyCSSVariables } from '../themes/utils/cssVariables';
 import { getThemeFromStorage } from '../themes/utils/validation';
 
@@ -27,14 +27,14 @@ interface ThemeProviderProps {
 }
 
 const DEFAULT_THEME_ORDER: ThemeName[] = [
-  'professional',
+  'classic-light',
+  'classic-dark',
   'bamboo',
-  'apple-dark',
   'kyoto',
   'new-york',
-  'autumn',
-  'classic-light',
-  'classic-dark'
+  'neon-night',
+  'deep-dive',
+  'professional',
 ];
 
 const THEME_ORDER_STORAGE_KEY = 'rdln-theme-order';
@@ -83,15 +83,17 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       applyCSSVariables(allVariables);
       
       // Apply background styles
-      document.body.style.cssText = backgroundStyles[currentTheme] || `
-        background: #fafafa !important;
-        background-repeat: no-repeat !important;
-        background-attachment: fixed !important;
-        background-size: 100% 100% !important;
-        min-height: 100vh !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      `;
+      document.body.style.cssText = themeConfig.background || '';
+      
+      // Force repaint to ensure gradients are rendered
+      requestAnimationFrame(() => {
+        if (themeConfig.background) {
+          const bgMatch = themeConfig.background.match(/background-image:(.*?);/);
+          if (bgMatch && bgMatch[1]) {
+            document.body.style.backgroundImage = bgMatch[1].trim();
+          }
+        }
+      });
     });
   }, [currentTheme]);
 
