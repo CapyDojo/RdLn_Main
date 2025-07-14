@@ -19,7 +19,7 @@ import { SUPPORTED_LANGUAGES } from '../config/ocrConfig';
 import { appConfig } from '../config/appConfig';
 
 // Import specialized services
-import { TextProcessingService, TextProcessingOptions } from './TextProcessingService';
+import { OCRTextCleanupService, TextProcessingOptions } from './OCRTextCleanupService';
 import { LanguageDetectionService } from './LanguageDetectionService';
 import { OCRCacheManager } from './OCRCacheManager';
 import { BackgroundLanguageLoader } from './BackgroundLanguageLoader';
@@ -211,7 +211,12 @@ export class OCROrchestrator {
 
       const textProcessingOptions = options.textProcessing || {};
       const textResult = await safeAsync(
-        () => TextProcessingService.processText(text, detectedLanguages, textProcessingOptions),
+        () =>
+          OCRTextCleanupService.processText(
+            text,
+            detectedLanguages,
+            textProcessingOptions
+          ),
         ErrorCategory.OCR,
         'Text processing failed'
       );
@@ -292,8 +297,10 @@ export class OCROrchestrator {
         timestamp: Date.now()
       });
       
-      const orchError = ErrorFactory.createError(
-        ErrorCategory.OCR,
+      const orchestratorError = (message: string, context?: object) =>
+        ErrorFactory.createError(ErrorCategory.OCR, message, context);
+      
+      const orchError = orchestratorError(
         'OCR orchestration failed',
         { 
           operationId,

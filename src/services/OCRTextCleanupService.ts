@@ -1,5 +1,5 @@
 /**
- * Text Processing Service
+ * OCR Text Cleanup Service
  * 
  * Handles multi-language text post-processing for OCR results.
  * Extracted from monolithic OCRService for focused responsibility.
@@ -35,7 +35,7 @@ export interface ProcessingResult {
   appliedProcessors: string[];
 }
 
-export class TextProcessingService {
+export class OCRTextCleanupService {
 
   /**
    * Main entry point for text processing
@@ -352,7 +352,6 @@ export class TextProcessingService {
       // Common punctuation errors
       [/\s*,\s*(?=\d)/g, ','],            // Fix comma spacing before numbers
       [/(\d)\s*,\s*(\d)/g, '$1,$2'],      // Fix number comma formatting
-      [/\s*\.\s*(?=\d)/g, '.'],           // Fix period spacing before numbers
       [/(\d)\s*\.\s*(\d)/g, '$1.$2'],     // Fix decimal formatting
       
       // Quote and apostrophe fixes

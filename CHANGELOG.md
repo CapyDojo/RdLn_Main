@@ -1,3 +1,19 @@
+## Version 0.4.5 - "SmartPaste Improved"
+*Released: July 14, 2025*
+
+### ✨ SmartPaste Enhancements
+
+#### **Legal Document Formatting**
+- **Header/Body Separation**: Implemented specialized rules for legal document headers (addresses, emails) vs body text
+- **Clause Continuation**: Improved handling of lowercase starters and punctuation-based continuations
+- **Character-Level Analysis**: Added detailed logging for debugging continuation failures
+
+### 🐞 Bug Fixes
+- **Fixed Excessive Breaks**: Resolved issues with unwanted paragraph breaks in document body
+- **Refined Regex Patterns**: Improved name/email detection to prevent false positives
+
+---
+
 ## Version 0.4.4 - "Smart Paste & Formatting"
 *Released: July 13, 2025*
 
@@ -268,10 +284,9 @@ This release represents a significant milestone in document comparison accuracy,
 - **Customization**: User preference management for theme selection
 
 #### **Component Improvements**
-- **ComparisonInterface**: Enhanced layout with better visual hierarchy
-- **RedlineOutput**: Improved diff rendering with cleaner formatting
+- **AppRouter**: Enhanced routing logic for better navigation flow
 - **TextInputPanel**: Better user experience with validation and feedback
-- **TestSuite**: Comprehensive testing interface with detailed results
+- **OCR Hook**: Optimized useOCR hook for improved performance
 
 ### 🛠️ Technical Architecture Enhancements
 
@@ -585,7 +600,9 @@ Version 0.4.3 represents the final production polish for our MVP, introducing in
 - Phase 3.2: Convert Professional theme input fields and glass panels to semantic CSS variables
 
 ### Fixed
-- restore instant comparison trigger for live compare toggle
+- **UI Consistency:** Resolved inconsistent corner radii for input and output panels' drag handle bars in both mobile and desktop views.
+- **Input Panel:** Fixed language detection overlay sticker to remain sticky in the bottom-left corner and appear correctly after OCR detection.
+- chore: Remove temporary commit message files
 
 ### Changed
 - Step 2 SSMR: Remove experimental redlining toggle from DeveloperModeCard

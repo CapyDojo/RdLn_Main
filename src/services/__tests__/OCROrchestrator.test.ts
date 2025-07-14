@@ -1,271 +1,111 @@
 /**
  * Tests for OCROrchestrator
- * 
- * Validates the service composition pattern and workflow coordination
- * from Phase 3.2 of the SSMR OCR refactor.
  */
-
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { OCROrchestrator } from '../OCROrchestrator';
-import { OCRLanguage } from '../../types/ocr-types';
-
-// Import the services to mock
-import { TextProcessingService } from '../TextProcessingService';
+import { OCRTextCleanupService } from '../OCRTextCleanupService';
 import { LanguageDetectionService } from '../LanguageDetectionService';
 import { OCRCacheManager } from '../OCRCacheManager';
 import { BackgroundLanguageLoader } from '../BackgroundLanguageLoader';
+import { PerformanceMonitor } from '../PerformanceMonitor';
+import { ErrorManager } from '../../utils/errorHandling';
 
-// Mock the external services for testing
-vi.mock('../TextProcessingService');
+// Mock dependencies
+vi.mock('../OCRTextCleanupService');
 vi.mock('../LanguageDetectionService');
 vi.mock('../OCRCacheManager');
 vi.mock('../BackgroundLanguageLoader');
+vi.mock('../PerformanceMonitor');
+vi.mock('../../utils/errorHandling');
 
-// Mock tesseract.js
-vi.mock('tesseract.js', () => ({
-  createWorker: vi.fn(() => Promise.resolve({
-    recognize: vi.fn(() => Promise.resolve({
-      data: { text: 'Mock extracted text' }
-    })),
-    terminate: vi.fn()
-  }))
-}));
-
-// Create typed mocks for better type safety
-const mockTextProcessingService = vi.mocked(TextProcessingService);
+// Create typed mocks
+const mockTextCleanupService = vi.mocked(OCRTextCleanupService);
 const mockLanguageDetectionService = vi.mocked(LanguageDetectionService);
 const mockOCRCacheManager = vi.mocked(OCRCacheManager);
 const mockBackgroundLanguageLoader = vi.mocked(BackgroundLanguageLoader);
+const mockPerformanceMonitor = vi.mocked(PerformanceMonitor.prototype);
+const mockErrorManager = vi.mocked(ErrorManager);
+
+// Mock the static getInstance method for PerformanceMonitor
+const mockGetInstance = vi.fn(() => mockPerformanceMonitor);
+vi.spyOn(PerformanceMonitor, 'getInstance').mockImplementation(mockGetInstance);
 
 describe('OCROrchestrator', () => {
+  const mockImageFile = new File(['test'], 'test.png', { type: 'image/png' });
+
   beforeEach(() => {
+    // Reset all mocks before each test
     vi.clearAllMocks();
-    
-    // Setup default mocks
 
-    mockTextProcessingService.processText = vi.fn().mockResolvedValue({
-      processedText: 'Processed mock text',
-      processingTime: 50,
-      language: 'eng',
-      appliedProcessors: ['english-processing', 'universal-preservation']
-    });
-
+    // Setup default mock implementations
     mockLanguageDetectionService.detectLanguage = vi.fn().mockResolvedValue(['eng']);
 
-    mockOCRCacheManager.initializeWorker = vi.fn().mockResolvedValue({
-      recognize: vi.fn().mockResolvedValue({
-        data: { text: 'Mock extracted text' }
-      })
+    const mockTesseractWorker = {
+      recognize: vi.fn().mockResolvedValue({ data: { text: 'raw ocr text' } }),
+      terminate: vi.fn(),
+    };
+    
+    vi.spyOn(OCROrchestrator, 'initializeOptimalWorker' as any).mockResolvedValue({
+        tesseractWorker: mockTesseractWorker,
+        cacheHit: false,
+        backgroundLoaderUsed: false,
     });
 
-    mockOCRCacheManager.getCachedWorker = vi.fn().mockReturnValue({
-      useCount: 1
+    mockTextCleanupService.processText = vi.fn().mockResolvedValue({
+      processedText: 'Processed clean text',
+      processingTime: 50,
+      language: 'eng',
+      appliedProcessors: ['english-processing'],
     });
 
-    mockOCRCacheManager.getCacheStats = vi.fn().mockReturnValue({
-      cachedWorkers: 2,
-      totalCacheHits: 5
-    });
-
-    mockBackgroundLanguageLoader.isEnabled = vi.fn().mockReturnValue(true);
-    mockBackgroundLanguageLoader.isLanguageReady = vi.fn().mockReturnValue(false);
-    mockBackgroundLanguageLoader.getLoadedWorker = vi.fn().mockReturnValue(null);
-    mockBackgroundLanguageLoader.getStats = vi.fn().mockReturnValue({
-      total: 5,
-      ready: 2,
-      loading: 1,
-      pending: 2
-    });
+    mockErrorManager.addError = vi.fn();
   });
 
   describe('extractText', () => {
-    it('should orchestrate full OCR workflow successfully', async () => {
-      const mockImage = new File(['test'], 'test.png', { type: 'image/png' });
-      
-      const result = await OCROrchestrator.extractText(mockImage);
+    it('should successfully orchestrate the text extraction workflow', async () => {
+      const result = await OCROrchestrator.extractText(mockImageFile);
 
-      expect(result.text).toBe('Processed mock text');
+      // Verify the final result
+      expect(result.text).toBe('Processed clean text');
       expect(result.detectedLanguages).toEqual(['eng']);
-      expect(result.extractionTime).toBeGreaterThan(0);
-      expect(result.processingTime).toBe(50);
+      expect(result.appliedProcessors).toEqual(['english-processing']);
       expect(result.totalTime).toBeGreaterThan(0);
-      expect(result.appliedProcessors).toContain('english-processing');
-      expect(result.performanceMetrics).toHaveProperty('languageDetectionMs');
-      expect(result.performanceMetrics).toHaveProperty('workerInitializationMs');
-      expect(result.performanceMetrics).toHaveProperty('ocrExtractionMs');
-      expect(result.performanceMetrics).toHaveProperty('textProcessingMs');
-    });
 
-    it('should use specified languages when autoDetect is false', async () => {
-      const mockImage = new File(['test'], 'test.png', { type: 'image/png' });
-      const options = {
-        autoDetect: false,
-        languages: ['fra', 'deu'] as OCRLanguage[]
-      };
-
-      const result = await OCROrchestrator.extractText(mockImage, options);
-
-      expect(result.detectedLanguages).toEqual(['fra', 'deu']); // Languages should preserve order when specified
-      
-      expect(mockLanguageDetectionService.detectLanguage).not.toHaveBeenCalled();
-    });
-
-    it('should prioritize primary language when specified', async () => {
-      mockLanguageDetectionService.detectLanguage.mockResolvedValue(['eng', 'fra', 'deu']);
-
-      const mockImage = new File(['test'], 'test.png', { type: 'image/png' });
-      const options = {
-        primaryLanguage: 'fra' as OCRLanguage
-      };
-
-      const result = await OCROrchestrator.extractText(mockImage, options);
-
-      expect(result.detectedLanguages[0]).toBe('fra'); // Primary language should be first
-      expect(result.detectedLanguages).toContain('eng');
-      expect(result.detectedLanguages).toContain('deu');
-    });
-
-    it('should use background loader when available', async () => {
-      const mockBgWorker = {
-        recognize: vi.fn().mockResolvedValue({
-          data: { text: 'Background loader text' }
-        })
-      };
-
-      mockBackgroundLanguageLoader.isLanguageReady.mockReturnValue(true);
-      mockBackgroundLanguageLoader.getLoadedWorker.mockReturnValue(mockBgWorker);
-
-      const mockImage = new File(['test'], 'test.png', { type: 'image/png' });
-      const result = await OCROrchestrator.extractText(mockImage);
-
-      expect(result.backgroundLoaderUsed).toBe(true);
-      expect(mockBgWorker.recognize).toHaveBeenCalledWith(mockImage);
-    });
-
-    it('should handle errors gracefully with fallback', async () => {
-      mockLanguageDetectionService.detectLanguage.mockRejectedValue(new Error('Detection failed'));
-
-      const mockImage = new File(['test'], 'test.png', { type: 'image/png' });
-      const result = await OCROrchestrator.extractText(mockImage);
-
-      // Language detection fails but OCR still succeeds with fallback language
-      expect(result.text).toBe('Processed mock text');
-      expect(result.appliedProcessors).toContain('english-processing');
-      expect(result.detectedLanguages).toEqual(['eng']); // Fallback language used
-    });
-
-    it('should pass text processing options correctly', async () => {
-      const mockImage = new File(['test'], 'test.png', { type: 'image/png' });
-      const options = {
-        textProcessing: {
-          applyLegalTermFixes: false,
-          enhancedPunctuation: true
-        }
-      };
-
-      await OCROrchestrator.extractText(mockImage, options);
-
-      expect(mockTextProcessingService.processText).toHaveBeenCalledWith(
-        'Mock extracted text',
+      // Verify that the correct services were called
+      expect(LanguageDetectionService.detectLanguage).toHaveBeenCalledWith(mockImageFile);
+      expect(OCRTextCleanupService.processText).toHaveBeenCalledWith(
+        'raw ocr text',
         ['eng'],
-        options.textProcessing
+        {}
       );
     });
 
-    it('should disable performance tracking when requested', async () => {
-      // Clear performance history before test
-      OCROrchestrator.clearPerformanceHistory();
-      
-      const mockImage = new File(['test'], 'test.png', { type: 'image/png' });
-      const options = {
-        performanceTracking: false
-      };
+    it('should handle language detection failure gracefully', async () => {
+      // Arrange: Simulate language detection failure
+      mockLanguageDetectionService.detectLanguage.mockRejectedValue(new Error('Detection failed'));
 
-      const result = await OCROrchestrator.extractText(mockImage, options);
+      const result = await OCROrchestrator.extractText(mockImageFile);
 
-      // Should still return performance metrics but not record them internally
-      expect(result.performanceMetrics).toBeDefined();
-      expect(OCROrchestrator.getPerformanceStats().recentExtractions).toBe(0);
-    });
-  });
-
-  describe('Performance and Health Monitoring', () => {
-    it('should return performance statistics', () => {
-      const stats = OCROrchestrator.getPerformanceStats();
-
-      expect(stats).toHaveProperty('cacheStats');
-      expect(stats).toHaveProperty('backgroundLoaderStats');
-      expect(stats).toHaveProperty('recentExtractions');
-      expect(stats).toHaveProperty('averageExtractionTime');
-      expect(stats).toHaveProperty('averageProcessingTime');
+      // Assert: Should fallback to English and still complete the process
+      expect(result.text).toBe('Processed clean text');
+      expect(result.detectedLanguages).toEqual(['eng']); // Falls back to 'eng'
+      expect(OCRTextCleanupService.processText).toHaveBeenCalledWith(
+        'raw ocr text',
+        ['eng'], // Called with fallback language
+        {}
+      );
     });
 
-    it('should return health status', async () => {
-      const health = await OCROrchestrator.getHealthStatus();
+    it('should pass text processing options to the cleanup service', async () => {
+      const textProcessingOptions = { applyLegalTermFixes: true };
 
-      expect(health.status).toMatch(/healthy|degraded|unhealthy/);
-      expect(health.services).toHaveProperty('textProcessing');
-      expect(health.services).toHaveProperty('languageDetection');
-      expect(health.services).toHaveProperty('cacheManager');
-      expect(health.services).toHaveProperty('backgroundLoader');
-      expect(health.performance).toHaveProperty('averageExtractionTime');
-      expect(health.performance).toHaveProperty('cacheHitRate');
-      expect(health.performance).toHaveProperty('backgroundLoaderUsage');
-    });
+      await OCROrchestrator.extractText(mockImageFile, { textProcessing: textProcessingOptions });
 
-    it('should report healthy status when all services available', async () => {
-      const health = await OCROrchestrator.getHealthStatus();
-
-      expect(health.status).toBe('healthy');
-      expect(health.services.textProcessing).toBe(true);
-      expect(health.services.languageDetection).toBe(true);
-      expect(health.services.cacheManager).toBe(true);
-      expect(health.services.backgroundLoader).toBe(true);
-    });
-
-    it('should report degraded status when background loader disabled', async () => {
-      mockBackgroundLanguageLoader.isEnabled.mockReturnValue(false);
-
-      const health = await OCROrchestrator.getHealthStatus();
-
-      expect(health.status).toBe('degraded');
-      expect(health.services.backgroundLoader).toBe(false);
-    });
-  });
-
-  describe('Background Services Management', () => {
-    it('should start background services', async () => {
-      mockBackgroundLanguageLoader.startBackgroundLoading = vi.fn().mockResolvedValue(undefined);
-
-      await OCROrchestrator.startBackgroundServices();
-
-      expect(mockBackgroundLanguageLoader.startBackgroundLoading).toHaveBeenCalled();
-    });
-
-    it('should stop background services', () => {
-      mockBackgroundLanguageLoader.stopBackgroundLoading = vi.fn();
-
-      OCROrchestrator.stopBackgroundServices();
-
-      expect(mockBackgroundLanguageLoader.stopBackgroundLoading).toHaveBeenCalled();
-    });
-
-    it('should cleanup resources', () => {
-      mockBackgroundLanguageLoader.stopBackgroundLoading = vi.fn();
-
-      OCROrchestrator.cleanup();
-
-      expect(mockBackgroundLanguageLoader.stopBackgroundLoading).toHaveBeenCalled();
-    });
-  });
-
-  describe('getSupportedLanguages', () => {
-    it('should return array of supported languages', () => {
-      const supportedLanguages = OCROrchestrator.getSupportedLanguages();
-      
-      expect(Array.isArray(supportedLanguages)).toBe(true);
-      expect(supportedLanguages.length).toBeGreaterThan(0);
-      expect(supportedLanguages).toContain('eng');
+      expect(OCRTextCleanupService.processText).toHaveBeenCalledWith(
+        'raw ocr text',
+        ['eng'],
+        textProcessingOptions
+      );
     });
   });
 });

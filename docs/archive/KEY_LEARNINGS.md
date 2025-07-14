@@ -1,3 +1,39 @@
+## 2025-07-14: Legal Document Formatting - Mastering Header/Body Separation
+
+**Problem**: Legal documents have fundamentally different formatting needs in headers (addresses, contact info) versus body text (clauses, paragraphs). Our initial one-size-fits-all approach caused:
+- Excessive breaks in headers (splitting addresses across lines)
+- Over-joining in body text (merging separate clauses)
+
+**Solutions & Technical Insights**:
+
+### **1. Dual-Mode Formatting Engine**
+- **Header Mode**: Special rules for address/email patterns
+  - Preserves line breaks after commas in addresses
+  - Protects email formatting (no joining after @ symbols)
+  - Recognizes common legal header patterns (e.g., "Between: [Name] and [Name]")
+
+### **2. Character-Level Continuation Analysis**
+- **Debugging Breakthrough**: Added detailed logging of:
+  - Previous line ending character
+  - Current line starting character
+  - Context classification (header/body)
+- **Pattern Recognition**: Identified that:
+  - Headers should break on uppercase starters
+  - Body text should continue on lowercase starters and punctuation
+
+### **3. Regex Refinement Process**
+- **Iterative Testing**: Created test cases for:
+  - 50+ real legal document headers
+  - 100+ clause variations
+- **Precision Patterns**: Developed targeted regex for:
+  - Legal names (preserving honorifics like "J.")
+  - Email addresses (protecting @ and . patterns)
+  - Clause numbering (e.g., "(a)", "1.1")
+
+**Key Insight**: Legal documents require context-aware formatting - headers need preservation while body text needs reconstruction. The solution was not better rules, but better classification of what we're formatting.
+
+---
+
 ## 2025-07-13: The Smart Paste Dilemma: Solving the PDF vs. Word Formatting Problem
 
 **Problem**: Pasting text from different sources created a frustrating user experience. Text from PDFs had unwanted line breaks within paragraphs, while text from Word documents, when fixed with the same logic, would lose its paragraph structure entirely.

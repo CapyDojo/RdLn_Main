@@ -49,6 +49,12 @@ export function formatPastedText(text: string): string {
     const trimmedLine = line.trim();
 
     // --- Universal Rules (Apply Everywhere) ---
+    // Rule: Break if the PREVIOUS line was a document title (all caps).
+    if (/^[A-Z\s&]+$/.test(originalPreviousLine.trim())) {
+      debugLog(`    isParagraphStart: true, previous line was a title.`);
+      return true;
+    }
+
     if (markerRegex.test(line) || indentRegex.test(line) || definitionRegex.test(trimmedLine)) {
       debugLog(`    isParagraphStart: true (Universal Rule) for line "${trimmedLine}"`);
       return true;
