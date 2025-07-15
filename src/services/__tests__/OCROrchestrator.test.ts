@@ -73,6 +73,10 @@ describe('OCROrchestrator', () => {
     it('should successfully orchestrate the text extraction workflow', async () => {
       const result = await OCROrchestrator.extractText(mockImageFile);
 
+      if (!result) {
+        throw new Error('extractText returned undefined');
+      }
+
       // Verify the final result
       expect(result.text).toBe('Processed clean text');
       expect(result.detectedLanguages).toEqual(['eng']);
@@ -93,6 +97,10 @@ describe('OCROrchestrator', () => {
       mockLanguageDetectionService.detectLanguage.mockRejectedValue(new Error('Detection failed'));
 
       const result = await OCROrchestrator.extractText(mockImageFile);
+
+      if (!result) {
+        throw new Error('extractText returned undefined');
+      }
 
       // Assert: Should fallback to English and still complete the process
       expect(result.text).toBe('Processed clean text');

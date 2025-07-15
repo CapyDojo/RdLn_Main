@@ -2,9 +2,11 @@
 trigger: always_on
 ---
 
-## Rule #1
+# RULES TO ADHERE FOR EVERY CHAT SESSION
 
-don't be lazy
+## Rule #1
+
+Don't be lazy, always get the full actual code, trace through it. Don't make assumptions, guess or take shortcuts. stop and ask further questions if you are ever unsure.
 
 ## Rule #2
 
@@ -22,7 +24,7 @@ Any time i ask you to follow CSS Protocol, adhere to the following:
 
 When facing CSS styling issues, follow this exact sequence:
 
-### 1. INSPECT FIRST, CODE SECOND
+### 3.1. INSPECT FIRST, CODE SECOND
 
 **Before writing any CSS:**
 
@@ -31,7 +33,7 @@ When facing CSS styling issues, follow this exact sequence:
 - Verify which elements are actually visible/rendered
 - Identify all classes applied to target elements
 
-### 2. IDENTIFY THE REAL PROBLEM
+### 3.2. IDENTIFY THE REAL PROBLEM
 
 **Root cause analysis:**
 
@@ -40,7 +42,7 @@ When facing CSS styling issues, follow this exact sequence:
 - Verify media queries are working as expected
 - Check CSS specificity conflicts
 
-### 3. VERIFY SELECTOR TARGETING
+### 3.3. VERIFY SELECTOR TARGETING
 
 **Before increasing specificity:**
 
@@ -49,7 +51,7 @@ When facing CSS styling issues, follow this exact sequence:
 - Verify parent container structure matches expectations
 - Test selectors in browser console first
 
-### 4. SYSTEMATIC APPROACH CHECKLIST
+### 3.4. SYSTEMATIC APPROACH CHECKLIST
 
 #### For Layout/Responsive Issues:
 
@@ -66,7 +68,7 @@ When facing CSS styling issues, follow this exact sequence:
 - [ ] **Theme Conflicts**: Are theme-specific rules interfering?
 - [ ] **Selector Precision**: Are we targeting exactly what we want?
 
-### 5. DEBUGGING SCRIPT TEMPLATE
+### 3.5. DEBUGGING SCRIPT TEMPLATE
 
 Always create a debug script like this:
 
@@ -96,7 +98,7 @@ const testSelector = document.querySelectorAll('.your-intended-selector');
 console.log(`Your selector matches: ${testSelector.length} elements`);
 ```
 
-### 6. COMMON DEADEND PATTERNS TO AVOID
+### 3.6. COMMON DEADEND PATTERNS TO AVOID
 
 #### ❌ **Don't Do This:**
 
@@ -112,7 +114,7 @@ console.log(`Your selector matches: ${testSelector.length} elements`);
 - Verify element visibility and expected count
 - Test selectors in browser console before implementing
 
-### 7. ESCALATION TRIGGERS
+### 3.7. ESCALATION TRIGGERS
 
 If any of these occur, STOP and debug:
 
@@ -121,7 +123,7 @@ If any of these occur, STOP and debug:
 - Mobile styles applying on desktop (or vice versa)
 - High specificity (!important) needed to override
 
-### 8. SUCCESS METRICS
+### 3.8. SUCCESS METRICS
 
 A good CSS fix should:
 
@@ -156,21 +158,20 @@ This rule should be applied when:
 
 ignore any files with .ignore suffix, except don't ignore for purposes of syncing to git,
 
-## Rule #5
+## Rule #5: File / Git Naming Protocol
 
-when creating new documentation files (e.g. to record plans, new features, new milestones etc), at the start of the file name, use convention:
+When creating files, git branches, tags etc, follow the naming protocol below:
 
-YYYYMMDD_[Type]_Doc Name
+1. **Format**: `YYYYMMDD_[A-Z]_DescriptiveName`
+  - `A` = First file/branch/tag etc of day
+  - `B` = Second file/branch/tag etc
+  - Continue alphabetically as needed
+2. **Annotation**: Always use annotated tags (`-a`) with `-m` describing changes
+3. **Examples**:
+  - `20250715_A_ocr_engine_update`
+  - `20250715_B_desktop_mobile_view_switch_fix`
 
-So e.g.
-
-a report after a refactor task on 5 July 2025 should be named like:
-
-"20250705_Milestone_RefactorReport"
-
-7 July 2025 = 20250707 - NOT 20250107
-
-## Rule #6
+## Rule #6: "INP"
 
 when i ask you to investigate and plan (or shorthand "INP"), please:
 
@@ -206,7 +207,7 @@ DO NOT start development server in chat. when you want to run development server
 
 ## Rule #10
 
-RULE: Collaborative Problem-Solving with user (Kai)
+RULE: Collaborative Problem-Solving with user
 
 Working Style Observations:
 • Prefers thorough investigation over quick fixes ("pls INP" = investigate thoroughly, trace code flows, create solutions, don't code yet)
@@ -231,7 +232,7 @@ Key Success Factors:
 • Comprehensive documentation for future reference
 • Clear technical explanations of root causes and solutions
 
-This rule emphasizes Kai's preference for thorough, systematic problem-solving with comprehensive documentation, while maintaining efficient communication and targeted implementation.
+This rule emphasizes the user's preference for thorough, systematic problem-solving with comprehensive documentation, while maintaining efficient communication and targeted implementation.
 
 ## Rule #11
 
