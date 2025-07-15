@@ -37,6 +37,9 @@ describe('OCROrchestrator', () => {
     // Reset all mocks before each test
     vi.clearAllMocks();
 
+    // Inject the mock performance monitor
+    OCROrchestrator.setPerformanceMonitor(mockPerformanceMonitor);
+
     // Setup default mock implementations
     mockLanguageDetectionService.detectLanguage = vi.fn().mockResolvedValue(['eng']);
 
@@ -59,6 +62,11 @@ describe('OCROrchestrator', () => {
     });
 
     mockErrorManager.addError = vi.fn();
+    mockPerformanceMonitor.recordMetric = vi.fn();
+    mockPerformanceMonitor.recordMetric = vi.fn();
+    mockPerformanceMonitor.recordMetric = vi.fn();
+    mockPerformanceMonitor.recordMetric = vi.fn();
+    mockPerformanceMonitor.recordMetric = vi.fn();
   });
 
   describe('extractText', () => {

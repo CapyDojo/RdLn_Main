@@ -81,6 +81,11 @@ const getThemeButtonStyle = (theme: ThemeConfig, isSelected: boolean) => {
       textColor: '#ffffff',
       borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
     },
+    'aurora-borealis': {
+      background: 'linear-gradient(135deg, #0f0524 0%, #1a0933 20%, #1e3799 40%, #38ada9 60%, #78e08f 80%, #b8e994 100%)',
+      textColor: '#ffffff',
+      borderColor: isSelected ? '#b8e994' : 'rgba(184, 233, 148, 0.5)'
+    },
   };
 
   const config = themeConfigs[theme.name as keyof typeof themeConfigs] || themeConfigs['professional'];

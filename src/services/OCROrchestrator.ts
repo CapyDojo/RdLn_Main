@@ -65,6 +65,11 @@ export class OCROrchestrator {
   // SSMR MODULAR: Centralized performance monitoring integration
   private static performanceMonitor = PerformanceMonitor.getInstance();
 
+  // Allow injecting a mock for testing
+  public static setPerformanceMonitor(monitor: PerformanceMonitor) {
+    this.performanceMonitor = monitor;
+  }
+
   /**
    * Main orchestration method for OCR text extraction
    */

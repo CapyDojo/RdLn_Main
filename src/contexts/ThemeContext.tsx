@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ThemeName, ThemeConfig } from '../types/theme';
-import { themes, hexToRgb, hexToRgba } from '../themes';
-import { generateColorVariables, generateGlassmorphismVariables, generateAllThemeVariables, applyCSSVariables } from '../themes/utils/cssVariables';
+import { themeDefinitions } from '../themes';
+import { generateAllThemeVariables, applyCSSVariables } from '../themes/utils/cssVariables';
 import { getThemeFromStorage } from '../themes/utils/validation';
 
 interface ThemeContextType {
@@ -34,6 +34,7 @@ const DEFAULT_THEME_ORDER: ThemeName[] = [
   'new-york',
   'neon-night',
   'deep-dive',
+  'aurora-borealis',
   'professional',
 ];
 
@@ -69,7 +70,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   // Apply theme to document root (OPTIMIZED for performance)
   useEffect(() => {
-    const themeConfig = themes[currentTheme];
+    const themeConfig = themeDefinitions[currentTheme];
     
     // PERFORMANCE FIX: Batch all theme updates in a single requestAnimationFrame
     // This prevents multiple DOM reflows and improves performance
@@ -113,12 +114,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   // Create availableThemes in the custom order, filtering out any undefined themes
   const availableThemes = themeOrder
-    .map(themeName => themes[themeName])
+    .map(themeName => themeDefinitions[themeName])
     .filter((theme): theme is ThemeConfig => theme !== undefined);
 
   const value: ThemeContextType = {
     currentTheme,
-    themeConfig: themes[currentTheme],
+    themeConfig: themeDefinitions[currentTheme],
     setTheme,
     availableThemes,
     reorderThemes,

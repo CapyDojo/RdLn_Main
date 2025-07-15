@@ -328,26 +328,35 @@ export const generateSemanticColorVariables = (themeConfig: ThemeConfig): Array<
  * Enhanced with caching for better performance on repeated theme switches
  */
 export const generateAllThemeVariables = (themeConfig: ThemeConfig): Array<[string, string]> => {
+  const cssVariables: Array<[string, string]> = [];
+  
+  // Add background property if it exists
+  if (themeConfig.background) {
+    cssVariables.push(['--theme-background', themeConfig.background]);
+  }
+  
+  // Generate color variables
+  const colorVariables = generateColorVariables(themeConfig);
+  cssVariables.push(...colorVariables);
+  
+  // Generate glassmorphism variables
+  const glassVariables = generateGlassmorphismVariables(themeConfig);
+  cssVariables.push(...glassVariables);
+  
+  // SSMR: Add semantic color variables (safe - only if semanticColors exist)
+  const semanticVariables = generateSemanticColorVariables(themeConfig);
+  cssVariables.push(...semanticVariables);
+  
   // PERFORMANCE: Check cache first
   const cacheKey = themeConfig.name;
   if (themeVariableCache.has(cacheKey)) {
     return themeVariableCache.get(cacheKey)!;
   }
   
-  // SAFE: Use existing functions to maintain compatibility
-  const colorVariables = generateColorVariables(themeConfig);
-  const glassVariables = generateGlassmorphismVariables(themeConfig);
-  
-  // SSMR: Add semantic color variables (safe - only if semanticColors exist)
-  const semanticVariables = generateSemanticColorVariables(themeConfig);
-  
-  // MODULAR: Combine all variables in single array for batch application
-  const allVariables = [...colorVariables, ...glassVariables, ...semanticVariables];
-  
   // PERFORMANCE: Cache result for future use
-  themeVariableCache.set(cacheKey, allVariables);
+  themeVariableCache.set(cacheKey, cssVariables);
   
-  return allVariables;
+  return cssVariables;
 };
 
 /**

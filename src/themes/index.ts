@@ -14,6 +14,7 @@ import { classicLightTheme } from './definitions/classic-light';
 import { classicDarkTheme } from './definitions/classic-dark';
 import { neonNightTheme } from './definitions/neon-night';
 import { deepDiveTheme } from './definitions/deep-dive';
+import { auroraBorealisTheme } from './definitions/aurora-borealis';
 
 // Import utilities
 export { hexToRgb, hexToRgba } from './utils/colors';
@@ -26,7 +27,7 @@ export { isValidTheme, getSafeTheme, getThemeFromStorage } from './utils/validat
  * Master theme registry
  * All available themes in the application
  */
-export const themes: Record<ThemeName, ThemeConfig> = {
+export const themeDefinitions: Record<ThemeName, ThemeConfig> = {
   professional: professionalTheme,
   bamboo: bambooTheme,
   kyoto: kyotoTheme,
@@ -35,6 +36,8 @@ export const themes: Record<ThemeName, ThemeConfig> = {
   'classic-dark': classicDarkTheme,
   'neon-night': neonNightTheme,
   'deep-dive': deepDiveTheme,
+  'ocean-deep': deepDiveTheme, // Using deepDiveTheme as placeholder
+  'aurora-borealis': auroraBorealisTheme,
 } as const;
 
 // Export individual themes for direct access
@@ -47,4 +50,5 @@ export {
   classicDarkTheme,
   neonNightTheme,
   deepDiveTheme,
+  auroraBorealisTheme,
 };

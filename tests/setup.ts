@@ -1,5 +1,14 @@
 import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import '@testing-library/jest-dom';
+import React from 'react';
+import { ExperimentalLayoutProvider } from '../src/contexts/ExperimentalLayoutContext';
+
+// Mock EnhancedRedlineOutput
+vi.mock('../src/components/EnhancedRedlineOutput', () => ({
+  EnhancedRedlineOutput: vi.fn((props) => {
+    return React.createElement('div', null, 'Mock EnhancedRedlineOutput');
+  }),
+}));
 
 // Set environment for tests
 process.env.NODE_ENV = 'development';

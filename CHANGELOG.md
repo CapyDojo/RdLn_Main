@@ -11,6 +11,7 @@
 ### 🐞 Bug Fixes
 - **Fixed Excessive Breaks**: Resolved issues with unwanted paragraph breaks in document body
 - **Refined Regex Patterns**: Improved name/email detection to prevent false positives
+- **Scrollbar Restoration**: Fixed missing scrollbar in TextInputPanel by replicating RedlineOutput's container scrolling pattern (July 15, 2025)
 
 ---
 

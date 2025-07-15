@@ -45,12 +45,13 @@ export function formatPastedText(text: string): string {
     return index < headerEndIndex;
   };
 
-  const isParagraphStart = (line: string, originalPreviousLine: string, index: number): boolean => {
+  const isParagraphStart = (line: string, originalPreviousLine: string, index: number, lines: string[]): boolean => {
     const trimmedLine = line.trim();
+    const trimmedPrevLine = originalPreviousLine.trim();
 
     // --- Universal Rules (Apply Everywhere) ---
     // Rule: Break if the PREVIOUS line was a document title (all caps).
-    if (/^[A-Z\s&]+$/.test(originalPreviousLine.trim())) {
+    if (/^[A-Z\s&]+$/.test(trimmedPrevLine)) {
       debugLog(`    isParagraphStart: true, previous line was a title.`);
       return true;
     }
@@ -62,8 +63,32 @@ export function formatPastedText(text: string): string {
 
     // --- Header-Specific Rules ---
     if (isHeaderLine(index)) {
+      const nextLine = (index + 1 < lines.length) ? lines[index + 1].trim() : null;
+
+      // Rule: Break for "Between" itself, and for the capitalized line that follows.
+      if (trimmedLine.toLowerCase() === 'between') {
+        debugLog(`    isParagraphStart: true (Header Rule), line is 'Between'.`);
+        return true;
+      }
+      if (trimmedPrevLine.toLowerCase() === 'between' && /^[A-Z]/.test(trimmedLine)) {
+        debugLog(`    isParagraphStart: true (Header Rule), for capitalized line after 'Between'.`);
+        return true;
+      }
+
+      // Rule: Break for "and" if it's between two capitalized lines, and for the capitalized line that follows.
+      if (trimmedLine.toLowerCase() === 'and' && /^[A-Z]/.test(trimmedPrevLine) && nextLine && /^[A-Z]/.test(nextLine)) {
+        debugLog(`    isParagraphStart: true (Header Rule), for 'and' between capitalized lines.`);
+        return true;
+      }
+      const prevPrevLine = (index > 1) ? lines[index - 2].trim() : null;
+      if (trimmedPrevLine.toLowerCase() === 'and' && /^[A-Z]/.test(trimmedLine) && prevPrevLine && /^[A-Z]/.test(prevPrevLine)) {
+        debugLog(`    isParagraphStart: true (Header Rule), for capitalized line after qualifying 'and'.`);
+        return true;
+      }
+
+
       // Rule: Break if the PREVIOUS line ended with a sign-off like (Discloser).
-      if (/\([A-Za-z]+\)$/.test(originalPreviousLine.trim())) {
+      if (/\([A-Za-z]+\)$/.test(trimmedPrevLine)) {
         debugLog(`    isParagraphStart: true (Header Rule), previous line ended with sign-off.`);
         return true;
       }
@@ -81,7 +106,7 @@ export function formatPastedText(text: string): string {
       return true;
     }
     // Rule: Break if the PREVIOUS line was a numbered clause heading.
-    if (clauseHeadingRegex.test(originalPreviousLine.trim())) {
+    if (clauseHeadingRegex.test(trimmedPrevLine)) {
       debugLog(`    isParagraphStart: true, previous line was a clause heading.`);
       return true;
     }
@@ -93,15 +118,28 @@ export function formatPastedText(text: string): string {
     const trimmedPrev = prevParagraph.trim();
     const trimmedCurr = currentLine.trim();
 
-    // Rule 1: Join if current line starts with a lowercase letter.
-    if (/^\p{Ll}/u.test(trimmedCurr)) {
-      debugLog(`      shouldContinue: true, starts with lowercase`);
+    // Rule 1: Do NOT join if the current line starts with an uppercase letter and the previous line ends with a period.
+    // This prevents joining what appear to be new sentences.
+    if (/^\p{Lu}/u.test(trimmedCurr) && trimmedPrev.endsWith('.')) {
+      debugLog(`      shouldContinue: false, current line starts with uppercase and previous ends with period.`);
+      return false;
+    }
+
+    // Rule 2: Join if the previous line ends with a hyphen (indicating a broken word).
+    if (trimmedPrev.endsWith('-')) {
+      debugLog(`      shouldContinue: true, previous line ends with hyphen.`);
       return true;
     }
 
-    // Rule 2: Join if the previous line does NOT end in sentence-ending punctuation.
-    if (!/[.:;]$/.test(trimmedPrev)) {
-      debugLog(`      shouldContinue: true, previous line does not end with a full stop.`);
+    // Rule 3: Join if the current line starts with a lowercase letter.
+    if (/^\p{Ll}/u.test(trimmedCurr)) {
+      debugLog(`      shouldContinue: true, starts with lowercase.`);
+      return true;
+    }
+
+    // Rule 4: Join if the previous line does NOT end in sentence-ending punctuation.
+    if (!/[.!?]$/.test(trimmedPrev)) {
+      debugLog(`      shouldContinue: true, previous line does not end with sentence-ending punctuation.`);
       return true;
     }
 
@@ -115,7 +153,7 @@ export function formatPastedText(text: string): string {
     const currentLine = lines[i];
     const originalPreviousLine = lines[i - 1];
 
-    if (isParagraphStart(currentLine, originalPreviousLine, i)) {
+    if (isParagraphStart(currentLine, originalPreviousLine, i, lines)) {
       // It's a definite paragraph start, so break.
       reconstructedLines.push(currentParagraph);
       currentParagraph = currentLine;
@@ -134,5 +172,7 @@ export function formatPastedText(text: string): string {
 
   reconstructedLines.push(currentParagraph);
 
-  return reconstructedLines.join('\n\n');
+  // Join with double newlines for paragraph breaks, but single for header party sections.
+  const finalOutput = reconstructedLines.join('\n\n');
+  return finalOutput;
 }

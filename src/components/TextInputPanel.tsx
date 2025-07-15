@@ -362,12 +362,13 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       
       
 
-      <div className="glass-panel-inner-content relative" style={{
-        height: isDynamicScaling ? 'auto' : `${height}px`,
-        minHeight: '200px',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
+      <div
+        className="glass-panel-inner-content overflow-y-auto"
+        style={{
+          height: isDynamicScaling ? 'auto' : `${height - 70}px`, // Match RedlineOutput: calculate height minus header
+          minHeight: '200px',
+        }}
+      >
         <textarea
           ref={textareaRef}
           value={value}
@@ -384,7 +385,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           onDragOver={handleDragOver}
           placeholder={isProcessing ? '' : placeholder}
           disabled={disabled || isProcessing}
-          className="glass-input-field w-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 leading-relaxed disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent flex-1"
+          className="glass-input-field w-full h-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 leading-relaxed disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent"
           style={{ minHeight: '200px' }}
         />
         

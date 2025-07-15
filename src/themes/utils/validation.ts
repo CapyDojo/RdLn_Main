@@ -3,13 +3,13 @@
  */
 
 import { ThemeName } from '../../types/theme';
-import { themes } from '../index';
+import { themeDefinitions } from '../index';
 
 /**
  * Validates if a theme name is valid and available
  */
 export const isValidTheme = (themeName: string): themeName is ThemeName => {
-  return themeName in themes;
+  return themeName in themeDefinitions;
 };
 
 /**

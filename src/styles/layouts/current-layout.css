@@ -1,5 +1,11 @@
 /* CURRENT LAYOUT - NOW USING FLUID SCALING (FORMERLY OPTION C) */
 
+.layout-current {
+  min-height: 100vh;
+  background: var(--theme-background, var(--glass-background, rgba(255, 255, 255, 0.8)));
+  font-size: clamp(0.875rem, 1.5vw, 1rem); /* 14px to 16px */
+}
+
 .layout-current .comparison-interface-container {
   max-width: 1440px;
   min-width: 320px;
@@ -33,9 +39,6 @@
 }
 
 /* Fluid typography scaling */
-.layout-current {
-  font-size: clamp(0.875rem, 1.5vw, 1rem); /* 14px to 16px */
-}
 
 .layout-current h1 {
   font-size: clamp(1.25rem, 4vw, 2rem); /* 20px to 32px */

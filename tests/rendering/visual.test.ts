@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { setupRenderingTest, createMockDocument, createMockDiff } from './setup';
 import { RedlineOutput } from '../../src/components/RedlineOutput';
+import { ExperimentalLayoutProvider } from '../../src/contexts/ExperimentalLayoutContext';
 
 describe('Visual and UX Tests', () => {
   beforeEach(() => {
@@ -19,11 +20,13 @@ describe('Visual and UX Tests', () => {
       ];
 
       const { container } = render(
-        React.createElement(EnhancedRedlineOutput, {
-          changes: changes,
-          onCopy: () => {},
-          useEnhancedStrategy: true
-        })
+        <ExperimentalLayoutProvider>
+          <EnhancedRedlineOutput
+            changes={changes}
+            onCopy={() => {}}
+            useEnhancedStrategy={true}
+          />
+        </ExperimentalLayoutProvider>
       );
 
       // Check that sentences are not broken
@@ -110,11 +113,13 @@ describe('Visual and UX Tests', () => {
       const changes = createMockDiff('moderate');
       
       const { container, rerender } = render(
-        React.createElement(EnhancedRedlineOutput, {
-          changes: changes,
-          onCopy: () => {},
-          useEnhancedStrategy: true
-        })
+        <ExperimentalLayoutProvider>
+          <EnhancedRedlineOutput
+            changes={changes}
+            onCopy={() => {}}
+            useEnhancedStrategy={true}
+          />
+        </ExperimentalLayoutProvider>
       );
 
       const scrollContainer = container.querySelector('.scroll-container') as HTMLElement;
@@ -126,11 +131,13 @@ describe('Visual and UX Tests', () => {
       // Re-render with updated changes
       const updatedChanges = [...changes, { type: 'added' as const, content: 'New content', index: changes.length }];
       rerender(
-        React.createElement(EnhancedRedlineOutput, {
-          changes: updatedChanges,
-          onCopy: () => {},
-          useEnhancedStrategy: true
-        })
+        <ExperimentalLayoutProvider>
+          <EnhancedRedlineOutput
+            changes={updatedChanges}
+            onCopy={() => {}}
+            useEnhancedStrategy={true}
+          />
+        </ExperimentalLayoutProvider>
       );
 
       // Scroll position should be preserved
@@ -143,14 +150,16 @@ describe('Visual and UX Tests', () => {
   describe('Progressive Loading UX', () => {
     it('should show loading state during processing', async () => {
       render(
-        React.createElement(EnhancedRedlineOutput, {
-          changes: [],
-          originalText: createMockDocument('large'),
-          revisedText: createMockDocument('large'),
-          onCopy: () => {},
-          useEnhancedStrategy: true,
-          showProgressIndicator: true
-        })
+        <ExperimentalLayoutProvider>
+          <EnhancedRedlineOutput
+            changes={[]}
+            originalText={createMockDocument('large')}
+            revisedText={createMockDocument('large')}
+            onCopy={() => {}}
+            useEnhancedStrategy={true}
+            showProgressIndicator={true}
+          />
+        </ExperimentalLayoutProvider>
       );
 
       // Should show loading indicator
@@ -161,14 +170,16 @@ describe('Visual and UX Tests', () => {
       const largeChanges = createMockDiff('many');
       
       render(
-        React.createElement(EnhancedRedlineOutput, {
-          changes: largeChanges,
-          originalText: createMockDocument('large'),
-          revisedText: createMockDocument('large'),
-          onCopy: () => {},
-          useEnhancedStrategy: true,
-          showProgressIndicator: true
-        })
+        <ExperimentalLayoutProvider>
+          <EnhancedRedlineOutput
+            changes={largeChanges}
+            originalText={createMockDocument('large')}
+            revisedText={createMockDocument('large')}
+            onCopy={() => {}}
+            useEnhancedStrategy={true}
+            showProgressIndicator={true}
+          />
+        </ExperimentalLayoutProvider>
       );
 
       // Should show progress bar
@@ -180,14 +191,16 @@ describe('Visual and UX Tests', () => {
       const changes = createMockDiff('moderate');
       
       const { container } = render(
-        React.createElement(EnhancedRedlineOutput, {
-          changes: changes,
-          originalText: createMockDocument('medium'),
-          revisedText: createMockDocument('medium'),
-          onCopy: () => {},
-          useEnhancedStrategy: true,
-          showProgressIndicator: true
-        })
+        <ExperimentalLayoutProvider>
+          <EnhancedRedlineOutput
+            changes={changes}
+            originalText={createMockDocument('medium')}
+            revisedText={createMockDocument('medium')}
+            onCopy={() => {}}
+            useEnhancedStrategy={true}
+            showProgressIndicator={true}
+          />
+        </ExperimentalLayoutProvider>
       );
 
       // Check for progress text
@@ -291,10 +304,12 @@ describe('Visual and UX Tests', () => {
         Object.defineProperty(window, 'innerHeight', { value: viewport.height, writable: true });
 
         const { container } = render(
-          React.createElement(EnhancedRedlineOutput, {
-            changes: changes,
-            onCopy: () => {}
-          })
+          <ExperimentalLayoutProvider>
+            <EnhancedRedlineOutput
+              changes={changes}
+              onCopy={() => {}}
+            />
+          </ExperimentalLayoutProvider>
         );
 
         // Should render without layout issues
@@ -316,10 +331,12 @@ describe('Visual and UX Tests', () => {
       ];
 
       const { container } = render(
-        React.createElement(EnhancedRedlineOutput, {
-          changes: invalidChanges,
-          onCopy: () => {}
-        })
+        <ExperimentalLayoutProvider>
+          <EnhancedRedlineOutput
+            changes={invalidChanges}
+            onCopy={() => {}}
+          />
+        </ExperimentalLayoutProvider>
       );
 
       // Should render without crashing
@@ -332,10 +349,12 @@ describe('Visual and UX Tests', () => {
 
     it('should handle empty change arrays', async () => {
       const { container } = render(
-        React.createElement(EnhancedRedlineOutput, {
-          changes: [],
-          onCopy: () => {}
-        })
+        <ExperimentalLayoutProvider>
+          <EnhancedRedlineOutput
+            changes={[]}
+            onCopy={() => {}}
+          />
+        </ExperimentalLayoutProvider>
       );
 
       // Should show empty state

@@ -6,6 +6,7 @@ export type ThemeName =
   | 'new-york'
   | 'neon-night'
   | 'deep-dive'
+  | 'aurora-borealis'
   | 'ocean-deep'
   | 'professional';
 

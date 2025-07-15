@@ -9,7 +9,13 @@ describe('formatPastedText - Legal Contract Headers', () => {
 
   test('handles party sections correctly', () => {
     const input = `Between\nAIA Investment Management...\nand\nBlackstone Alternative...`;
-    const expected = `Between\n\nAIA Investment Management...\n\nand\n\nBlackstone Alternative...`;
+    const expected = `Between
+
+AIA Investment Management...
+
+and
+
+Blackstone Alternative...`;
     expect(formatPastedText(input)).toBe(expected);
   });
 
@@ -22,14 +28,28 @@ describe('formatPastedText - Legal Contract Headers', () => {
   test('handles full contract header example', () => {
     const input = `CONFIDENTIALITY AGREEMENT\nThis Agreement is made on 22 January, 2025...\nBetween\nAIA Investment Management...\nand\nBlackstone Alternative...\n(collectively referred to as \"Parties\").`;
     
-    const expected = `CONFIDENTIALITY AGREEMENT\n\nThis Agreement is made on 22 January, 2025...\n\nBetween\n\nAIA Investment Management...\n\nand\n\nBlackstone Alternative...\n\n(collectively referred to as \"Parties\").`;
+    const expected = `CONFIDENTIALITY AGREEMENT
+
+This Agreement is made on 22 January, 2025...
+
+Between
+
+AIA Investment Management...
+
+and
+
+Blackstone Alternative...
+
+(collectively referred to as \"Parties\").`;
     
     expect(formatPastedText(input)).toBe(expected);
   });
 
   test('does not affect regular paragraphs', () => {
     const input = `This is a regular paragraph.\nIt should be joined normally.`;
-    const expected = `This is a regular paragraph. It should be joined normally.`;
+    const expected = `This is a regular paragraph.
+
+It should be joined normally.`;
     expect(formatPastedText(input)).toBe(expected);
   });
 });
