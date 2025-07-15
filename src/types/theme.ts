@@ -15,6 +15,8 @@ export interface ThemeConfig {
   displayName: string;
   description: string;
   background: string;
+  animation?: string;
+  animationStyles?: string;
   colors: {
     // Primary colors
     primary: {

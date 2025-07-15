@@ -115,7 +115,11 @@ describe('OCROrchestrator', () => {
     it('should pass text processing options to the cleanup service', async () => {
       const textProcessingOptions = { applyLegalTermFixes: true };
 
-      await OCROrchestrator.extractText(mockImageFile, { textProcessing: textProcessingOptions });
+      const result = await OCROrchestrator.extractText(mockImageFile, { textProcessing: textProcessingOptions });
+
+      if (!result) {
+        throw new Error('extractText returned undefined');
+      }
 
       expect(OCRTextCleanupService.processText).toHaveBeenCalledWith(
         'raw ocr text',

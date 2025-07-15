@@ -335,6 +335,14 @@ export const generateAllThemeVariables = (themeConfig: ThemeConfig): Array<[stri
     cssVariables.push(['--theme-background', themeConfig.background]);
   }
   
+  // Add animation properties if they exist
+  if (themeConfig.animation) {
+    cssVariables.push(['--theme-animation', themeConfig.animation]);
+  }
+  if (themeConfig.animationStyles) {
+    cssVariables.push(['--theme-animation-styles', themeConfig.animationStyles]);
+  }
+  
   // Generate color variables
   const colorVariables = generateColorVariables(themeConfig);
   cssVariables.push(...colorVariables);
@@ -372,7 +380,19 @@ export const clearThemeVariableCache = (): void => {
  */
 export const applyCSSVariables = (variables: Array<[string, string]>): void => {
   const root = document.documentElement;
+  let styleElement = document.getElementById('theme-animation-styles') as HTMLStyleElement;
+  
+  if (!styleElement) {
+    styleElement = document.createElement('style');
+    styleElement.id = 'theme-animation-styles';
+    document.head.appendChild(styleElement);
+  }
+  
   variables.forEach(([property, value]) => {
-    root.style.setProperty(property, value);
+    if (property === '--theme-animation-styles') {
+      styleElement.textContent = value;
+    } else {
+      root.style.setProperty(property, value);
+    }
   });
 };
