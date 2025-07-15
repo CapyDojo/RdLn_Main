@@ -185,6 +185,29 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
     minOutputHeight: 300
   });
   
+  const { activeTab, isMobile, handleResultsAppear, getPanelVisibility } = useMobileTabInterface();
+
+  // FIX: Recalculate panel height on layout change (mobile/desktop)
+  useEffect(() => {
+    // This effect ensures that when switching between mobile and desktop layouts,
+    // the panel height is recalculated and applied correctly, preventing the shrinking issue.
+
+    // Use a timeout to allow the DOM to update before measuring.
+    setTimeout(() => {
+      if (isMobile) {
+        // On mobile, reset to a sensible default height to avoid excessive height.
+        console.log(`[Layout Change: Mobile] Applying default panel height: 300px`);
+        setPanelHeightCSS(300);
+      } else {
+        // On desktop, reset to a larger default height. This avoids a feedback loop
+        // where we measure a height that was previously set by this same effect.
+        console.log(`[Layout Change: Desktop] Applying default panel height: 400px`);
+        setPanelHeightCSS(400);
+      }
+    }, 0); // 0ms timeout defers execution until after the next paint.
+
+  }, [isMobile, setPanelHeightCSS]); // IMPORTANT: Removed panelResizeHandlers to prevent feedback loop.
+  
   // Local refs for resize handles (not managed by hook)
   const desktopResizeHandleRef = useRef<HTMLDivElement>(null);
   const mobileResizeHandleRef = useRef<HTMLDivElement>(null);
@@ -210,9 +233,6 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
   
   // Jump to results functionality for experimental features
   const { jumpToResults } = useJumpToResults();
-  
-  // Mobile tab interface hook
-  const { getPanelVisibility } = useMobileTabInterface();
   
   // Results overlay hook - only active when feature is enabled (moved here before useEffect)
   const {

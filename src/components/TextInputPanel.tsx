@@ -70,6 +70,10 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       return (
         <div className="text-center">
           <br />
+          <br />
+          <br />
+          <br />
+          <br />
           <span className="text-4xl block" role="img" aria-label="Document">📜</span>
           <p className="text-base mt-2 font-sans">Paste text or screenshot</p>
         </div>
@@ -77,6 +81,11 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     }
     return (
       <div className="text-center text-theme-neutral-400 max-w-sm">
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
         <br />
         <span className="text-4xl mb-3 block" role="img" aria-label="Document">📜</span>
         <p className="text-base mb-2 font-sans">Paste text or screenshot</p>

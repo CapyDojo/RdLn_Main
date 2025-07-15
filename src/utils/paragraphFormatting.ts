@@ -49,44 +49,43 @@ export function formatPastedText(text: string): string {
     const trimmedLine = line.trim();
     const trimmedPrevLine = originalPreviousLine.trim();
 
-    // --- Universal Rules (Apply Everywhere) ---
+    // --- Universal Party/Title Rules ---
     // Rule: Break if the PREVIOUS line was a document title (all caps).
     if (/^[A-Z\s&]+$/.test(trimmedPrevLine)) {
       debugLog(`    isParagraphStart: true, previous line was a title.`);
       return true;
     }
 
+    // Rule: Handle 'Between' and the line that follows it.
+    if (trimmedLine.toLowerCase() === 'between') {
+        debugLog(`    isParagraphStart: true (Universal Rule), line is 'Between'.`);
+        return true;
+    }
+    if (trimmedPrevLine.toLowerCase() === 'between') {
+        debugLog(`    isParagraphStart: true (Universal Rule), for line after 'Between'.`);
+        return true;
+    }
+
+    // Rule: Handle 'and' and the line that follows it, but only if surrounded by capitalized lines.
+    const nextLine = (index + 1 < lines.length) ? lines[index + 1].trim() : null;
+    if (trimmedLine.toLowerCase() === 'and' && /^[A-Z]/.test(trimmedPrevLine) && nextLine && /^[A-Z]/.test(nextLine)) {
+        debugLog(`    isParagraphStart: true (Universal Rule), for 'and' between capitalized lines.`);
+        return true;
+    }
+    const prevPrevLine = (index > 1) ? lines[index - 2].trim() : null;
+    if (trimmedPrevLine.toLowerCase() === 'and' && /^[A-Z]/.test(trimmedLine) && prevPrevLine && /^[A-Z]/.test(prevPrevLine)) {
+        debugLog(`    isParagraphStart: true (Universal Rule), for capitalized line after qualifying 'and'.`);
+        return true;
+    }
+
+    // --- Universal Structural Rules ---
     if (markerRegex.test(line) || indentRegex.test(line) || definitionRegex.test(trimmedLine)) {
       debugLog(`    isParagraphStart: true (Universal Rule) for line "${trimmedLine}"`);
       return true;
     }
 
-    // --- Header-Specific Rules ---
+    // --- Header-Specific Rules (for things that ONLY happen in headers) ---
     if (isHeaderLine(index)) {
-      const nextLine = (index + 1 < lines.length) ? lines[index + 1].trim() : null;
-
-      // Rule: Break for "Between" itself, and for the capitalized line that follows.
-      if (trimmedLine.toLowerCase() === 'between') {
-        debugLog(`    isParagraphStart: true (Header Rule), line is 'Between'.`);
-        return true;
-      }
-      if (trimmedPrevLine.toLowerCase() === 'between' && /^[A-Z]/.test(trimmedLine)) {
-        debugLog(`    isParagraphStart: true (Header Rule), for capitalized line after 'Between'.`);
-        return true;
-      }
-
-      // Rule: Break for "and" if it's between two capitalized lines, and for the capitalized line that follows.
-      if (trimmedLine.toLowerCase() === 'and' && /^[A-Z]/.test(trimmedPrevLine) && nextLine && /^[A-Z]/.test(nextLine)) {
-        debugLog(`    isParagraphStart: true (Header Rule), for 'and' between capitalized lines.`);
-        return true;
-      }
-      const prevPrevLine = (index > 1) ? lines[index - 2].trim() : null;
-      if (trimmedPrevLine.toLowerCase() === 'and' && /^[A-Z]/.test(trimmedLine) && prevPrevLine && /^[A-Z]/.test(prevPrevLine)) {
-        debugLog(`    isParagraphStart: true (Header Rule), for capitalized line after qualifying 'and'.`);
-        return true;
-      }
-
-
       // Rule: Break if the PREVIOUS line ended with a sign-off like (Discloser).
       if (/\([A-Za-z]+\)$/.test(trimmedPrevLine)) {
         debugLog(`    isParagraphStart: true (Header Rule), previous line ended with sign-off.`);
