@@ -2,7 +2,7 @@ import { useRef, useCallback, useEffect, startTransition, useState } from 'react
 import { startDragOperation, endDragOperation, calculateResizeHeight } from '../utils/mouseHandlers';
 import { UI_CONFIG, FEATURE_FLAGS } from '../config/appConfig';
 import { BaseHookReturn } from '../types/components';
-import { ErrorId, PerformanceTimestamp } from '../types/enhancedTypes';
+import { PerformanceTimestamp } from '../types/enhancedTypes';
 
 interface UseResizeHandlersConfig {
   /** Whether to use CSS-based resize (true) or React state fallback (false) */
@@ -15,6 +15,8 @@ interface UseResizeHandlersConfig {
   maxHeight?: number;
   /** Maximum height for output panel */
   maxOutputHeight?: number;
+  /** Flag to indicate if the view is mobile */
+  isMobile?: boolean;
 }
 
 interface PanelResizeHandlers {
@@ -86,8 +88,13 @@ export const useResizeHandlers = ({
   minHeight = UI_CONFIG.PANEL_HEIGHTS.MIN_INPUT_HEIGHT,
   minOutputHeight = UI_CONFIG.PANEL_HEIGHTS.MIN_OUTPUT_HEIGHT,
   maxHeight = UI_CONFIG.PANEL_HEIGHTS.MAX_INPUT_HEIGHT,
-  maxOutputHeight = UI_CONFIG.PANEL_HEIGHTS.MAX_OUTPUT_HEIGHT
-}: UseResizeHandlersConfig = {}): UseResizeHandlersReturn => {
+  maxOutputHeight = UI_CONFIG.PANEL_HEIGHTS.MAX_OUTPUT_HEIGHT,
+  isMobile
+}: UseResizeHandlersConfig = {
+  USE_CSS_RESIZE: FEATURE_FLAGS.ENABLE_CSS_RESIZE,
+  minHeight: UI_CONFIG.PANEL_HEIGHTS.MIN_INPUT_HEIGHT,
+  minOutputHeight: UI_CONFIG.PANEL_HEIGHTS.MIN_OUTPUT_HEIGHT
+}): UseResizeHandlersReturn => {
   
   // Store configuration for structured interface
   const config: UseResizeHandlersConfig = {
@@ -95,7 +102,8 @@ export const useResizeHandlers = ({
     minHeight,
     minOutputHeight,
     maxHeight,
-    maxOutputHeight
+    maxOutputHeight,
+    isMobile
   };
   
   // Performance tracking
@@ -120,8 +128,8 @@ export const useResizeHandlers = ({
   
   // ==================== FALLBACK REACT STATE ====================
   
-  const [panelHeight, setPanelHeight] = useState(UI_CONFIG.PANEL_HEIGHTS.DEFAULT_INPUT_HEIGHT);
-  const [outputHeight, setOutputHeight] = useState(UI_CONFIG.PANEL_HEIGHTS.DEFAULT_OUTPUT_HEIGHT);
+  const [panelHeight, setPanelHeight] = useState<number>(UI_CONFIG.PANEL_HEIGHTS.DEFAULT_INPUT_HEIGHT);
+  const [outputHeight, setOutputHeight] = useState<number>(UI_CONFIG.PANEL_HEIGHTS.DEFAULT_OUTPUT_HEIGHT);
   
   // ==================== CSS MANIPULATION HELPERS ====================
   
@@ -311,6 +319,23 @@ export const useResizeHandlers = ({
       }
     }
   }, [USE_CSS_RESIZE, setPanelHeightCSS, setOutputHeightCSS]);
+
+  // ==================== LAYOUT CHANGE HANDLER ====================
+
+  // This effect ensures that when switching between mobile and desktop layouts,
+  // the panel height snaps to a sensible default, preventing height creep.
+  useEffect(() => {
+    // Don't run if isMobile is not provided by the consumer
+    if (typeof isMobile !== 'boolean') return;
+
+    if (isMobile) {
+      console.log(`[useResizeHandlers] Layout Change: Mobile. Applying default panel height: 300px`);
+      setPanelHeightCSS(300); // Mobile default height
+    } else {
+      console.log(`[useResizeHandlers] Layout Change: Desktop. Applying default panel height: 400px`);
+      setPanelHeightCSS(400); // Desktop default height
+    }
+  }, [isMobile, setPanelHeightCSS]);
   
   // ==================== RETURN INTERFACE ====================
   
