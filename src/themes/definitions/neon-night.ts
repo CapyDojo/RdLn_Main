@@ -10,15 +10,7 @@ export const neonNightTheme: ThemeConfig = {
   name: 'neon-night',
   displayName: 'Neon Night',
   description: 'Sophisticated dark theme with vibrant neon aesthetics',
-  background: `
-    background-image: linear-gradient(45deg, #1e1e1e 0%, #2d2d2d 25%, #3a3a3a 63%, #4a4a4a 85%, #5a5a5a 100%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-size: 100% 100%;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0 !important;
-  `,
+  background: 'linear-gradient(45deg, #1e1e1e 0%, #2d2d2d 25%, #3a3a3a 63%, #4a4a4a 85%, #5a5a5a 100%)',
   colors: {
     // Inverted cool gray primary palette - dark mode adaptation
     primary: {

@@ -10,20 +10,7 @@ export const newYorkTheme: ThemeConfig = {
   name: 'new-york',
   displayName: 'NYC Dusk',
   description: 'Urban night skyline with warm amber accents',
-  background: `
-    background-image: 
-      linear-gradient(180deg, #0f172a 0%, #1e293b 30%, #451a03 100%),
-      radial-gradient(circle at 50% 100%, rgba(100, 149, 237, 0.15) 0%, transparent 60%),
-      radial-gradient(circle at 25% 80%, rgba(70, 130, 180, 0.12) 0%, transparent 40%),
-      radial-gradient(circle at 75% 90%, rgba(65, 105, 225, 0.10) 0%, transparent 35%),
-      repeating-linear-gradient(90deg, transparent 0%, rgba(16, 16, 16, 0.6) 2%, transparent 4%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 2px;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0 !important;
-  `,
+  background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 30%, #451a03 100%), radial-gradient(circle at 50% 100%, rgba(100, 149, 237, 0.15) 0%, transparent 60%), radial-gradient(circle at 25% 80%, rgba(70, 130, 180, 0.12) 0%, transparent 40%), radial-gradient(circle at 75% 90%, rgba(65, 105, 225, 0.10) 0%, transparent 35%), repeating-linear-gradient(90deg, transparent 0%, rgba(16, 16, 16, 0.6) 2%, transparent 4%)',
   colors: {
     primary: {
       50: '#ebebeb',

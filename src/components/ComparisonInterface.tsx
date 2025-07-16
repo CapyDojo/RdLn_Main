@@ -6,15 +6,12 @@ import { RedlineOutput } from './RedlineOutput';
 import { ProcessingDisplay } from './ProcessingDisplay';
 import { OutputLayout } from './OutputLayout';
 import { ComparisonStats } from './ComparisonStats';
-import { OCRFeatureCard } from './OCRFeatureCard';
 import { PerformanceDemoCard } from './PerformanceDemoCard';
 import { DesktopControlsPanel } from './DesktopControlsPanel';
 import { MobileControlsPanel } from './MobileControlsPanel';
 import { DesktopInputLayout } from './DesktopInputLayout';
 import { MobileInputLayout } from './MobileInputLayout';
 import { ExtremeTestSuite } from '../testing/ExtremeTestSuite';
-// Background Loading Status
-import { BackgroundLoadingStatus } from './BackgroundLoadingStatus';
 // Resize and scroll handlers
 import { useResizeHandlers } from '../hooks/useResizeHandlers';
 import { useScrollSync } from '../hooks/useScrollSync';
@@ -457,20 +454,11 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
       {/* Extreme Test Suite - Ultra-Complex Testing Module - Toggleable via Dev Dashboard */}
       {showExtremeTestSuite && <ExtremeTestSuite onLoadTest={handleLoadTest} />}
 
-      {/* STEP 3b: Background Loading Status (Safe, Optional, Reversible) */}
-      <BackgroundLoadingStatus 
-        enabled={true} // ROLLBACK: Set to false to hide completely
-        compact={true} 
-        className="mb-4" 
-      />
-      
+      {/* STEP 3b: Background Loading Status - Removed to be placed in App.tsx */}
       
       {/* SSMR CHUNKING: Progress now shown in output area during processing */}
       
       
-      {/* Enhanced OCR Feature Notice - Enhanced with glassmorphism */}
-{showAdvancedOcrCard && <OCRFeatureCard visible={true} />}
-
       {/* Demo Performance Test Buttons */}
       <PerformanceDemoCard 
         visible={showPerformanceDemoCard}

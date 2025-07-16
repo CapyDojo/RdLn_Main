@@ -68,29 +68,42 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
   }, []);
 
-  // Apply theme to document root (OPTIMIZED for performance)
+  // Apply theme variables and data-attribute
   useEffect(() => {
     const themeConfig = themeDefinitions[currentTheme];
-    
-    // PERFORMANCE FIX: Batch all theme updates in a single requestAnimationFrame
-    // This prevents multiple DOM reflows and improves performance
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    const allVariables = generateAllThemeVariables(themeConfig);
+    applyCSSVariables(allVariables);
+  }, [currentTheme]);
+
+  // Apply theme background
+  useEffect(() => {
+    const themeConfig = themeDefinitions[currentTheme];
+    document.body.style.background = themeConfig.background || '';
+    // Force repaint to ensure gradients are rendered
     requestAnimationFrame(() => {
-      // Set data-theme attribute first for immediate CSS cascade
-      document.documentElement.setAttribute('data-theme', currentTheme);
-      
-      // SSMR: Use unified variable generator for cleaner code and better performance
-      // FALLBACK: Keep old functions available for gradual migration
-      const allVariables = generateAllThemeVariables(themeConfig);
-      applyCSSVariables(allVariables);
-      
-      // Apply background styles
-      document.body.style.cssText = themeConfig.background || '';
-      
-      // Force repaint to ensure gradients are rendered
-      requestAnimationFrame(() => {
-        document.body.clientWidth; // Trigger reflow
-      });
+      document.body.clientWidth; // Trigger reflow
     });
+  }, [currentTheme]);
+
+  // Apply theme animations
+  useEffect(() => {
+    const themeConfig = themeDefinitions[currentTheme];
+    document.body.style.animation = themeConfig.animation || '';
+
+    const styleElementId = 'theme-animation-styles';
+    let styleElement = document.getElementById(styleElementId) as HTMLStyleElement | null;
+
+    if (themeConfig.animationStyles) {
+      if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = styleElementId;
+        document.head.appendChild(styleElement);
+      }
+      styleElement.textContent = themeConfig.animationStyles;
+    } else if (styleElement) {
+      styleElement.textContent = '';
+    }
   }, [currentTheme]);
 
   const setTheme = (theme: ThemeName) => {

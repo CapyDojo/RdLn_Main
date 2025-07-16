@@ -8,7 +8,8 @@ export type ThemeName =
   | 'deep-dive'
   | 'aurora-borealis'
   | 'ocean-deep'
-  | 'professional';
+  | 'professional'
+  | 'autumn';
 
 export interface ThemeConfig {
   name: ThemeName;
@@ -17,6 +18,7 @@ export interface ThemeConfig {
   background: string;
   animation?: string;
   animationStyles?: string;
+  init?: (element: HTMLElement) => void;
   colors: {
     // Primary colors
     primary: {
@@ -112,5 +114,17 @@ export interface ThemeConfig {
     resizeHandleHoverBg: string;      // Resize handle hover background
     resizeHandleHoverBorder: string;  // Resize handle hover border
     resizeHandleHoverShadow: string;  // Resize handle hover shadow
+
+    // Redline/diff specific colors
+    diff?: {
+      additionBg: string;
+      additionBorder: string;
+      additionText: string;
+      additionDecoration: string;
+      deletionBg: string;
+      deletionBorder: string;
+      deletionText: string;
+      deletionDecoration: string;
+    };
   };
 }

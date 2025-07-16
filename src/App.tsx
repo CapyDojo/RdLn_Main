@@ -12,6 +12,8 @@ import { DeveloperDashboard } from './pages/DeveloperDashboard';
 import BoundaryFragmentTest from './pages/BoundaryFragmentTest';
 import BoundaryFixTester from './components/BoundaryFixTester';
 import { SmartPasteTest } from './components/SmartPasteTest';
+import { OCRFeatureCard } from './components/OCRFeatureCard';
+import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
 import './styles/resize-overrides.css';
 
 interface AppContentProps {
@@ -80,6 +82,12 @@ function AppContent({
           onOverlayHide={handleOverlayHide}
         />
       </main>
+
+      {/* OCR Loading Card - Moved here from ComparisonInterface */}
+      {showAdvancedOcrCard && <OCRFeatureCard visible={true} />}
+
+      {/* Background Loading Status - Moved here from ComparisonInterface */}
+      <BackgroundLoadingStatus enabled={true} compact={true} className="mb-4" />
 
       <div className="glass-panel border-t border-theme-neutral-200 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-4 text-center text-theme-neutral-600">

@@ -11,9 +11,7 @@ export const classicDarkTheme: ThemeConfig = {
   name: 'classic-dark',
   displayName: 'Classic Dark',
   description: 'A dark theme with pure grey backgrounds, light blue and orange accents - inspired by modern productivity apps',
-  background: `
-    background: rgba(9, 9, 9, 0.96) !important;
-  `,
+  background: 'rgba(9, 9, 9, 0.96)',
   colors: {
     // Light blue primary palette - for highlights and interactive elements
     primary: {

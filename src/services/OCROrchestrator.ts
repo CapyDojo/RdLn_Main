@@ -65,11 +65,6 @@ export class OCROrchestrator {
   // SSMR MODULAR: Centralized performance monitoring integration
   private static performanceMonitor = PerformanceMonitor.getInstance();
 
-  // Allow injecting a mock for testing
-  public static setPerformanceMonitor(monitor: PerformanceMonitor) {
-    this.performanceMonitor = monitor;
-  }
-
   /**
    * Main orchestration method for OCR text extraction
    */
@@ -132,9 +127,8 @@ export class OCROrchestrator {
             SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
           ).join(', '));
         } else {
-          // Language detection failed, use fallback
-          detectedLanguages = ['eng'];
-          console.log('🔄 Language detection failed, defaulting to English');
+          // Language detection failed, throw error to trigger fallback
+          throw new Error('Language detection failed: ' + languageResult.error.message);
         }
       } else if (options.languages && options.languages.length > 0) {
         detectedLanguages = options.languages;
@@ -214,6 +208,7 @@ export class OCROrchestrator {
       }
       
       const { data: { text } } = extractionResult.data;
+      console.log(`DEBUG: Extracted text (from Tesseract): ${text}`);
 
       extractionTime = performance.now() - extractionStart;
       performanceMetrics.ocrExtractionMs = extractionTime;
@@ -240,32 +235,32 @@ export class OCROrchestrator {
 
       const textProcessingOptions = options.textProcessing || {};
       const textResult = await safeAsync(
-        () =>
-          OCRTextCleanupService.processText(
+        () => {
+          console.log(`DEBUG: Calling OCRTextCleanupService.processText with input text: ${text}`);
+          return OCRTextCleanupService.processText(
             text,
             detectedLanguages,
             textProcessingOptions
-          ),
+          );
+        },
         ErrorCategory.OCR,
         'Text processing failed'
       );
       
+      console.log(`DEBUG: textResult.success: ${textResult.success}`);
       let processingResult;
       if (textResult.success) {
         processingResult = textResult.data;
+        console.log(`DEBUG: processingResult.processedText (from cleanup service): ${processingResult.processedText}`);
       } else {
-        // Text processing failed, use fallback
-        processingResult = {
-          processedText: text, // Use original text
-          processingTime: 0,
-          language: detectedLanguages[0] || 'eng',
-          appliedProcessors: ['fallback-original-text']
-        };
+        // Text processing failed, throw error to trigger fallback
+        throw new Error('Text processing failed: ' + textResult.error.message);
       }
 
       // Phase 5: Final Paragraph Formatting
       const paragraphFormattingStart = performance.now();
       const finalText = formatPastedText(processingResult.processedText);
+      console.log(`DEBUG: finalText (after paragraph formatting): ${finalText}`);
       performanceMetrics.paragraphFormattingMs = performance.now() - paragraphFormattingStart;
 
       processingTime = processingResult.processingTime;

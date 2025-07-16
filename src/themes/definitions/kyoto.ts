@@ -11,45 +11,7 @@ export const kyotoTheme: ThemeConfig = {
   name: 'kyoto',
   displayName: 'Kyoto Afternoon',
   description: 'A dark, elegant theme inspired by a tranquil Kyoto night.',
-  background: `
-    background-image: 
-      /* Added subtle green and orange blurs for organic breakup */
-      radial-gradient(ellipse 1800px 900px at 15% 20%, rgba(13, 142, 48, 0.39) 0%, transparent 35%),
-      radial-gradient(ellipse 900px 600px at 85% 80%, rgba(197, 90, 17, 0.15) 0%, transparent 60%),
-      radial-gradient(ellipse 1200px 900px at 15% 25%, rgba(122, 61, 26, 0.6) 0%, rgba(155, 74, 31, 0.4) 25%, transparent 60%),
-      radial-gradient(ellipse 12300px 1800px at 78% 69%, rgba(20, 54, 20, 0.76) 0%, rgba(80, 63, 30, 0.2) 27%, transparent 90%),
-      /* Organic transition helper - subtle horizontal band to break up the diagonal */
-      radial-gradient(ellipse 1200px 600px at 48% 63%, rgba(197, 90, 17, 0.2) 30%, rgba(217, 119, 6, 0.15) 20%, transparent 70%),
-      radial-gradient(ellipse 900px 600px at 60% 10%, rgba(197, 90, 17, 0.4) 0%, rgba(217, 119, 6, 0.25) 40%, transparent 80%),
-      radial-gradient(ellipse 900px 1200px at 5% 85%, rgba(122, 61, 26, 0.3) 0%, rgba(155, 74, 31, 0.15) 50%, transparent 85%),
-      radial-gradient(ellipse 500px 700px at 95% 45%, rgba(19, 78, 74, 0.4) 0%, rgba(58, 118, 15, 0.2) 45%, transparent 90%),
-      /* Modified gradient with left-shifted emphasis */
-      linear-gradient(160deg, 
-        #7A3D1A 0%,     /* Rich burnt sienna */
-        #9B4A1F 5%,     /* Deep rust */
-        #C55A11 10%,    /* Burnt orange */
-        #D97706 15%,    /* Amber 700 */
-rgb(220, 8, 8) 18%,    /* Amber 700 darker */
-rgb(173, 76, 16) 27%,    /* Amber 800 */
-        #6B4423 35%,    /* Mixed brown */
-        #4A5D23 45%,    /* Olive brown - organic break */
-        #3A4D1F 55%,    /* Deeper olive */
-        #2A3D1A 60%,    /* Forest transition */
-        #1E3A1E 65%,    /* Deep forest */
-rgb(87, 69, 12) 70%,    /* Teal 800 */
-rgb(7, 59, 27) 80%,    /* Teal 700 */
-        #C55A11 95%,    /* Burnt orange */
-rgb(186, 101, 3) 100%    /* Amber 700 */
-      ),
-      radial-gradient(circle at 40% 60%, rgba(30, 85, 80, 0.15) 0%, transparent 40%),
-      radial-gradient(circle at 60% 40%, rgba(140, 70, 50, 0.1) 0%, transparent 50%) !important;
-    background-repeat: no-repeat !important;
-    background-attachment: fixed !important;
-    background-size: 100% 100% !important;
-    min-height: 100vh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  `,
+  background: 'radial-gradient(ellipse 1800px 900px at 15% 20%, rgba(13, 142, 48, 0.39) 0%, transparent 35%), radial-gradient(ellipse 900px 600px at 85% 80%, rgba(197, 90, 17, 0.15) 0%, transparent 60%), radial-gradient(ellipse 1200px 900px at 15% 25%, rgba(122, 61, 26, 0.6) 0%, rgba(155, 74, 31, 0.4) 25%, transparent 60%), radial-gradient(ellipse 12300px 1800px at 78% 69%, rgba(20, 54, 20, 0.76) 0%, rgba(80, 63, 30, 0.2) 27%, transparent 90%), radial-gradient(ellipse 1200px 600px at 48% 63%, rgba(197, 90, 17, 0.2) 30%, rgba(217, 119, 6, 0.15) 20%, transparent 70%), radial-gradient(ellipse 900px 600px at 60% 10%, rgba(197, 90, 17, 0.4) 0%, rgba(217, 119, 6, 0.25) 40%, transparent 80%), radial-gradient(ellipse 900px 1200px at 5% 85%, rgba(122, 61, 26, 0.3) 0%, rgba(155, 74, 31, 0.15) 50%, transparent 85%), radial-gradient(ellipse 500px 700px at 95% 45%, rgba(19, 78, 74, 0.4) 0%, rgba(58, 118, 15, 0.2) 45%, transparent 90%), linear-gradient(160deg, #7A3D1A 0%, #9B4A1F 5%, #C55A11 10%, #D97706 15%, rgb(220, 8, 8) 18%, rgb(173, 76, 16) 27%, #6B4423 35%, #4A5D23 45%, #3A4D1F 55%, #2A3D1A 60%, #1E3A1E 65%, rgb(87, 69, 12) 70%, rgb(7, 59, 27) 80%, #C55A11 95%, rgb(186, 101, 3) 100%), radial-gradient(circle at 40% 60%, rgba(30, 85, 80, 0.15) 0%, transparent 40%), radial-gradient(circle at 60% 40%, rgba(140, 70, 50, 0.1) 0%, transparent 50%)',
   colors: {
     // Deep Forest Green primary palette
     primary: {

@@ -10,15 +10,7 @@ export const bambooTheme: ThemeConfig = {
   name: 'bamboo',
   displayName: 'Bamboo Morning',
   description: 'Serene bamboo green theme with glassmorphic effects',
-  background: `
-    background-image: linear-gradient(45deg, #2d5016 0%,rgb(146, 183, 113) 25%,rgb(113, 155, 81) 63%,rgb(183, 203, 165) 85%, #7ba05f 100%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-size: 100% 100%;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0 !important;
-  `,
+  background: 'linear-gradient(45deg, #2d5016 0%,rgb(146, 183, 113) 25%,rgb(113, 155, 81) 63%,rgb(183, 203, 165) 85%, #7ba05f 100%)',
   colors: {
     // Green primary palette - main nature colors
     primary: {

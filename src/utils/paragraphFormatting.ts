@@ -30,6 +30,7 @@ export function formatPastedText(text: string): string {
   debugLog(`Split into lines: [${lines.join(', ')}]`);
 
   if (lines.length <= 1) {
+    debugLog(`Returning original text due to <= 1 line: ${text}`);
     return text;
   }
 
@@ -173,5 +174,6 @@ export function formatPastedText(text: string): string {
 
   // Join with double newlines for paragraph breaks, but single for header party sections.
   const finalOutput = reconstructedLines.join('\n\n');
+  debugLog(`Final output: ${finalOutput}`);
   return finalOutput;
 }

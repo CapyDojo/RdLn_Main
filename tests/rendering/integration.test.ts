@@ -4,6 +4,7 @@ import { render } from '@testing-library/react';
 import { setupRenderingTest, createMockDocument, createMockDiff } from './setup';
 import { RedlineOutput } from '../../src/components/RedlineOutput';
 import { analyzeRenderingStrategy } from '../../src/components/RenderingStrategy';
+import { ExperimentalLayoutProvider } from '../../src/contexts/ExperimentalLayoutContext';
 
 describe('Integration Tests - Components Working', () => {
   beforeEach(() => {
@@ -34,12 +35,14 @@ describe('Integration Tests - Components Working', () => {
     const mockChanges = createMockDiff('few');
     
     // Use React.createElement to avoid JSX compilation issues
-    const component = React.createElement(RedlineOutput, {
-      changes: mockChanges,
-      onCopy: () => {},
-      useEnhancedStrategy: true,
-      originalText: createMockDocument('small'),
-      revisedText: createMockDocument('small')
+    const component = React.createElement(ExperimentalLayoutProvider, { children: 
+      React.createElement(RedlineOutput, {
+        changes: mockChanges,
+        onCopy: () => {},
+        useEnhancedStrategy: true,
+        originalText: createMockDocument('small'),
+        revisedText: createMockDocument('small')
+      })
     });
 
     const { container } = render(component);

@@ -172,9 +172,7 @@ describe('Rendering Performance Tests', () => {
       
       render(
         <ExperimentalLayoutProvider>
-          render(
-        <ExperimentalLayoutProvider>
-          <EnhancedRedlineOutput
+          <RedlineOutput
             changes={largeChanges}
             originalText={createMockDocument('large')}
             revisedText={createMockDocument('large')}
@@ -182,8 +180,6 @@ describe('Rendering Performance Tests', () => {
             useEnhancedStrategy={true}
             showProgressIndicator={true}
           />
-        </ExperimentalLayoutProvider>
-      );
         </ExperimentalLayoutProvider>
       );
 
@@ -196,9 +192,8 @@ describe('Rendering Performance Tests', () => {
       const changes = createMockDiff('moderate');
       
       const { container } = render(
-        const { container } = render(
         <ExperimentalLayoutProvider>
-          <EnhancedRedlineOutput
+          <RedlineOutput
             changes={changes}
             originalText={createMockDocument('medium')}
             revisedText={createMockDocument('medium')}
@@ -206,7 +201,6 @@ describe('Rendering Performance Tests', () => {
             useEnhancedStrategy={true}
           />
         </ExperimentalLayoutProvider>
-      );
       );
 
       // Should start with some content rendered

@@ -10,17 +10,7 @@ export const oceanDeepTheme: ThemeConfig = {
   name: 'ocean-deep',
   displayName: 'Ocean Deep',
   description: 'Calming deep ocean theme with sophisticated blue gradients',
-  background: `
-    background-image: linear-gradient(45deg, #0a2540 0%, #1a3a5f 25%, #2a4a7f 63%, #3a5a9f 85%, #4a6abf 100%),
-      radial-gradient(circle at 20% 30%, rgba(74, 106, 191, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(74, 106, 191, 0.15) 0%, transparent 50%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-size: 100% 100%;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0 !important;
-  `,
+  background: 'linear-gradient(45deg, #0a2540 0%, #1a3a5f 25%, #2a4a7f 63%, #3a5a9f 85%, #4a6abf 100%), radial-gradient(circle at 20% 30%, rgba(74, 106, 191, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(74, 106, 191, 0.15) 0%, transparent 50%)',
   colors: {
     primary: {
       50: '#ebebeb',

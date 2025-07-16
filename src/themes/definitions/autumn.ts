@@ -11,16 +11,7 @@ export const autumnTheme: ThemeConfig = {
   name: 'autumn',
   displayName: 'Autumn',
   description: 'A theme inspired by the colors of autumn.',
-  background: `
-    background-image: url('/images/autumn-background.jpg') !important;
-    background-repeat: no-repeat !important;
-    background-attachment: fixed !important;
-    background-size: cover !important;
-    background-position: center !important;
-    min-height: 100vh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  `,
+  background: "url('/images/autumn-background.jpg') center / cover no-repeat fixed",
   colors: {
     // Deep Forest Green primary palette
     primary: {

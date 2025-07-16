@@ -21,7 +21,7 @@ describe('Visual and UX Tests', () => {
 
       const { container } = render(
         <ExperimentalLayoutProvider>
-          <EnhancedRedlineOutput
+          <RedlineOutput
             changes={changes}
             onCopy={() => {}}
             useEnhancedStrategy={true}
@@ -48,9 +48,10 @@ describe('Visual and UX Tests', () => {
       ];
 
       const { container } = render(
-        React.createElement(EnhancedRedlineOutput, {
+        React.createElement(RedlineOutput, {
           changes: changes,
-          onCopy: () => {}
+          onCopy: () => {},
+          useEnhancedStrategy: true
         })
       );
 
@@ -67,9 +68,10 @@ describe('Visual and UX Tests', () => {
       ];
 
       const { container } = render(
-        React.createElement(EnhancedRedlineOutput, {
+        React.createElement(RedlineOutput, {
           changes: changes,
-          onCopy: () => {}
+          onCopy: () => {},
+          useEnhancedStrategy: true
         })
       );
 
@@ -218,9 +220,10 @@ describe('Visual and UX Tests', () => {
       ];
 
       const { container } = render(
-        React.createElement(EnhancedRedlineOutput, {
+        React.createElement(RedlineOutput, {
           changes: changes,
-          onCopy: () => {}
+          onCopy: () => {},
+          useEnhancedStrategy: true
         })
       );
 
@@ -236,9 +239,10 @@ describe('Visual and UX Tests', () => {
       const changes = createMockDiff('few');
       
       const { container } = render(
-        React.createElement(EnhancedRedlineOutput, {
+        React.createElement(RedlineOutput, {
           changes: changes,
-          onCopy: () => {}
+          onCopy: () => {},
+          useEnhancedStrategy: true
         })
       );
 
@@ -267,9 +271,10 @@ describe('Visual and UX Tests', () => {
       ];
 
       const { container } = render(
-        React.createElement(EnhancedRedlineOutput, {
+        React.createElement(RedlineOutput, {
           changes: changes,
-          onCopy: () => {}
+          onCopy: () => {},
+          useEnhancedStrategy: true
         })
       );
 

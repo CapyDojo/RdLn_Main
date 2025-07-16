@@ -10,19 +10,7 @@ export const professionalTheme: ThemeConfig = {
   name: 'professional',
   displayName: 'Professional Blue',
   description: 'Classic professional theme with blue, white, and orange accents',
-  background: `
-    background-image: 
-      linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%, #e2e8f0 100%),
-      linear-gradient(138deg, rgba(59, 130, 246, 0.35) 0%, rgba(147, 197, 253, 0.28) 22%, transparent 48%, rgba(219, 234, 254, 0.22) 73%, rgba(239, 246, 255, 0.15) 100%),
-      radial-gradient(ellipse at 28% 18%, rgba(226, 232, 240, 0.25) 0%, transparent 52%),
-      radial-gradient(ellipse at 78% 82%, rgba(203, 213, 225, 0.20) 0%, transparent 47%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-size: 100% 100%;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0 !important;
-  `,
+  background: 'linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%, #e2e8f0 100%), linear-gradient(138deg, rgba(59, 130, 246, 0.35) 0%, rgba(147, 197, 253, 0.28) 22%, transparent 48%, rgba(219, 234, 254, 0.22) 73%, rgba(239, 246, 255, 0.15) 100%), radial-gradient(ellipse at 28% 18%, rgba(226, 232, 240, 0.25) 0%, transparent 52%), radial-gradient(ellipse at 78% 82%, rgba(203, 213, 225, 0.20) 0%, transparent 47%)',
   colors: {
     // Blue primary palette - main brand colors
     primary: {
@@ -36,6 +24,19 @@ export const professionalTheme: ThemeConfig = {
       700: '#1d4ed8',
       800: '#1e40af',
       900: '#1e3c72',
+    },
+    // Slate gray secondary palette
+    secondary: {
+      50: '#f8fafc',
+      100: '#f1f5f9',
+      200: '#e2e8f0',
+      300: '#cbd5e1',
+      400: '#94a3b8',
+      500: '#64748b',
+      600: '#475569',
+      700: '#334155',
+      800: '#1e293b',
+      900: '#0f172a',
     },
     // Unified neutral gray palette
     neutral: {
