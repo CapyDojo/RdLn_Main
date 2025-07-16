@@ -29,12 +29,54 @@ vi.mock('../PerformanceMonitor', () => ({
     })),
   },
 }));
-vi.mock('../../utils/errorHandling');
 
 // Mock Tesseract.js
 vi.mock('tesseract.js', () => ({
   createWorker: vi.fn()
 }));
+
+// Mock paragraph formatting utility
+vi.mock('../../utils/paragraphFormatting', () => ({
+  formatPastedText: vi.fn((text: string) => text) // Return text unchanged for tests
+}));
+
+// Mock error handling utilities
+vi.mock('../../utils/errorHandling', () => ({
+  safeAsync: vi.fn(async (fn) => {
+    // Execute the function directly and wrap result in success format
+    try {
+      const result = await fn();
+      return { success: true, data: result };
+    } catch (error) {
+      return { success: false, error };
+    }
+  }),
+  ErrorCategory: { OCR: 'OCR' },
+  ErrorFactory: { createError: vi.fn() },
+  ErrorManager: { addError: vi.fn() }
+}));
+
+// Mock PerformanceMonitor
+vi.mock('../PerformanceMonitor', () => {
+  const mockInstance = {
+    startTimer: vi.fn(),
+    endTimer: vi.fn(() => 100), // Return a default time
+    recordMetric: vi.fn(), // Add the missing recordMetric method
+    getMetrics: vi.fn(() => ({
+      languageDetectionMs: 10,
+      workerInitializationMs: 20,
+      ocrExtractionMs: 30,
+      textProcessingMs: 40
+    }))
+  };
+
+  return {
+    PerformanceMonitor: {
+      getInstance: vi.fn(() => mockInstance),
+      ...mockInstance
+    }
+  };
+});
 
 // Create typed mocks
 const mockTextCleanupService = vi.mocked(OCRTextCleanupService);
@@ -51,9 +93,16 @@ describe('OCROrchestrator', () => {
   beforeEach(() => {
     // Reset all mocks before each test
     vi.clearAllMocks();
+    vi.restoreAllMocks();
 
     // Setup default mock implementations
-    mockLanguageDetectionService.detectLanguage = vi.fn().mockResolvedValue(['eng']);
+    mockLanguageDetectionService.detectLanguage = vi.fn().mockImplementation((imageFile: File | Blob) => {
+      // Return different languages based on file name for testing
+      if (imageFile.name === 'multilang.png') {
+        return Promise.resolve(['eng', 'spa', 'fra']);
+      }
+      return Promise.resolve(['eng']);
+    });
 
     const mockTesseractWorker = {
       recognize: vi.fn().mockImplementation((imageFile: File | Blob) => {
@@ -65,6 +114,7 @@ describe('OCROrchestrator', () => {
       terminate: vi.fn(),
     };
 
+    // Set up a default spy that individual tests can override
     vi.spyOn(OCROrchestrator, 'initializeOptimalWorker' as any).mockResolvedValue({
         tesseractWorker: mockTesseractWorker,
         cacheHit: false,
@@ -252,10 +302,10 @@ describe('OCROrchestrator', () => {
       expect(result.totalTime).toBeGreaterThan(0);
       expect(result.extractionTime).toBeGreaterThan(0);
       expect(result.processingTime).toBe(50);
-      expect(typeof result.languageDetectionMs).toBe('number');
-      expect(typeof result.workerInitializationMs).toBe('number');
-      expect(typeof result.ocrExtractionMs).toBe('number');
-      expect(typeof result.textProcessingMs).toBe('number');
+      expect(typeof result.performanceMetrics.languageDetectionMs).toBe('number');
+      expect(typeof result.performanceMetrics.workerInitializationMs).toBe('number');
+      expect(typeof result.performanceMetrics.ocrExtractionMs).toBe('number');
+      expect(typeof result.performanceMetrics.textProcessingMs).toBe('number');
     });
 
     it('should provide cache hit information', async () => {

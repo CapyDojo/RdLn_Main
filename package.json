@@ -12,6 +12,8 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:report": "node scripts/coverage-report.js",
+    "test:coverage:open": "npm run test:coverage && open coverage/index.html",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run --config vitest.ocr.config.ts tests/integration",
     "test:performance": "vitest run --config vitest.ocr.config.ts tests/performance",

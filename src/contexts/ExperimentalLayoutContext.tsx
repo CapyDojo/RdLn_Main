@@ -187,13 +187,13 @@ export const useExperimentalCSSClasses = () => {
   
   const classes: string[] = [];
   
-  if (features.resultsSpotlight) classes.push('experimental-results-spotlight');
+  if (features.resultsSpotlight) classes.push('experimental-spotlight');
   if (features.floatingJumpButton) classes.push('experimental-floating-jump');
   if (features.resultsPeekButton) classes.push('experimental-peek-button');
   if (features.autoScrollToResults) classes.push('experimental-auto-scroll');
   if (features.mobileTabInterface) classes.push('experimental-mobile-tabs');
   if (features.stickyResultsPanel) classes.push('experimental-sticky-results');
-  if (features.resultsOverlay) classes.push('experimental-results-overlay');
+  if (features.resultsOverlay) classes.push('experimental-overlay');
   if (features.resultsFirstAnimation) classes.push('experimental-results-first');
   if (features.refinedResultsFirst) classes.push('experimental-refined-results-first');
   if (features.popoutResultsWindow) classes.push('experimental-popout-window');

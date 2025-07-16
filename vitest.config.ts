@@ -22,14 +22,46 @@ export default defineConfig({
     hookTimeout: 30000,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov'],
       exclude: [
         'node_modules/',
         'tests/',
         '**/*.d.ts',
         '**/*.config.*',
-        '**/coverage/**'
-      ]
+        '**/coverage/**',
+        '**/__mocks__/**',
+        '**/types/**'
+      ],
+      thresholds: {
+        global: {
+          branches: 70,
+          functions: 70,
+          lines: 70,
+          statements: 70
+        },
+        // Per-file thresholds for critical components
+        'src/components/ProcessingDisplay.tsx': {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90
+        },
+        'src/services/BackgroundLanguageLoader.ts': {
+          branches: 85,
+          functions: 85,
+          lines: 85,
+          statements: 85
+        }
+      },
+      reportOnFailure: true,
+      all: true,
+      include: ['src/**/*.{ts,tsx}'],
+      watermarks: {
+        statements: [70, 85],
+        functions: [70, 85],
+        branches: [70, 85],
+        lines: [70, 85]
+      }
     }
   },
   resolve: {

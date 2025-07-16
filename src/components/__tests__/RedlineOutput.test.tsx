@@ -17,19 +17,13 @@ vi.mock('../../utils/performanceUtils.tsx', () => ({
   useComponentPerformance: vi.fn(() => ({
     trackEvent: vi.fn(),
     trackRender: vi.fn(),
+    trackMetric: vi.fn(),
     getMetrics: vi.fn(() => ({}))
   })),
   usePerformanceAwareHandler: vi.fn((handler) => handler)
 }));
 
-// Mock intersection observer for chunking
-const mockIntersectionObserver = vi.fn();
-mockIntersectionObserver.mockReturnValue({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-});
-window.IntersectionObserver = mockIntersectionObserver;
+// IntersectionObserver is mocked globally in tests/setup.ts
 
 // Mock experimental components that might not exist
 vi.mock('../experimental/ResultsOverlayTrigger', () => ({
@@ -142,10 +136,14 @@ describe('RedlineOutput Component', () => {
           <RedlineOutput {...defaultProps} />
         </ExperimentalLayoutProvider>
       );
-      
-      // Check for addition styling (green background)
-      const addedElements = container.querySelectorAll('[style*="background"]');
+
+      // Check for addition styling (CSS classes for added content)
+      const addedElements = container.querySelectorAll('.bg-theme-secondary-100');
       expect(addedElements.length).toBeGreaterThan(0);
+
+      // Check for removal styling (CSS classes for removed content)
+      const removedElements = container.querySelectorAll('.bg-theme-accent-100');
+      expect(removedElements.length).toBeGreaterThan(0);
     });
 
     it('should handle empty changes array', () => {
@@ -181,16 +179,16 @@ describe('RedlineOutput Component', () => {
 
   describe('Processing State', () => {
     it('should show processing indicator when isProcessing is true', () => {
-      render(
+      const { container } = render(
         <ExperimentalLayoutProvider>
-          <RedlineOutput 
-            {...defaultProps} 
+          <RedlineOutput
+            {...defaultProps}
             isProcessing={true}
             processingStatus="Analyzing differences..."
           />
         </ExperimentalLayoutProvider>
       );
-      
+
       expect(screen.getByText('Analyzing differences...')).toBeTruthy();
       expect(container.querySelector('.animate-spin')).toBeTruthy();
     });

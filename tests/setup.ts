@@ -3,11 +3,13 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { ExperimentalLayoutProvider } from '../src/contexts/ExperimentalLayoutContext';
 
-// Mock RedlineOutput
-vi.mock('../src/components/RedlineOutput', () => ({
-  RedlineOutput: vi.fn((props) => {
-    return React.createElement('div', null, 'Mock RedlineOutput');
-  }),
+// RedlineOutput mock removed - tests should use actual component
+
+// Mock IntersectionObserver globally
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
 }));
 
 // Set environment for tests
@@ -15,6 +17,31 @@ process.env.NODE_ENV = 'development';
 
 // Mock appConfig globally for tests
 vi.mock('../src/config/appConfig', () => ({
+  UI_CONFIG: {
+    RENDERING: {
+      CHUNK_SIZE: 1000,
+      ESTIMATED_CHUNK_HEIGHT: 5000,
+      INTERSECTION_MARGIN: '200px',
+      SEMANTIC_CHUNKING: {
+        ENABLED: true,
+        MAX_CONSECUTIVE_SAME_TYPE: 50,
+        PRESERVE_WORD_BOUNDARIES: true,
+        PRESERVE_NUMBER_PARENTHESES: true,
+      },
+    },
+    ANIMATION: {
+      COPY_SUCCESS_DURATION: 2000,
+    },
+  },
+  FEATURE_FLAGS: {
+    ENABLE_CHUNKED_RENDERING: true,
+    ENABLE_SEMANTIC_CHUNKING: true,
+  },
+  DEV_CONFIG: {
+    DEBUGGING: {
+      SEMANTIC_CHUNKING_DEBUG: false,
+    },
+  },
   appConfig: {
     env: {
       IS_DEVELOPMENT: true,

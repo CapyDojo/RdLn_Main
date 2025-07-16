@@ -25,10 +25,7 @@ const TestComponent: React.FC<{ onFeaturesChange?: (features: any) => void }> = 
     onFeaturesChange?.(features);
   }, [features, onFeaturesChange]);
 
-  // Reset all features on mount to ensure clean state
-  React.useEffect(() => {
-    resetAllFeatures();
-  }, [resetAllFeatures]);
+  // Note: Not auto-resetting to allow tests to control state
 
   return (
     <div data-testid="test-component">
@@ -74,9 +71,29 @@ const TestComponent: React.FC<{ onFeaturesChange?: (features: any) => void }> = 
   );
 };
 
+// Helper function to reset features before each test
+const resetFeatures = () => {
+  const resetButton = screen.queryByTestId('reset-all');
+  if (resetButton) {
+    fireEvent.click(resetButton);
+  }
+};
+
 describe('ExperimentalLayoutContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock localStorage to prevent persistence between tests
+    const localStorageMock = {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    };
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      writable: true,
+    });
   });
 
   describe('Provider Setup', () => {
@@ -125,10 +142,13 @@ describe('ExperimentalLayoutContext', () => {
           <TestComponent />
         </ExperimentalLayoutProvider>
       );
-      
+
+      // Reset features to ensure clean state
+      resetFeatures();
+
       const toggleButton = screen.getByTestId('toggle-spotlight');
       const featuresElement = screen.getByTestId('features');
-      
+
       // Initially false
       let features = JSON.parse(featuresElement.textContent || '{}');
       expect(features.resultsSpotlight).toBe(false);
