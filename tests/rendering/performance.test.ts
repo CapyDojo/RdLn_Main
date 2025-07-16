@@ -42,15 +42,15 @@ describe('Rendering Performance Tests', () => {
 
         const renderTime = await measureRenderTime(async () => {
           render(
-            <ExperimentalLayoutProvider>
+            React.createElement(ExperimentalLayoutProvider, { children:
               React.createElement(RedlineOutput, {
-            changes: mockChanges,
-            originalText: mockDoc1,
-            revisedText: mockDoc2,
-            onCopy: () => {},
-            useEnhancedStrategy: true
-          })
-            </ExperimentalLayoutProvider>
+                changes: mockChanges,
+                originalText: mockDoc1,
+                revisedText: mockDoc2,
+                onCopy: () => {},
+                useEnhancedStrategy: true
+              })
+            })
           );
         });
 

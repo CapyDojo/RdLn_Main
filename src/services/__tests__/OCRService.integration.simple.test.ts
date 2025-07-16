@@ -6,15 +6,15 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { OCRService } from '../../services/OCRService';
+import { OCRService } from '../OCRService';
 import { OCRLanguage } from '../../types/ocr-types';
 
 // Import the orchestrator module for mocking
-import { OCROrchestrator } from '../../services/OCROrchestrator';
+import { OCROrchestrator } from '../OCROrchestrator';
 
 // Mock the orchestrator and external dependencies
-vi.mock('../../services/OCROrchestrator');
-vi.mock('../../services/BackgroundLanguageLoader');
+vi.mock('../OCROrchestrator');
+vi.mock('../BackgroundLanguageLoader');
 vi.mock('tesseract.js', () => ({
   createWorker: vi.fn(() => Promise.resolve({
     recognize: vi.fn(() => Promise.resolve({

@@ -3,10 +3,10 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { ExperimentalLayoutProvider } from '../src/contexts/ExperimentalLayoutContext';
 
-// Mock EnhancedRedlineOutput
-vi.mock('../src/components/EnhancedRedlineOutput', () => ({
-  EnhancedRedlineOutput: vi.fn((props) => {
-    return React.createElement('div', null, 'Mock EnhancedRedlineOutput');
+// Mock RedlineOutput
+vi.mock('../src/components/RedlineOutput', () => ({
+  RedlineOutput: vi.fn((props) => {
+    return React.createElement('div', null, 'Mock RedlineOutput');
   }),
 }));
 
@@ -14,7 +14,7 @@ vi.mock('../src/components/EnhancedRedlineOutput', () => ({
 process.env.NODE_ENV = 'development';
 
 // Mock appConfig globally for tests
-vi.mock('../config/appConfig', () => ({
+vi.mock('../src/config/appConfig', () => ({
   appConfig: {
     env: {
       IS_DEVELOPMENT: true,

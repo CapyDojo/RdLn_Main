@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { OCRService } from '@/utils/OCRService';
+import { OCRService } from '@/services/OCRService';
 import { 
   TEST_DOCUMENTS, 
   getTestDocumentsByDifficulty,

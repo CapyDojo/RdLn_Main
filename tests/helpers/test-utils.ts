@@ -1,4 +1,4 @@
-import { LanguageOption } from '@/types/ocr-types';
+import { OCRLanguage } from '@/types/ocr-types';
 
 /**
  * Test utilities for OCR testing
@@ -32,7 +32,7 @@ export const EXPECTED_TEXT = {
 };
 
 // Expected language detection results
-export const EXPECTED_LANGUAGES: Record<string, LanguageOption[]> = {
+export const EXPECTED_LANGUAGES: Record<string, OCRLanguage[]> = {
   ENGLISH_SIMPLE: ['eng'],
   CHINESE_SIMPLE: ['chi_sim'],
   MULTILINGUAL: ['eng', 'chi_sim'],
@@ -155,8 +155,8 @@ export function calculateWordAccuracy(expected: string, actual: string): number 
  * Validate language detection results
  */
 export function validateLanguageDetection(
-  detected: LanguageOption[], 
-  expected: LanguageOption[]
+  detected: OCRLanguage[],
+  expected: OCRLanguage[]
 ): { precision: number; recall: number; f1: number } {
   const detectedSet = new Set(detected);
   const expectedSet = new Set(expected);

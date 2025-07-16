@@ -6,15 +6,15 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { OCRService } from '../../services/OCRService';
+import { OCRService } from '../OCRService';
 import { OCRLanguage } from '../../types/ocr-types';
 
 // Import the orchestrator module for mocking
-import { OCROrchestrator } from '../../services/OCROrchestrator';
+import { OCROrchestrator } from '../OCROrchestrator';
 
 // Mock the orchestrator and external dependencies
-vi.mock('../../services/OCROrchestrator');
-vi.mock('../../services/BackgroundLanguageLoader');
+vi.mock('../OCROrchestrator');
+vi.mock('../BackgroundLanguageLoader');
 vi.mock('tesseract.js', () => ({
   createWorker: vi.fn(() => Promise.resolve({
     recognize: vi.fn(() => Promise.resolve({
@@ -304,17 +304,17 @@ describe('OCRService Integration with Orchestrator', () => {
   describe('Error Handling', () => {
     it('should handle orchestrator import failures gracefully', async () => {
       // This tests the case where the orchestrator module fails to import
-      vi.doMock('../../services/OCROrchestrator', () => {
+      vi.doMock('../OCROrchestrator', () => {
         throw new Error('Module import failed');
       });
-      
+
       const mockImage = new File(['test'], 'test.png', { type: 'image/png' });
-      
+
       // Should fall back to legacy implementation
-      const result = await OCRService.extractTextFromImage(mockImage, { 
-        useOrchestrator: true 
+      const result = await OCRService.extractTextFromImage(mockImage, {
+        useOrchestrator: true
       });
-      
+
       expect(typeof result).toBe('string');
     });
   });
