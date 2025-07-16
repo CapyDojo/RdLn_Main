@@ -43,13 +43,13 @@ describe('Rendering Performance Tests', () => {
         const renderTime = await measureRenderTime(async () => {
           render(
             <ExperimentalLayoutProvider>
-              <RedlineOutput
-                changes={mockChanges}
-                originalText={mockDoc1}
-                revisedText={mockDoc2}
-                onCopy={() => {}}
-                useEnhancedStrategy={true}
-              />
+              React.createElement(RedlineOutput, {
+            changes: mockChanges,
+            originalText: mockDoc1,
+            revisedText: mockDoc2,
+            onCopy: () => {},
+            useEnhancedStrategy: true
+          })
             </ExperimentalLayoutProvider>
           );
         });
@@ -66,15 +66,14 @@ describe('Rendering Performance Tests', () => {
       
       const renderTime = await measureRenderTime(async () => {
         render(
-          <ExperimentalLayoutProvider>
-            <RedlineOutput
-              changes={largeChanges}
-              onCopy={() => {}}
-              useEnhancedStrategy={true}
-            />
-          </ExperimentalLayoutProvider>
+          React.createElement(ExperimentalLayoutProvider, { children: 
+            React.createElement(RedlineOutput, {
+              changes: largeChanges,
+              onCopy: () => {},
+              useEnhancedStrategy: true
+            })
+          })
         );
-      });
       });
 
       // Virtual scrolling should render initial viewport quickly
@@ -113,13 +112,13 @@ describe('Rendering Performance Tests', () => {
       const initialMemory = performance.memory?.usedJSHeapSize || 0;
       
       render(
-        <ExperimentalLayoutProvider>
-          <RedlineOutput
-            changes={xlargeDiff}
-            onCopy={() => {}}
-            useEnhancedStrategy={true}
-          />
-        </ExperimentalLayoutProvider>
+        React.createElement(ExperimentalLayoutProvider, { children: 
+          React.createElement(RedlineOutput, {
+            changes: xlargeDiff,
+            onCopy: () => {},
+            useEnhancedStrategy: true
+          })
+        })
       );
 
       // Allow some time for rendering
@@ -138,13 +137,13 @@ describe('Rendering Performance Tests', () => {
       const changes = createMockDiff('many');
       
       const { container } = render(
-        <ExperimentalLayoutProvider>
-          <RedlineOutput
-            changes={changes}
-            onCopy={() => {}}
-            useEnhancedStrategy={true}
-          />
-        </ExperimentalLayoutProvider>
+        React.createElement(ExperimentalLayoutProvider, { children: 
+          React.createElement(RedlineOutput, {
+            changes: changes,
+            onCopy: () => {},
+            useEnhancedStrategy: true
+          })
+        })
       );
 
       const scrollContainer = container.querySelector('.scroll-container');
@@ -171,16 +170,16 @@ describe('Rendering Performance Tests', () => {
       const largeChanges = createMockDiff('many');
       
       render(
-        <ExperimentalLayoutProvider>
-          <RedlineOutput
-            changes={largeChanges}
-            originalText={createMockDocument('large')}
-            revisedText={createMockDocument('large')}
-            onCopy={() => {}}
-            useEnhancedStrategy={true}
-            showProgressIndicator={true}
-          />
-        </ExperimentalLayoutProvider>
+        React.createElement(ExperimentalLayoutProvider, { children: 
+          React.createElement(RedlineOutput, {
+            changes: largeChanges,
+            originalText: createMockDocument('large'),
+            revisedText: createMockDocument('large'),
+            onCopy: () => {},
+            useEnhancedStrategy: true,
+            showProgressIndicator: true
+          })
+        })
       );
 
       // Should show progress indicator
@@ -192,15 +191,15 @@ describe('Rendering Performance Tests', () => {
       const changes = createMockDiff('moderate');
       
       const { container } = render(
-        <ExperimentalLayoutProvider>
-          <RedlineOutput
-            changes={changes}
-            originalText={createMockDocument('medium')}
-            revisedText={createMockDocument('medium')}
-            onCopy={() => {}}
-            useEnhancedStrategy={true}
-          />
-        </ExperimentalLayoutProvider>
+        React.createElement(ExperimentalLayoutProvider, { children: 
+          React.createElement(RedlineOutput, {
+            changes: changes,
+            originalText: createMockDocument('medium'),
+            revisedText: createMockDocument('medium'),
+            onCopy: () => {},
+            useEnhancedStrategy: true
+          })
+        })
       );
 
       // Should start with some content rendered

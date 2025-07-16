@@ -87,8 +87,8 @@ describe('Visual and UX Tests', () => {
       const largeChanges = createMockDiff('many');
       
       const { container } = render(
-        React.createElement(EnhancedRedlineOutput, {
-          changes: largeChanges,
+        React.createElement(RedlineOutput, {
+          changes: changes,
           onCopy: () => {},
           useEnhancedStrategy: true
         })

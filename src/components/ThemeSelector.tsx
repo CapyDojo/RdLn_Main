@@ -14,7 +14,7 @@ interface DragState {
 // Helper function to get theme-specific styling for buttons
 const getThemeButtonStyle = (theme: ThemeConfig, isSelected: boolean) => {
   const baseStyle = {
-    backdropFilter: 'blur(8px)',
+    background: 'white',
     borderWidth: isSelected ? '2px' : '1px',
     transition: 'all 0.2s ease'
   };
@@ -203,11 +203,15 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
     >
       {/* Main Themes Button - Rounded Square */}
       <button
-        className="flex items-center justify-center bg-theme-primary-100 hover:bg-theme-primary-200 rounded-lg transition-all duration-200 text-theme-primary-800 shadow-md shrink-0 relative group"
+        className="flex items-center justify-center bg-theme-primary-100/50 hover:bg-theme-primary-200/50 rounded-lg transition-all duration-200 text-theme-primary-800 shadow-theme border border-theme-primary-300/50 shrink-0 relative group"
         title="Hover to see themes"
         aria-label="Theme selector - hover to view available themes"
         onMouseEnter={() => setIsHovered(true)}
-        style={{ width: '48px', height: '48px', aspectRatio: '1/1' }}
+        style={{ 
+          width: '48px', 
+          height: '48px', 
+          aspectRatio: '1/1'
+        }}
       >
         <div className="flex flex-col items-center justify-center">
           <Palette className="w-6 h-6" aria-hidden="true" />

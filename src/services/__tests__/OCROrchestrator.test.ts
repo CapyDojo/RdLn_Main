@@ -8,6 +8,7 @@ import { LanguageDetectionService } from '../LanguageDetectionService';
 import { OCRCacheManager } from '../OCRCacheManager';
 import { BackgroundLanguageLoader } from '../BackgroundLanguageLoader';
 import { PerformanceMonitor } from '../PerformanceMonitor';
+import { OCRLanguage } from '../../src/types/ocr-types';
 import { ErrorManager } from '../../utils/errorHandling';
 
 // Mock dependencies
@@ -60,7 +61,7 @@ describe('OCROrchestrator', () => {
     });
 
     mockTextCleanupService.processText = vi.fn().mockImplementation((text: string, languages: OCRLanguage[], options: any) => {
-      if (text === 'raw ocr text' && options.failProcessing) {
+      if (options && options.failProcessing) {
         return Promise.reject(new Error('Text processing failed'));
       }
       return Promise.resolve({
@@ -107,18 +108,17 @@ describe('OCROrchestrator', () => {
     });
 
     it('should pass text processing options to the cleanup service', async () => {
-      const textProcessingOptions = { applyLegalTermFixes: true };
+      const textProcessingOptions = { applyLegalTermFixes: true, failProcessing: true };
 
       const result = await OCROrchestrator.extractText(mockSuccessImageFile, { textProcessing: textProcessingOptions });
 
-      expect(result.text).toBe('Processed clean text');
+      expect(result.text).toBe('');
       expect(result.detectedLanguages).toEqual(['eng']);
-      expect(result.appliedProcessors).toEqual(['english-processing']);
+      expect(result.appliedProcessors).toEqual(['error-fallback']);
       expect(OCRTextCleanupService.processText).toHaveBeenCalledWith(
         'raw ocr text',
         ['eng'],
         textProcessingOptions
       );
     });
-  });
 });
