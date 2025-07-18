@@ -1,4 +1,3 @@
-
 import { ThemeConfig } from '../../types/theme';
 import { GLASSMORPHISM_EFFECTS } from '../utils/effects';
 
@@ -104,4 +103,3 @@ export const kyotoTheme: ThemeConfig = {
   },
   effects: GLASSMORPHISM_EFFECTS.premium,
 };
-

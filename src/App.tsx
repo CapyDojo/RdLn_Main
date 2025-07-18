@@ -178,6 +178,13 @@ function App() {
       <LayoutProvider>
         <ExperimentalLayoutProvider>
           <div className="App">
+            {/* Global style override to fix background stitching issue */}
+            <style>{`
+              body {
+                background-attachment: fixed !important;
+              }
+            `}</style>
+
             {/* Conditional rendering for test pages */}
             {window.location.pathname === '/logo-test' ? (
               <LogoTestPage />
