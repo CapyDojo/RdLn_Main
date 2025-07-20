@@ -1,3 +1,59 @@
+## 2025-01-20: Word-Level Trimming Breakthrough - Solving Semantic Chunking with Elegant Architecture
+
+**Problem**: Critical semantic chunking issue where meaningful units like `15,000,000 -> 20,000,000` were being fragmented into `15` -> `20` + unchanged `,000,000`. The character-level prefix/suffix trimming optimization was too aggressive, breaking apart carefully tokenized semantic units.
+
+**Root Cause Analysis**:
+- **Character-Level Trimming**: Algorithm found `,000,000 shares of Parent Common Stock.` as common suffix
+- **Boundary Detection Failure**: Complex character-level boundary logic couldn't handle number components properly
+- **Tokenization Disconnect**: Robust tokenization created `15,000,000` as single token, but trimming split it apart
+- **Performance vs Accuracy**: Optimization was defeating the purpose of semantic tokenization
+
+**The Elegant Solution - Word-Level Trimming**:
+
+### **1. Architectural Insight**
+- **Problem**: Character-level granularity was wrong level of abstraction
+- **Solution**: Move trimming to word/token level to respect semantic boundaries
+- **Key Realization**: We already had perfect tokenization - just needed to use it consistently
+
+### **2. Implementation Strategy**
+```typescript
+// OLD: Character-by-character comparison with complex boundary detection
+while (prefixLength < minLength && originalText[prefixLength] === revisedText[prefixLength]) {
+  // Complex boundary backtracking logic...
+}
+
+// NEW: Token-by-token comparison respecting semantic units
+const originalTokens = this.tokenize(originalText);
+const revisedTokens = this.tokenize(revisedText);
+while (prefixTokenCount < minTokens && originalTokens[prefixTokenCount] === revisedTokens[prefixTokenCount]) {
+  prefixTokenCount++;
+}
+```
+
+### **3. SSMR Methodology Success**
+- **Safe**: Leveraged existing, proven tokenization logic with zero breaking changes
+- **Step-by-step**: Implemented new method, tested thoroughly, then cleaned up obsolete code
+- **Modular**: Clean separation between word-level trimming and other algorithm components  
+- **Reversible**: Easy rollback with clear architectural boundaries
+
+**Technical Achievements**:
+- **Code Simplification**: Removed ~200 lines of complex character-level boundary detection
+- **Performance Maintained**: Still provides optimization benefits for large documents
+- **Semantic Preservation**: Numbers, dates, currencies, and other meaningful units stay intact
+- **Universal Fix**: Solves the problem for all semantic units, not just numbers
+
+**Test Results - All Cases Now Pass**:
+- ✅ `15,000,000 -> 20,000,000` = single clean substitution
+- ✅ `$12.50 -> $15.00` = perfect currency handling
+- ✅ `$500,000,000 -> $750,000,000` = large currency formatting preserved
+- ✅ `0.75 -> 0.85` = decimal substitutions work correctly
+
+**Key Insight**: The best optimizations respect the abstractions you've already built. Instead of fighting against tokenization with complex character-level logic, we embraced it with word-level trimming. Sometimes the most elegant solution is to operate at the right level of abstraction.
+
+**Legal Mind → Technical Translation**: *"This felt exactly like contract drafting - when you're fighting against your own defined terms, step back and work at the right level of abstraction. The breakthrough came from respecting the semantic boundaries we'd already established, not trying to optimize around them."*
+
+---
+
 ## 2025-07-14: Legal Document Formatting - Mastering Header/Body Separation
 
 **Problem**: Legal documents have fundamentally different formatting needs in headers (addresses, contact info) versus body text (clauses, paragraphs). Our initial one-size-fits-all approach caused:

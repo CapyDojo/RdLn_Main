@@ -1,3 +1,64 @@
+## Version 0.4.6 - "Semantic Chunking Excellence"
+*Released: January 20, 2025*
+
+### 🎯 Major Algorithm Enhancement
+
+#### **Word-Level Trimming Implementation**
+- **BREAKTHROUGH**: Completely reimplemented prefix/suffix trimming to operate at word-level instead of character-level
+- **Problem Solved**: Fixed critical semantic chunking issue where numbers like `15,000,000 -> 20,000,000` were being split into fragments (`15` -> `20` + unchanged `,000,000`)
+- **Root Cause**: Character-level trimming was too aggressive, breaking apart carefully tokenized semantic units (numbers, dates, currencies)
+- **Elegant Solution**: Leveraged existing robust tokenization logic to respect semantic boundaries while maintaining performance optimization benefits
+
+#### **Enhanced Substitution Detection**
+- **Pure Numerical Substitutions**: Added specialized detection for number-to-number changes with enhanced regex patterns
+- **Structured Data Recognition**: Improved detection of financial amounts, large numbers with commas, and decimal values
+- **Intelligent Boundary Respect**: Word-level trimming preserves integrity of tokenized units like `$500,000,000`, `15,000,000`, and `0.75`
+
+#### **Simplified Architecture**
+- **Code Reduction**: Removed complex character-level boundary detection logic (~200 lines)
+- **Cleaner Implementation**: Word-level approach is more predictable and maintainable
+- **Performance Maintained**: Still provides significant optimization for large documents with common sections
+
+### ✅ Comprehensive Testing Success
+
+#### **All Target Cases Now Pass**
+- ✅ `15,000,000 -> 20,000,000` displays as single clean substitution
+- ✅ `$12.50 -> $15.00` maintains perfect currency handling  
+- ✅ `$500,000,000 -> $750,000,000` preserves large currency formatting
+- ✅ `0.75 -> 0.85` correctly handles decimal substitutions
+
+#### **SSMR Methodology Applied**
+- **Safe**: Used existing, proven tokenization logic with zero breaking changes
+- **Step-by-step**: Incremental implementation and testing at each phase
+- **Modular**: Clean separation between word-level trimming and other components
+- **Reversible**: Easy rollback capability with clear architectural boundaries
+
+### 🔧 Technical Excellence
+
+#### **Algorithm Improvements**
+- **Word-Level Tokenization**: Reuses robust `tokenize()` method that handles numbers, dates, abbreviations, and contractions
+- **Semantic Preservation**: Maintains integrity of meaningful units while optimizing performance
+- **Simplified Logic**: Replaced complex character boundary detection with straightforward token comparison
+
+#### **Code Quality Enhancements**
+- **Removed Obsolete Methods**: Cleaned up unused helper functions (`shouldIncludeInChangeGroup`, `isNumberComponent`, etc.)
+- **Enhanced Documentation**: Clear inline comments explaining word-level approach
+- **Test Coverage**: Comprehensive test suite validates all number formatting scenarios
+
+### 🚀 User Experience Impact
+
+#### **Professional Document Handling**
+- **Legal Documents**: Numbers in contracts, financial amounts, and dates now display correctly
+- **Financial Reports**: Currency values and percentages maintain proper formatting
+- **Technical Documents**: Version numbers, measurements, and specifications preserve semantic meaning
+
+#### **Visual Consistency**
+- **Clean Substitutions**: No more fragmented number changes in redline output
+- **Professional Appearance**: Maintains document integrity and readability
+- **Reduced Noise**: Fewer confusing partial changes in comparison results
+
+---
+
 ## Version 0.4.5 - "SmartPaste Improved"
 *Released: July 14, 2025*
 
