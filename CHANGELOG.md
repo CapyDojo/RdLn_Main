@@ -1,5 +1,5 @@
 ## Version 0.4.6 - "Semantic Chunking Excellence"
-*Released: January 20, 2025*
+*Released: July 20, 2025*
 
 ### 🎯 Major Algorithm Enhancement
 
