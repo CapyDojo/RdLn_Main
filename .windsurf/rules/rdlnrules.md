@@ -156,20 +156,21 @@ This rule should be applied when:
 
 ## Rule #4
 
-ignore any files with .ignore suffix, except don't ignore for purposes of syncing to git,
+ignore any files with .ignore suffix, except don't ignore for purposes of syncing to github (i.e. still sync them)
 
 ## Rule #5: File / Git Naming Protocol
 
-When creating files, git branches, tags etc, follow the naming protocol below:
+When creating files, git commits, branches, tags etc, follow the naming protocol below:
 
-1. **Format**: `YYYYMMDD_[A-Z]_DescriptiveName`
-  - `A` = First file/branch/tag etc of day
-  - `B` = Second file/branch/tag etc
-  - Continue alphabetically as needed
-2. **Annotation**: Always use annotated tags (`-a`) with `-m` describing changes
+1. **Format**: `YYYYMMDD_File/ActionType_[A-Z]_DescriptiveName`
+    - `A` = First file/commit/branch/tag etc of day of that type
+    - `B` = Second file/commit/branch/tag etc of day of that type
+    - Continue alphabetically as needed
+2. **Annotation**: Always use annotated tags (`a`) with `m` describing changes
 3. **Examples**:
-  - `20250715_A_ocr_engine_update`
-  - `20250715_B_desktop_mobile_view_switch_fix`
+    - `20250715_REPORT_A_OcrEngine.tsx_refactor.md`
+    - `20250715_TAG_F_Desktop_mobile_view_switch_fix`
+    - `20250715_COMMIT_B_Fixed_database_integration`
 
 ## Rule #6: "INP"
 
