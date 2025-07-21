@@ -52,39 +52,45 @@
   box-shadow: 0 8px 32px 0 rgba(30, 64, 175, var(--glass-panel));
   backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
-  color: #1e293b !important; /* Deep charcoal - enhanced with backdrop */
+  color: #1e293b !important;
+  /* Deep charcoal - enhanced with backdrop */
 }
 
 /* Professional theme text hierarchy */
 [data-theme="professional"] .text-body,
 [data-theme="professional"] .libertinus-math-text {
-  color: #1e293b !important; /* Deep charcoal - 9.2:1 contrast */
+  color: #1e293b !important;
+  /* Deep charcoal - 9.2:1 contrast */
 }
 
 [data-theme="professional"] h1,
 [data-theme="professional"] h2,
 [data-theme="professional"] h3,
 [data-theme="professional"] .text-header {
-  color: #0f172a !important; /* Navy blue - 11.5:1 contrast */
+  color: #0f172a !important;
+  /* Navy blue - 11.5:1 contrast */
   font-weight: 600;
 }
 
 [data-theme="professional"] .text-secondary,
 [data-theme="professional"] .text-theme-neutral-600,
 [data-theme="professional"] .text-theme-neutral-500 {
-  color: #475569 !important; /* Medium gray - 6.8:1 contrast */
+  color: #475569 !important;
+  /* Medium gray - 6.8:1 contrast */
 }
 
 [data-theme="professional"] .text-interactive,
 [data-theme="professional"] .text-theme-accent-500,
 [data-theme="professional"] button:not(.glass-panel),
 [data-theme="professional"] a {
-  color: #ea580c !important; /* Orange accent - 4.9:1 contrast */
+  color: #ea580c !important;
+  /* Orange accent - 4.9:1 contrast */
 }
 
 [data-theme="professional"] .text-success,
 [data-theme="professional"] .text-active {
-  color: #1d4ed8 !important; /* Dark blue - 5.2:1 contrast */
+  color: #1d4ed8 !important;
+  /* Dark blue - 5.2:1 contrast */
 }
 
 [data-theme="professional"] .glass-panel:not(.hover-from-handle):not(.hover-from-handle-primary):hover {
@@ -122,39 +128,45 @@
   box-shadow: 0 8px 32px 0 rgba(232, 196, 31, var(--glass-focus));
   backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.4);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.4);
-  color: #471e01 !important; /* Extremely dark ochre - enhanced with backdrop */
+  color: #471e01 !important;
+  /* Extremely dark ochre - enhanced with backdrop */
 }
 
 /* Bamboo theme text hierarchy */
 [data-theme="bamboo"] .text-body,
 [data-theme="bamboo"] .libertinus-math-text {
-  color: #471e01 !important; /* Extremely dark ochre - enhanced readability */
+  color: #471e01 !important;
+  /* Extremely dark ochre - enhanced readability */
 }
 
 [data-theme="bamboo"] h1,
 [data-theme="bamboo"] h2,
 [data-theme="bamboo"] h3,
 [data-theme="bamboo"] .text-header {
-  color: #471e01 !important; /* Extremely dark ochre - enhanced readability */
+  color: #471e01 !important;
+  /* Extremely dark ochre - enhanced readability */
   font-weight: 600;
 }
 
 [data-theme="bamboo"] .text-secondary,
 [data-theme="bamboo"] .text-theme-neutral-600,
 [data-theme="bamboo"] .text-theme-neutral-500 {
-  color: #44403c !important; /* Brown-gray - 5.8:1 contrast */
+  color: #44403c !important;
+  /* Brown-gray - 5.8:1 contrast */
 }
 
 [data-theme="bamboo"] .text-interactive,
 [data-theme="bamboo"] .text-theme-accent-500,
 [data-theme="bamboo"] button:not(.glass-panel),
 [data-theme="bamboo"] a {
-  color: #471e01 !important; /* Extremely dark ochre - enhanced readability */
+  color: #471e01 !important;
+  /* Extremely dark ochre - enhanced readability */
 }
 
 [data-theme="bamboo"] .text-success,
 [data-theme="bamboo"] .text-active {
-  color: #256325 !important; /* Rich green - 6.0:1 contrast */
+  color: #256325 !important;
+  /* Rich green - 6.0:1 contrast */
 }
 
 [data-theme="bamboo"] .glass-panel:not(.hover-from-handle):not(.hover-from-handle-primary):hover {
@@ -172,39 +184,45 @@
   backdrop-filter: blur(8px) saturate(1.6);
   -webkit-backdrop-filter: blur(8px) saturate(1.6);
   border-radius: 12px;
-  color: #f5f5f5 !important; /* Off-white - enhanced with backdrop */
+  color: #f5f5f5 !important;
+  /* Off-white - enhanced with backdrop */
 }
 
 /* Apple Dark theme text hierarchy */
 [data-theme="apple-dark"] .text-body,
 [data-theme="apple-dark"] .libertinus-math-text {
-  color: #f5f5f5 !important; /* Off-white - 17.8:1 contrast */
+  color: #f5f5f5 !important;
+  /* Off-white - 17.8:1 contrast */
 }
 
 [data-theme="apple-dark"] h1,
 [data-theme="apple-dark"] h2,
 [data-theme="apple-dark"] h3,
 [data-theme="apple-dark"] .text-header {
-  color: #ffffff !important; /* Pure white - 21:1 contrast */
+  color: #ffffff !important;
+  /* Pure white - 21:1 contrast */
   font-weight: 600;
 }
 
 [data-theme="apple-dark"] .text-secondary,
 [data-theme="apple-dark"] .text-theme-neutral-600,
 [data-theme="apple-dark"] .text-theme-neutral-500 {
-  color: #d4d4d4 !important; /* Light gray - 11.2:1 contrast */
+  color: #d4d4d4 !important;
+  /* Light gray - 11.2:1 contrast */
 }
 
 [data-theme="apple-dark"] .text-interactive,
 [data-theme="apple-dark"] .text-theme-accent-500,
 [data-theme="apple-dark"] button:not(.glass-panel),
 [data-theme="apple-dark"] a {
-  color: #a78bfa !important; /* Bright purple - 8.1:1 contrast */
+  color: #a78bfa !important;
+  /* Bright purple - 8.1:1 contrast */
 }
 
 [data-theme="apple-dark"] .text-success,
 [data-theme="apple-dark"] .text-active {
-  color: #80deea !important; /* Electric blue - 9.5:1 contrast */
+  color: #80deea !important;
+  /* Electric blue - 9.5:1 contrast */
 }
 
 [data-theme="apple-dark"] .glass-panel:hover {
@@ -215,9 +233,9 @@
 
 /* Kyoto Dusk theme glassmorphism - Unified opacity system */
 [data-theme="kyoto"] .glass-panel {
-  background: rgba(28, 25, 23, var(--glass-panel)) !important;
+  background: rgba(28, 25, 23, var(--glass-panel));
   border: 1px solid rgba(120, 113, 108, var(--glass-focus));
-  box-shadow: 0 8px 32px 0 rgba(220, 8, 8, var(--glass-strong)) !important;
+  box-shadow: 0 8px 32px 0 rgba(220, 8, 8, var(--glass-strong));
   backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.6);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.6);
   /* Removed color override - let text hierarchy handle colors */
@@ -231,33 +249,38 @@
 [data-theme="kyoto"] .glass-input-field,
 [data-theme="kyoto"] .text-theme-neutral-800,
 [data-theme="kyoto"] .text-theme-neutral-700 {
-  color: #f8b4b4 !important; /* CORRECT peach color for user-generated text */
+  color: #f8b4b4 !important;
+  /* CORRECT peach color for user-generated text */
 }
 
 [data-theme="kyoto"] h1,
 [data-theme="kyoto"] h2,
 [data-theme="kyoto"] h3,
 [data-theme="kyoto"] .text-header {
-  color: #86efac !important; /* Theme button background green for panel titles */
+  color: #86efac !important;
+  /* Theme button background green for panel titles */
   font-weight: 600;
 }
 
 [data-theme="kyoto"] .text-secondary,
 [data-theme="kyoto"] .text-theme-neutral-600,
 [data-theme="kyoto"] .text-theme-neutral-500 {
-  color: #fef7e6 !important; /* Tatami wheat off-white for secondary text */
+  color: #fef7e6 !important;
+  /* Tatami wheat off-white for secondary text */
 }
 
 [data-theme="kyoto"] .text-interactive,
 [data-theme="kyoto"] .text-theme-accent-500,
 [data-theme="kyoto"] button:not(.glass-panel),
 [data-theme="kyoto"] a {
-  color: #f8b4b4 !important; /* Light maple red */
+  color: #f8b4b4 !important;
+  /* Light maple red */
 }
 
 [data-theme="kyoto"] .text-success,
 [data-theme="kyoto"] .text-active {
-  color: #bbf7d0 !important; /* Light forest green */
+  color: #bbf7d0 !important;
+  /* Light forest green */
 }
 
 [data-theme="kyoto"] .glass-panel:hover,
@@ -287,13 +310,15 @@ html[data-theme="kyoto"] div[data-input-panel="true"] .glass-panel.glass-content
   background: rgba(28, 25, 23, var(--glass-focus)) !important;
   box-shadow: 0 30px 80px 0 rgba(220, 8, 8, 0.7), 0 12px 40px 0 rgba(220, 8, 8, 0.5) !important;
   border-color: rgba(220, 8, 8, 0.6) !important;
-  transform: translateY(-1px) !important; /* Slightly less transform for handle-triggered hover */
+  transform: translateY(-1px) !important;
+  /* Slightly less transform for handle-triggered hover */
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* Kyoto theme glassmorphism opacity overrides for better text legibility */
 [data-theme="kyoto"] .glass-input-field {
-  background: rgba(28, 25, 23, 0.03) !important; /* Lower opacity = lighter background for better text contrast */
+  background: rgba(28, 25, 23, 0.03) !important;
+  /* Lower opacity = lighter background for better text contrast */
   border: 1px solid rgba(120, 113, 108, 0.15) !important;
   backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
@@ -302,7 +327,8 @@ html[data-theme="kyoto"] div[data-input-panel="true"] .glass-panel.glass-content
 }
 
 [data-theme="kyoto"] .glass-input-field:focus {
-  background: rgba(28, 25, 23, 0.05) !important; /* Still low opacity for light background */
+  background: rgba(28, 25, 23, 0.05) !important;
+  /* Still low opacity for light background */
   border-color: rgba(120, 113, 108, 0.25) !important;
   box-shadow: 0 0 0 3px rgba(220, 8, 8, 0.08), 0 4px 16px 0 rgba(220, 8, 8, 0.1) !important;
   outline: none !important;
@@ -310,11 +336,13 @@ html[data-theme="kyoto"] div[data-input-panel="true"] .glass-panel.glass-content
 
 /* Enhanced readability for content panels in Kyoto theme */
 [data-theme="kyoto"] .glass-content-panel .glass-panel-inner-content {
-  background: rgba(28, 25, 23, 0.04) !important; /* Very light background for content */
+  background: rgba(28, 25, 23, 0.04) !important;
+  /* Very light background for content */
 }
 
 [data-theme="kyoto"] .glass-panel-inner-content {
-  background: rgba(28, 25, 23, 0.02) !important; /* Minimal opacity for lightest background */
+  background: rgba(28, 25, 23, 0.02) !important;
+  /* Minimal opacity for lightest background */
 }
 
 /* Disable transforms for data input and output panels */
@@ -330,39 +358,45 @@ html[data-theme="kyoto"] div[data-input-panel="true"] .glass-panel.glass-content
   box-shadow: 0 8px 32px 0 rgba(251, 140, 0, var(--glass-panel));
   backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.4);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.4);
-  color: #fafafa !important; /* Bright white - enhanced with backdrop */
+  color: #fafafa !important;
+  /* Bright white - enhanced with backdrop */
 }
 
 /* New York theme text hierarchy */
 [data-theme="new-york"] .text-body,
 [data-theme="new-york"] .libertinus-math-text {
-  color: #fafafa !important; /* Bright white - 19.2:1 contrast */
+  color: #fafafa !important;
+  /* Bright white - 19.2:1 contrast */
 }
 
 [data-theme="new-york"] h1,
 [data-theme="new-york"] h2,
 [data-theme="new-york"] h3,
 [data-theme="new-york"] .text-header {
-  color: #ffffff !important; /* Pure white - 21:1 contrast */
+  color: #ffffff !important;
+  /* Pure white - 21:1 contrast */
   font-weight: 600;
 }
 
 [data-theme="new-york"] .text-secondary,
 [data-theme="new-york"] .text-theme-neutral-600,
 [data-theme="new-york"] .text-theme-neutral-500 {
-  color: #e0e0e0 !important; /* Light cool gray - 12.8:1 contrast */
+  color: #e0e0e0 !important;
+  /* Light cool gray - 12.8:1 contrast */
 }
 
 [data-theme="new-york"] .text-interactive,
 [data-theme="new-york"] .text-theme-accent-500,
 [data-theme="new-york"] button:not(.glass-panel),
 [data-theme="new-york"] a {
-  color: #ffb74d !important; /* Warm amber - 8.9:1 contrast */
+  color: #ffb74d !important;
+  /* Warm amber - 8.9:1 contrast */
 }
 
 [data-theme="new-york"] .text-success,
 [data-theme="new-york"] .text-active {
-  color: #4dd0e1 !important; /* Electric cyan - 10.2:1 contrast */
+  color: #4dd0e1 !important;
+  /* Electric cyan - 10.2:1 contrast */
 }
 
 [data-theme="new-york"] .glass-panel:hover {
@@ -378,29 +412,35 @@ html[data-theme="kyoto"] div[data-input-panel="true"] .glass-panel.glass-content
   box-shadow: 0 8px 32px 0 rgba(245, 158, 11, var(--glass-focus));
   backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.4);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.4);
-  color: #1c1917 !important; /* Deepest charcoal - enhanced with backdrop */
+  color: #1c1917 !important;
+  /* Deepest charcoal - enhanced with backdrop */
 }
 
 /* Autumn theme text hierarchy - Autumn garden inspired */
 [data-theme="autumn"] .text-body,
 [data-theme="autumn"] .libertinus-math-text {
-  color: #1c1917 !important; /* Deepest charcoal - 12.5:1 contrast */
-  text-shadow: 0 1px 2px rgba(250, 250, 249, 0.5); /* Subtle white shadow for readability */
+  color: #1c1917 !important;
+  /* Deepest charcoal - 12.5:1 contrast */
+  text-shadow: 0 1px 2px rgba(250, 250, 249, 0.5);
+  /* Subtle white shadow for readability */
 }
 
 [data-theme="autumn"] h1,
 [data-theme="autumn"] h2,
 [data-theme="autumn"] h3,
 [data-theme="autumn"] .text-header {
-  color: #14532d !important; /* Deepest forest green - 15.8:1 contrast */
+  color: #14532d !important;
+  /* Deepest forest green - 15.8:1 contrast */
   font-weight: 600;
-  text-shadow: 0 1px 3px rgba(250, 250, 249, 0.7); /* Enhanced shadow for headers */
+  text-shadow: 0 1px 3px rgba(250, 250, 249, 0.7);
+  /* Enhanced shadow for headers */
 }
 
 [data-theme="autumn"] .text-secondary,
 [data-theme="autumn"] .text-theme-neutral-600,
 [data-theme="autumn"] .text-theme-neutral-500 {
-  color: #44403c !important; /* Dark stone - 8.2:1 contrast */
+  color: #44403c !important;
+  /* Dark stone - 8.2:1 contrast */
   text-shadow: 0 1px 2px rgba(250, 250, 249, 0.4);
 }
 
@@ -408,13 +448,15 @@ html[data-theme="kyoto"] div[data-input-panel="true"] .glass-panel.glass-content
 [data-theme="autumn"] .text-theme-accent-500,
 [data-theme="autumn"] button:not(.glass-panel),
 [data-theme="autumn"] a {
-  color: #ef4444 !important; /* Medium-bright maple red - 6.8:1 contrast */
+  color: #ef4444 !important;
+  /* Medium-bright maple red - 6.8:1 contrast */
   text-shadow: 0 1px 2px rgba(250, 250, 249, 0.6);
 }
 
 [data-theme="autumn"] .text-success,
 [data-theme="autumn"] .text-active {
-  color: #15803d !important; /* Dark forest green - 7.5:1 contrast */
+  color: #15803d !important;
+  /* Dark forest green - 7.5:1 contrast */
   text-shadow: 0 1px 2px rgba(250, 250, 249, 0.5);
 }
 
@@ -651,14 +693,16 @@ html[data-theme="kyoto"] div[data-input-panel="true"] .glass-panel.glass-content
 
 /* Kyoto theme specific title colors for panel headings */
 [data-theme="kyoto"] .text-theme-primary-900 {
-  color: #ee8f1c !important; /* Updated orange color */
+  color: #ee8f1c !important;
+  /* Updated orange color */
 }
 
 /* Kyoto theme footer text harmonization */
 [data-theme="kyoto"] .glass-panel-header-footer,
 [data-theme="kyoto"] .glass-panel-header-footer .text-theme-neutral-600,
 [data-theme="kyoto"] .glass-panel-header-footer .text-theme-neutral-500 {
-  color: #fef7e6 !important; /* Tatami wheat off-white for all footer text */
+  color: #fef7e6 !important;
+  /* Tatami wheat off-white for all footer text */
 }
 
 /* NUCLEAR OVERRIDE - Maximum specificity for Kyoto theme text */
@@ -673,7 +717,8 @@ html[data-theme="kyoto"] textarea.glass-input-field,
 html[data-theme="kyoto"] input.glass-input-field,
 html[data-theme="kyoto"] .glass-panel textarea.text-theme-neutral-800,
 html[data-theme="kyoto"] .glass-panel input.text-theme-neutral-800 {
-  color: #f8b4b4 !important; /* FORCE CORRECT peach color with maximum specificity */
+  color: #f8b4b4 !important;
+  /* FORCE CORRECT peach color with maximum specificity */
 }
 
 /* Enhanced glassmorphism utility */
@@ -818,7 +863,7 @@ html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.sha
 }
 
 /* Ensure dropdown doesn't affect parent container height */
-.relative.z-50 > .absolute {
+.relative.z-50>.absolute {
   position: absolute !important;
   top: 100% !important;
   left: auto !important;
@@ -859,37 +904,41 @@ header .flex {
   box-shadow: 0 4px 16px 0 rgba(249, 115, 22, var(--glass-subtle)), 0 1px 4px 0 rgba(14, 165, 233, var(--glass-subtle));
   backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
-  color: #1e293b !important; /* Dark text on light background */
+  color: #1e293b !important;
+  /* Dark text on light background */
 }
 
 /* Classic Light theme text hierarchy */
 [data-theme="classic-light"] .text-body,
 [data-theme="classic-light"] .libertinus-math-text {
-  color: #1e293b !important; /* Dark text - excellent contrast on light */
+  color: #1e293b !important;
+  /* Dark text - excellent contrast on light */
 }
 
 [data-theme="classic-light"] h1,
 [data-theme="classic-light"] h2,
 [data-theme="classic-light"] h3 {
-  color: #0f172a !important; /* Very dark for headings */
+  color: #0f172a !important;
+  /* Very dark for headings */
 }
 
 /* MOBILE UNIFIED LAYOUT: Create seamless input panel unit */
 @media (max-width: 1023px) {
+
   /* Top panel: rounded top corners only */
   .mobile-top-panel .glass-panel.glass-content-panel {
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
     margin-bottom: 0 !important;
   }
-  
+
   /* Bottom panel: rounded bottom corners only */
   .mobile-bottom-panel .glass-panel.glass-content-panel {
     border-top-left-radius: 0 !important;
     border-top-right-radius: 0 !important;
     margin-top: 0 !important;
   }
-  
+
   /* Handle bar: no rounded corners to integrate seamlessly */
   .lg\:hidden [data-resize-handle="input-panels"] {
     border-radius: 0 !important;
@@ -901,19 +950,22 @@ header .flex {
 [data-theme="classic-light"] .text-secondary,
 [data-theme="classic-light"] .text-theme-neutral-600,
 [data-theme="classic-light"] .text-theme-neutral-500 {
-  color: #475569 !important; /* Medium gray for secondary text */
+  color: #475569 !important;
+  /* Medium gray for secondary text */
 }
 
 [data-theme="classic-light"] .text-interactive,
 [data-theme="classic-light"] .text-theme-accent-500,
 [data-theme="classic-light"] button:not(.glass-panel),
 [data-theme="classic-light"] a {
-  color: #ea580c !important; /* Darker orange accent for better contrast */
+  color: #ea580c !important;
+  /* Darker orange accent for better contrast */
 }
 
 [data-theme="classic-light"] .text-success,
 [data-theme="classic-light"] .text-active {
-  color: #0284c7 !important; /* Darker blue for success/active states */
+  color: #0284c7 !important;
+  /* Darker blue for success/active states */
 }
 
 [data-theme="classic-light"] .glass-panel:hover {
@@ -972,35 +1024,40 @@ header .flex {
   box-shadow: 0 4px 16px 0 rgba(249, 115, 22, var(--glass-subtle)), 0 1px 4px 0 rgba(14, 165, 233, var(--glass-subtle));
   backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
-  color: #fafafa !important; /* Light text on dark background */
+  color: #fafafa !important;
+  /* Light text on dark background */
 }
 
 /* Classic Dark theme text hierarchy */
 [data-theme="classic-dark"] .text-body,
 [data-theme="classic-dark"] .libertinus-math-text,
 [data-theme="classic-dark"] .output-content {
-  color: #fafafa !important; /* Pure white for text - excellent contrast on dark */
+  color: #fafafa !important;
+  /* Pure white for text - excellent contrast on dark */
 }
 
 [data-theme="classic-dark"] h1,
 [data-theme="classic-dark"] h2,
 [data-theme="classic-dark"] h3,
 [data-theme="classic-dark"] .text-header {
-  color: #ffffff !important; /* Pure white for headers */
+  color: #ffffff !important;
+  /* Pure white for headers */
   font-weight: 600;
 }
 
 [data-theme="classic-dark"] .text-secondary,
 [data-theme="classic-dark"] .text-theme-neutral-600,
 [data-theme="classic-dark"] .text-theme-neutral-500 {
-  color: #a3a3a3 !important; /* Pure medium gray for secondary text */
+  color: #a3a3a3 !important;
+  /* Pure medium gray for secondary text */
 }
 
 [data-theme="classic-dark"] .text-interactive,
 [data-theme="classic-dark"] .text-theme-accent-500,
 [data-theme="classic-dark"] button:not(.glass-panel),
 [data-theme="classic-dark"] a {
-  color: #fb923c !important; /* Orange accent for interactive elements */
+  color: #fb923c !important;
+  /* Orange accent for interactive elements */
 }
 
 /* Ensure all output panel text is properly colored for dark mode */
@@ -1009,12 +1066,14 @@ header .flex {
 [data-theme="classic-dark"] .text-theme-neutral-700,
 [data-theme="classic-dark"] .font-serif,
 [data-theme="classic-dark"] span {
-  color: #fafafa !important; /* Pure white for all output text */
+  color: #fafafa !important;
+  /* Pure white for all output text */
 }
 
 [data-theme="classic-dark"] .text-success,
 [data-theme="classic-dark"] .text-active {
-  color: #38bdf8 !important; /* Light blue for success/active states */
+  color: #38bdf8 !important;
+  /* Light blue for success/active states */
 }
 
 [data-theme="classic-dark"] .glass-panel:hover {

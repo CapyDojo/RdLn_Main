@@ -42,7 +42,7 @@ export interface ThemeHoverAuditReport {
  */
 const REQUIRED_HOVER_PROPERTIES = [
   'glassPanelHover',
-  'glassPanelHoverBorder', 
+  'glassPanelHoverBorder',
   'glassPanelHoverShadow'
 ] as const;
 
@@ -53,7 +53,7 @@ export function auditThemeHoverImplementation(theme: ThemeConfig): ThemeHoverAud
   const semanticColors = theme.semanticColors || {};
   const missingProperties: string[] = [];
   const semanticHoverColors: ThemeHoverAuditResult['semanticHoverColors'] = {};
-  
+
   // Check for required hover properties
   REQUIRED_HOVER_PROPERTIES.forEach(prop => {
     if (semanticColors[prop]) {
@@ -62,7 +62,7 @@ export function auditThemeHoverImplementation(theme: ThemeConfig): ThemeHoverAud
       missingProperties.push(prop);
     }
   });
-  
+
   // Determine implementation status
   let hoverImplementationStatus: ThemeHoverAuditResult['hoverImplementationStatus'];
   if (missingProperties.length === 0) {
@@ -72,12 +72,12 @@ export function auditThemeHoverImplementation(theme: ThemeConfig): ThemeHoverAud
   } else {
     hoverImplementationStatus = 'missing';
   }
-  
+
   // Check if theme has any visual feedback mechanism
-  const hasVisualFeedback = hoverImplementationStatus !== 'missing' || 
-    Boolean(semanticColors.glassPanelBorder) || 
+  const hasVisualFeedback = hoverImplementationStatus !== 'missing' ||
+    Boolean(semanticColors.glassPanelBorder) ||
     Boolean(semanticColors.glassPanelShadow);
-  
+
   // Generate recommended fixes
   const recommendedFixes: string[] = [];
   if (missingProperties.includes('glassPanelHover')) {
@@ -92,10 +92,10 @@ export function auditThemeHoverImplementation(theme: ThemeConfig): ThemeHoverAud
   if (!hasVisualFeedback) {
     recommendedFixes.push('Implement basic glass panel styling for visual feedback foundation');
   }
-  
+
   // Kyoto is the reference standard as mentioned in the design document
   const isReferenceStandard = theme.name === 'kyoto';
-  
+
   return {
     themeName: theme.name,
     displayName: theme.displayName,
@@ -114,7 +114,7 @@ export function auditThemeHoverImplementation(theme: ThemeConfig): ThemeHoverAud
 export function auditAllThemes(): ThemeHoverAuditReport {
   const auditResults: ThemeHoverAuditResult[] = [];
   const themeNames = Object.keys(themeDefinitions) as ThemeName[];
-  
+
   // Audit each theme
   themeNames.forEach(themeName => {
     const theme = themeDefinitions[themeName];
@@ -123,19 +123,19 @@ export function auditAllThemes(): ThemeHoverAuditReport {
       auditResults.push(auditResult);
     }
   });
-  
+
   // Calculate statistics
   const totalThemes = auditResults.length;
   const compliantThemes = auditResults.filter(r => r.hoverImplementationStatus === 'complete').length;
   const partialThemes = auditResults.filter(r => r.hoverImplementationStatus === 'partial').length;
   const missingThemes = auditResults.filter(r => r.hoverImplementationStatus === 'missing').length;
   const overallComplianceRate = Math.round((compliantThemes / totalThemes) * 100);
-  
+
   // Identify themes needing fixes (partial or missing)
-  const themesNeedingFixes = auditResults.filter(r => 
+  const themesNeedingFixes = auditResults.filter(r =>
     r.hoverImplementationStatus === 'partial' || r.hoverImplementationStatus === 'missing'
   );
-  
+
   // Generate summary
   const summary = `Theme Hover Audit Summary:
 - ${compliantThemes}/${totalThemes} themes have complete hover implementations (${overallComplianceRate}%)
@@ -143,7 +143,7 @@ export function auditAllThemes(): ThemeHoverAuditReport {
 - ${missingThemes} themes are missing hover implementations
 - Kyoto theme serves as the reference standard
 - ${themesNeedingFixes.length} themes require fixes for consistency`;
-  
+
   return {
     auditDate: new Date().toISOString(),
     totalThemes,
@@ -170,13 +170,13 @@ export function documentKyotoReferenceStandard(): {
   keyFeatures: string[];
 } {
   const kyotoTheme = themeDefinitions.kyoto;
-  
+
   return {
     themeName: 'Kyoto Afternoon',
     workingImplementation: {
       semanticColors: {
         glassPanelHover: kyotoTheme.semanticColors?.glassPanelHover || 'Not defined',
-        glassPanelHoverBorder: kyotoTheme.semanticColors?.glassPanelHoverBorder || 'Not defined', 
+        glassPanelHoverBorder: kyotoTheme.semanticColors?.glassPanelHoverBorder || 'Not defined',
         glassPanelHoverShadow: kyotoTheme.semanticColors?.glassPanelHoverShadow || 'Not defined',
         glassPanelBg: kyotoTheme.semanticColors?.glassPanelBg || 'Not defined',
         glassPanelBorder: kyotoTheme.semanticColors?.glassPanelBorder || 'Not defined',
@@ -217,10 +217,10 @@ onMouseEnter={() => {
  */
 export function generateAuditConsoleReport(): void {
   console.group('🎨 Theme Hover Implementation Audit Report');
-  
+
   const auditReport = auditAllThemes();
   const kyotoReference = documentKyotoReferenceStandard();
-  
+
   console.log('📊 Overall Statistics:');
   console.log(`   Total Themes: ${auditReport.totalThemes}`);
   console.log(`   Complete Implementations: ${auditReport.compliantThemes}`);
@@ -228,7 +228,7 @@ export function generateAuditConsoleReport(): void {
   console.log(`   Missing Implementations: ${auditReport.missingThemes}`);
   console.log(`   Compliance Rate: ${auditReport.overallComplianceRate}%`);
   console.log('');
-  
+
   console.log('🏆 Reference Standard (Kyoto Theme):');
   console.log(`   Theme: ${kyotoReference.themeName}`);
   console.log('   Key Features:');
@@ -236,7 +236,7 @@ export function generateAuditConsoleReport(): void {
     console.log(`   • ${feature}`);
   });
   console.log('');
-  
+
   console.log('🔍 Detailed Theme Analysis:');
   auditReport.themesNeedingFixes.forEach(theme => {
     console.group(`❌ ${theme.displayName} (${theme.themeName})`);
@@ -249,17 +249,17 @@ export function generateAuditConsoleReport(): void {
     });
     console.groupEnd();
   });
-  
+
   console.log('');
   console.log('✅ Compliant Themes:');
-  auditReport.themesNeedingFixes.length < auditReport.totalThemes && 
-  Object.values(themeDefinitions).forEach(theme => {
-    const audit = auditThemeHoverImplementation(theme);
-    if (audit.hoverImplementationStatus === 'complete') {
-      console.log(`   ✓ ${audit.displayName} (${audit.themeName})`);
-    }
-  });
-  
+  auditReport.themesNeedingFixes.length < auditReport.totalThemes &&
+    Object.values(themeDefinitions).forEach(theme => {
+      const audit = auditThemeHoverImplementation(theme);
+      if (audit.hoverImplementationStatus === 'complete') {
+        console.log(`   ✓ ${audit.displayName} (${audit.themeName})`);
+      }
+    });
+
   console.groupEnd();
 }
 

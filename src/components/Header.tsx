@@ -1,5 +1,6 @@
 import React from 'react';
 import { ThemeSelector } from './ThemeSelector';
+import { FontSizeSelector } from './FontSizeSelector';
 import { BaseComponentProps } from '../types/components';
 
 export const Header: React.FC<BaseComponentProps> = ({ style, className }) => {
@@ -7,6 +8,11 @@ export const Header: React.FC<BaseComponentProps> = ({ style, className }) => {
     <header className={`floating-header ${className || ''}`} style={style}>
       <nav className="glass-panel rounded-xl px-3 sm:px-4 py-2 sm:py-3 shadow-lg border border-white/20 backdrop-blur-xl transition-all duration-300 hover:shadow-xl">
         <div className="flex items-center justify-between">
+          {/* Left Controls */}
+          <div className="flex items-center gap-3">
+            <FontSizeSelector />
+          </div>
+
           {/* Logo Section */}
           <div className="flex items-center gap-3 flex-grow justify-center">
             <img 
@@ -17,8 +23,7 @@ export const Header: React.FC<BaseComponentProps> = ({ style, className }) => {
             />
           </div>
           
-
-          {/* Controls */}
+          {/* Right Controls */}
           <div className="flex items-center gap-3">
             <ThemeSelector />
           </div>

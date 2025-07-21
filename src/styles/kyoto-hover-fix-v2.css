@@ -1,0 +1,145 @@
+/**
+ * Kyoto Theme Hover Fix - Version 2
+ * 
+ * This file implements a clean CSS hierarchy for the Kyoto theme hover effects
+ * with proper specificity and without !important declarations.
+ * 
+ * Key improvements:
+ * 1. Uses html[data-theme="kyoto"] for higher specificity
+ * 2. Ensures proper targeting of input panels
+ * 3. Maintains consistent hover effects for both direct hover and hover-from-handle
+ * 4. Overrides Tailwind shadow classes without !important
+ */
+
+/* 
+ * CSS Specificity Progression:
+ * 1. Base styles (specificity: 10)
+ * 2. Theme base styles (specificity: 20)
+ * 3. Content panel styles (specificity: 30)
+ * 4. Theme content panel styles (specificity: 40)
+ * 5. Input panel styles (specificity: 50)
+ * 6. Theme input panel styles (specificity: 60)
+ * 7. Hover states (adds :hover to each level)
+ * 8. Hover-from-handle class (matches hover specificity)
+ */
+
+/* 1. Base glass panel styles */
+.glass-panel {
+  background: rgba(255, 255, 255, var(--glass-panel));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: var(--glass-shadow);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 2. Kyoto theme base styles */
+html[data-theme="kyoto"] .glass-panel {
+  background: rgba(28, 25, 23, var(--glass-panel));
+  border-color: rgba(120, 113, 108, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(220, 8, 8, 0.45);
+}
+
+/* 3. Content panel styles */
+.glass-panel.glass-content-panel {
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+/* 4. Kyoto theme content panel styles */
+html[data-theme="kyoto"] .glass-panel.glass-content-panel {
+  /* Kyoto theme content panel specific styles */
+}
+
+/* 5. Input panel styles */
+[data-input-panel] .glass-panel,
+div[data-input-panel] .glass-panel {
+  /* Input panel specific styles */
+}
+
+/* 6. Kyoto theme input panel styles */
+html[data-theme="kyoto"] [data-input-panel] .glass-panel,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel {
+  /* Kyoto theme input panel specific styles */
+}
+
+/* 7. Hover states - add to each level */
+
+/* 7.1. Base hover */
+.glass-panel:hover {
+  background: rgba(255, 255, 255, var(--glass-focus));
+  border-color: var(--gradient-accent);
+  box-shadow: var(--glass-shadow), 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* 7.2. Kyoto theme hover */
+html[data-theme="kyoto"] .glass-panel:hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  border-color: rgba(220, 8, 8, 0.6);
+  box-shadow: rgba(220, 8, 8, 0.7) 0px 30px 80px 0px, rgba(220, 8, 8, 0.5) 0px 12px 40px 0px;
+  transform: translateY(-3px);
+}
+
+/* 7.3. Content panel hover */
+.glass-panel.glass-content-panel:hover {
+  transform: translateY(-2px);
+}
+
+/* 7.4. Kyoto theme content panel hover */
+html[data-theme="kyoto"] .glass-panel.glass-content-panel:hover {
+  box-shadow: rgba(220, 8, 8, 0.6) 0px 24px 64px 0px, rgba(220, 8, 8, 0.4) 0px 10px 36px 0px;
+  transform: translateY(-2px);
+}
+
+/* 7.5. Input panel hover */
+[data-input-panel] .glass-panel:hover,
+div[data-input-panel] .glass-panel:hover {
+  /* Input panel hover specific styles */
+}
+
+/* 7.6. Kyoto theme input panel hover - highest specificity for direct hover */
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel:hover,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel.glass-content-panel:hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  border-color: rgba(220, 8, 8, 0.6);
+  box-shadow: rgba(220, 8, 8, 0.7) 0px 30px 80px 0px, rgba(220, 8, 8, 0.5) 0px 12px 40px 0px;
+  transform: translateY(-2px);
+}
+
+/* 8. Tailwind shadow class overrides */
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.shadow-lg:hover,
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.shadow-md:hover,
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.shadow-sm:hover,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel.glass-content-panel.shadow-lg:hover,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel.glass-content-panel.shadow-md:hover,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel.glass-content-panel.shadow-sm:hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  border-color: rgba(220, 8, 8, 0.6);
+  box-shadow: rgba(220, 8, 8, 0.7) 0px 30px 80px 0px, rgba(220, 8, 8, 0.5) 0px 12px 40px 0px;
+  transform: translateY(-2px);
+}
+
+/* 9. Handle hover-from-handle class - same styles as input panel hover */
+html[data-theme="kyoto"] .layout-current .hover-from-handle,
+html[data-theme="kyoto"] .layout-current .hover-from-handle-primary {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  border-color: rgba(220, 8, 8, 0.6);
+  box-shadow: rgba(220, 8, 8, 0.7) 0px 30px 80px 0px, rgba(220, 8, 8, 0.5) 0px 12px 40px 0px;
+  transform: translateY(-2px);
+}
+
+/* 10. Direct panel selector - ensure highest specificity */
+html[data-theme="kyoto"] .glass-panel.glass-content-panel[class*="shadow"]:hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  border-color: rgba(220, 8, 8, 0.6);
+  box-shadow: rgba(220, 8, 8, 0.7) 0px 30px 80px 0px, rgba(220, 8, 8, 0.5) 0px 12px 40px 0px;
+  transform: translateY(-2px);
+}
+
+/* 11. Ensure TextInputPanel hover works */
+html[data-theme="kyoto"] .text-input-panel .glass-panel:hover,
+html[data-theme="kyoto"] .text-input-panel.glass-panel:hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  border-color: rgba(220, 8, 8, 0.6);
+  box-shadow: rgba(220, 8, 8, 0.7) 0px 30px 80px 0px, rgba(220, 8, 8, 0.5) 0px 12px 40px 0px;
+  transform: translateY(-2px);
+}

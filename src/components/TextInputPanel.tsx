@@ -280,7 +280,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   };
 
   return (
-    <div className="glass-panel glass-content-panel overflow-hidden shadow-lg transition-all duration-300" style={style}>
+    <div className="glass-panel glass-content-panel overflow-hidden transition-all duration-300" style={style}>
       <div className="glass-panel-header-footer px-4 py-3 border-b border-theme-neutral-200 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {iconEmoji ? (

@@ -1,0 +1,70 @@
+/**
+ * Clean Kyoto Hover Fix
+ * 
+ * This file implements a clean fix for the Kyoto theme hover effects
+ * by directly addressing the root cause in the glassmorphism.css file.
+ */
+
+/* 
+ * Reset the problematic rule in glassmorphism.css
+ * This removes the !important declarations that are preventing hover styles from working
+ */
+[data-theme="kyoto"] .glass-panel {
+  background: rgba(28, 25, 23, var(--glass-panel));
+  box-shadow: 0 8px 32px 0 rgba(220, 8, 8, var(--glass-strong));
+}
+
+/* 
+ * Clean hover styles for Kyoto theme
+ * These styles will now work properly because we've removed the !important declarations
+ */
+[data-theme="kyoto"] .glass-panel:hover,
+[data-theme="kyoto"] .glass-panel.shadow-lg:hover,
+[data-theme="kyoto"] .glass-panel.shadow-md:hover,
+[data-theme="kyoto"] .glass-panel.shadow-sm:hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  border-color: rgba(220, 8, 8, 0.6);
+  box-shadow: 0 30px 80px 0 rgba(220, 8, 8, 0.7), 0 12px 40px 0 rgba(220, 8, 8, 0.5);
+  transform: translateY(-3px);
+}
+
+/* 
+ * Clean hover styles for Kyoto theme content panels
+ */
+[data-theme="kyoto"] .glass-panel.glass-content-panel:hover {
+  box-shadow: 0 24px 64px 0 rgba(220, 8, 8, 0.6), 0 10px 36px 0 rgba(220, 8, 8, 0.4);
+  transform: translateY(-2px);
+}
+
+/* 
+ * Clean hover styles for Kyoto theme input panels
+ */
+[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel:hover,
+[data-theme="kyoto"] div[data-input-panel] .glass-panel.glass-content-panel:hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  border-color: rgba(220, 8, 8, 0.6);
+  box-shadow: 0 30px 80px 0 rgba(220, 8, 8, 0.7), 0 12px 40px 0 rgba(220, 8, 8, 0.5);
+  transform: translateY(-2px);
+}
+
+/* 
+ * Clean hover-from-handle styles for Kyoto theme
+ */
+[data-theme="kyoto"] .layout-current .hover-from-handle,
+[data-theme="kyoto"] .layout-current .hover-from-handle-primary {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  border-color: rgba(220, 8, 8, 0.6);
+  box-shadow: 0 30px 80px 0 rgba(220, 8, 8, 0.7), 0 12px 40px 0 rgba(220, 8, 8, 0.5);
+  transform: translateY(-2px);
+}
+
+/* 
+ * Clean force-hover styles for Kyoto theme
+ */
+[data-theme="kyoto"] .glass-panel.glass-content-panel.force-hover,
+[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.force-hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  border-color: rgba(220, 8, 8, 0.6);
+  box-shadow: 0 30px 80px 0 rgba(220, 8, 8, 0.7), 0 12px 40px 0 rgba(220, 8, 8, 0.5);
+  transform: translateY(-2px);
+}

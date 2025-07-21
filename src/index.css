@@ -18,6 +18,10 @@
   --gradient-middle: rgba(255, 255, 255, 0.25);
   --gradient-end: rgba(255, 255, 255, 0.15);
   --gradient-accent: rgba(255, 255, 255, 0.4);
+  
+  /* Font size scaling variables */
+  --font-scale: 1;
+  --base-font-size: 1rem;
 }
 
 /* Clean Glass Panel - Use unified opacity system only */
@@ -69,6 +73,90 @@ body {
 /* FORCE REMOVE ANY CONFLICTING STYLES */
 * {
   box-sizing: border-box;
+}
+
+/* Font size scaling system */
+[data-font-size="small"] {
+  --font-scale: 1.125;
+  --base-font-size: 1.125rem;
+}
+
+[data-font-size="medium"] {
+  --font-scale: 1.375;
+  --base-font-size: 1.375rem;
+}
+
+[data-font-size="large"] {
+  --font-scale: 1.625;
+  --base-font-size: 1.625rem;
+}
+
+/* Apply font scaling to body and common elements with smooth transitions */
+* {
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  font-size: calc(var(--base-font-size) * 1);
+}
+
+h1 { 
+  font-size: calc(1.5rem * var(--font-scale)); 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+h2 { 
+  font-size: calc(1.25rem * var(--font-scale)); 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+h3 { 
+  font-size: calc(1.125rem * var(--font-scale)); 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+h4 { 
+  font-size: calc(1rem * var(--font-scale)); 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+h5 { 
+  font-size: calc(0.875rem * var(--font-scale)); 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+h6 { 
+  font-size: calc(0.75rem * var(--font-scale)); 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+p, div, span, input, textarea, button, label {
+  font-size: calc(1rem * var(--font-scale));
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.text-xs { 
+  font-size: calc(0.75rem * var(--font-scale)) !important; 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.text-sm { 
+  font-size: calc(0.875rem * var(--font-scale)) !important; 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.text-base { 
+  font-size: calc(1rem * var(--font-scale)) !important; 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.text-lg { 
+  font-size: calc(1.125rem * var(--font-scale)) !important; 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.text-xl { 
+  font-size: calc(1.25rem * var(--font-scale)) !important; 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.text-2xl { 
+  font-size: calc(1.5rem * var(--font-scale)) !important; 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.text-3xl { 
+  font-size: calc(1.875rem * var(--font-scale)) !important; 
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Global text legibility improvements - WCAG AAA compliance with 10% safety margin */

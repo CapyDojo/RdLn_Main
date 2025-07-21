@@ -4,10 +4,11 @@ import App from './App.tsx';
 import './index.css';
 import './styles/themes/themes.css';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { FontSizeProvider } from './contexts/FontSizeContext';
 // STEP 1: Import Background Language Loader (Safe, Modular)
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
-// Import nuclear fix for Kyoto hover
-import './styles/nuclear-fix';
+// Import clean Kyoto hover fix that addresses the root cause
+import './styles/clean-kyoto-hover-fix.css';
 
 // Development console control - set to false for quiet development
 const ENABLE_DEV_LOGS = true; // Toggle this for clean development console
@@ -38,7 +39,9 @@ if (process.env.NODE_ENV === 'development' && !ENABLE_DEV_LOGS) {
 // Conditional StrictMode - only in development
 const AppWithProvider = (
   <ThemeProvider>
-    <App />
+    <FontSizeProvider>
+      <App />
+    </FontSizeProvider>
   </ThemeProvider>
 );
 

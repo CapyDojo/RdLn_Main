@@ -1,0 +1,123 @@
+/**
+ * Clean Kyoto Theme Hierarchy - Final Version
+ * 
+ * This file implements a clean CSS hierarchy for the Kyoto theme hover effects
+ * without using !important declarations. It follows a natural specificity progression
+ * to ensure hover effects work correctly.
+ */
+
+/* 
+ * CSS Specificity Progression:
+ * 1. Base styles (specificity: 10)
+ * 2. Theme base styles (specificity: 20)
+ * 3. Content panel styles (specificity: 30)
+ * 4. Theme content panel styles (specificity: 40)
+ * 5. Input panel styles (specificity: 50)
+ * 6. Theme input panel styles (specificity: 60)
+ * 7. Hover states (adds :hover to each level)
+ */
+
+/* 1. Base glass panel styles */
+.glass-panel {
+  background: rgba(255, 255, 255, var(--glass-panel));
+  border: 1px solid rgba(255, 255, 255, var(--glass-focus));
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, var(--glass-subtle));
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 2. Kyoto theme base styles */
+html[data-theme="kyoto"] .glass-panel {
+  background: rgba(28, 25, 23, var(--glass-panel));
+  border-color: rgba(120, 113, 108, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(220, 8, 8, 0.45);
+}
+
+/* 3. Content panel styles */
+.glass-panel.glass-content-panel {
+  /* Content panel specific styles */
+}
+
+/* 4. Kyoto theme content panel styles */
+html[data-theme="kyoto"] .glass-panel.glass-content-panel {
+  /* Kyoto theme content panel specific styles */
+}
+
+/* 5. Input panel styles */
+[data-input-panel] .glass-panel,
+div[data-input-panel] .glass-panel {
+  /* Input panel specific styles */
+}
+
+/* 6. Kyoto theme input panel styles */
+html[data-theme="kyoto"] [data-input-panel] .glass-panel,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel {
+  /* Kyoto theme input panel specific styles */
+}
+
+/* 7. Hover states - add to each level */
+
+/* 7.1. Base hover */
+.glass-panel:hover {
+  background: rgba(255, 255, 255, var(--glass-focus));
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, var(--glass-panel));
+  transform: translateY(-2px);
+}
+
+/* 7.2. Kyoto theme hover */
+html[data-theme="kyoto"] .glass-panel:hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  box-shadow: rgba(220, 8, 8, 0.7) 0px 30px 80px 0px, rgba(220, 8, 8, 0.5) 0px 12px 40px 0px;
+  border-color: rgba(220, 8, 8, 0.6);
+  transform: translateY(-3px);
+}
+
+/* 7.3. Content panel hover */
+.glass-panel.glass-content-panel:hover {
+  /* Content panel hover specific styles */
+  transform: translateY(-2px);
+}
+
+/* 7.4. Kyoto theme content panel hover */
+html[data-theme="kyoto"] .glass-panel.glass-content-panel:hover {
+  box-shadow: rgba(220, 8, 8, 0.6) 0px 24px 64px 0px, rgba(220, 8, 8, 0.4) 0px 10px 36px 0px;
+  transform: translateY(-2px);
+}
+
+/* 7.5. Input panel hover */
+[data-input-panel] .glass-panel:hover,
+div[data-input-panel] .glass-panel:hover {
+  /* Input panel hover specific styles */
+}
+
+/* 7.6. Kyoto theme input panel hover - highest specificity */
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel:hover,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel.glass-content-panel:hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  box-shadow: 0 30px 80px 0 rgba(220, 8, 8, 0.7), 0 12px 40px 0 rgba(220, 8, 8, 0.5);
+  border-color: rgba(220, 8, 8, 0.6);
+  transform: translateY(-2px);
+}
+
+/* 8. Tailwind shadow class overrides */
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.shadow-lg:hover,
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.shadow-md:hover,
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.shadow-sm:hover,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel.glass-content-panel.shadow-lg:hover,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel.glass-content-panel.shadow-md:hover,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel.glass-content-panel.shadow-sm:hover {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  box-shadow: 0 30px 80px 0 rgba(220, 8, 8, 0.7), 0 12px 40px 0 rgba(220, 8, 8, 0.5);
+  border-color: rgba(220, 8, 8, 0.6);
+  transform: translateY(-2px);
+}
+
+/* 9. Handle hover-from-handle class */
+html[data-theme="kyoto"] .layout-current .hover-from-handle,
+html[data-theme="kyoto"] .layout-current .hover-from-handle-primary {
+  background: rgba(28, 25, 23, var(--glass-focus));
+  box-shadow: rgba(220, 8, 8, 0.8) 0px 28px 72px 0px, 
+              rgba(220, 8, 8, 0.6) 0px 14px 40px 0px, 
+              rgba(220, 8, 8, 0.4) 0px 8px 24px 0px;
+  border-color: rgba(220, 8, 8, 0.6);
+  transform: translateY(-2px);
+}

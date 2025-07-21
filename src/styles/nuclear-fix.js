@@ -1,6 +1,8 @@
 // Nuclear CSS fix for Kyoto hover
 // This script injects a style element with the highest specificity CSS rules
+// DISABLED: This file is now disabled in favor of a clean CSS hierarchy approach
 
+/*
 function applyNuclearCSSFix() {
   // Create style element
   const style = document.createElement('style');
@@ -47,5 +49,10 @@ observer.observe(document.documentElement, {
   attributes: true,
   attributeFilter: ['data-theme']
 });
+*/
 
-export default applyNuclearCSSFix;
+// Export a dummy function that does nothing
+export default function disabledNuclearFix() {
+  console.log('Nuclear CSS fix is disabled');
+  return null;
+}
