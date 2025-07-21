@@ -78,8 +78,11 @@ export const kyotoTheme: ThemeConfig = {
     glassPanelBg: '#1c1917',        // Dark tatami stone background (neutral.900)
     glassPanelBorder: '#78716c',    // Stone neutral border (neutral.500)
     glassPanelShadow: '#b91c1c',    // Deep maple red shadow (secondary.700)
-    glassPanelHover: '#292524',     // Slightly lighter stone on hover (neutral.800)
-    glassPanelHoverShadow: '#dc2626', // Brighter maple red hover shadow (secondary.600)
+    
+    // Glass panel hover states - extracted from working CSS implementation
+    glassPanelHover: '#1c1917',     // Same as glassPanelBg - CSS applies opacity via var(--glass-focus)
+    glassPanelHoverBorder: '#dc0808', // Exact match for rgba(220, 8, 8, 0.6) from working CSS
+    glassPanelHoverShadow: '#dc0808', // Exact match for rgba(220, 8, 8, 0.7/0.5) from working CSS
     
     // Input fields - harmonized with theme
     inputBg: '#1c1917',            // Dark stone background (neutral.900)

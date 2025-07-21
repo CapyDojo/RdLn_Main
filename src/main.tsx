@@ -6,6 +6,8 @@ import './styles/themes/themes.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 // STEP 1: Import Background Language Loader (Safe, Modular)
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
+// Import nuclear fix for Kyoto hover
+import './styles/nuclear-fix';
 
 // Development console control - set to false for quiet development
 const ENABLE_DEV_LOGS = true; // Toggle this for clean development console

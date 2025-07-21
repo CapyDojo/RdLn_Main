@@ -1,0 +1,12 @@
+/* NUCLEAR CSS FIX FOR KYOTO HOVER */
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel:hover,
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.shadow-lg:hover,
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.shadow-md:hover,
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.shadow-sm:hover,
+html[data-theme="kyoto"] div[data-input-panel] .glass-panel.glass-content-panel:hover,
+html[data-theme="kyoto"] div[data-input-panel="true"] .glass-panel.glass-content-panel:hover {
+  background: rgba(28, 25, 23, var(--glass-focus)) !important;
+  box-shadow: 0 30px 80px 0 rgba(220, 8, 8, 0.7), 0 12px 40px 0 rgba(220, 8, 8, 0.5) !important;
+  border-color: rgba(220, 8, 8, 0.6) !important;
+  transform: translateY(-2px) !important;
+}
