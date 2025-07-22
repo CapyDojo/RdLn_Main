@@ -7,8 +7,6 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { FontSizeProvider } from './contexts/FontSizeContext';
 // STEP 1: Import Background Language Loader (Safe, Modular)
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
-// Import clean Kyoto hover fix that addresses the root cause
-import './styles/clean-kyoto-hover-fix.css';
 
 // Development console control - set to false for quiet development
 const ENABLE_DEV_LOGS = true; // Toggle this for clean development console

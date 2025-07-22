@@ -88,7 +88,7 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
             outputPanels.forEach(panel => {
               const element = panel as HTMLElement;
               // Apply same hover state as the handle bar
-              element.classList.add('hover-from-handle-primary');
+              element.classList.add('hover-from-handle');
               element.style.transform = 'translateY(-1px)';
               element.style.transition = 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)';
             });
@@ -98,7 +98,7 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
             const outputPanels = document.querySelectorAll('[data-output-panel] .glass-panel');
             outputPanels.forEach(panel => {
               const element = panel as HTMLElement;
-              element.classList.remove('hover-from-handle-primary');
+              element.classList.remove('hover-from-handle');
               element.style.transform = '';
             });
           }}

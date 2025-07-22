@@ -1,3 +1,47 @@
+## 2025-07-23: CSS Architecture Debugging - When the Problem Isn't Where You Think It Is
+
+**Problem**: Output panel resize handle had weak shadow effect instead of strong dramatic shadow like input panels, despite having identical CSS rules.
+
+**Initial Assumption**: CSS specificity or selector targeting issue requiring complex CSS fixes.
+
+**Investigation Process**:
+- **Step 1**: Comprehensive code trace audit of hover mechanisms
+- **Step 2**: Comparison of input vs output panel JavaScript implementations  
+- **Step 3**: Discovery that CSS rules were correct, JavaScript behavior was inconsistent
+
+**Root Cause Discovery**:
+- **Input Panels**: Used `hover-from-handle` class when resize handle hovered
+- **Output Panel**: Used `hover-from-handle-primary` class when resize handle hovered
+- **CSS Rules**: Supported both classes, but inconsistency prevented unified behavior
+- **Real Issue**: JavaScript mechanism, not CSS styling
+
+**The Elegant Solution**:
+```typescript
+// BEFORE: Output panel used different class
+element.classList.add('hover-from-handle-primary');
+
+// AFTER: Output panel uses same class as input panels
+element.classList.add('hover-from-handle');
+```
+
+**Key Insights**:
+- **Assumption Trap**: Spent time on CSS when the issue was JavaScript behavior
+- **Systematic Investigation**: Code trace audit revealed the real problem quickly
+- **Minimal Fix**: Two-line change achieved complete visual consistency
+- **Testing Validation**: Visual test confirmed perfect hover effect parity
+
+**Legal Mind → Technical Translation**: *"This felt exactly like contract review - when clauses seem inconsistent, sometimes the issue isn't the language but the defined terms. The 'hover effect' was defined differently for input vs output panels, creating apparent inconsistency despite identical styling rules."*
+
+**Development Process Success**:
+- **SSMR Methodology**: Safe investigation, step-by-step analysis, modular fix, reversible change
+- **Diagnostic Excellence**: Comprehensive debugging before implementing solutions
+- **Targeted Implementation**: Maximum impact with minimal code changes
+- **Documentation Value**: Process insights valuable for future similar issues
+
+**Achievement**: CSS Architecture Refactor Task 8 completed at 100% with perfect visual consistency across all resize handle hover effects.
+
+---
+
 ## 2025-07-20: Word-Level Trimming Breakthrough - Solving Semantic Chunking with Elegant Architecture
 
 **Problem**: Critical semantic chunking issue where meaningful units like `15,000,000 -> 20,000,000` were being fragmented into `15` -> `20` + unchanged `,000,000`. The character-level prefix/suffix trimming optimization was too aggressive, breaking apart carefully tokenized semantic units.

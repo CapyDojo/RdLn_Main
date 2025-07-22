@@ -34,7 +34,10 @@ This plan transforms the fragmented CSS architecture into a clean, TypeScript-dr
 
 ## Phase 2: TypeScript-Driven CSS Generation
 
-- [-] 4. Enhance CSS variable generation system
+- [ ] 4. Enhance CSS variable generation system
+
+
+
 
   - Extend src/themes/utils/cssVariables.ts to generate complete theme CSS
   - Add CSS selector generation from semanticColors mappings
@@ -65,7 +68,12 @@ This plan transforms the fragmented CSS architecture into a clean, TypeScript-dr
   - Document any remaining issues or missing functionality
   - _Requirements: 2.2, 2.3, 5.2, 5.3_
 
-- [ ] 8. Fix Kyoto theme hover effects specifically
+- [x] 8. Fix Kyoto theme hover effects specifically
+
+
+
+
+
   - Ensure Kyoto theme hover effects work correctly (original issue)
   - Test with clean-kyoto-hover-fix-test.js script
   - Validate that no `!important` declarations are needed

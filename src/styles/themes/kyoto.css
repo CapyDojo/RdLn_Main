@@ -1,8 +1,8 @@
-/* Kyoto Dusk theme glassmorphism - Unified opacity system */
-[data-theme="kyoto"] .glass-panel {
-  background: rgba(28, 25, 23, var(--glass-panel)) !important;
+/* Kyoto Dusk theme glassmorphism - Unified opacity system with higher specificity */
+html[data-theme="kyoto"] .glass-panel {
+  background: rgba(28, 25, 23, var(--glass-panel));
   border: 1px solid rgba(120, 113, 108, var(--glass-focus));
-  box-shadow: 0 8px 32px 0 rgba(220, 8, 8, var(--glass-strong)) !important;
+  box-shadow: 0 8px 32px 0 rgba(220, 8, 8, var(--glass-strong));
   backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.6);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.6);
   /* Removed color override - let text hierarchy handle colors */
@@ -16,52 +16,59 @@
 [data-theme="kyoto"] .glass-input-field,
 [data-theme="kyoto"] .text-theme-neutral-800,
 [data-theme="kyoto"] .text-theme-neutral-700 {
-  color: #f8b4b4 !important; /* CORRECT peach color for user-generated text */
+  color: #f8b4b4 !important;
+  /* CORRECT peach color for user-generated text */
 }
 
 [data-theme="kyoto"] h1,
 [data-theme="kyoto"] h2,
 [data-theme="kyoto"] h3,
 [data-theme="kyoto"] .text-header {
-  color: #86efac !important; /* Theme button background green for panel titles */
+  color: #86efac !important;
+  /* Theme button background green for panel titles */
   font-weight: 600;
 }
 
 [data-theme="kyoto"] .text-secondary,
 [data-theme="kyoto"] .text-theme-neutral-600,
 [data-theme="kyoto"] .text-theme-neutral-500 {
-  color: #fef7e6 !important; /* Tatami wheat off-white for secondary text */
+  color: #fef7e6 !important;
+  /* Tatami wheat off-white for secondary text */
 }
 
 [data-theme="kyoto"] .text-interactive,
 [data-theme="kyoto"] .text-theme-accent-500,
 [data-theme="kyoto"] button:not(.glass-panel),
 [data-theme="kyoto"] a {
-  color: #f8b4b4 !important; /* Light maple red */
+  color: #f8b4b4 !important;
+  /* Light maple red */
 }
 
 [data-theme="kyoto"] .text-success,
 [data-theme="kyoto"] .text-active {
-  color: #bbf7d0 !important; /* Light forest green */
+  color: #bbf7d0 !important;
+  /* Light forest green */
 }
 
-[data-theme="kyoto"] .glass-panel:hover {
-  background: rgba(28, 25, 23, var(--glass-focus));
-  box-shadow: 0 30px 80px 0 rgba(220, 8, 8, 0.7), 0 12px 40px 0 rgba(220, 8, 8, 0.5);
-  border-color: rgba(220, 8, 8, 0.6);
+html[data-theme="kyoto"] .glass-panel:hover {
+  background: rgba(28, 25, 23, var(--glass-focus)) !important;
+  box-shadow: 0 30px 80px 0 rgba(220, 8, 8, 0.7), 0 12px 40px 0 rgba(220, 8, 8, 0.5) !important;
+  border-color: rgba(220, 8, 8, 0.6) !important;
   transform: translateY(-3px);
 }
 
 /* Kyoto theme specific title colors for panel headings */
 [data-theme="kyoto"] .text-theme-primary-900 {
-  color: #ee8f1c !important; /* Updated orange color */
+  color: #ee8f1c !important;
+  /* Updated orange color */
 }
 
 /* Kyoto theme footer text harmonization */
 [data-theme="kyoto"] .glass-panel-header-footer,
 [data-theme="kyoto"] .glass-panel-header-footer .text-theme-neutral-600,
 [data-theme="kyoto"] .glass-panel-header-footer .text-theme-neutral-500 {
-  color: #fef7e6 !important; /* Tatami wheat off-white for all footer text */
+  color: #fef7e6 !important;
+  /* Tatami wheat off-white for all footer text */
 }
 
 /* NUCLEAR OVERRIDE - Maximum specificity for Kyoto theme text */
@@ -76,12 +83,20 @@ html[data-theme="kyoto"] textarea.glass-input-field,
 html[data-theme="kyoto"] input.glass-input-field,
 html[data-theme="kyoto"] .glass-panel textarea.text-theme-neutral-800,
 html[data-theme="kyoto"] .glass-panel input.text-theme-neutral-800 {
-  color: #f8b4b4 !important; /* FORCE CORRECT peach color with maximum specificity */
+  color: #f8b4b4 !important;
+  /* FORCE CORRECT peach color with maximum specificity */
 }
 
-[data-theme="kyoto"] .glass-panel.glass-content-panel:hover {
-  border-color: rgba(220, 8, 8, 0.6);
-  box-shadow: 0 24px 64px 0 rgba(220, 8, 8, 0.6), 0 10px 36px 0 rgba(220, 8, 8, 0.4);
+/* SURGICAL OVERRIDE - Target only base state, preserve hover effects */
+html[data-theme="kyoto"] .glass-panel:not(:hover):not(.hover-from-handle):not(.force-hover) {
+  background: rgba(28, 25, 23, var(--glass-panel)) !important;
+  box-shadow: 0 8px 32px 0 rgba(220, 8, 8, var(--glass-strong)) !important;
+}
+
+html[data-theme="kyoto"] .glass-panel.glass-content-panel:hover {
+  background: rgba(28, 25, 23, var(--glass-focus)) !important;
+  border-color: rgba(220, 8, 8, 0.6) !important;
+  box-shadow: 0 24px 64px 0 rgba(220, 8, 8, 0.6), 0 10px 36px 0 rgba(220, 8, 8, 0.4) !important;
   transform: translateY(-2px);
 }
 
@@ -89,4 +104,13 @@ html[data-theme="kyoto"] .glass-panel input.text-theme-neutral-800 {
 [data-theme="kyoto"] .segmented-control:hover {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Force hover styles for programmatic hover state */
+html[data-theme="kyoto"] .glass-panel.glass-content-panel.force-hover,
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.force-hover {
+  background: rgba(28, 25, 23, var(--glass-focus)) !important;
+  border-color: rgba(220, 8, 8, 0.6) !important;
+  box-shadow: 0 24px 64px 0 rgba(220, 8, 8, 0.6), 0 10px 36px 0 rgba(220, 8, 8, 0.4) !important;
+  transform: translateY(-2px);
 }
