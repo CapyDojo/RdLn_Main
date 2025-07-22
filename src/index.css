@@ -76,19 +76,23 @@ body {
 }
 
 /* Font size scaling system */
-[data-font-size="small"] {
-  --font-scale: 1.125;
-  --base-font-size: 1.125rem;
+/* Font size control for user text areas only */
+.user-text-area[data-user-font-size="small"],
+.user-text-area[data-user-font-size="small"] * {
+  font-size: 16px !important;
+  line-height: 1.5 !important;
 }
 
-[data-font-size="medium"] {
-  --font-scale: 1.375;
-  --base-font-size: 1.375rem;
+.user-text-area[data-user-font-size="medium"],
+.user-text-area[data-user-font-size="medium"] * {
+  font-size: 23px !important;
+  line-height: 1.6 !important;
 }
 
-[data-font-size="large"] {
-  --font-scale: 1.625;
-  --base-font-size: 1.625rem;
+.user-text-area[data-user-font-size="large"],
+.user-text-area[data-user-font-size="large"] * {
+  font-size: 30px !important;
+  line-height: 1.7 !important;
 }
 
 /* Apply font scaling to body and common elements with smooth transitions */
@@ -663,6 +667,62 @@ h3 { font-size: 1.125rem; } /* 15.75px instead of 18px */
 .segmented-control .sliding-indicator.to-right {
   width: calc(102px + var(--manual-badge-width, 0px)); /* Base width + dynamic badge width */
   transform: translateX(70px); /* Start after the auto button */
+}
+
+/* ========================================
+   FONT SIZE SELECTOR COMPONENT STYLES
+   ======================================== */
+
+/* Container - Font size selector segmented control */
+.segmented-control.font-size-control {
+  height: 50px;
+  min-width: 160px;
+}
+
+/* Segments - Individual font size option buttons */
+.segmented-control.font-size-control .segment {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 10px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Text Display - "Aa" sample text styling */
+.segmented-control.font-size-control .segment span {
+  display: inline-block;
+  line-height: 0.9;
+}
+
+/* Visual Alignment - Baseline adjustments for size progression */
+.segmented-control.font-size-control .segment span[style*="16px"] {
+  transform: translateY(1px); /* Small: slight downward adjustment */
+}
+
+.segmented-control.font-size-control .segment span[style*="22px"] {
+  transform: translateY(1px); /* Medium: slight downward adjustment */  
+}
+
+.segmented-control.font-size-control .segment span[style*="30px"] {
+  transform: translateY(0px); /* Large: baseline reference */
+}
+
+/* Sliding Indicator - Font size selector active state indicator */
+.segmented-control .sliding-indicator.size-small {
+  width: 33.333%;
+  transform: translateX(0%);
+}
+
+.segmented-control .sliding-indicator.size-medium {
+  width: 32%;
+  transform: translateX(99%);
+}
+
+.segmented-control .sliding-indicator.size-large {
+  width: 32.632%;
+  transform: translateX(200%);
 }
 
 /* Glassmorphism enhancement for different themes */

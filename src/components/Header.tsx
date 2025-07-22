@@ -7,14 +7,14 @@ export const Header: React.FC<BaseComponentProps> = ({ style, className }) => {
   return (
     <header className={`floating-header ${className || ''}`} style={style}>
       <nav className="glass-panel rounded-xl px-3 sm:px-4 py-2 sm:py-3 shadow-lg border border-white/20 backdrop-blur-xl transition-all duration-300 hover:shadow-xl">
-        <div className="flex items-center justify-between">
+        <div className="relative flex items-center">
           {/* Left Controls */}
-          <div className="flex items-center gap-3">
+          <div className="absolute left-0 flex items-center gap-3">
             <FontSizeSelector />
           </div>
 
-          {/* Logo Section */}
-          <div className="flex items-center gap-3 flex-grow justify-center">
+          {/* Logo Section - Centered */}
+          <div className="w-full flex items-center justify-center">
             <img 
               src="/images/rdln-logo.png" 
               alt="RdLn Logo" 
@@ -24,7 +24,7 @@ export const Header: React.FC<BaseComponentProps> = ({ style, className }) => {
           </div>
           
           {/* Right Controls */}
-          <div className="flex items-center gap-3">
+          <div className="absolute right-0 flex items-center gap-3">
             <ThemeSelector />
           </div>
         </div>

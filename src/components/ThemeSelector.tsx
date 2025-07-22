@@ -198,12 +198,12 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
   return (
     <div 
       ref={themesButtonRef}
-      className={`relative ${className || ''}`}
+      className={`relative segmented-control ${className || ''}`}
       style={style}
     >
       {/* Main Themes Button - Rounded Square */}
       <button
-        className="flex items-center justify-center bg-theme-primary-100/50 hover:bg-theme-primary-200/50 rounded-lg transition-all duration-200 text-theme-primary-800 shadow-theme border border-theme-primary-300/50 shrink-0 relative group"
+        className="flex items-center justify-center rounded-lg transition-all duration-200 shrink-0 relative group segment"
         title="Hover to see themes"
         aria-label="Theme selector - hover to view available themes"
         onMouseEnter={() => setIsHovered(true)}

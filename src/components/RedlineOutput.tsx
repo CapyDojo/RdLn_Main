@@ -6,6 +6,7 @@ import { UI_CONFIG, FEATURE_FLAGS, DEV_CONFIG } from '../config/appConfig';
 import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/performanceUtils.tsx';
 import { useExperimentalFeatures } from '../contexts/ExperimentalLayoutContext';
 import { ResultsOverlayTrigger } from './experimental/ResultsOverlayTrigger';
+import { useFontSize } from '../contexts/FontSizeContext';
 
 interface RedlineOutputProps extends BaseComponentProps {
   changes: DiffChange[];
@@ -51,6 +52,9 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   
   // Background mode state (only used in overlay mode)
   const [backgroundMode, setBackgroundMode] = React.useState<'theme' | 'glassmorphism'>('theme');
+  
+  // Font size context
+  const { fontSize } = useFontSize();
   
   // Handle background mode toggle
   const handleBackgroundToggle = () => {
@@ -169,8 +173,8 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       {!hideHeader && (
         <div className="glass-panel-header-footer px-4 py-3 border-b border-theme-neutral-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl" role="img" aria-label="Output panel">🎯</span>
-            <h3 className="text-lg font-semibold text-theme-primary-900">Compared Redline</h3>
+            <span className="text-5xl" role="img" aria-label="Output panel">🎯</span>
+            <h3 className="text-2xl font-semibold text-theme-primary-900">Compared Redline</h3>
           </div>
           <div className="flex items-center gap-2">
             {/* Background Mode Toggle - only in overlay mode */}
@@ -232,7 +236,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
           minHeight: '200px',
         }}
       >
-        <div className="glass-input-field font-serif text-theme-neutral-800 leading-relaxed whitespace-pre-wrap libertinus-math-output libertinus-math-text py-6 px-8">
+        <div className="glass-input-field user-text-area font-serif text-theme-neutral-800 leading-relaxed whitespace-pre-wrap libertinus-math-output libertinus-math-text py-6 px-8" data-user-font-size={fontSize}>
           {isProcessing ? (
             <div className="mt-4 p-3 bg-theme-primary-50 border border-theme-primary-200 rounded-lg">
               <div className="flex items-center gap-2 text-theme-primary-700">

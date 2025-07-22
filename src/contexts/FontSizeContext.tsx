@@ -29,7 +29,11 @@ export const FontSizeProvider: React.FC<FontSizeProviderProps> = ({ children }) 
   useEffect(() => {
     try {
       localStorage.setItem('app-font-size', fontSize);
-      document.documentElement.setAttribute('data-font-size', fontSize);
+      // Instead of setting global data attribute, we'll apply to specific elements
+      const textInputAreas = document.querySelectorAll('.user-text-area');
+      textInputAreas.forEach(element => {
+        element.setAttribute('data-user-font-size', fontSize);
+      });
     } catch (error) {
       console.error('Failed to save font size to localStorage:', error);
     }

@@ -59,7 +59,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
       <div ref={panelResizeHandlers.desktopInputPanelsRef} className="grid grid-cols-2 gap-6">
         <div data-input-panel>
           <TextInputPanel
-            title="Original Version"
+            title="Original&nbsp;"
             value={originalText}
             onChange={onOriginalTextChange}
             placeholder="TYPE or PASTE your original text here, or paste a screenshot to extract text automatically using multi-language OCR..."
@@ -71,7 +71,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
         
         <div data-input-panel>
           <TextInputPanel
-            title="Revised Version"
+            title="Revised&nbsp;"
             value={revisedText}
             onChange={onRevisedTextChange}
             placeholder="TYPE or PASTE your revised text here, or paste a screenshot to extract text automatically using multi-language OCR..."

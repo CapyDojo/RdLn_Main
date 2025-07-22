@@ -60,7 +60,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
         {/* Original Panel */}
         <div data-input-panel className="mb-0 mobile-top-panel">
           <TextInputPanel
-            title="Original Version"
+            title="Original&nbsp;"
             value={originalText}
             onChange={onOriginalTextChange}
             placeholder="TYPE or PASTE your original text here, or paste a screenshot to extract text automatically using multi-language OCR..."
@@ -124,7 +124,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
         {/* Revised Panel */}
         <div data-input-panel className="mt-0 mobile-bottom-panel">
           <TextInputPanel
-            title="Revised Version"
+            title="Revised&nbsp;"
             value={revisedText}
             onChange={onRevisedTextChange}
             placeholder="TYPE or PASTE your revised text here, or paste a screenshot to extract text automatically using multi-language OCR..."

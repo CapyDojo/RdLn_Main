@@ -8,6 +8,7 @@ import { useLayout } from '../contexts/LayoutContext';
 import { BaseComponentProps } from '../types/components';
 import { useComponentPerformance } from '../utils/performanceUtils.tsx';
 import { formatPastedText } from '../utils/paragraphFormatting';
+import { useFontSize } from '../contexts/FontSizeContext';
 
 interface TextInputPanelProps extends BaseComponentProps {
   title: string;
@@ -38,6 +39,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isAutoFormatEnabled, setIsAutoFormatEnabled] = useState(true);
+  const { fontSize } = useFontSize();
 
   const toggleAutoFormat = () => {
     setIsAutoFormatEnabled(prev => !prev);
@@ -144,6 +146,13 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       console.warn('Performance metrics tracking failed:', error);
     }
   }, [value.length, performanceTracker]);
+
+  // Apply font size to textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.setAttribute('data-user-font-size', fontSize);
+    }
+  }, [fontSize]);
   
 
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
@@ -284,11 +293,11 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       <div className="glass-panel-header-footer px-4 py-3 border-b border-theme-neutral-200 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {iconEmoji ? (
-            <span className="text-xl" role="img" aria-label="Input panel">{iconEmoji}</span>
+            <span className="text-5xl" role="img" aria-label="Input panel">{iconEmoji}</span>
           ) : (
             <FileText className="w-5 h-5 text-theme-primary-900" />
           )}
-          <h3 className="text-lg font-semibold text-theme-primary-900">{title}</h3>
+          <h3 className="text-2xl font-semibold text-theme-primary-900">{title}</h3>
           <button
             onClick={toggleAutoFormat}
             className={`flex items-center justify-center p-3 rounded-lg backdrop-blur-sm border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] ${isAutoFormatEnabled
@@ -394,7 +403,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           onDragOver={handleDragOver}
           placeholder={isProcessing ? '' : placeholder}
           disabled={disabled || isProcessing}
-          className="glass-input-field w-full h-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 leading-relaxed disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent"
+          className="glass-input-field user-text-area w-full h-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 leading-relaxed disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent"
           style={{ minHeight: '200px' }}
         />
         
