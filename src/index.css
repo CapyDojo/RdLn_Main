@@ -79,19 +79,19 @@ body {
 /* Font size control for user text areas only */
 .user-text-area[data-user-font-size="small"],
 .user-text-area[data-user-font-size="small"] * {
-  font-size: 16px !important;
+  font-size: 15px !important;
   line-height: 1.5 !important;
 }
 
 .user-text-area[data-user-font-size="medium"],
 .user-text-area[data-user-font-size="medium"] * {
-  font-size: 23px !important;
+  font-size: 18px !important;
   line-height: 1.6 !important;
 }
 
 .user-text-area[data-user-font-size="large"],
 .user-text-area[data-user-font-size="large"] * {
-  font-size: 30px !important;
+  font-size: 23px !important;
   line-height: 1.7 !important;
 }
 
@@ -698,15 +698,15 @@ h3 { font-size: 1.125rem; } /* 15.75px instead of 18px */
 
 /* Visual Alignment - Baseline adjustments for size progression */
 .segmented-control.font-size-control .segment span[style*="16px"] {
-  transform: translateY(1px); /* Small: slight downward adjustment */
+  transform: translateY(0px); /* Small: slight downward adjustment */
 }
 
 .segmented-control.font-size-control .segment span[style*="22px"] {
-  transform: translateY(1px); /* Medium: slight downward adjustment */  
+  transform: translateY(-1px); /* Medium: slight downward adjustment */  
 }
 
-.segmented-control.font-size-control .segment span[style*="30px"] {
-  transform: translateY(0px); /* Large: baseline reference */
+.segmented-control.font-size-control .segment span[style*="27px"] {
+  transform: translateY(-0.6px); /* Large: baseline reference */
 }
 
 /* Sliding Indicator - Font size selector active state indicator */

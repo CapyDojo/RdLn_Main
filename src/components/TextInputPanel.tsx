@@ -297,7 +297,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           ) : (
             <FileText className="w-5 h-5 text-theme-primary-900" />
           )}
-          <h3 className="text-2xl font-semibold text-theme-primary-900">{title}</h3>
+          <h3 className="text-3xl font-semibold text-theme-primary-900">{title}</h3>
           <button
             onClick={toggleAutoFormat}
             className={`flex items-center justify-center p-3 rounded-lg backdrop-blur-sm border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] ${isAutoFormatEnabled

@@ -174,7 +174,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
         <div className="glass-panel-header-footer px-4 py-3 border-b border-theme-neutral-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-5xl" role="img" aria-label="Output panel">🎯</span>
-            <h3 className="text-2xl font-semibold text-theme-primary-900">Compared Redline</h3>
+            <h3 className="text-3xl font-semibold text-theme-primary-900">Compared Redline</h3>
           </div>
           <div className="flex items-center gap-2">
             {/* Background Mode Toggle - only in overlay mode */}
