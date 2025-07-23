@@ -268,13 +268,13 @@
   border-color: rgba(232, 196, 31, calc(var(--glass-strong) * 1.2)) !important;
 }
 
-/* Kyoto theme */
+/* Kyoto theme - clean implementation */
 [data-theme="kyoto"] .layout-current .hover-from-handle,
 [data-theme="kyoto"] .layout-current .hover-from-handle-primary {
-  background: rgba(28, 25, 23, var(--glass-focus)) !important;
-  border-color: rgba(220, 8, 8, 0.8) !important;
-  box-shadow: 0 28px 72px 0 rgba(220, 8, 8, 0.8), 0 14px 40px 0 rgba(220, 8, 8, 0.6), 0 8px 24px 0 rgba(220, 8, 8, 0.4) !important;
-  transform: translateY(-2px);
+  background: rgba(var(--theme-glass-bg), var(--glass-focus)) !important;
+  border-color: rgba(var(--theme-glass-hover-border), 0.8) !important;
+  box-shadow: 0 28px 72px 0 rgba(var(--theme-glass-hover-shadow), 0.8), 0 14px 40px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 8px 24px 0 rgba(var(--theme-glass-hover-shadow), 0.4) !important;
+  transform: translateY(-2px) !important;
 }
 
 /* Kyoto theme - Output panel handle hover (comprehensive approach) */
@@ -282,19 +282,19 @@
 [data-theme="kyoto"] .layout-current [data-resize-handle="output-panel"]:hover + [data-output-panel] .glass-panel.glass-content-panel,
 [data-theme="kyoto"] .layout-current [data-resize-handle="output-panel"]:hover ~ * [data-output-panel] .glass-panel.glass-content-panel,
 [data-theme="kyoto"] .layout-current [data-resize-handle="output-panel"]:hover + * [data-output-panel] .glass-panel.glass-content-panel {
-  background: rgba(28, 25, 23, var(--glass-focus)) !important;
-  border-color: rgba(220, 8, 8, 0.8) !important;
-  box-shadow: 0 28px 72px 0 rgba(220, 8, 8, 0.8), 0 14px 40px 0 rgba(220, 8, 8, 0.6), 0 8px 24px 0 rgba(220, 8, 8, 0.4) !important;
-  transform: translateY(-2px);
+  background: rgba(var(--theme-glass-bg), var(--glass-focus)) !important;
+  border-color: rgba(var(--theme-glass-hover-border), 0.8) !important;
+  box-shadow: 0 28px 72px 0 rgba(var(--theme-glass-hover-shadow), 0.8), 0 14px 40px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 8px 24px 0 rgba(var(--theme-glass-hover-shadow), 0.4) !important;
+  transform: translateY(-2px) !important;
 }
 
 /* Kyoto theme - Output panel handle hover (higher specificity fix) */
 [data-theme="kyoto"] [data-output-panel] .glass-panel.hover-from-handle,
 [data-theme="kyoto"] [data-output-panel] .glass-panel.hover-from-handle-primary {
-  background: rgba(28, 25, 23, var(--glass-focus)) !important;
-  border-color: rgba(220, 8, 8, 0.8) !important;
-  box-shadow: 0 28px 72px 0 rgba(220, 8, 8, 0.8), 0 14px 40px 0 rgba(220, 8, 8, 0.6), 0 8px 24px 0 rgba(220, 8, 8, 0.4) !important;
-  transform: translateY(-2px);
+  background: rgba(var(--theme-glass-bg), var(--glass-focus)) !important;
+  border-color: rgba(var(--theme-glass-hover-border), 0.8) !important;
+  box-shadow: 0 28px 72px 0 rgba(var(--theme-glass-hover-shadow), 0.8), 0 14px 40px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 8px 24px 0 rgba(var(--theme-glass-hover-shadow), 0.4) !important;
+  transform: translateY(-2px) !important;
 }
 
 /* Fluid button sizing (excludes resize handles) */

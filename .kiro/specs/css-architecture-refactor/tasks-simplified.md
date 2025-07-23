@@ -32,40 +32,37 @@ This plan transforms the fragmented CSS architecture into a clean, TypeScript-dr
   - Create priority list of critical functionality to restore first
   - _Requirements: 2.1, 2.2, 5.1, 5.2_
 
-## Phase 2: TypeScript-Driven CSS Generation
+## Phase 2: Kyoto Blueprint Approach
 
-- [ ] 4. Enhance CSS variable generation system
+- [x] 4. Clean and optimize Kyoto theme as blueprint
+  - ✅ Removed all `!important` declarations from kyoto.css and current-layout.css
+  - ✅ Consolidated redundant hover rules into single, clean implementation
+  - ✅ Maintained CSS variables and semantic color usage
+  - ✅ Archived legacy fix files (kyoto-hover-fix-v*.css, clean-kyoto-hierarchy*.css, nuclear-fix.js)
+  - ✅ Created kyoto-blueprint-pattern.md documentation
+  - _Requirements: 1.4, 4.3, 6.4_
 
+- [ ] 5. Extract Kyoto blueprint pattern
+  - Document the working CSS structure from cleaned Kyoto theme
+  - Create template mapping from TypeScript semanticColors to CSS selectors
+  - Identify reusable patterns for hover effects, text hierarchy, and glass panels
+  - Create step-by-step application guide for other themes
+  - _Requirements: 1.1, 2.1, 3.1_
 
-
-
-  - Extend src/themes/utils/cssVariables.ts to generate complete theme CSS
-  - Add CSS selector generation from semanticColors mappings
-  - Implement hover effect CSS generation from glassPanelHover* properties
-  - Create CSS output functions that generate complete theme stylesheets
-  - _Requirements: 1.1, 2.1, 3.1, 6.2_
-
-- [ ] 5. Generate CSS from TypeScript definitions
-  - Create CSS generation script that reads all TypeScript theme definitions
-  - Generate complete CSS files for each theme in src/styles/themes/
-  - Ensure generated CSS follows consistent specificity hierarchy
-  - Validate that generated CSS covers all required selectors and states
-  - _Requirements: 1.1, 1.4, 2.1, 3.2_
-
-- [ ] 6. Implement hover effects from semanticColors
-  - Generate hover CSS from glassPanelHover*, glassPanelHoverBorder, glassPanelHoverShadow
-  - Ensure hover effects work without any `!important` declarations
-  - Test hover-from-handle class functionality across all themes
-  - Validate that hover effects are consistent across all themes
+- [ ] 6. Apply blueprint to Professional theme
+  - Use Kyoto pattern as template for Professional theme CSS
+  - Map Professional theme semanticColors to CSS selectors
+  - Implement hover effects using Professional theme colors
+  - Test all functionality matches Kyoto theme behavior
   - _Requirements: 2.1, 2.4, 4.3_
 
-## Phase 3: Testing and Validation
+## Phase 3: Blueprint Application to All Themes
 
-- [ ] 7. Test all themes systematically
-  - Test each of the 9 themes (professional, kyoto, bamboo, classic-dark, classic-light, new-york, aurora-borealis, deep-dive, neon-night)
-  - Validate that all themes render correctly with generated CSS
+- [ ] 7. Apply blueprint to remaining themes systematically
+  - Apply Kyoto blueprint pattern to Bamboo, Apple Dark, Classic themes, etc.
+  - Use consistent CSS structure and specificity hierarchy for each theme
+  - Map each theme's semanticColors to the established CSS selectors
   - Test hover effects, input fields, buttons, and all interactive elements
-  - Document any remaining issues or missing functionality
   - _Requirements: 2.2, 2.3, 5.2, 5.3_
 
 - [x] 8. Fix Kyoto theme hover effects specifically
@@ -89,11 +86,11 @@ This plan transforms the fragmented CSS architecture into a clean, TypeScript-dr
 
 ## Phase 4: Cleanup and Optimization
 
-- [ ] 10. Clean up legacy CSS files
-  - Archive all failed fix attempts (clean-kyoto-hover-fix.css, kyoto-hover-fix-v*.css, etc.)
-  - Remove obsolete theme CSS from src/styles/themes/ if fully generated
+- [ ] 10. Clean up legacy CSS files and finalize architecture
+  - Archive all legacy fix attempts (already identified in health check)
+  - Ensure all themes follow consistent blueprint pattern
   - Update src/styles/themes/themes.css to import only necessary files
-  - Clean up any remaining theme references in glassmorphism.css
+  - Final cleanup of any remaining theme references in glassmorphism.css
   - _Requirements: 1.2, 4.1_
 
 - [ ] 11. Update build system and documentation
@@ -119,10 +116,11 @@ This plan transforms the fragmented CSS architecture into a clean, TypeScript-dr
 - ✅ **No CSS cascade conflicts** between themes and base styles
 - ✅ **Clean, maintainable architecture** for future theme development
 
-## Key Benefits of This Approach
+## Key Benefits of Blueprint Approach
 
-1. **Much simpler**: Delete conflicting CSS instead of trying to extract/migrate it
-2. **TypeScript-driven**: Single source of truth eliminates duplication and conflicts
-3. **Faster implementation**: 12 tasks instead of 21, cleaner approach
-4. **Better maintainability**: Changes only need to be made in TypeScript definitions
-5. **Eliminates root cause**: No more CSS cascade wars or `!important` declarations
+1. **Proven Foundation**: Uses working Kyoto theme as tested template
+2. **Practical Implementation**: Copy/modify existing working CSS vs theoretical generation
+3. **Lower Risk**: Known working patterns reduce chance of breaking functionality
+4. **Faster Execution**: Direct application vs building generation system
+5. **Incremental Progress**: Fix one theme at a time with immediate testing
+6. **Eliminates Root Cause**: Consistent CSS structure prevents cascade conflicts
