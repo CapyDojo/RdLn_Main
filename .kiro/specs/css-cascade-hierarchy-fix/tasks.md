@@ -37,6 +37,7 @@
 - [x] 4. Implement consolidated hover effects with proper specificity
 
 
+
   - Create single hover rule combining direct hover and programmatic hover states
   - Use html[data-theme="kyoto"] .glass-panel:hover selector with theme variables
   - Implement layered shadow effects using rgba(var(--theme-glass-hover-shadow), opacity)
@@ -44,7 +45,10 @@
   - Test both direct panel hover and hover-from-handle class application
   - _Requirements: 1.1, 1.2, 4.1, 4.2_
 
-- [ ] 5. Fix text hierarchy colors with comprehensive selectors
+- [x] 5. Fix text hierarchy colors with comprehensive selectors
+
+
+
   - Create html[data-theme="kyoto"] .text-body selector using --theme-text-body variable
   - Add html[data-theme="kyoto"] .text-header selector using --theme-text-header variable
   - Include comprehensive selector coverage for textarea, input, and nested elements
@@ -58,7 +62,8 @@
   - Add specific rules for output panel handle hover edge cases
   - _Requirements: 1.3, 1.4, 4.3_
 
-- [ ] 7. Remove conflicting !important declarations from base styles
+- [-] 7. Remove conflicting !important declarations from base styles
+
   - Identify !important declarations in glassmorphism.css that conflict with theme styles
   - Remove or replace with higher specificity selectors where appropriate
   - Ensure base styles still work for themes that don't override them

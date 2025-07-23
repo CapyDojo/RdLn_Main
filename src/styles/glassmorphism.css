@@ -17,7 +17,7 @@
 
 /* Base glassmorphism panel - Unified opacity system */
 .glass-panel {
-  background: rgba(255, 255, 255, var(--glass-panel)) !important;
+  background: rgba(255, 255, 255, var(--glass-panel));
   backdrop-filter: blur(10px) saturate(1.3);
   -webkit-backdrop-filter: blur(10px) saturate(1.3);
   border: 1px solid rgba(255, 255, 255, var(--glass-focus));

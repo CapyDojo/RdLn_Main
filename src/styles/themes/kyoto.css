@@ -57,7 +57,7 @@ html[data-theme="kyoto"] input.glass-input-field:hover {
   border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus)) !important;
 }
 
-/* Text hierarchy - clean implementation without !important */
+/* COMPREHENSIVE TEXT HIERARCHY - Body Text (Peach #f8b4b4) */
 html[data-theme="kyoto"] .text-body,
 html[data-theme="kyoto"] .libertinus-math-text,
 html[data-theme="kyoto"] textarea,
@@ -73,52 +73,163 @@ html[data-theme="kyoto"] .glass-panel .text-theme-neutral-700,
 html[data-theme="kyoto"] .glass-panel .libertinus-math-text,
 html[data-theme="kyoto"] .glass-panel .text-body,
 html[data-theme="kyoto"] textarea.glass-input-field,
-html[data-theme="kyoto"] input.glass-input-field {
-  color: var(--theme-text-body);
+html[data-theme="kyoto"] input.glass-input-field,
+html[data-theme="kyoto"] .glass-content-panel .text-body,
+html[data-theme="kyoto"] .glass-content-panel textarea,
+html[data-theme="kyoto"] .glass-content-panel input,
+html[data-theme="kyoto"] [data-input-panel] .text-body,
+html[data-theme="kyoto"] [data-input-panel] textarea,
+html[data-theme="kyoto"] [data-input-panel] input,
+html[data-theme="kyoto"] [data-output-panel] .text-body,
+html[data-theme="kyoto"] [data-output-panel] textarea,
+html[data-theme="kyoto"] [data-output-panel] input,
+html[data-theme="kyoto"] .redline-output .text-body,
+html[data-theme="kyoto"] .comparison-result .text-body,
+html[data-theme="kyoto"] p,
+html[data-theme="kyoto"] .glass-panel p,
+html[data-theme="kyoto"] span:not(.text-header):not(.text-secondary):not(.text-interactive),
+html[data-theme="kyoto"] .glass-panel span:not(.text-header):not(.text-secondary):not(.text-interactive),
+html[data-theme="kyoto"] div:not(.text-header):not(.text-secondary):not(.text-interactive) {
+  color: var(--theme-text-body) !important;
   /* Peach color for user-generated text */
 }
 
+/* COMPREHENSIVE TEXT HIERARCHY - Headers (Green #86efac) */
 html[data-theme="kyoto"] h1,
 html[data-theme="kyoto"] h2,
 html[data-theme="kyoto"] h3,
-html[data-theme="kyoto"] .text-header {
-  color: var(--theme-text-header);
+html[data-theme="kyoto"] h4,
+html[data-theme="kyoto"] h5,
+html[data-theme="kyoto"] h6,
+html[data-theme="kyoto"] .text-header,
+html[data-theme="kyoto"] .glass-panel h1,
+html[data-theme="kyoto"] .glass-panel h2,
+html[data-theme="kyoto"] .glass-panel h3,
+html[data-theme="kyoto"] .glass-panel h4,
+html[data-theme="kyoto"] .glass-panel h5,
+html[data-theme="kyoto"] .glass-panel h6,
+html[data-theme="kyoto"] .glass-panel .text-header,
+html[data-theme="kyoto"] .glass-content-panel h1,
+html[data-theme="kyoto"] .glass-content-panel h2,
+html[data-theme="kyoto"] .glass-content-panel h3,
+html[data-theme="kyoto"] .glass-content-panel .text-header,
+html[data-theme="kyoto"] [data-input-panel] h1,
+html[data-theme="kyoto"] [data-input-panel] h2,
+html[data-theme="kyoto"] [data-input-panel] h3,
+html[data-theme="kyoto"] [data-input-panel] .text-header,
+html[data-theme="kyoto"] [data-output-panel] h1,
+html[data-theme="kyoto"] [data-output-panel] h2,
+html[data-theme="kyoto"] [data-output-panel] h3,
+html[data-theme="kyoto"] [data-output-panel] .text-header,
+html[data-theme="kyoto"] .floating-header h1,
+html[data-theme="kyoto"] .floating-header h2,
+html[data-theme="kyoto"] .floating-header h3,
+html[data-theme="kyoto"] .floating-header .text-header {
+  color: var(--theme-text-header) !important;
   /* Vibrant green for headers */
   font-weight: 600;
 }
 
+/* COMPREHENSIVE TEXT HIERARCHY - Secondary Text (Wheat #fef7e6) */
 html[data-theme="kyoto"] .text-secondary,
 html[data-theme="kyoto"] .text-theme-neutral-600,
-html[data-theme="kyoto"] .text-theme-neutral-500 {
-  color: var(--theme-text-secondary);
+html[data-theme="kyoto"] .text-theme-neutral-500,
+html[data-theme="kyoto"] .glass-panel .text-secondary,
+html[data-theme="kyoto"] .glass-panel .text-theme-neutral-600,
+html[data-theme="kyoto"] .glass-panel .text-theme-neutral-500,
+html[data-theme="kyoto"] .glass-content-panel .text-secondary,
+html[data-theme="kyoto"] .glass-content-panel .text-theme-neutral-600,
+html[data-theme="kyoto"] .glass-content-panel .text-theme-neutral-500,
+html[data-theme="kyoto"] [data-input-panel] .text-secondary,
+html[data-theme="kyoto"] [data-input-panel] .text-theme-neutral-600,
+html[data-theme="kyoto"] [data-input-panel] .text-theme-neutral-500,
+html[data-theme="kyoto"] [data-output-panel] .text-secondary,
+html[data-theme="kyoto"] [data-output-panel] .text-theme-neutral-600,
+html[data-theme="kyoto"] [data-output-panel] .text-theme-neutral-500,
+html[data-theme="kyoto"] .text-sm,
+html[data-theme="kyoto"] .text-xs,
+html[data-theme="kyoto"] .glass-panel .text-sm,
+html[data-theme="kyoto"] .glass-panel .text-xs,
+html[data-theme="kyoto"] small,
+html[data-theme="kyoto"] .glass-panel small {
+  color: var(--theme-text-secondary) !important;
   /* Tatami wheat off-white for secondary text */
 }
 
+/* COMPREHENSIVE TEXT HIERARCHY - Interactive Text (Peach #f8b4b4) */
 html[data-theme="kyoto"] .text-interactive,
 html[data-theme="kyoto"] .text-theme-accent-500,
 html[data-theme="kyoto"] button:not(.glass-panel),
-html[data-theme="kyoto"] a {
-  color: var(--theme-text-interactive);
+html[data-theme="kyoto"] a,
+html[data-theme="kyoto"] .glass-panel .text-interactive,
+html[data-theme="kyoto"] .glass-panel .text-theme-accent-500,
+html[data-theme="kyoto"] .glass-panel button:not(.glass-panel),
+html[data-theme="kyoto"] .glass-panel a,
+html[data-theme="kyoto"] .glass-content-panel .text-interactive,
+html[data-theme="kyoto"] .glass-content-panel button:not(.glass-panel),
+html[data-theme="kyoto"] .glass-content-panel a,
+html[data-theme="kyoto"] [data-input-panel] .text-interactive,
+html[data-theme="kyoto"] [data-input-panel] button:not(.glass-panel),
+html[data-theme="kyoto"] [data-input-panel] a,
+html[data-theme="kyoto"] [data-output-panel] .text-interactive,
+html[data-theme="kyoto"] [data-output-panel] button:not(.glass-panel),
+html[data-theme="kyoto"] [data-output-panel] a,
+html[data-theme="kyoto"] .enhanced-button,
+html[data-theme="kyoto"] .glass-panel .enhanced-button {
+  color: var(--theme-text-interactive) !important;
   /* Light maple red for interactive elements */
 }
 
+/* COMPREHENSIVE TEXT HIERARCHY - Success/Active Text (Light Green #bbf7d0) */
 html[data-theme="kyoto"] .text-success,
-html[data-theme="kyoto"] .text-active {
-  color: var(--theme-text-success);
+html[data-theme="kyoto"] .text-active,
+html[data-theme="kyoto"] .glass-panel .text-success,
+html[data-theme="kyoto"] .glass-panel .text-active,
+html[data-theme="kyoto"] .glass-content-panel .text-success,
+html[data-theme="kyoto"] .glass-content-panel .text-active,
+html[data-theme="kyoto"] [data-input-panel] .text-success,
+html[data-theme="kyoto"] [data-input-panel] .text-active,
+html[data-theme="kyoto"] [data-output-panel] .text-success,
+html[data-theme="kyoto"] [data-output-panel] .text-active,
+html[data-theme="kyoto"] .status-success,
+html[data-theme="kyoto"] .glass-panel .status-success {
+  color: var(--theme-text-success) !important;
   /* Light forest green for success states */
 }
 
-html[data-theme="kyoto"] .text-theme-primary-900 {
-  color: var(--theme-text-primary);
-  /* Orange color for specific headings */
+/* COMPREHENSIVE TEXT HIERARCHY - Primary Text (Orange #ee8f1c) */
+html[data-theme="kyoto"] .text-theme-primary-900,
+html[data-theme="kyoto"] .text-primary,
+html[data-theme="kyoto"] .glass-panel .text-theme-primary-900,
+html[data-theme="kyoto"] .glass-panel .text-primary,
+html[data-theme="kyoto"] .glass-content-panel .text-theme-primary-900,
+html[data-theme="kyoto"] .glass-content-panel .text-primary,
+html[data-theme="kyoto"] [data-input-panel] .text-theme-primary-900,
+html[data-theme="kyoto"] [data-input-panel] .text-primary,
+html[data-theme="kyoto"] [data-output-panel] .text-theme-primary-900,
+html[data-theme="kyoto"] [data-output-panel] .text-primary,
+html[data-theme="kyoto"] .text-warning,
+html[data-theme="kyoto"] .glass-panel .text-warning {
+  color: var(--theme-text-primary) !important;
+  /* Orange color for specific headings and warnings */
 }
 
-/* Footer text harmonization */
+/* COMPREHENSIVE TEXT HIERARCHY - Footer and Special Contexts */
 html[data-theme="kyoto"] .glass-panel-header-footer,
 html[data-theme="kyoto"] .glass-panel-header-footer .text-theme-neutral-600,
-html[data-theme="kyoto"] .glass-panel-header-footer .text-theme-neutral-500 {
-  color: var(--theme-text-secondary);
-  /* Tatami wheat off-white for all footer text */
+html[data-theme="kyoto"] .glass-panel-header-footer .text-theme-neutral-500,
+html[data-theme="kyoto"] .glass-panel-header-footer p,
+html[data-theme="kyoto"] .glass-panel-header-footer span,
+html[data-theme="kyoto"] .footer-container,
+html[data-theme="kyoto"] .footer-container .text-theme-neutral-600,
+html[data-theme="kyoto"] .footer-container .text-theme-neutral-500,
+html[data-theme="kyoto"] .footer-container p,
+html[data-theme="kyoto"] .footer-container span,
+html[data-theme="kyoto"] .floating-header .text-secondary,
+html[data-theme="kyoto"] .floating-header .text-theme-neutral-600,
+html[data-theme="kyoto"] .floating-header .text-theme-neutral-500 {
+  color: var(--theme-text-secondary) !important;
+  /* Tatami wheat off-white for all footer and header text */
 }
 
 /* CONSOLIDATED HOVER EFFECTS - Enhanced specificity to override base glassmorphism.css */
