@@ -1,31 +1,33 @@
 # Implementation Plan
 
-This plan transforms the fragmented CSS architecture into a clean, maintainable theme system by extracting all theme-specific styles from glassmorphism.css into dedicated theme files and establishing a consistent CSS variable system.
+This plan transforms the fragmented CSS architecture into a clean, maintainable theme system by prioritizing simplicity over complexity. The approach eliminates bloated CSS with hundreds of overlapping selectors, removes specificity battles, and creates semantic classes that work predictably without `!important` declarations or complex `:not()` patterns.
 
-- [ ] 1. Audit and analyze current CSS architecture
-
-
-
-
+- [ ] 1. Audit and analyze current CSS architecture with focus on complexity reduction
   - Create comprehensive audit of all theme-related CSS across the codebase
   - Document current file structure and identify all locations where theme styles exist
-  - Analyze CSS specificity conflicts and `!important` usage patterns
-  - Create migration plan for each theme based on current implementation
-  - _Requirements: 1.1, 4.1, 5.1_
+  - **Identify bloated CSS blocks with 200+ lines of overlapping selectors**
+  - **Analyze specificity wars and complex `:not()` exclusion patterns**
+  - **Document cases where semantic classes are overridden by element selectors**
+  - Create migration plan prioritizing architectural simplification over complex fixes
+  - _Requirements: 1.1, 4.1, 5.1, 7.1_
 
-- [ ] 2. Create new CSS architecture foundation
+- [ ] 2. Create new CSS architecture foundation based on simplicity principles
   - Create new `src/styles/themes/` directory structure
   - Design CSS variable system for theme colors using RGB values for opacity flexibility
   - Create `_base.css` with common theme utilities and patterns
-  - Establish CSS specificity hierarchy and naming conventions
-  - _Requirements: 1.1, 1.3, 3.1, 6.3_
+  - **Establish "simplicity over complexity" guidelines for CSS architecture**
+  - **Define semantic class priority system where classes always override element selectors**
+  - **Create naming conventions that prevent specificity conflicts**
+  - _Requirements: 1.1, 1.3, 3.1, 6.3, 7.1, 7.2_
 
-- [ ] 3. Extract and clean base glassmorphism styles
+- [ ] 3. Extract and clean base glassmorphism styles using simplicity principles
   - Remove all theme-specific overrides from glassmorphism.css
+  - **Strip out bloated, overlapping selectors and replace with clean, minimal CSS**
   - Refactor base glassmorphism classes to use CSS variables instead of hardcoded colors
+  - **Eliminate complex selector patterns and specificity battles**
   - Implement theme-agnostic hover effects that work with CSS variables
   - Optimize base glassmorphism for performance and maintainability
-  - _Requirements: 6.1, 6.2, 6.4_
+  - _Requirements: 6.1, 6.2, 6.4, 7.1, 7.4_
 
 - [ ] 4. Create Professional theme CSS file
   - Generate CSS from authoritative TypeScript theme definition in src/themes/definitions/professional.ts
@@ -34,12 +36,15 @@ This plan transforms the fragmented CSS architecture into a clean, maintainable 
   - Validate generated CSS matches TypeScript theme definition exactly
   - _Requirements: 1.1, 1.4, 2.1, 4.3_
 
-- [ ] 5. Create Kyoto theme CSS file
+- [ ] 5. Create Kyoto theme CSS file using clean architecture principles
   - Generate CSS from authoritative TypeScript theme definition in src/themes/definitions/kyoto.ts
   - Map semanticColors to CSS variables and selectors using proper cascade hierarchy
+  - **Remove the temporary `!important` fix from text-theme-primary-900 and replace with proper architecture**
+  - **Implement semantic classes that work through clean inheritance, not specificity overrides**
+  - **Ensure no element selectors override semantic classes like text-theme-primary-900**
   - Implement hover effects using theme's glassPanelHover* semantic colors
-  - Ensure hover effects work correctly without any `!important` declarations
-  - _Requirements: 1.1, 1.4, 2.1, 4.3_
+  - Validate that orange text displays correctly without any `!important` declarations
+  - _Requirements: 1.1, 1.4, 2.1, 4.3, 7.2, 7.3_
 
 - [ ] 6. Create Bamboo theme CSS file
   - Generate CSS from authoritative TypeScript theme definition in src/themes/definitions/bamboo.ts
@@ -97,12 +102,14 @@ This plan transforms the fragmented CSS architecture into a clean, maintainable 
   - Include examples of proper hover effect implementation
   - _Requirements: 1.3, 3.1, 3.2, 3.3_
 
-- [ ] 14. Implement theme validation system
+- [ ] 14. Implement theme validation system with complexity checks
   - Create automated validation tool to check theme completeness
   - Implement CSS specificity analysis to prevent conflicts
-  - Add build-time checks for `!important` declarations
+  - **Add build-time checks for `!important` declarations and complex selector patterns**
+  - **Validate that semantic classes work without specificity overrides**
+  - **Check for bloated CSS blocks with excessive selector counts**
   - Create theme consistency validation across all required selectors
-  - _Requirements: 5.1, 5.2, 5.3, 5.4_
+  - _Requirements: 5.1, 5.2, 5.3, 5.4, 7.1, 7.4_
 
 - [ ] 15. Update build system and CSS loading
   - Modify build system to include new theme CSS files

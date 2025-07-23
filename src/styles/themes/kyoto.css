@@ -60,7 +60,7 @@ html[data-theme="kyoto"] {
 /* Semantic text classes - these should always work */
 html[data-theme="kyoto"] .text-theme-primary-900,
 html[data-theme="kyoto"] .text-primary {
-  color: var(--theme-text-primary) !important;
+  color: var(--theme-text-primary) ;
 }
 
 html[data-theme="kyoto"] .text-header {
