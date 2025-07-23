@@ -96,7 +96,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
             <div
               data-resize-handle="input-panels"
               ref={desktopResizeHandleRef}
-              className="flex items-center justify-center w-12 h-6 cursor-row-resize touch-none select-none"
+              className="flex items-center justify-center w-12 h-7 cursor-row-resize touch-none select-none"
               onMouseDown={panelResizeHandlers.handleMouseDown}
               onMouseEnter={() => {
                 // Apply hover effects to input panels - same as handle bar

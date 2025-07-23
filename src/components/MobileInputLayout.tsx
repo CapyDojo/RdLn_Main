@@ -72,7 +72,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
         
         {/* Mobile Handle - Between panels for integrated unit */}
         <div 
-          className="glass-panel bg-theme-neutral-200/60 hover:bg-theme-neutral-300/70 transition-all duration-300 backdrop-blur-md border-l border-r border-theme-neutral-300/30 shadow-sm hover:shadow-md px-3 py-2"
+          className="glass-panel bg-theme-neutral-200/60 hover:bg-theme-neutral-300/70 transition-all duration-300 backdrop-blur-md border-l border-r border-theme-neutral-300/30 shadow-sm hover:shadow-md px-3 h-10"
           data-resize-handle="input-panels"
           ref={mobileResizeHandleRef}
           onMouseDown={panelResizeHandlers.handleMouseDown}

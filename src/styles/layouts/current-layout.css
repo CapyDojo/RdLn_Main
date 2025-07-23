@@ -262,7 +262,7 @@
 .layout-current [data-resize-handle] {
   width: 100% !important;
   max-width: none !important;
-  height: 2rem !important; /* Match Option A height */
+  /* Let Tailwind height classes (h-6, etc.)take effect naturally */
   padding: 0 !important;
   font-size: inherit !important;
 }
