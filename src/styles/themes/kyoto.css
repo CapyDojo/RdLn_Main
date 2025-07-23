@@ -60,7 +60,7 @@ html[data-theme="kyoto"] {
 /* Semantic text classes - these should always work */
 html[data-theme="kyoto"] .text-theme-primary-900,
 html[data-theme="kyoto"] .text-primary {
-  color: var(--theme-text-primary) ;
+  color: var(--theme-text-primary);
 }
 
 html[data-theme="kyoto"] .text-header {
@@ -84,30 +84,10 @@ html[data-theme="kyoto"] .text-active {
   color: var(--theme-text-success);
 }
 
-/* CONSOLIDATED HOVER EFFECTS - Ultra-high specificity natural CSS cascade */
-html[data-theme="kyoto"] body .glass-panel:hover,
-html[data-theme="kyoto"] main .glass-panel:hover,
-html[data-theme="kyoto"] .glass-panel.glass-content-panel:hover,
-html[data-theme="kyoto"] .glass-panel.shadow-lg:hover,
-html[data-theme="kyoto"] .glass-panel.shadow-md:hover,
-html[data-theme="kyoto"] .glass-panel.shadow-sm:hover,
-html[data-theme="kyoto"] body .glass-panel.hover-from-handle,
-html[data-theme="kyoto"] main .glass-panel.hover-from-handle,
-html[data-theme="kyoto"] .glass-panel.glass-content-panel.hover-from-handle,
-html[data-theme="kyoto"] .glass-panel.shadow-lg.hover-from-handle,
-html[data-theme="kyoto"] .glass-panel.shadow-md.hover-from-handle,
-html[data-theme="kyoto"] .glass-panel.shadow-sm.hover-from-handle,
-html[data-theme="kyoto"] .glass-panel.force-hover,
-html[data-theme="kyoto"] .glass-panel.glass-content-panel.force-hover,
-html[data-theme="kyoto"] [data-input-panel] .glass-panel:hover,
-html[data-theme="kyoto"] [data-output-panel] .glass-panel:hover,
-html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel:hover,
-html[data-theme="kyoto"] [data-output-panel] .glass-panel.glass-content-panel:hover,
-html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.force-hover,
-html[data-theme="kyoto"] [data-output-panel] .glass-panel.glass-content-panel.hover-from-handle,
-html[data-theme="kyoto"] [data-input-panel] .glass-panel.hover-from-handle,
-html[data-theme="kyoto"] .comparison-interface-container .glass-panel:hover,
-html[data-theme="kyoto"] .comparison-interface-container .glass-panel.hover-from-handle {
+/* Clean Hover Effects - Simple and Maintainable */
+html[data-theme="kyoto"] .glass-panel:hover,
+html[data-theme="kyoto"] .glass-panel.hover-from-handle,
+html[data-theme="kyoto"] .glass-panel.force-hover {
   background: rgba(var(--theme-glass-bg), var(--glass-focus));
   border-color: rgba(var(--theme-glass-hover-border), 0.6);
   box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);

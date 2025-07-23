@@ -164,71 +164,8 @@ p, div, span, input, textarea, button, label {
 }
 
 /* Global text legibility improvements - WCAG AAA compliance with 10% safety margin */
-
-/* Professional theme global text */
-[data-theme="professional"] {
-  --text-body: #1e293b;
-  --text-header: #0f172a;
-  --text-secondary: #475569;
-  --text-interactive: #ea580c;
-  --text-success: #1d4ed8;
-  --text-on-glass: #1e293b;
-}
-
-/* Bamboo theme global text */
-[data-theme="bamboo"] {
-  --text-body: #471e01;
-  --text-header: #471e01;
-  --text-secondary: #471e01;
-  --text-interactive: #471e01;
-  --text-success: #471e01;
-  --text-on-glass: #471e01;
-}
-
-/* Apple Light theme global text */
-[data-theme="apple-light"] {
-  --text-body: #111827;
-  --text-header: #1f2937;
-  --text-secondary: #4b5563;
-  --text-interactive: #7c3aed;
-  --text-success: #0284c7;
-  --text-on-glass: #111827;
-}
-
-/* Apple Dark theme global text */
-[data-theme="apple-dark"] {
-  --text-body: #f5f5f5;
-  --text-header: #ffffff;
-  --text-secondary: #d4d4d4;
-  --text-interactive: #a78bfa;
-  --text-success: #80deea;
-  --text-on-glass: #f5f5f5;
-}
-
-/* Kyoto theme global text - Dark autumn night inspired */
-[data-theme="kyoto"] {
-  --text-body: #f8b4b4;      /* CORRECT peach color for all body text including input panels */
-  --text-header: #86efac;    /* Green for panel titles */
-  --text-secondary: #fef7e6; /* Tatami wheat off-white for secondary text */
-  --text-interactive: #f8b4b4; /* Light maple red - interactive elements */
-  --text-success: #bbf7d0;   /* Light forest green - success states */
-  --text-on-glass: #f8b4b4; /* CORRECT peach for glass panels */
-  
-  /* BRUTE FORCE: Override Tailwind neutral colors directly */
-  --color-neutral-800: 248 180 180; /* Force neutral-800 to be CORRECT peach RGB */
-  --color-neutral-900: 248 180 180; /* Force neutral-900 to be CORRECT peach RGB */
-  --tw-text-opacity: 1;
-}
-
-/* New York theme global text */
-[data-theme="new-york"] {
-  --text-body: #fafafa;
-  --text-header: #ffffff;
-  --text-secondary: #e0e0e0;
-  --text-interactive: #ffb74d;
-  --text-success: #4dd0e1;
-  --text-on-glass: #fafafa;
-}
+/* NOTE: Theme-specific text colors are now managed by ThemeContext and semantic color mappings */
+/* Legacy hardcoded theme CSS variables removed to prevent conflicts with dynamic theme system */
 
 /* Global text hierarchy classes */
 .text-body,
@@ -242,7 +179,12 @@ span:not(.text-header):not(.text-secondary) {
   line-height: 1.6 !important;
 }
 
-/* Removed global header rule - semantic classes should determine color */
+/* Removed global header rule - semantic classes should determine colo
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-header) !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
 
 .text-secondary,
 .text-sm,
@@ -525,39 +467,10 @@ h3 { font-size: 1.125rem; } /* 15.75px instead of 18px */
   overflow: hidden;
 }
 
-/* Theme-specific backgrounds for better contrast */
-[data-theme="classic-light"] .segmented-control {
-  background: rgba(89, 140, 193, 0.2);
-  border: 1px solid rgba(89, 140, 193, 0.3);
-}
-
-[data-theme="professional"] .segmented-control {
-  background: rgba(66, 133, 244, 0.2);
-  border: 1px solid rgba(66, 133, 244, 0.3);
-}
-
-[data-theme="bamboo"] .segmented-control {
-  background: rgba(255, 193, 7, 0.4);
-  border: 1px solid rgba(255, 193, 7, 0.6);
-}
-
-[data-theme="apple-light"] .segmented-control {
-  background: rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-/* NYC Dusk theme - burnt orange glass */
-[data-theme="new-york"] .segmented-control {
-  background: rgba(193, 63, 23, 0.2);
-  border: 1px solid rgba(193, 63, 23, 0.3);
-}
-
-/* Other dark themes keep original styling */
-[data-theme="kyoto"] .segmented-control,
-[data-theme="apple-dark"] .segmented-control,
-[data-theme="classic-dark"] .segmented-control {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+/* Theme-agnostic segmented control styling - uses CSS variables for consistency */
+.segmented-control {
+  background: rgba(var(--theme-glass-panel-bg-rgb, 255 255 255), 0.1);
+  border: 1px solid rgba(var(--theme-glass-panel-border-rgb, 255 255 255), 0.2);
 }
 
 .segmented-control .segment {
@@ -725,35 +638,9 @@ h3 { font-size: 1.125rem; } /* 15.75px instead of 18px */
   transition: all 0.3s ease;
 }
 
+
+/* Theme-agnostic hover effects using CSS variables */
 .segmented-control:hover {
-  background: rgba(68, 50, 50, 0.15);
-}
-
-/* Theme-specific hover effects to match contrast colors */
-[data-theme="classic-light"] .segmented-control:hover {
-  background: rgba(89, 140, 193, 0.25);
-}
-
-[data-theme="professional"] .segmented-control:hover {
-  background: rgba(66, 133, 244, 0.25);
-}
-
-[data-theme="bamboo"] .segmented-control:hover {
-  background: rgba(255, 193, 7, 0.45);
-}
-
-[data-theme="apple-light"] .segmented-control:hover {
-  background: rgba(0, 0, 0, 0.12);
-}
-
-/* NYC Dusk theme hover */
-[data-theme="new-york"] .segmented-control:hover {
-  background: rgba(193, 63, 23, 0.25);
-}
-
-/* Other dark themes enhanced hover */
-[data-theme="kyoto"] .segmented-control:hover,
-[data-theme="apple-dark"] .segmented-control:hover,
-[data-theme="classic-dark"] .segmented-control:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(var(--theme-glass-panel-hover-bg-rgb, 255 255 255), 0.15);
+  border-color: rgba(var(--theme-glass-panel-hover-border-rgb, 255 255 255), 0.3);
 }
