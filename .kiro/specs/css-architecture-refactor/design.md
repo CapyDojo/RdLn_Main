@@ -2,7 +2,7 @@
 
 ## Overview
 
-The CSS Architecture Refactor will transform the current fragmented theme system into a clean, TypeScript-driven architecture. The design centers around eliminating all theme-specific CSS from glassmorphism.css and relying on the authoritative TypeScript theme definitions in `src/themes/definitions/` as the single source of truth. This eliminates cascade conflicts, removes the need for `!important` declarations, and provides a maintainable system where themes are defined once in TypeScript and CSS is generated or applied via CSS variables.
+The CSS Architecture Refactor will transform the current fragmented theme system into a clean, simple architecture that prioritizes maintainability over complexity. The design centers around the principle that **simplicity beats complexity** - eliminating bloated CSS with hundreds of overlapping selectors in favor of clean, semantic classes that work predictably. This approach eliminates cascade conflicts through architectural design rather than specificity battles, removes the need for `!important` declarations and complex `:not()` patterns, and provides a maintainable system where semantic intent is respected.
 
 ## Architecture
 
@@ -13,8 +13,10 @@ The CSS Architecture Refactor will transform the current fragmented theme system
 - Excessive `!important` declarations causing cascade conflicts
 - glassmorphism.css contains 1000+ lines with theme-specific overrides
 - Multiple failed fix attempts cluttering the codebase
-- Inconsistent hover effect implementations across themes
-- No clear pattern for theme development
+- **Complexity over simplicity**: 200+ line CSS blocks with overlapping, contradictory selectors
+- **Specificity wars**: Complex `:not()` exclusions and ultra-specific selectors fighting each other
+- **Semantic classes ignored**: `text-theme-primary-900` overridden by blanket element selectors
+- **Architectural bloat**: Layers of fixes instead of addressing root architectural issues
 
 **File Structure Issues:**
 ```
@@ -77,41 +79,54 @@ src/styles/
 .glass-effect { /* Backdrop filter utilities */ }
 ```
 
-### Theme CSS Structure
+### Theme CSS Structure - Simplicity First
 
-**Each theme file (e.g., kyoto.css):**
+**Each theme file (e.g., kyoto.css) - Clean and Minimal:**
 ```css
 /* 1. Theme CSS Variables */
 [data-theme="kyoto"] {
   --theme-glass-panel-bg: 28, 25, 23;
   --theme-glass-panel-border: 120, 113, 108;
   --theme-glass-panel-shadow: 220, 8, 8;
-  --theme-glass-hover-bg: 28, 25, 23;
-  --theme-glass-hover-border: 220, 8, 8;
-  --theme-glass-hover-shadow: 220, 8, 8;
+  --theme-text-primary: #ee8f1c;
+  --theme-text-header: #86efac;
+  --theme-text-secondary: #fef7e6;
 }
 
-/* 2. Base Panel Styles */
+/* 2. Default text color through inheritance */
+[data-theme="kyoto"] {
+  color: var(--theme-text-body);
+}
+
+/* 3. Semantic classes - Simple and Predictable */
+[data-theme="kyoto"] .text-theme-primary-900,
+[data-theme="kyoto"] .text-primary {
+  color: var(--theme-text-primary);
+}
+
+[data-theme="kyoto"] .text-header {
+  color: var(--theme-text-header);
+  font-weight: 600;
+}
+
+[data-theme="kyoto"] .text-secondary {
+  color: var(--theme-text-secondary);
+}
+
+/* 4. Glass panels - Clean inheritance */
 [data-theme="kyoto"] .glass-panel {
   background: rgba(var(--theme-glass-panel-bg), var(--glass-panel));
   border: 1px solid rgba(var(--theme-glass-panel-border), var(--glass-focus));
-  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-panel-shadow), var(--glass-strong));
 }
 
-/* 3. Hover Effects */
-[data-theme="kyoto"] .glass-panel:hover {
-  background: rgba(var(--theme-glass-hover-bg), var(--glass-focus));
-  border-color: rgba(var(--theme-glass-hover-border), 0.6);
-  box-shadow: 0 30px 80px 0 rgba(var(--theme-glass-hover-shadow), 0.7);
-  transform: translateY(-2px);
-}
-
-/* 4. Text Hierarchy */
-[data-theme="kyoto"] .text-body { /* Theme text colors */ }
-
-/* 5. Input Fields */
-[data-theme="kyoto"] .glass-input-field { /* Theme input styling */ }
+/* NO complex selectors, NO :not() exclusions, NO !important declarations */
 ```
+
+**Key Principles:**
+- **Semantic classes always work** - No element selectors overriding them
+- **Clean inheritance** - Default colors set at theme root
+- **Minimal selectors** - Only what's necessary, nothing more
+- **Predictable behavior** - Classes do what they say they do
 
 ### CSS Variable System
 

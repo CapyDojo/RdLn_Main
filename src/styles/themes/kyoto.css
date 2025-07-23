@@ -7,12 +7,12 @@ html[data-theme="kyoto"] {
   --theme-glass-border: 120, 113, 108;
   --theme-glass-hover-border: 220, 8, 8;
   --theme-glass-hover-shadow: 220, 8, 8;
-  
+
   /* Variables expected by glassmorphism.css */
   --theme-glass-panel-hover-rgb: 28, 25, 23;
   --theme-glass-panel-hover-border-rgb: 220, 8, 8;
   --theme-glass-panel-hover-shadow-rgb: 220, 8, 8;
-  
+
   /* Text hierarchy colors */
   --theme-text-body: #f8b4b4;
   --theme-text-header: #86efac;
@@ -20,225 +20,79 @@ html[data-theme="kyoto"] {
   --theme-text-interactive: #f8b4b4;
   --theme-text-success: #bbf7d0;
   --theme-text-primary: #ee8f1c;
-  
+
   /* Additional theme-specific colors */
   --theme-segmented-control-bg: 255, 255, 255;
   --theme-segmented-control-border: 255, 255, 255;
 }
 
-/* Enhanced specificity glass panel styling - overrides base glassmorphism.css */
-html[data-theme="kyoto"] .glass-panel,
-html[data-theme="kyoto"] .glass-panel.glass-content-panel,
-html[data-theme="kyoto"] .glass-panel.shadow-lg,
-html[data-theme="kyoto"] .glass-panel.shadow-md,
-html[data-theme="kyoto"] .glass-panel.shadow-sm {
-  background: rgba(var(--theme-glass-bg), var(--glass-panel)) !important;
-  border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus)) !important;
-  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong)) !important;
-  backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.6) !important;
-  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.6) !important;
+/* Simple theme glass panel styling - works with theme-conditional base */
+html[data-theme="kyoto"] .glass-panel {
+  background: rgba(var(--theme-glass-bg), var(--glass-panel));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
+  backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.6);
 }
 
-/* Glass input field styling - missing override from base */
-html[data-theme="kyoto"] .glass-input-field,
-html[data-theme="kyoto"] textarea.glass-input-field,
-html[data-theme="kyoto"] input.glass-input-field,
-html[data-theme="kyoto"] .glass-panel .glass-input-field {
-  background: rgba(var(--theme-glass-bg), var(--glass-subtle)) !important;
-  border: 1px solid rgba(var(--theme-glass-border), var(--glass-panel)) !important;
-  backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
-  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
+/* Simple input field styling - works with theme-conditional base */
+html[data-theme="kyoto"] .glass-input-field {
+  background: rgba(var(--theme-glass-bg), var(--glass-subtle));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-panel));
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
 }
 
 /* Glass input field hover effects */
 html[data-theme="kyoto"] .glass-input-field:hover,
 html[data-theme="kyoto"] textarea.glass-input-field:hover,
 html[data-theme="kyoto"] input.glass-input-field:hover {
-  border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus)) !important;
+  border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus));
 }
 
-/* COMPREHENSIVE TEXT HIERARCHY - Body Text (Peach #f8b4b4) */
-html[data-theme="kyoto"] .text-body,
-html[data-theme="kyoto"] .libertinus-math-text,
-html[data-theme="kyoto"] textarea,
-html[data-theme="kyoto"] input,
-html[data-theme="kyoto"] .glass-input-field,
-html[data-theme="kyoto"] .text-theme-neutral-800,
-html[data-theme="kyoto"] .text-theme-neutral-700,
-html[data-theme="kyoto"] .glass-panel textarea,
-html[data-theme="kyoto"] .glass-panel input,
-html[data-theme="kyoto"] .glass-panel .glass-input-field,
-html[data-theme="kyoto"] .glass-panel .text-theme-neutral-800,
-html[data-theme="kyoto"] .glass-panel .text-theme-neutral-700,
-html[data-theme="kyoto"] .glass-panel .libertinus-math-text,
-html[data-theme="kyoto"] .glass-panel .text-body,
-html[data-theme="kyoto"] textarea.glass-input-field,
-html[data-theme="kyoto"] input.glass-input-field,
-html[data-theme="kyoto"] .glass-content-panel .text-body,
-html[data-theme="kyoto"] .glass-content-panel textarea,
-html[data-theme="kyoto"] .glass-content-panel input,
-html[data-theme="kyoto"] [data-input-panel] .text-body,
-html[data-theme="kyoto"] [data-input-panel] textarea,
-html[data-theme="kyoto"] [data-input-panel] input,
-html[data-theme="kyoto"] [data-output-panel] .text-body,
-html[data-theme="kyoto"] [data-output-panel] textarea,
-html[data-theme="kyoto"] [data-output-panel] input,
-html[data-theme="kyoto"] .redline-output .text-body,
-html[data-theme="kyoto"] .comparison-result .text-body,
-html[data-theme="kyoto"] p,
-html[data-theme="kyoto"] .glass-panel p,
-html[data-theme="kyoto"] span:not(.text-header):not(.text-secondary):not(.text-interactive),
-html[data-theme="kyoto"] .glass-panel span:not(.text-header):not(.text-secondary):not(.text-interactive),
-html[data-theme="kyoto"] div:not(.text-header):not(.text-secondary):not(.text-interactive) {
-  color: var(--theme-text-body) !important;
-  /* Peach color for user-generated text */
+/* Clean Text Hierarchy - Simple and Maintainable */
+
+/* Default body text */
+html[data-theme="kyoto"] {
+  color: var(--theme-text-body);
 }
 
-/* COMPREHENSIVE TEXT HIERARCHY - Headers (Green #86efac) */
-html[data-theme="kyoto"] h1,
-html[data-theme="kyoto"] h2,
-html[data-theme="kyoto"] h3,
-html[data-theme="kyoto"] h4,
-html[data-theme="kyoto"] h5,
-html[data-theme="kyoto"] h6,
-html[data-theme="kyoto"] .text-header,
-html[data-theme="kyoto"] .glass-panel h1,
-html[data-theme="kyoto"] .glass-panel h2,
-html[data-theme="kyoto"] .glass-panel h3,
-html[data-theme="kyoto"] .glass-panel h4,
-html[data-theme="kyoto"] .glass-panel h5,
-html[data-theme="kyoto"] .glass-panel h6,
-html[data-theme="kyoto"] .glass-panel .text-header,
-html[data-theme="kyoto"] .glass-content-panel h1,
-html[data-theme="kyoto"] .glass-content-panel h2,
-html[data-theme="kyoto"] .glass-content-panel h3,
-html[data-theme="kyoto"] .glass-content-panel .text-header,
-html[data-theme="kyoto"] [data-input-panel] h1,
-html[data-theme="kyoto"] [data-input-panel] h2,
-html[data-theme="kyoto"] [data-input-panel] h3,
-html[data-theme="kyoto"] [data-input-panel] .text-header,
-html[data-theme="kyoto"] [data-output-panel] h1,
-html[data-theme="kyoto"] [data-output-panel] h2,
-html[data-theme="kyoto"] [data-output-panel] h3,
-html[data-theme="kyoto"] [data-output-panel] .text-header,
-html[data-theme="kyoto"] .floating-header h1,
-html[data-theme="kyoto"] .floating-header h2,
-html[data-theme="kyoto"] .floating-header h3,
-html[data-theme="kyoto"] .floating-header .text-header {
-  color: var(--theme-text-header) !important;
-  /* Vibrant green for headers */
+/* Semantic text classes - these should always work */
+html[data-theme="kyoto"] .text-theme-primary-900,
+html[data-theme="kyoto"] .text-primary {
+  color: var(--theme-text-primary) !important;
+}
+
+html[data-theme="kyoto"] .text-header {
+  color: var(--theme-text-header);
   font-weight: 600;
 }
 
-/* COMPREHENSIVE TEXT HIERARCHY - Secondary Text (Wheat #fef7e6) */
 html[data-theme="kyoto"] .text-secondary,
 html[data-theme="kyoto"] .text-theme-neutral-600,
-html[data-theme="kyoto"] .text-theme-neutral-500,
-html[data-theme="kyoto"] .glass-panel .text-secondary,
-html[data-theme="kyoto"] .glass-panel .text-theme-neutral-600,
-html[data-theme="kyoto"] .glass-panel .text-theme-neutral-500,
-html[data-theme="kyoto"] .glass-content-panel .text-secondary,
-html[data-theme="kyoto"] .glass-content-panel .text-theme-neutral-600,
-html[data-theme="kyoto"] .glass-content-panel .text-theme-neutral-500,
-html[data-theme="kyoto"] [data-input-panel] .text-secondary,
-html[data-theme="kyoto"] [data-input-panel] .text-theme-neutral-600,
-html[data-theme="kyoto"] [data-input-panel] .text-theme-neutral-500,
-html[data-theme="kyoto"] [data-output-panel] .text-secondary,
-html[data-theme="kyoto"] [data-output-panel] .text-theme-neutral-600,
-html[data-theme="kyoto"] [data-output-panel] .text-theme-neutral-500,
-html[data-theme="kyoto"] .text-sm,
-html[data-theme="kyoto"] .text-xs,
-html[data-theme="kyoto"] .glass-panel .text-sm,
-html[data-theme="kyoto"] .glass-panel .text-xs,
-html[data-theme="kyoto"] small,
-html[data-theme="kyoto"] .glass-panel small {
-  color: var(--theme-text-secondary) !important;
-  /* Tatami wheat off-white for secondary text */
+html[data-theme="kyoto"] .text-theme-neutral-500 {
+  color: var(--theme-text-secondary);
 }
 
-/* COMPREHENSIVE TEXT HIERARCHY - Interactive Text (Peach #f8b4b4) */
 html[data-theme="kyoto"] .text-interactive,
-html[data-theme="kyoto"] .text-theme-accent-500,
-html[data-theme="kyoto"] button:not(.glass-panel),
-html[data-theme="kyoto"] a,
-html[data-theme="kyoto"] .glass-panel .text-interactive,
-html[data-theme="kyoto"] .glass-panel .text-theme-accent-500,
-html[data-theme="kyoto"] .glass-panel button:not(.glass-panel),
-html[data-theme="kyoto"] .glass-panel a,
-html[data-theme="kyoto"] .glass-content-panel .text-interactive,
-html[data-theme="kyoto"] .glass-content-panel button:not(.glass-panel),
-html[data-theme="kyoto"] .glass-content-panel a,
-html[data-theme="kyoto"] [data-input-panel] .text-interactive,
-html[data-theme="kyoto"] [data-input-panel] button:not(.glass-panel),
-html[data-theme="kyoto"] [data-input-panel] a,
-html[data-theme="kyoto"] [data-output-panel] .text-interactive,
-html[data-theme="kyoto"] [data-output-panel] button:not(.glass-panel),
-html[data-theme="kyoto"] [data-output-panel] a,
-html[data-theme="kyoto"] .enhanced-button,
-html[data-theme="kyoto"] .glass-panel .enhanced-button {
-  color: var(--theme-text-interactive) !important;
-  /* Light maple red for interactive elements */
+html[data-theme="kyoto"] .text-theme-accent-500 {
+  color: var(--theme-text-interactive);
 }
 
-/* COMPREHENSIVE TEXT HIERARCHY - Success/Active Text (Light Green #bbf7d0) */
 html[data-theme="kyoto"] .text-success,
-html[data-theme="kyoto"] .text-active,
-html[data-theme="kyoto"] .glass-panel .text-success,
-html[data-theme="kyoto"] .glass-panel .text-active,
-html[data-theme="kyoto"] .glass-content-panel .text-success,
-html[data-theme="kyoto"] .glass-content-panel .text-active,
-html[data-theme="kyoto"] [data-input-panel] .text-success,
-html[data-theme="kyoto"] [data-input-panel] .text-active,
-html[data-theme="kyoto"] [data-output-panel] .text-success,
-html[data-theme="kyoto"] [data-output-panel] .text-active,
-html[data-theme="kyoto"] .status-success,
-html[data-theme="kyoto"] .glass-panel .status-success {
-  color: var(--theme-text-success) !important;
-  /* Light forest green for success states */
+html[data-theme="kyoto"] .text-active {
+  color: var(--theme-text-success);
 }
 
-/* COMPREHENSIVE TEXT HIERARCHY - Primary Text (Orange #ee8f1c) */
-html[data-theme="kyoto"] .text-theme-primary-900,
-html[data-theme="kyoto"] .text-primary,
-html[data-theme="kyoto"] .glass-panel .text-theme-primary-900,
-html[data-theme="kyoto"] .glass-panel .text-primary,
-html[data-theme="kyoto"] .glass-content-panel .text-theme-primary-900,
-html[data-theme="kyoto"] .glass-content-panel .text-primary,
-html[data-theme="kyoto"] [data-input-panel] .text-theme-primary-900,
-html[data-theme="kyoto"] [data-input-panel] .text-primary,
-html[data-theme="kyoto"] [data-output-panel] .text-theme-primary-900,
-html[data-theme="kyoto"] [data-output-panel] .text-primary,
-html[data-theme="kyoto"] .text-warning,
-html[data-theme="kyoto"] .glass-panel .text-warning {
-  color: var(--theme-text-primary) !important;
-  /* Orange color for specific headings and warnings */
-}
-
-/* COMPREHENSIVE TEXT HIERARCHY - Footer and Special Contexts */
-html[data-theme="kyoto"] .glass-panel-header-footer,
-html[data-theme="kyoto"] .glass-panel-header-footer .text-theme-neutral-600,
-html[data-theme="kyoto"] .glass-panel-header-footer .text-theme-neutral-500,
-html[data-theme="kyoto"] .glass-panel-header-footer p,
-html[data-theme="kyoto"] .glass-panel-header-footer span,
-html[data-theme="kyoto"] .footer-container,
-html[data-theme="kyoto"] .footer-container .text-theme-neutral-600,
-html[data-theme="kyoto"] .footer-container .text-theme-neutral-500,
-html[data-theme="kyoto"] .footer-container p,
-html[data-theme="kyoto"] .footer-container span,
-html[data-theme="kyoto"] .floating-header .text-secondary,
-html[data-theme="kyoto"] .floating-header .text-theme-neutral-600,
-html[data-theme="kyoto"] .floating-header .text-theme-neutral-500 {
-  color: var(--theme-text-secondary) !important;
-  /* Tatami wheat off-white for all footer and header text */
-}
-
-/* CONSOLIDATED HOVER EFFECTS - Enhanced specificity to override base glassmorphism.css */
-html[data-theme="kyoto"] .glass-panel:hover,
+/* CONSOLIDATED HOVER EFFECTS - Ultra-high specificity natural CSS cascade */
+html[data-theme="kyoto"] body .glass-panel:hover,
+html[data-theme="kyoto"] main .glass-panel:hover,
 html[data-theme="kyoto"] .glass-panel.glass-content-panel:hover,
 html[data-theme="kyoto"] .glass-panel.shadow-lg:hover,
 html[data-theme="kyoto"] .glass-panel.shadow-md:hover,
 html[data-theme="kyoto"] .glass-panel.shadow-sm:hover,
-html[data-theme="kyoto"] .glass-panel.hover-from-handle,
+html[data-theme="kyoto"] body .glass-panel.hover-from-handle,
+html[data-theme="kyoto"] main .glass-panel.hover-from-handle,
 html[data-theme="kyoto"] .glass-panel.glass-content-panel.hover-from-handle,
 html[data-theme="kyoto"] .glass-panel.shadow-lg.hover-from-handle,
 html[data-theme="kyoto"] .glass-panel.shadow-md.hover-from-handle,
@@ -251,12 +105,14 @@ html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel:hov
 html[data-theme="kyoto"] [data-output-panel] .glass-panel.glass-content-panel:hover,
 html[data-theme="kyoto"] [data-input-panel] .glass-panel.glass-content-panel.force-hover,
 html[data-theme="kyoto"] [data-output-panel] .glass-panel.glass-content-panel.hover-from-handle,
-html[data-theme="kyoto"] [data-input-panel] .glass-panel.hover-from-handle {
-  background: rgba(var(--theme-glass-bg), var(--glass-focus)) !important;
-  border-color: rgba(var(--theme-glass-hover-border), 0.6) !important;
-  box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4) !important;
-  transform: translateY(-2px) !important;
-  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+html[data-theme="kyoto"] [data-input-panel] .glass-panel.hover-from-handle,
+html[data-theme="kyoto"] .comparison-interface-container .glass-panel:hover,
+html[data-theme="kyoto"] .comparison-interface-container .glass-panel.hover-from-handle {
+  background: rgba(var(--theme-glass-bg), var(--glass-focus));
+  border-color: rgba(var(--theme-glass-hover-border), 0.6);
+  box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+  transform: translateY(-2px);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Segmented controls */

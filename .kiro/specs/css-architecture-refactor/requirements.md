@@ -15,7 +15,7 @@ This feature addresses the fragmented and chaotic CSS architecture in the RdLn a
 1. WHEN implementing any theme THEN the system SHALL have all theme-specific styles contained in a single dedicated CSS file per theme
 2. WHEN modifying a theme THEN the system SHALL NOT require changes to glassmorphism.css or other shared files
 3. WHEN adding a new theme THEN the system SHALL provide a clear template and structure to follow
-4. WHEN debugging theme issues THEN the system SHALL have a predictable CSS cascade without `!important` declarations
+4. WHEN debugging theme issues THEN the system SHALL have a predictable CSS cascade that prioritizes simplicity over complexity, avoiding `!important` declarations and complex selector patterns like `:not()` exclusions
 
 ### Requirement 2
 
@@ -36,8 +36,8 @@ This feature addresses the fragmented and chaotic CSS architecture in the RdLn a
 
 1. WHEN creating a new theme THEN the system SHALL provide a standardized CSS template with all required selectors
 2. WHEN implementing theme colors THEN the system SHALL use semantic CSS variables that map to consistent visual elements
-3. WHEN defining hover effects THEN the system SHALL follow a standardized pattern that works without `!important` declarations
-4. WHEN the theme is complete THEN the system SHALL validate that all required styles are implemented and accessible
+3. WHEN defining hover effects THEN the system SHALL follow a standardized pattern that works through clean CSS cascade, avoiding `!important` declarations and complex selector patterns
+4. WHEN the theme is complete THEN the system SHALL validate that all required styles are implemented using simple, maintainable CSS patterns
 
 ### Requirement 4
 
@@ -47,7 +47,7 @@ This feature addresses the fragmented and chaotic CSS architecture in the RdLn a
 
 1. WHEN the CSS architecture is implemented THEN the system SHALL eliminate all redundant theme-specific rules from shared files
 2. WHEN themes are loaded THEN the system SHALL only load the CSS for the active theme plus base styles
-3. WHEN CSS is parsed THEN the system SHALL have minimal specificity conflicts and no `!important` declarations
+3. WHEN CSS is parsed THEN the system SHALL have minimal specificity conflicts achieved through architectural simplicity rather than complex selectors or `!important` declarations
 4. WHEN measuring performance THEN the system SHALL show improved CSS parsing and rendering times compared to the current architecture
 
 ### Requirement 5
@@ -59,7 +59,7 @@ This feature addresses the fragmented and chaotic CSS architecture in the RdLn a
 1. WHEN validating themes THEN the system SHALL provide automated tools to check theme completeness and consistency
 2. WHEN testing hover effects THEN the system SHALL verify that all themes implement identical interaction patterns
 3. WHEN comparing themes THEN the system SHALL ensure that all required CSS selectors are present and functional
-4. WHEN themes are deployed THEN the system SHALL validate that no `!important` declarations are used except where absolutely necessary
+4. WHEN themes are deployed THEN the system SHALL validate that CSS architecture follows the principle of simplicity over complexity, eliminating `!important` declarations and complex selector patterns through proper architectural design
 
 ### Requirement 6
 
@@ -71,3 +71,14 @@ This feature addresses the fragmented and chaotic CSS architecture in the RdLn a
 2. WHEN themes customize glassmorphism THEN the system SHALL use CSS variables and proper cascade instead of overrides
 3. WHEN updating base glassmorphism THEN the system SHALL NOT require changes to individual theme files
 4. WHEN debugging glassmorphism issues THEN the system SHALL have clear separation between base effects and theme customizations
+
+### Requirement 7
+
+**User Story:** As a developer maintaining CSS, I want an architecture that prioritizes simplicity and maintainability over complex solutions, so that CSS issues can be resolved through architectural improvements rather than specificity battles.
+
+#### Acceptance Criteria
+
+1. WHEN encountering CSS conflicts THEN the system SHALL resolve them by simplifying the architecture rather than adding complex selectors or `!important` declarations
+2. WHEN semantic classes are applied THEN the system SHALL respect their intent without requiring specificity overrides or `:not()` exclusions
+3. WHEN debugging CSS issues THEN the system SHALL provide clear, predictable behavior through simple inheritance and cascade patterns
+4. WHEN refactoring CSS THEN the system SHALL favor removing complexity over adding layers of fixes
