@@ -21,6 +21,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -65,12 +66,14 @@
     box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
     border-color: transparent;
   }
+
   50% {
     opacity: 0.8;
     transform: translateY(-5px);
     box-shadow: 0 0 30px 5px rgba(255, 215, 0, 0.5);
     border-color: rgba(255, 215, 0, 0.8);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -84,16 +87,19 @@
     opacity: 0;
     transform: translateX(-50%) scale(0.8);
   }
+
   8.33% {
     /* ~0.5s - entrance complete */
     opacity: 1;
     transform: translateX(-50%) scale(1);
   }
+
   50% {
     /* 3s - persist phase complete, start fade */
     opacity: 1;
     transform: translateX(-50%) scale(1);
   }
+
   100% {
     /* 6s - fade complete */
     opacity: 0;
@@ -175,7 +181,8 @@
 /* Responsive behavior */
 @media (min-width: 1024px) {
   .mobile-tab-interface {
-    display: none; /* Hide on desktop */
+    display: none;
+    /* Hide on desktop */
   }
 }
 
@@ -221,7 +228,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4); /* Default lighter backdrop */
+  background: rgba(0, 0, 0, 0.4);
+  /* Default lighter backdrop */
   backdrop-filter: blur(10px);
   z-index: 100;
   display: flex;
@@ -235,143 +243,35 @@
   /* Direct content wrapper - no glassmorphism (RedlineOutput handles its own) */
   max-width: 90vw;
   max-height: 90vh;
-  overflow: visible; /* Let RedlineOutput handle its own overflow */
+  overflow: visible;
+  /* Let RedlineOutput handle its own overflow */
   animation: overlaySlideIn 0.3s ease-out;
   position: relative;
   display: flex;
   flex-direction: column;
 }
 
-/* Theme-specific container styling removed - RedlineOutput handles its own theme styling */
+/* Container styling handled by individual theme CSS files */
 
 /* ==============================================
-   THEME-SPECIFIC BACKDROP STYLES - EXACT THEME BACKGROUNDS
+   THEME-AWARE BACKDROP STYLES - SIMPLIFIED
    ============================================== */
 
-/* Professional theme - exact same background as app */
-[data-theme="professional"] .experimental-results-overlay .results-overlay {
-  background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 25%, #f8fafc  50%, #f1f5f9 75%, #e2e8f0 100%) !important;
-  background-image: 
-    linear-gradient(138deg, rgba(59, 130, 246, 0.35) 0%, rgba(147, 197, 253, 0.28) 22%, transparent 48%, rgba(219, 234, 254, 0.22) 73%, rgba(239, 246, 255, 0.15) 100%),
-    radial-gradient(ellipse at 28% 18%, rgba(226, 232, 240, 0.25) 0%, transparent 52%),
-    radial-gradient(ellipse at 78% 82%, rgba(203, 213, 225, 0.20) 0%, transparent 47%) !important;
-  background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
-  background-size: 100% 100% !important;
-}
-
-/* Bamboo theme - exact same background as app */
-[data-theme="bamboo"] .experimental-results-overlay .results-overlay {
-  background: linear-gradient(45deg, #2d5016 0%,rgb(146, 183, 113) 25%,rgb(113, 155, 81) 63%,rgb(183, 203, 165) 85%, #7ba05f 100%) !important;
-  background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
-  background-size: 100% 100% !important;
-}
-
-/* Apple Dark theme - exact same background as app */
-[data-theme="apple-dark"] .experimental-results-overlay .results-overlay {
-  background: #0a0a0a !important;
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgba(23, 23, 23, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(38, 38, 38, 0.04) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(15, 15, 15, 0.03) 0%, transparent 50%) !important;
-  background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
-  background-size: 100% 100% !important;
-}
-
-/* Kyoto theme - exact same background as app */
-[data-theme="kyoto"] .experimental-results-overlay .results-overlay {
-  background-image: 
-    /* Added subtle green and orange blurs for organic breakup */
-    radial-gradient(ellipse 1800px 900px at 15% 20%, rgba(13, 142, 48, 0.39) 0%, transparent 35%),
-    radial-gradient(ellipse 900px 600px at 85% 80%, rgba(197, 90, 17, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse 1200px 900px at 15% 25%, rgba(122, 61, 26, 0.6) 0%, rgba(155, 74, 31, 0.4) 25%, transparent 60%),
-    radial-gradient(ellipse 12300px 1800px at 78% 69%, rgba(20, 54, 20, 0.76) 0%, rgba(80, 63, 30, 0.2) 27%, transparent 90%),
-    /* Organic transition helper - subtle horizontal band to break up the diagonal */
-    radial-gradient(ellipse 1200px 600px at 48% 63%, rgba(197, 90, 17, 0.2) 30%, rgba(217, 119, 6, 0.15) 20%, transparent 70%),
-    radial-gradient(ellipse 900px 600px at 60% 10%, rgba(197, 90, 17, 0.4) 0%, rgba(217, 119, 6, 0.25) 40%, transparent 80%),
-    radial-gradient(ellipse 900px 1200px at 5% 85%, rgba(122, 61, 26, 0.3) 0%, rgba(155, 74, 31, 0.15) 50%, transparent 85%),
-    radial-gradient(ellipse 500px 700px at 95% 45%, rgba(19, 78, 74, 0.4) 0%, rgba(58, 118, 15, 0.2) 45%, transparent 90%),
-    /* Modified gradient with left-shifted emphasis */
-    linear-gradient(160deg, 
-      #7A3D1A 0%,     /* Rich burnt sienna */
-      #9B4A1F 5%,     /* Deep rust */
-      #C55A11 10%,    /* Burnt orange */
-      #D97706 15%,    /* Amber 700 */
-      rgb(220, 8, 8) 18%,    /* Amber 700 darker */
-      rgb(173, 76, 16) 27%,    /* Amber 800 */
-      #6B4423 35%,    /* Mixed brown */
-      #4A5D23 45%,    /* Olive brown - organic break */
-      #3A4D1F 55%,    /* Deeper olive */
-      #2A3D1A 60%,    /* Forest transition */
-      #1E3A1E 65%,    /* Deep forest */
-      rgb(87, 69, 12) 70%,    /* Teal 800 */
-      rgb(7, 59, 27) 80%,    /* Teal 700 */
-      #C55A11 95%,    /* Burnt orange */
-      rgb(186, 101, 3) 100%    /* Amber 700 */
-    ),
-    radial-gradient(circle at 40% 60%, rgba(30, 85, 80, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 60% 40%, rgba(140, 70, 50, 0.1) 0%, transparent 50%) !important;
-  background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
-  background-size: 100% 100% !important;
-}
-
-/* New York theme - exact same background as app */
-[data-theme="new-york"] .experimental-results-overlay .results-overlay {
-  background: #0a0a0a !important;
-  background-image: 
-    linear-gradient(180deg, #0f172a 0%, #1e293b 30%, #451a03 100%),
-    radial-gradient(circle at 50% 100%, rgba(251, 140, 0, 0.08) 0%, transparent 60%),
-    radial-gradient(circle at 25% 80%, rgba(255, 152, 0, 0.04) 0%, transparent 40%),
-    radial-gradient(circle at 75% 90%, rgba(239, 108, 0, 0.03) 0%, transparent 35%),
-    repeating-linear-gradient(90deg, transparent 0%, rgba(16, 16, 16, 0.6) 2%, transparent 4%) !important;
-  background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 2px !important;
-}
-
-/* Autumn theme - exact same background as app */
-[data-theme="autumn"] .experimental-results-overlay .results-overlay {
-  background-image: url('/images/autumn-background.jpg') !important;
-  background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
-  background-size: cover !important;
-  background-position: center !important;
-}
-
-/* Classic Light theme - exact same background as app */
-[data-theme="classic-light"] .experimental-results-overlay .results-overlay {
-  background: #dedcd5 !important;
-}
-
-/* Classic Dark theme - exact same background as app */
-[data-theme="classic-dark"] .experimental-results-overlay .results-overlay {
-  background: #171717 !important;
+/* Use CSS variables for theme-aware backgrounds */
+.experimental-results-overlay .results-overlay {
+  background: var(--theme-background, rgba(0, 0, 0, 0.4));
+  backdrop-filter: blur(10px);
 }
 
 /* ==============================================
    GLASSMORPHISM MODE OVERRIDE
    ============================================== */
 
-/* When glassmorphism mode is enabled, use translucent backdrop instead of theme background */
+/* Enhanced glassmorphism mode using CSS variables */
 .experimental-results-overlay.glassmorphism-mode .results-overlay {
-  background: rgba(255, 255, 255, 0.1) !important;
-  background-image: none !important;
-  backdrop-filter: blur(20px) saturate(1.2) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
-}
-
-/* Dark themes get darker glassmorphism backdrop */
-[data-theme="kyoto"] .experimental-results-overlay.glassmorphism-mode .results-overlay,
-[data-theme="apple-dark"] .experimental-results-overlay.glassmorphism-mode .results-overlay,
-[data-theme="classic-dark"] .experimental-results-overlay.glassmorphism-mode .results-overlay,
-[data-theme="new-york"] .experimental-results-overlay.glassmorphism-mode .results-overlay {
-  background: rgba(0, 0, 0, 0.2) !important;
-  background-image: none !important;
-  backdrop-filter: blur(20px) saturate(1.2) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
+  background: rgba(var(--theme-glass-panel-bg, 255, 255, 255), 0.1);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
 }
 
 /* Container wrapper styling removed - using direct RedlineOutput */
@@ -380,6 +280,7 @@
   0% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
@@ -390,6 +291,7 @@
     opacity: 0;
     transform: scale(0.9) translateY(20px);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -401,7 +303,7 @@
   .experimental-results-overlay .results-overlay {
     padding: 10px;
   }
-  
+
   .experimental-results-overlay .results-overlay-direct-content {
     max-width: 95vw;
     max-height: 95vh;
@@ -410,7 +312,8 @@
 
 /* Ensure proper stacking above other experimental features */
 .experimental-results-overlay .results-overlay {
-  z-index: 200; /* Higher than floating buttons (z-index: 30) */
+  z-index: 200;
+  /* Higher than floating buttons (z-index: 30) */
 }
 
 /* Auto-show period removed - users can close immediately */
@@ -468,38 +371,17 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* Theme-aware background for output section in results-first mode */
-[data-theme="professional"] .experimental-results-first.results-active .output-section {
-  background: rgba(248, 250, 252, 0.95);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
-
-[data-theme="apple-dark"] .experimental-results-first.results-active .output-section,
-[data-theme="classic-dark"] .experimental-results-first.results-active .output-section,
-[data-theme="new-york"] .experimental-results-first.results-active .output-section {
-  background: rgba(23, 23, 23, 0.95);
-  border: 1px solid rgba(64, 64, 64, 0.8);
-}
-
-[data-theme="bamboo"] .experimental-results-first.results-active .output-section {
-  background: rgba(183, 203, 165, 0.95);
-  border: 1px solid rgba(146, 183, 113, 0.8);
-}
-
-[data-theme="kyoto"] .experimental-results-first.results-active .output-section {
-  background: rgba(122, 61, 26, 0.95);
-  border: 1px solid rgba(197, 90, 17, 0.8);
-}
-
-[data-theme="autumn"] .experimental-results-first.results-active .output-section {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(139, 69, 19, 0.3);
+/* Theme-aware background using CSS variables */
+.experimental-results-first.results-active .output-section {
+  background: rgba(var(--theme-glass-panel-bg, 255, 255, 255), 0.95);
+  border: 1px solid rgba(var(--theme-glass-panel-border, 255, 255, 255), 0.8);
 }
 
 /* Mobile responsive adjustments */
@@ -507,7 +389,7 @@
   .experimental-results-first.results-active .input-section {
     transform: translateY(50vh);
   }
-  
+
   .experimental-results-first.results-active .output-section {
     transform: translateY(-25vh);
     margin: 10px;
@@ -517,15 +399,16 @@
 
 /* Accessibility: Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
+
   .experimental-results-first .output-section,
   .experimental-results-first .input-section {
     transition: none;
   }
-  
+
   .experimental-results-first.results-active .output-section [data-output-panel] {
     transform: none;
   }
-  
+
   .experimental-results-first.results-active .output-section .redline-output {
     animation: none;
   }
@@ -549,6 +432,7 @@
     z-index: 100;
     background: rgba(0, 0, 0, 0.8);
   }
+
   66% {
     /* Hold overlay for 2 seconds */
     position: fixed;
@@ -557,6 +441,7 @@
     transform: translate(-50%, -50%);
     z-index: 100;
   }
+
   100% {
     /* Animate to top position */
     position: static;
@@ -762,6 +647,7 @@
     opacity: 0;
     transform: translateY(-10px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -800,13 +686,16 @@
    RESPONSIVE BEHAVIOR
    ============================================== */
 @media (max-width: 768px) {
+
   /* Mobile-specific adjustments for experimental features */
   .experimental-floating-jump .floating-jump-button {
-    bottom: 80px; /* Avoid mobile UI elements */
+    bottom: 80px;
+    /* Avoid mobile UI elements */
   }
-  
+
   .experimental-peek-button .results-peek-button {
-    bottom: 140px; /* Stack above jump button */
+    bottom: 140px;
+    /* Stack above jump button */
   }
 }
 

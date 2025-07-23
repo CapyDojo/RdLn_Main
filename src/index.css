@@ -167,43 +167,7 @@ p, div, span, input, textarea, button, label {
 /* NOTE: Theme-specific text colors are now managed by ThemeContext and semantic color mappings */
 /* Legacy hardcoded theme CSS variables removed to prevent conflicts with dynamic theme system */
 
-/* Global text hierarchy classes */
-.text-body,
-textarea,
-input[type="text"],
-input[type="email"],
-input[type="password"],
-p,
-span:not(.text-header):not(.text-secondary) {
-  color: var(--text-body) !important;
-  line-height: 1.6 !important;
-}
-
-/* Removed global header rule - semantic classes should determine colo
-h1, h2, h3, h4, h5, h6 {
-  color: var(--text-header) !important;
-  font-weight: 600 !important;
-  line-height: 1.4 !important;
-}
-
-.text-secondary,
-.text-sm,
-.text-xs,
-label {
-  color: var(--text-secondary) !important;
-}
-
-.text-interactive,
-button,
-a,
-.cursor-pointer {
-  color: var(--text-interactive) !important;
-}
-
-.text-success,
-.text-active {
-  color: var(--text-success) !important;
-}
+/* Text hierarchy - handled by individual theme CSS files through semantic classes */
 
 /* Enhanced Button Text Legibility - Universal Font Weight Enhancement */
 button.enhanced-button,
@@ -238,50 +202,7 @@ button.enhanced-button.text-white,
   word-wrap: break-word !important;
 }
 
-/* SSMR FIX: Comprehensive theme class fix - adds missing Tailwind theme utilities */
-/* SAFE: Uses existing CSS variable system with fallbacks */
-/* MODULAR: Self-contained rules that don't affect other components */
-/* REVERSIBLE: Easy to remove by deleting this section */
-
-/* Background colors for redline output - FIXED: Use actual theme colors */
-.bg-theme-secondary-100 {
-  background-color: rgb(var(--color-secondary-100, 241 245 249)) !important;
-}
-
-.bg-theme-accent-100 {
-  background-color: rgb(var(--color-accent-100, 255 237 213)) !important;
-}
-
-/* Text colors for redline output - FIXED: Use actual theme colors */
-.text-theme-secondary-800 {
-  color: rgb(var(--color-secondary-800, 30 41 59)) !important;
-}
-
-.text-theme-accent-800 {
-  color: rgb(var(--color-accent-800, 154 52 18)) !important;
-}
-
-/* Border colors for redline output - FIXED: Use actual theme colors */
-.border-theme-secondary-300 {
-  border-width: 1px !important;
-  border-style: solid !important;
-  border-color: rgb(var(--color-secondary-300, 203 213 225)) !important;
-}
-
-.border-theme-accent-300 {
-  border-width: 1px !important;
-  border-style: solid !important;
-  border-color: rgb(var(--color-accent-300, 253 186 116)) !important;
-}
-
-/* Decoration colors for underlines/strikethroughs - FIXED: Use actual theme colors */
-.decoration-theme-secondary-600 {
-  text-decoration-color: rgb(var(--color-secondary-600, 71 85 105)) !important;
-}
-
-.decoration-theme-accent-600 {
-  text-decoration-color: rgb(var(--color-accent-600, 234 88 12)) !important;
-}
+/* Theme utility classes - handled by individual theme CSS files */
 
 /* Universal dark text enforcement for light buttons */
 .enhanced-button:not(.text-white):not([class*="bg-theme-primary-"]):not([class*="bg-theme-accent-"]):not([class*="bg-theme-neutral-6"]),

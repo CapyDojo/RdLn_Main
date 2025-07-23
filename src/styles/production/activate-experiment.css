@@ -10,8 +10,8 @@
  * 2. Delete this file or remove import to deactivate
  */
 
-/* Import the MVP unified redlining module */
-@import './unified-redline-colors-mvp.css';
+/* Import the main unified redlining module */
+@import '../unified-redline-mvp.css';
 
 /* 
  * ACTIVATION STEPS:

@@ -18,7 +18,7 @@ This experimental module provides unified redlining colors across all themes:
 
 ## Files
 
-- `unified-redline-colors.css` - Main experimental CSS overrides
+- `unified-redline-colors-mvp.css` - Removed (consolidated into main unified-redline-mvp.css)
 - `activate-experiment.css` - Simple activation module
 - `README.md` - This documentation
 
