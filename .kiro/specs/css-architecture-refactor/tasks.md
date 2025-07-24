@@ -65,46 +65,52 @@ This plan transforms the fragmented CSS architecture into a clean, maintainable 
   - Validate all theme-specific visual elements match TypeScript definition and architectural consistency with Kyoto
   - _Requirements: 1.1, 1.4, 2.1, 4.3_
 
-- [ ] 7. Create Classic Dark theme CSS file
+- [ ] 7. Create Classic Dark theme CSS file following Kyoto blueprint
+  - **Follow kyoto.css as the architectural gold standard blueprint for structure and patterns**
   - Generate CSS from authoritative TypeScript theme definition in src/themes/definitions/classic-dark.ts
-  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy
-  - Implement hover effects using theme's glassPanelHover* semantic colors
-  - Validate accessibility compliance matches TypeScript theme definition
+  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy following Kyoto pattern
+  - Implement hover effects using theme's glassPanelHover* semantic colors following Kyoto's clean approach
+  - Validate accessibility compliance matches TypeScript theme definition and architectural consistency with Kyoto
   - _Requirements: 1.1, 1.4, 2.1, 3.4_
 
-- [ ] 8. Create Classic Light theme CSS file
+- [ ] 8. Create Classic Light theme CSS file following Kyoto blueprint
+  - **Follow kyoto.css as the architectural gold standard blueprint for structure and patterns**
   - Generate CSS from authoritative TypeScript theme definition in src/themes/definitions/classic-light.ts
-  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy
-  - Implement hover effects using theme's glassPanelHover* semantic colors
-  - Validate accessibility compliance matches TypeScript theme definition
+  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy following Kyoto pattern
+  - Implement hover effects using theme's glassPanelHover* semantic colors following Kyoto's clean approach
+  - Validate accessibility compliance matches TypeScript theme definition and architectural consistency with Kyoto
   - _Requirements: 1.1, 1.4, 2.1, 3.4_
 
-- [ ] 9. Create New York theme CSS file
+- [ ] 9. Create New York theme CSS file following Kyoto blueprint
+  - **Follow kyoto.css as the architectural gold standard blueprint for structure and patterns**
   - Generate CSS from authoritative TypeScript theme definition in src/themes/definitions/new-york.ts
-  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy
-  - Implement hover effects using theme's glassPanelHover* semantic colors
-  - Validate all theme-specific visual effects match TypeScript definition
+  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy following Kyoto pattern
+  - Implement hover effects using theme's glassPanelHover* semantic colors following Kyoto's clean approach
+  - Validate all theme-specific visual effects match TypeScript definition and architectural consistency with Kyoto
   - _Requirements: 1.1, 1.4, 2.1, 4.3_
 
-- [ ] 10. Create Aurora Borealis theme CSS file
+- [ ] 10. Create Aurora Borealis theme CSS file following Kyoto blueprint
+  - **Follow kyoto.css as the architectural gold standard blueprint for structure and patterns**
   - Generate CSS from authoritative TypeScript theme definition in src/themes/definitions/aurora-borealis.ts
-  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy
-  - Implement hover effects using theme's glassPanelHover* semantic colors
-  - Validate all theme-specific visual effects match TypeScript definition
+  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy following Kyoto pattern
+  - Implement hover effects using theme's glassPanelHover* semantic colors following Kyoto's clean approach
+  - Validate all theme-specific visual effects match TypeScript definition and architectural consistency with Kyoto
   - _Requirements: 1.1, 1.4, 2.1, 4.3_
 
-- [ ] 11. Create Deep Dive theme CSS file
+- [ ] 11. Create Deep Dive theme CSS file following Kyoto blueprint
+  - **Follow kyoto.css as the architectural gold standard blueprint for structure and patterns**
   - Generate CSS from authoritative TypeScript theme definition in src/themes/definitions/deep-dive.ts
-  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy
-  - Implement hover effects using theme's glassPanelHover* semantic colors
-  - Validate all theme-specific visual effects match TypeScript definition
+  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy following Kyoto pattern
+  - Implement hover effects using theme's glassPanelHover* semantic colors following Kyoto's clean approach
+  - Validate all theme-specific visual effects match TypeScript definition and architectural consistency with Kyoto
   - _Requirements: 1.1, 1.4, 2.1, 4.3_
 
-- [ ] 12. Create Neon Night theme CSS file
+- [ ] 12. Create Neon Night theme CSS file following Kyoto blueprint
+  - **Follow kyoto.css as the architectural gold standard blueprint for structure and patterns**
   - Generate CSS from authoritative TypeScript theme definition in src/themes/definitions/neon-night.ts
-  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy
-  - Implement hover effects using theme's glassPanelHover* semantic colors
-  - Validate all theme-specific visual effects match TypeScript definition
+  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy following Kyoto pattern
+  - Implement hover effects using theme's glassPanelHover* semantic colors following Kyoto's clean approach
+  - Validate all theme-specific visual effects match TypeScript definition and architectural consistency with Kyoto
   - _Requirements: 1.1, 1.4, 2.1, 4.3_
 
 - [ ] 13. Create theme template and documentation
