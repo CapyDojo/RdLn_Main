@@ -236,6 +236,25 @@ background: rgba(var(--theme-glass-panel-bg, 255, 255, 255), var(--glass-panel))
 
 ## Testing Strategy
 
+### Test Organization
+
+**CSS Test File Structure:**
+All CSS testing scripts and validation files must be organized in a dedicated folder structure:
+```
+CSS Tests/
+├── validation/           # Theme validation scripts
+├── hover-effects/        # Hover effect testing scripts
+├── architecture/         # Architecture compliance tests
+├── performance/          # Performance testing scripts
+└── visual-regression/    # Visual regression test scripts
+```
+
+**Test File Naming Convention:**
+- Use descriptive names that indicate the test purpose
+- Prefix with test type: `validate-`, `test-`, `diagnose-`, `check-`
+- Include theme name when theme-specific: `test-professional-hover.js`
+- Use kebab-case for consistency: `validate-no-important-cleanup.js`
+
 ### Automated Theme Validation
 
 **CSS Structure Tests:**

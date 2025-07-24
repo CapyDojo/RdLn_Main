@@ -57,11 +57,12 @@ This plan transforms the fragmented CSS architecture into a clean, maintainable 
 
   - _Requirements: 1.1, 1.4, 2.1, 4.3, 7.2, 7.3_
 
-- [ ] 6. Create Bamboo theme CSS file
+- [ ] 6. Create Bamboo theme CSS file following Kyoto blueprint
+  - **Follow kyoto.css as the architectural gold standard blueprint for structure and patterns**
   - Generate CSS from authoritative TypeScript theme definition in src/themes/definitions/bamboo.ts
-  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy
-  - Implement hover effects using theme's glassPanelHover* semantic colors
-  - Validate all theme-specific visual elements match TypeScript definition
+  - Map semanticColors to CSS variables and selectors using proper cascade hierarchy following Kyoto pattern
+  - Implement hover effects using theme's glassPanelHover* semantic colors following Kyoto's clean approach
+  - Validate all theme-specific visual elements match TypeScript definition and architectural consistency with Kyoto
   - _Requirements: 1.1, 1.4, 2.1, 4.3_
 
 - [ ] 7. Create Classic Dark theme CSS file

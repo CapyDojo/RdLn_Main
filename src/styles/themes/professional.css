@@ -231,7 +231,8 @@ html[data-theme="professional"] [data-resize-handle="output-panel"]:hover {
   /* Add glass panel hover shadow effects to match panel styling */
   box-shadow: 0 12px 40px 0 rgba(30, 64, 175, 0.18), 0 4px 16px 0 rgba(var(--theme-resize-handle-hover-shadow), 0.15);
   outline: none;
-  transform: translateY(-1px); /* Subtle lift effect like glass panels */
+  transform: translateY(-1px);
+  /* Subtle lift effect like glass panels */
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -244,8 +245,10 @@ html[data-theme="professional"] [data-resize-handle="output-panel"]:hover .lucid
 
 /* Text selection styling - professional blue theme */
 html[data-theme="professional"] ::selection {
-  background-color: rgba(59, 130, 246, 0.2); /* Light blue background - primary.500 */
-  color: #0f172a; /* Dark navy text for contrast - theme-text-header */
+  background-color: rgba(59, 130, 246, 0.2);
+  /* Light blue background - primary.500 */
+  color: #0f172a;
+  /* Dark navy text for contrast - theme-text-header */
 }
 
 html[data-theme="professional"] ::-moz-selection {
