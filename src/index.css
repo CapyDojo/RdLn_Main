@@ -18,7 +18,7 @@
   --gradient-middle: rgba(255, 255, 255, 0.25);
   --gradient-end: rgba(255, 255, 255, 0.15);
   --gradient-accent: rgba(255, 255, 255, 0.4);
-  
+
   /* Font size scaling variables */
   --font-scale: 1;
   --base-font-size: 1rem;
@@ -61,7 +61,8 @@ body {
   height: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
-  background-color: #f0f0f0; /* Fallback background color */
+  background-color: #f0f0f0;
+  /* Fallback background color */
 }
 
 #root {
@@ -104,62 +105,79 @@ body {
   font-size: calc(var(--base-font-size) * 1);
 }
 
-h1 { 
-  font-size: calc(1.5rem * var(--font-scale)); 
-  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-h2 { 
-  font-size: calc(1.25rem * var(--font-scale)); 
-  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-h3 { 
-  font-size: calc(1.125rem * var(--font-scale)); 
-  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-h4 { 
-  font-size: calc(1rem * var(--font-scale)); 
-  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-h5 { 
-  font-size: calc(0.875rem * var(--font-scale)); 
-  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-h6 { 
-  font-size: calc(0.75rem * var(--font-scale)); 
+h1 {
+  font-size: calc(1.5rem * var(--font-scale));
   transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-p, div, span, input, textarea, button, label {
+h2 {
+  font-size: calc(1.25rem * var(--font-scale));
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+h3 {
+  font-size: calc(1.125rem * var(--font-scale));
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+h4 {
   font-size: calc(1rem * var(--font-scale));
   transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.text-xs { 
-  font-size: calc(0.75rem * var(--font-scale)) !important; 
+h5 {
+  font-size: calc(0.875rem * var(--font-scale));
   transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.text-sm { 
-  font-size: calc(0.875rem * var(--font-scale)) !important; 
+
+h6 {
+  font-size: calc(0.75rem * var(--font-scale));
   transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.text-base { 
-  font-size: calc(1rem * var(--font-scale)) !important; 
+
+p,
+div,
+span,
+input,
+textarea,
+button,
+label {
+  font-size: calc(1rem * var(--font-scale));
   transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.text-lg { 
-  font-size: calc(1.125rem * var(--font-scale)) !important; 
+
+.text-xs {
+  font-size: calc(0.75rem * var(--font-scale)) !important;
   transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.text-xl { 
-  font-size: calc(1.25rem * var(--font-scale)) !important; 
+
+.text-sm {
+  font-size: calc(0.875rem * var(--font-scale)) !important;
   transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.text-2xl { 
-  font-size: calc(1.5rem * var(--font-scale)) !important; 
+
+.text-base {
+  font-size: calc(1rem * var(--font-scale)) !important;
   transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.text-3xl { 
-  font-size: calc(1.875rem * var(--font-scale)) !important; 
+
+.text-lg {
+  font-size: calc(1.125rem * var(--font-scale)) !important;
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.text-xl {
+  font-size: calc(1.25rem * var(--font-scale)) !important;
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.text-2xl {
+  font-size: calc(1.5rem * var(--font-scale)) !important;
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.text-3xl {
+  font-size: calc(1.875rem * var(--font-scale)) !important;
   transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -252,40 +270,44 @@ textarea:focus {
   padding-right: 1rem !important;
 }
 
-/* Selection states - Default for all themes */
+/* Selection states - Default for all themes (removed !important to allow theme overrides) */
 ::selection {
-  background: var(--text-interactive) !important;
-  color: white !important;
+  background: var(--text-interactive);
+  color: white;
 }
 
 /* Classic Light theme - Dark selection background with white text for optimal contrast */
 [data-theme="classic-light"] ::selection {
-  background: #1e293b !important; /* Dark blue-gray for high contrast on light backgrounds */
-  color: #ffffff !important; /* Pure white text */
+  background: #1e293b;
+  /* Dark blue-gray for high contrast on light backgrounds */
+  color: #ffffff;
+  /* Pure white text */
 }
 
 /* Classic Dark theme - Light selection background with dark text for optimal contrast */
 [data-theme="classic-dark"] ::selection {
-  background: #38bdf8 !important; /* Light blue for high contrast on dark backgrounds */
-  color: #0f172a !important; /* Very dark text for maximum readability */
+  background: #38bdf8;
+  /* Light blue for high contrast on dark backgrounds */
+  color: #0f172a;
+  /* Very dark text for maximum readability */
 }
 
 /* Firefox compatibility - Default */
 ::-moz-selection {
-  background: var(--text-interactive) !important;
-  color: white !important;
+  background: var(--text-interactive);
+  color: white;
 }
 
 /* Firefox compatibility - Classic Light theme */
 [data-theme="classic-light"] ::-moz-selection {
-  background: #1e293b !important;
-  color: #ffffff !important;
+  background: #1e293b;
+  color: #ffffff;
 }
 
 /* Firefox compatibility - Classic Dark theme */
 [data-theme="classic-dark"] ::-moz-selection {
-  background: #38bdf8 !important;
-  color: #0f172a !important;
+  background: #38bdf8;
+  color: #0f172a;
 }
 
 /* ENSURE BACKDROP-FILTER WORKS */
@@ -301,7 +323,8 @@ textarea:focus {
 
 /* Text areas get higher opacity for better readability */
 .glass-content-panel .glass-panel-inner-content {
-  background: rgba(255, 255, 255, 0.15) !important; /* Higher opacity for text readability */
+  background: rgba(255, 255, 255, 0.15) !important;
+  /* Higher opacity for text readability */
 }
 
 /* All other glass-panel-inner-content keeps base opacity */
@@ -314,9 +337,11 @@ textarea:focus {
   0% {
     transform: translateX(-100%);
   }
+
   50% {
     transform: translateX(100%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -349,30 +374,49 @@ textarea:focus {
 /* Scale optimization for better 100% zoom experience */
 @media (min-width: 1024px) {
   html {
-    font-size: 14px; /* Reduce base font size from 16px to 14px for desktop */
+    font-size: 14px;
+    /* Reduce base font size from 16px to 14px for desktop */
   }
 }
 
 /* Compact component spacing */
 .glass-panel {
-  --panel-padding: 1rem; /* Reduce from default 1.5rem */
+  --panel-padding: 1rem;
+  /* Reduce from default 1.5rem */
 }
 
 /* Optimize button sizes for web app density */
 button {
-  font-size: 0.875rem; /* 14px instead of 16px */
-  padding: 0.5rem 0.75rem; /* More compact than default */
+  font-size: 0.875rem;
+  /* 14px instead of 16px */
+  padding: 0.5rem 0.75rem;
+  /* More compact than default */
 }
 
 /* Dense layout for text content */
-p, span, div {
-  line-height: 1.5; /* Tighter than default 1.6 */
+p,
+span,
+div {
+  line-height: 1.5;
+  /* Tighter than default 1.6 */
 }
 
 /* Headings optimization */
-h1 { font-size: 1.5rem; } /* 21px instead of 24px */
-h2 { font-size: 1.25rem; } /* 17.5px instead of 20px */
-h3 { font-size: 1.125rem; } /* 15.75px instead of 18px */
+h1 {
+  font-size: 1.5rem;
+}
+
+/* 21px instead of 24px */
+h2 {
+  font-size: 1.25rem;
+}
+
+/* 17.5px instead of 20px */
+h3 {
+  font-size: 1.125rem;
+}
+
+/* 15.75px instead of 18px */
 
 /* ==================================================================
    SEGMENTED CONTROL COMPONENT - iOS-style Toggle
@@ -474,13 +518,13 @@ h3 { font-size: 1.125rem; } /* 15.75px instead of 18px */
   top: 2px;
   left: 2px;
   height: calc(100% - 4px);
-  background: linear-gradient(135deg, 
-    rgba(var(--color-primary-200, 191 219 254), 0.9) 0%, 
-    rgba(var(--color-primary-100, 219 234 254), 0.7) 100%);
+  background: linear-gradient(135deg,
+      rgba(var(--color-primary-200, 191 219 254), 0.9) 0%,
+      rgba(var(--color-primary-100, 219 234 254), 0.7) 100%);
   border-radius: 6px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(12px);
-  box-shadow: 
+  box-shadow:
     0 2px 8px rgba(var(--color-primary-500, 59 130 246), 0.15),
     0 1px 4px rgba(var(--color-primary-600, 37 99 235), 0.1);
   z-index: 1;
@@ -488,14 +532,17 @@ h3 { font-size: 1.125rem; } /* 15.75px instead of 18px */
 
 /* Auto position - match actual button content width */
 .segmented-control .sliding-indicator.to-left {
-  width: 70px; /* Actual width of "🤖 Auto" content + padding */
+  width: 70px;
+  /* Actual width of "🤖 Auto" content + padding */
   transform: translateX(0%);
 }
 
 /* Manual position - match actual button content width (dynamic for count badge) */
 .segmented-control .sliding-indicator.to-right {
-  width: calc(102px + var(--manual-badge-width, 0px)); /* Base width + dynamic badge width */
-  transform: translateX(70px); /* Start after the auto button */
+  width: calc(102px + var(--manual-badge-width, 0px));
+  /* Base width + dynamic badge width */
+  transform: translateX(70px);
+  /* Start after the auto button */
 }
 
 /* ========================================
@@ -527,15 +574,18 @@ h3 { font-size: 1.125rem; } /* 15.75px instead of 18px */
 
 /* Visual Alignment - Baseline adjustments for size progression */
 .segmented-control.font-size-control .segment span[style*="16px"] {
-  transform: translateY(0px); /* Small: slight downward adjustment */
+  transform: translateY(0px);
+  /* Small: slight downward adjustment */
 }
 
 .segmented-control.font-size-control .segment span[style*="22px"] {
-  transform: translateY(-1px); /* Medium: slight downward adjustment */  
+  transform: translateY(-1px);
+  /* Medium: slight downward adjustment */
 }
 
 .segmented-control.font-size-control .segment span[style*="27px"] {
-  transform: translateY(-0.6px); /* Large: baseline reference */
+  transform: translateY(-0.6px);
+  /* Large: baseline reference */
 }
 
 /* Sliding Indicator - Font size selector active state indicator */
