@@ -1,112 +1,47 @@
-/* Professional Theme - Clean Blueprint Implementation */
-/* Generated from authoritative TypeScript theme definition in src/themes/definitions/professional.ts */
+/* Professional Theme - Following Kyoto Blueprint Pattern */
+/* Minimal variables, clean architecture, maximum maintainability */
 
-/* Theme-scoped CSS Variables - Generated from semanticColors */
+/* Theme-scoped CSS Variables - Following Kyoto Minimalist Pattern */
 html[data-theme="professional"] {
-  /* Glass panel colors (RGB values for rgba() usage) - from semanticColors */
+  /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
   --theme-glass-bg: 255, 255, 255;
-  /* glassPanelBg: #ffffff */
   --theme-glass-border: 191, 219, 254;
-  /* glassPanelBorder: #bfdbfe */
-  --theme-glass-shadow: 30, 64, 175;
-  /* glassPanelShadow: #1e40af */
-  --theme-glass-hover-bg: 248, 250, 252;
-  /* glassPanelHover: #f8fafc */
-  --theme-glass-hover-border: 191, 219, 254;
-  /* Use glassPanelBorder for consistency */
+  --theme-glass-hover-border: 59, 130, 246;
   --theme-glass-hover-shadow: 30, 64, 175;
-  /* glassPanelShadow: #1e40af */
 
-  /* Variables expected by glassmorphism.css */
+  /* Variables expected by glassmorphism.css - Essential only */
   --theme-glass-panel-hover-rgb: 248, 250, 252;
-  /* glassPanelHover: #f8fafc */
-  --theme-glass-panel-hover-border-rgb: 191, 219, 254;
-  /* glassPanelBorder: #bfdbfe */
+  --theme-glass-panel-hover-border-rgb: 59, 130, 246;
   --theme-glass-panel-hover-shadow-rgb: 30, 64, 175;
-  /* glassPanelShadow: #1e40af */
 
-  /* Text hierarchy colors - from semanticColors */
+  /* Text hierarchy colors - Minimal like Kyoto */
   --theme-text-body: #1e293b;
   --theme-text-header: #0f172a;
   --theme-text-secondary: #475569;
   --theme-text-interactive: #c2410c;
   --theme-text-success: #1d4ed8;
   --theme-text-primary: #0f172a;
-  /* Map primary to header color for consistency */
 
-  /* Input field colors - from semanticColors */
-  --theme-input-bg: 255, 255, 255;
-  /* inputBg: #ffffff */
-  --theme-input-border: 147, 197, 253;
-  /* inputBorder: #93c5fd */
-  --theme-input-focus: 59, 130, 246;
-  /* inputFocus: #3b82f6 */
-  --theme-input-placeholder: 100, 116, 139;
-  /* inputPlaceholder: #64748b */
-
-  /* Button colors - from semanticColors */
-  --theme-button-primary: #1d4ed8;
-  --theme-button-secondary: #e2e8f0;
-  --theme-button-text: #ffffff;
-  --theme-button-hover: #1e40af;
-
-  /* Resize handle colors - subtle and professional */
-  --theme-resize-handle-bg: 226, 232, 240;
-  /* Much lighter - neutral.200 */
-  --theme-resize-handle-border: 203, 213, 225;
-  /* Subtle border - neutral.300 */
-  --theme-resize-handle-shadow: 148, 163, 184;
-  /* Soft shadow - neutral.400 */
-  --theme-resize-handle-hover-bg: 191, 219, 254;
-  /* Light blue hover - primary.200 */
-  --theme-resize-handle-hover-border: 147, 197, 253;
-  /* Medium blue hover border - primary.300 */
-  --theme-resize-handle-hover-shadow: 59, 130, 246;
-  /* Blue hover shadow - primary.500 */
-
-  /* Segmented control colors */
+  /* Additional theme-specific colors - Minimal like Kyoto */
   --theme-segmented-control-bg: 59, 130, 246;
   --theme-segmented-control-border: 59, 130, 246;
-
-  /* Variables expected by base glassmorphism.css system */
-  --glass-bg: 255, 255, 255;
-  /* Map to base glassmorphism system */
-  --glass-border: 191, 219, 254;
-  /* Map to base glassmorphism system */
-  --glass-shadow: 30, 64, 175;
-  /* Map to base glassmorphism system */
 }
 
-/* Simple theme glass panel styling - follows Kyoto blueprint */
+/* Simple theme glass panel styling - works with theme-conditional base */
 html[data-theme="professional"] .glass-panel {
   background: rgba(var(--theme-glass-bg), var(--glass-panel));
   border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
-  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-shadow), var(--glass-panel));
+  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
   backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
-  color: var(--theme-text-body);
 }
 
-/* Simple input field styling - follows Kyoto blueprint */
+/* Simple input field styling - works with theme-conditional base */
 html[data-theme="professional"] .glass-input-field {
-  background: rgba(var(--theme-input-bg), var(--glass-subtle));
-  border: 1px solid rgba(var(--theme-input-border), var(--glass-panel));
+  background: rgba(var(--theme-glass-bg), var(--glass-subtle));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-panel));
   backdrop-filter: blur(var(--effect-backdropBlur, 12px));
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
-  color: var(--theme-text-body);
-  box-shadow: none;
-  transition: all 0.3s ease;
-}
-
-html[data-theme="professional"] .glass-input-field:focus {
-  background: rgba(var(--theme-input-bg), var(--glass-panel));
-  border-color: rgba(var(--theme-input-focus), var(--glass-focus));
-  box-shadow: 0 0 0 3px rgba(var(--theme-input-focus), var(--glass-subtle));
-  outline: none;
-}
-
-html[data-theme="professional"] .glass-input-field::placeholder {
-  color: rgba(var(--theme-input-placeholder), 0.7);
 }
 
 /* Glass input field hover effects */
@@ -129,6 +64,11 @@ html[data-theme="professional"] .text-primary {
   color: var(--theme-text-primary);
 }
 
+html[data-theme="professional"] .text-header {
+  color: var(--theme-text-header);
+  font-weight: 600;
+}
+
 html[data-theme="professional"] .text-secondary,
 html[data-theme="professional"] .text-theme-neutral-600,
 html[data-theme="professional"] .text-theme-neutral-500 {
@@ -136,19 +76,8 @@ html[data-theme="professional"] .text-theme-neutral-500 {
 }
 
 html[data-theme="professional"] .text-interactive,
-html[data-theme="professional"] .text-theme-accent-500,
-html[data-theme="professional"] button:not(.glass-panel),
-html[data-theme="professional"] a:not(h1):not(h2):not(h3):not(.text-header) {
+html[data-theme="professional"] .text-theme-accent-500 {
   color: var(--theme-text-interactive);
-}
-
-/* Headers - clean and simple since text-theme-primary-900 now maps correctly */
-html[data-theme="professional"] .text-header,
-html[data-theme="professional"] h1,
-html[data-theme="professional"] h2,
-html[data-theme="professional"] h3 {
-  color: var(--theme-text-header);
-  font-weight: 600;
 }
 
 html[data-theme="professional"] .text-success,
@@ -156,99 +85,21 @@ html[data-theme="professional"] .text-active {
   color: var(--theme-text-success);
 }
 
-html[data-theme="professional"] .text-body,
-html[data-theme="professional"] .libertinus-math-text {
-  color: var(--theme-text-body);
-}
-
-/* Clean Hover Effects - Stronger visual feedback */
+/* Clean Hover Effects - Simple and Maintainable */
 html[data-theme="professional"] .glass-panel:hover,
 html[data-theme="professional"] .glass-panel.hover-from-handle,
 html[data-theme="professional"] .glass-panel.force-hover {
-  background: rgba(248, 250, 252, 0.25);
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 16px 48px 0 rgba(30, 64, 175, 0.2), 0 8px 24px 0 rgba(59, 130, 246, 0.15);
+  background: rgba(var(--theme-glass-bg), var(--glass-focus));
+  border-color: rgba(var(--theme-glass-hover-border), 0.6);
+  box-shadow: 0 16px 48px 0 rgba(var(--theme-glass-hover-shadow), 0.2), 0 8px 24px 0 rgba(var(--theme-glass-hover-shadow), 0.15);
   transform: translateY(-2px);
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html[data-theme="professional"] .glass-panel.glass-content-panel:hover {
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 12px 40px 0 rgba(30, 64, 175, 0.18);
-}
-
-/* Input panel resize handle - seamless with bar (invisible but functional) */
-html[data-theme="professional"] [data-resize-handle="input-panels"] {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  outline: none;
-}
-
-/* Keep grip icon visible but styled to match theme */
-html[data-theme="professional"] [data-resize-handle="input-panels"] svg,
-html[data-theme="professional"] [data-resize-handle="input-panels"] .lucide-grip-horizontal {
-  color: var(--theme-text-secondary);
-  opacity: 0.6;
-}
-
-/* Resize handle styling - subtle and professional (output panel only) */
-html[data-theme="professional"] .output-resize-handle,
-html[data-theme="professional"] [data-resize-handle="output-panel"] {
-  background-color: rgba(var(--theme-resize-handle-bg), 0.3);
-  border-color: rgba(var(--theme-resize-handle-border), 0.2);
-  box-shadow: 0 2px 8px 0 rgba(var(--theme-resize-handle-shadow), 0.1);
-  outline: none;
-}
-
-/* Output panel grip icon - match input panel styling */
-html[data-theme="professional"] [data-resize-handle="output-panel"] svg,
-html[data-theme="professional"] [data-resize-handle="output-panel"] .lucide-grip-horizontal {
-  color: var(--theme-text-secondary);
-  opacity: 0.6;
-}
-
-/* Input panel handle hover - remain seamless but show cursor */
-html[data-theme="professional"] [data-resize-handle="input-panels"]:hover {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  outline: none;
-  cursor: row-resize;
-}
-
-/* Show grip icon more prominently on hover */
-html[data-theme="professional"] [data-resize-handle="input-panels"]:hover svg,
-html[data-theme="professional"] [data-resize-handle="input-panels"]:hover .lucide-grip-horizontal {
-  color: var(--theme-text-body);
-  opacity: 0.8;
-}
-
-html[data-theme="professional"] .output-resize-handle:hover,
-html[data-theme="professional"] [data-resize-handle="output-panel"]:hover {
-  background-color: rgba(var(--theme-resize-handle-hover-bg), 0.4);
-  border-color: rgba(var(--theme-resize-handle-hover-border), 0.3);
-  /* Add glass panel hover shadow effects to match panel styling */
-  box-shadow: 0 12px 40px 0 rgba(30, 64, 175, 0.18), 0 4px 16px 0 rgba(var(--theme-resize-handle-hover-shadow), 0.15);
-  outline: none;
-  transform: translateY(-1px);
-  /* Subtle lift effect like glass panels */
-  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Output panel grip icon hover - match input panel styling */
-html[data-theme="professional"] [data-resize-handle="output-panel"]:hover svg,
-html[data-theme="professional"] [data-resize-handle="output-panel"]:hover .lucide-grip-horizontal {
-  color: var(--theme-text-body);
-  opacity: 0.8;
-}
-
 /* Text selection styling - professional blue theme */
 html[data-theme="professional"] ::selection {
-  background-color: rgba(59, 130, 246, 0.2);
-  /* Light blue background - primary.500 */
-  color: #0f172a;
-  /* Dark navy text for contrast - theme-text-header */
+  background-color: rgba(59, 130, 246, 0.2); /* Professional blue background */
+  color: #0f172a; /* Dark navy text for contrast - theme-text-header */
 }
 
 html[data-theme="professional"] ::-moz-selection {
@@ -257,11 +108,8 @@ html[data-theme="professional"] ::-moz-selection {
 }
 
 /* Segmented controls */
-html[data-theme="professional"] .segmented-control {
-  background: rgba(var(--theme-segmented-control-bg), 0.2);
-  border: 1px solid rgba(var(--theme-segmented-control-border), 0.3);
-}
-
+html[data-theme="professional"] .segmented-control,
 html[data-theme="professional"] .segmented-control:hover {
-  background: rgba(var(--theme-segmented-control-bg), 0.25);
+  background: rgba(var(--theme-segmented-control-bg), 0.12);
+  border: 1px solid rgba(var(--theme-segmented-control-border), 0.2);
 }
