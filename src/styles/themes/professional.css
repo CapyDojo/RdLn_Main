@@ -1,99 +1,251 @@
-/* Professional theme glassmorphism - Unified opacity system */
-[data-theme="professional"] .glass-panel {
-  background: rgba(255, 255, 255, var(--glass-panel)) !important;
-  border: 1px solid rgba(var(--color-primary-200-rgb), var(--glass-focus));
-  box-shadow: 0 8px 32px 0 rgba(30, 64, 175, var(--glass-panel));
+/* Professional Theme - Clean Blueprint Implementation */
+/* Generated from authoritative TypeScript theme definition in src/themes/definitions/professional.ts */
+
+/* Theme-scoped CSS Variables - Generated from semanticColors */
+html[data-theme="professional"] {
+  /* Glass panel colors (RGB values for rgba() usage) - from semanticColors */
+  --theme-glass-bg: 255, 255, 255;
+  /* glassPanelBg: #ffffff */
+  --theme-glass-border: 191, 219, 254;
+  /* glassPanelBorder: #bfdbfe */
+  --theme-glass-shadow: 30, 64, 175;
+  /* glassPanelShadow: #1e40af */
+  --theme-glass-hover-bg: 248, 250, 252;
+  /* glassPanelHover: #f8fafc */
+  --theme-glass-hover-border: 191, 219, 254;
+  /* Use glassPanelBorder for consistency */
+  --theme-glass-hover-shadow: 30, 64, 175;
+  /* glassPanelShadow: #1e40af */
+
+  /* Variables expected by glassmorphism.css */
+  --theme-glass-panel-hover-rgb: 248, 250, 252;
+  /* glassPanelHover: #f8fafc */
+  --theme-glass-panel-hover-border-rgb: 191, 219, 254;
+  /* glassPanelBorder: #bfdbfe */
+  --theme-glass-panel-hover-shadow-rgb: 30, 64, 175;
+  /* glassPanelShadow: #1e40af */
+
+  /* Text hierarchy colors - from semanticColors */
+  --theme-text-body: #1e293b;
+  --theme-text-header: #0f172a;
+  --theme-text-secondary: #475569;
+  --theme-text-interactive: #c2410c;
+  --theme-text-success: #1d4ed8;
+  --theme-text-primary: #0f172a;
+  /* Map primary to header color for consistency */
+
+  /* Input field colors - from semanticColors */
+  --theme-input-bg: 255, 255, 255;
+  /* inputBg: #ffffff */
+  --theme-input-border: 147, 197, 253;
+  /* inputBorder: #93c5fd */
+  --theme-input-focus: 59, 130, 246;
+  /* inputFocus: #3b82f6 */
+  --theme-input-placeholder: 100, 116, 139;
+  /* inputPlaceholder: #64748b */
+
+  /* Button colors - from semanticColors */
+  --theme-button-primary: #1d4ed8;
+  --theme-button-secondary: #e2e8f0;
+  --theme-button-text: #ffffff;
+  --theme-button-hover: #1e40af;
+
+  /* Resize handle colors - subtle and professional */
+  --theme-resize-handle-bg: 226, 232, 240;
+  /* Much lighter - neutral.200 */
+  --theme-resize-handle-border: 203, 213, 225;
+  /* Subtle border - neutral.300 */
+  --theme-resize-handle-shadow: 148, 163, 184;
+  /* Soft shadow - neutral.400 */
+  --theme-resize-handle-hover-bg: 191, 219, 254;
+  /* Light blue hover - primary.200 */
+  --theme-resize-handle-hover-border: 147, 197, 253;
+  /* Medium blue hover border - primary.300 */
+  --theme-resize-handle-hover-shadow: 59, 130, 246;
+  /* Blue hover shadow - primary.500 */
+
+  /* Segmented control colors */
+  --theme-segmented-control-bg: 59, 130, 246;
+  --theme-segmented-control-border: 59, 130, 246;
+
+  /* Variables expected by base glassmorphism.css system */
+  --glass-bg: 255, 255, 255;
+  /* Map to base glassmorphism system */
+  --glass-border: 191, 219, 254;
+  /* Map to base glassmorphism system */
+  --glass-shadow: 30, 64, 175;
+  /* Map to base glassmorphism system */
+}
+
+/* Simple theme glass panel styling - follows Kyoto blueprint */
+html[data-theme="professional"] .glass-panel {
+  background: rgba(var(--theme-glass-bg), var(--glass-panel));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-shadow), var(--glass-panel));
   backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
-  color: #1e293b !important; /* Deep charcoal - enhanced with backdrop */
+  color: var(--theme-text-body);
 }
 
-/* Professional theme text hierarchy */
-[data-theme="professional"] .text-body,
-[data-theme="professional"] .libertinus-math-text {
-  color: #1e293b !important; /* Deep charcoal - 9.2:1 contrast */
+/* Simple input field styling - follows Kyoto blueprint */
+html[data-theme="professional"] .glass-input-field {
+  background: rgba(var(--theme-input-bg), var(--glass-subtle));
+  border: 1px solid rgba(var(--theme-input-border), var(--glass-panel));
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+  color: var(--theme-text-body);
+  box-shadow: none;
+  transition: all 0.3s ease;
 }
 
-[data-theme="professional"] h1,
-[data-theme="professional"] h2,
-[data-theme="professional"] h3,
-[data-theme="professional"] .text-header {
-  color: #0f172a !important; /* Navy blue - 11.5:1 contrast */
+html[data-theme="professional"] .glass-input-field:focus {
+  background: rgba(var(--theme-input-bg), var(--glass-panel));
+  border-color: rgba(var(--theme-input-focus), var(--glass-focus));
+  box-shadow: 0 0 0 3px rgba(var(--theme-input-focus), var(--glass-subtle));
+  outline: none;
+}
+
+html[data-theme="professional"] .glass-input-field::placeholder {
+  color: rgba(var(--theme-input-placeholder), 0.7);
+}
+
+/* Glass input field hover effects */
+html[data-theme="professional"] .glass-input-field:hover,
+html[data-theme="professional"] textarea.glass-input-field:hover,
+html[data-theme="professional"] input.glass-input-field:hover {
+  border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus));
+}
+
+/* Clean Text Hierarchy - Simple and Maintainable */
+
+/* Default body text */
+html[data-theme="professional"] {
+  color: var(--theme-text-body);
+}
+
+/* Semantic text classes - these should always work */
+html[data-theme="professional"] .text-theme-primary-900,
+html[data-theme="professional"] .text-primary {
+  color: var(--theme-text-primary);
+}
+
+html[data-theme="professional"] .text-secondary,
+html[data-theme="professional"] .text-theme-neutral-600,
+html[data-theme="professional"] .text-theme-neutral-500 {
+  color: var(--theme-text-secondary);
+}
+
+html[data-theme="professional"] .text-interactive,
+html[data-theme="professional"] .text-theme-accent-500,
+html[data-theme="professional"] button:not(.glass-panel),
+html[data-theme="professional"] a:not(h1):not(h2):not(h3):not(.text-header) {
+  color: var(--theme-text-interactive);
+}
+
+/* Headers - clean and simple since text-theme-primary-900 now maps correctly */
+html[data-theme="professional"] .text-header,
+html[data-theme="professional"] h1,
+html[data-theme="professional"] h2,
+html[data-theme="professional"] h3 {
+  color: var(--theme-text-header);
   font-weight: 600;
 }
 
-[data-theme="professional"] .text-secondary,
-[data-theme="professional"] .text-theme-neutral-600,
-[data-theme="professional"] .text-theme-neutral-500 {
-  color: #475569 !important; /* Medium gray - 6.8:1 contrast */
+html[data-theme="professional"] .text-success,
+html[data-theme="professional"] .text-active {
+  color: var(--theme-text-success);
 }
 
-[data-theme="professional"] .text-interactive,
-[data-theme="professional"] .text-theme-accent-500,
-[data-theme="professional"] button:not(.glass-panel),
-[data-theme="professional"] a {
-  color: #ea580c !important; /* Orange accent - 4.9:1 contrast */
+html[data-theme="professional"] .text-body,
+html[data-theme="professional"] .libertinus-math-text {
+  color: var(--theme-text-body);
 }
 
-[data-theme="professional"] .text-success,
-[data-theme="professional"] .text-active {
-  color: #1d4ed8 !important; /* Dark blue - 5.2:1 contrast */
+/* Clean Hover Effects - Stronger visual feedback */
+html[data-theme="professional"] .glass-panel:hover,
+html[data-theme="professional"] .glass-panel.hover-from-handle,
+html[data-theme="professional"] .glass-panel.force-hover {
+  background: rgba(248, 250, 252, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 16px 48px 0 rgba(30, 64, 175, 0.2), 0 8px 24px 0 rgba(59, 130, 246, 0.15) !important;
+  transform: translateY(-2px) !important;
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-[data-theme="professional"] .glass-panel:hover {
-  background: rgba(248, 250, 252, var(--glass-focus));
-  box-shadow: 0 12px 40px 0 rgba(30, 64, 175, var(--glass-strong)), 0 4px 16px 0 rgba(14, 165, 233, var(--glass-panel)) !important;
-  border-color: rgba(var(--color-primary-200-rgb), var(--glass-strong));
+html[data-theme="professional"] .glass-panel.glass-content-panel:hover {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 12px 40px 0 rgba(30, 64, 175, 0.18) !important;
 }
 
-/* Professional theme input fields with glassmorphism - Unified opacity system */
-[data-theme="professional"] .glass-input-field {
-  background: rgba(255, 255, 255, var(--glass-subtle)) !important;
-  border: 1px solid rgba(var(--color-primary-300-rgb), var(--glass-panel)) !important;
-  backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
-  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
-  color: rgb(var(--color-neutral-800-rgb)) !important;
+/* Input panel resize handle - seamless with bar (invisible but functional) */
+html[data-theme="professional"] [data-resize-handle="input-panels"] {
+  background: transparent !important;
+  border: none !important;
   box-shadow: none !important;
-  transition: all 0.3s ease !important;
-}
-
-[data-theme="professional"] .glass-input-field:focus {
-  background: rgba(255, 255, 255, var(--glass-panel)) !important;
-  border-color: rgba(var(--color-primary-500-rgb), var(--glass-focus)) !important;
-  box-shadow: 0 0 0 3px rgba(var(--color-primary-500-rgb), var(--glass-subtle)) !important;
   outline: none !important;
 }
 
-[data-theme="professional"] .glass-input-field::placeholder {
-  color: rgba(var(--color-neutral-600-rgb), 0.7) !important;
+/* Keep grip icon visible but styled to match theme */
+html[data-theme="professional"] [data-resize-handle="input-panels"] svg,
+html[data-theme="professional"] [data-resize-handle="input-panels"] .lucide-grip-horizontal {
+  color: var(--theme-text-secondary) !important;
+  opacity: 0.6 !important;
 }
 
-[data-theme="professional"] .output-resize-handle {
-  background-color: rgba(var(--color-primary-200-rgb), 0.6) !important;
-  border-color: rgba(30, 64, 175, 0.25) !important;
-  box-shadow: 0 4px 16px 0 rgba(30, 64, 175, 0.15) !important;
+/* Resize handle styling - subtle and professional (output panel only) */
+html[data-theme="professional"] .output-resize-handle,
+html[data-theme="professional"] [data-resize-handle="output-panel"] {
+  background-color: rgba(var(--theme-resize-handle-bg), 0.3) !important;
+  border-color: rgba(var(--theme-resize-handle-border), 0.2) !important;
+  box-shadow: 0 2px 8px 0 rgba(var(--theme-resize-handle-shadow), 0.1) !important;
+  outline: none !important;
 }
 
-[data-theme="professional"] .output-resize-handle:hover {
-  background-color: rgba(var(--color-primary-300-rgb), 0.7) !important;
-  border-color: rgba(30, 64, 175, 0.35) !important;
-  box-shadow: 0 8px 24px 0 rgba(30, 64, 175, 0.25) !important;
+/* Output panel grip icon - match input panel styling */
+html[data-theme="professional"] [data-resize-handle="output-panel"] svg,
+html[data-theme="professional"] [data-resize-handle="output-panel"] .lucide-grip-horizontal {
+  color: var(--theme-text-secondary) !important;
+  opacity: 0.6 !important;
 }
 
-[data-theme="professional"] .glass-panel.glass-content-panel:hover {
-  border-color: rgba(var(--color-primary-300-rgb), var(--glass-strong));
-  box-shadow: 0 8px 32px 0 rgba(var(--color-primary-600-rgb), var(--glass-panel));
+/* Input panel handle hover - remain seamless but show cursor */
+html[data-theme="professional"] [data-resize-handle="input-panels"]:hover {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  cursor: row-resize !important;
 }
 
-[data-theme="professional"] .glass-input-field::placeholder {
-  color: rgba(113, 113, 122, 0.7) !important;
+/* Show grip icon more prominently on hover */
+html[data-theme="professional"] [data-resize-handle="input-panels"]:hover svg,
+html[data-theme="professional"] [data-resize-handle="input-panels"]:hover .lucide-grip-horizontal {
+  color: var(--theme-text-body) !important;
+  opacity: 0.8 !important;
 }
 
-[data-theme="professional"] .segmented-control {
-  background: rgba(66, 133, 244, 0.2);
-  border: 1px solid rgba(66, 133, 244, 0.3);
+html[data-theme="professional"] .output-resize-handle:hover,
+html[data-theme="professional"] [data-resize-handle="output-panel"]:hover {
+  background-color: rgba(var(--theme-resize-handle-hover-bg), 0.4) !important;
+  border-color: rgba(var(--theme-resize-handle-hover-border), 0.3) !important;
+  box-shadow: 0 4px 16px 0 rgba(var(--theme-resize-handle-hover-shadow), 0.15) !important;
+  outline: none !important;
+  transform: none !important;
 }
 
-[data-theme="professional"] .segmented-control:hover {
-  background: rgba(66, 133, 244, 0.25);
+/* Output panel grip icon hover - match input panel styling */
+html[data-theme="professional"] [data-resize-handle="output-panel"]:hover svg,
+html[data-theme="professional"] [data-resize-handle="output-panel"]:hover .lucide-grip-horizontal {
+  color: var(--theme-text-body) !important;
+  opacity: 0.8 !important;
+}
+
+/* Segmented controls */
+html[data-theme="professional"] .segmented-control {
+  background: rgba(var(--theme-segmented-control-bg), 0.2);
+  border: 1px solid rgba(var(--theme-segmented-control-border), 0.3);
+}
+
+html[data-theme="professional"] .segmented-control:hover {
+  background: rgba(var(--theme-segmented-control-bg), 0.25);
 }
