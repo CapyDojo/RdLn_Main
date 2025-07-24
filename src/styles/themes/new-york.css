@@ -5,39 +5,45 @@
   box-shadow: 0 8px 32px 0 rgba(251, 140, 0, var(--glass-panel));
   backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.4);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.4);
-  color: #fafafa !important; /* Bright white - enhanced with backdrop */
+  color: #fafafa !important;
+  /* Bright white - enhanced with backdrop */
 }
 
 /* New York theme text hierarchy */
 [data-theme="new-york"] .text-body,
 [data-theme="new-york"] .libertinus-math-text {
-  color: #fafafa !important; /* Bright white - 19.2:1 contrast */
+  color: #fafafa !important;
+  /* Bright white - 19.2:1 contrast */
 }
 
 [data-theme="new-york"] h1,
 [data-theme="new-york"] h2,
 [data-theme="new-york"] h3,
 [data-theme="new-york"] .text-header {
-  color: #ffffff !important; /* Pure white - 21:1 contrast */
+  color: #ffffff !important;
+  /* Pure white - 21:1 contrast */
   font-weight: 600;
 }
 
 [data-theme="new-york"] .text-secondary,
 [data-theme="new-york"] .text-theme-neutral-600,
 [data-theme="new-york"] .text-theme-neutral-500 {
-  color: #e0e0e0 !important; /* Light cool gray - 12.8:1 contrast */
+  color: #e0e0e0 !important;
+  /* Light cool gray - 12.8:1 contrast */
 }
 
 [data-theme="new-york"] .text-interactive,
 [data-theme="new-york"] .text-theme-accent-500,
 [data-theme="new-york"] button:not(.glass-panel),
 [data-theme="new-york"] a {
-  color: #ffb74d !important; /* Warm amber - 8.9:1 contrast */
+  color: #ffb74d !important;
+  /* Warm amber - 8.9:1 contrast */
 }
 
 [data-theme="new-york"] .text-success,
 [data-theme="new-york"] .text-active {
-  color: #4dd0e1 !important; /* Electric cyan - 10.2:1 contrast */
+  color: #4dd0e1 !important;
+  /* Electric cyan - 10.2:1 contrast */
 }
 
 [data-theme="new-york"] .glass-panel:hover {
