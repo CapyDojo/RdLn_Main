@@ -1,160 +1,115 @@
-/* Bamboo theme glassmorphism - Unified opacity system */
-[data-theme="bamboo"] .glass-panel {
-  background: rgba(255, 255, 255, var(--glass-panel)) !important;
-  border: 1px solid rgba(232, 196, 31, var(--glass-focus));
-  box-shadow: 0 8px 32px 0 rgba(232, 196, 31, var(--glass-focus));
+/* Bamboo Theme - Following Kyoto Blueprint Pattern */
+/* Minimal variables, clean architecture, maximum maintainability */
+
+/* Theme-scoped CSS Variables - Following Kyoto Minimalist Pattern */
+html[data-theme="bamboo"] {
+  /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
+  --theme-glass-bg: 250, 250, 249;
+  --theme-glass-border: 251, 191, 36;
+  --theme-glass-hover-border: 217, 119, 6;
+  --theme-glass-hover-shadow: 180, 83, 9;
+
+  /* Variables expected by glassmorphism.css - Essential only */
+  --theme-glass-panel-hover-rgb: 245, 245, 244;
+  --theme-glass-panel-hover-border-rgb: 217, 119, 6;
+  --theme-glass-panel-hover-shadow-rgb: 180, 83, 9;
+
+  /* Text hierarchy colors - Minimal like Kyoto */
+  --theme-text-body: #1c1917;
+  --theme-text-header: #14532d;
+  --theme-text-secondary: #57534e;
+  --theme-text-interactive: #b45309;
+  --theme-text-success: #15803d;
+  --theme-text-primary: #14532d;
+
+  /* Additional theme-specific colors - Minimal like Kyoto */
+  --theme-segmented-control-bg: 251, 191, 36;
+  --theme-segmented-control-border: 251, 191, 36;
+}
+
+/* Simple theme glass panel styling - works with theme-conditional base */
+html[data-theme="bamboo"] .glass-panel {
+  background: rgba(var(--theme-glass-bg), var(--glass-panel));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
   backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.4);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.4);
-  color: #2e0e01 !important; /* Extremely dark ochre - enhanced with backdrop */
 }
 
-/* Bamboo theme text hierarchy */
-[data-theme="bamboo"] .text-body,
-[data-theme="bamboo"] .libertinus-math-text {
-  color: #2e0e01 !important; /* Extremely dark ochre - enhanced readability */
+/* Simple input field styling - works with theme-conditional base */
+html[data-theme="bamboo"] .glass-input-field {
+  background: rgba(var(--theme-glass-bg), var(--glass-subtle));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-panel));
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
 }
 
-[data-theme="bamboo"] h1,
-[data-theme="bamboo"] h2,
-[data-theme="bamboo"] h3,
-[data-theme="bamboo"] .text-header {
-  color: #2e0e01 !important; /* Extremely dark ochre - enhanced readability */
+/* Glass input field hover effects */
+html[data-theme="bamboo"] .glass-input-field:hover,
+html[data-theme="bamboo"] textarea.glass-input-field:hover,
+html[data-theme="bamboo"] input.glass-input-field:hover {
+  border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus));
+}
+
+/* Clean Text Hierarchy - Simple and Maintainable */
+
+/* Default body text */
+html[data-theme="bamboo"] {
+  color: var(--theme-text-body);
+}
+
+/* Semantic text classes - these should always work */
+html[data-theme="bamboo"] .text-theme-primary-900,
+html[data-theme="bamboo"] .text-primary {
+  color: var(--theme-text-primary);
+}
+
+html[data-theme="bamboo"] .text-header {
+  color: var(--theme-text-header);
   font-weight: 600;
 }
 
-[data-theme="bamboo"] .text-secondary,
-[data-theme="bamboo"] .text-theme-neutral-600,
-[data-theme="bamboo"] .text-theme-neutral-500 {
-  color: #44403c !important; /* Brown-gray - 5.8:1 contrast */
+html[data-theme="bamboo"] .text-secondary,
+html[data-theme="bamboo"] .text-theme-neutral-600,
+html[data-theme="bamboo"] .text-theme-neutral-500 {
+  color: var(--theme-text-secondary);
 }
 
-[data-theme="bamboo"] .text-interactive,
-[data-theme="bamboo"] .text-theme-accent-500,
-[data-theme="bamboo"] button:not(.glass-panel),
-[data-theme="bamboo"] a {
-  color: #2e0e01 !important; /* Extremely dark ochre - enhanced readability */
+html[data-theme="bamboo"] .text-interactive,
+html[data-theme="bamboo"] .text-theme-accent-500 {
+  color: var(--theme-text-interactive);
 }
 
-[data-theme="bamboo"] .text-success,
-[data-theme="bamboo"] .text-active {
-  color: #256325 !important; /* Rich green - 6.0:1 contrast */
+html[data-theme="bamboo"] .text-success,
+html[data-theme="bamboo"] .text-active {
+  color: var(--theme-text-success);
 }
 
-[data-theme="bamboo"] .glass-panel:hover {
-  background: rgba(248, 245, 240, var(--glass-focus));
-  box-shadow: 0 12px 40px 0 rgba(241, 172, 29, var(--glass-strong)), 0 4px 16px 0 rgba(14, 165, 233, var(--glass-panel)) !important;
-  border-color: rgba(232, 196, 31, var(--glass-strong));
+/* Clean Hover Effects - Simple and Maintainable */
+html[data-theme="bamboo"] .glass-panel:hover,
+html[data-theme="bamboo"] .glass-panel.hover-from-handle,
+html[data-theme="bamboo"] .glass-panel.force-hover {
+  background: rgba(var(--theme-glass-bg), var(--glass-focus));
+  border-color: rgba(var(--theme-glass-hover-border), 0.6);
+  box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+  transform: translateY(-2px);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Bamboo theme input fields with glassmorphism - Unified opacity system */
-[data-theme="bamboo"] .glass-input-field {
-  background: rgba(255, 255, 255, var(--glass-subtle)) !important;
-  border: 1px solid rgba(93, 138, 58, var(--glass-focus)) !important;
-  backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
-  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
-  color: #2e0e01 !important;
+/* Text selection styling - bamboo nature theme */
+html[data-theme="bamboo"] ::selection {
+  background-color: rgba(251, 191, 36, 0.25); /* Golden bamboo background */
+  color: #14532d; /* Deep forest green text for contrast - theme-text-header */
 }
 
-[data-theme="bamboo"] .glass-input-field:focus {
-  background: rgba(255, 255, 255, var(--glass-panel)) !important;
-  border-color: rgba(93, 138, 58, var(--glass-strong)) !important;
-  box-shadow: 0 0 0 3px rgba(93, 138, 58, var(--glass-subtle)) !important;
-  outline: none !important;
+html[data-theme="bamboo"] ::-moz-selection {
+  background-color: rgba(251, 191, 36, 0.25);
+  color: #14532d;
 }
 
-[data-theme="bamboo"] .glass-input-field::placeholder {
-  color: rgba(42, 50, 42, 0.7) !important;
-}
-
-/* Glass panel header and footer sections - Use unified transparency */
-[data-theme="bamboo"] .glass-panel-header-footer {
-  background: transparent !important;
-  border-color: rgba(93, 138, 58, var(--glass-focus));
-}
-
-/* Text areas get subtle background for readability across all themes */
-[data-theme="bamboo"] .glass-panel-inner-content {
-  background: rgba(255, 255, 255, var(--glass-subtle)) !important;
-}
-
-/* Text contrast improvements for bamboo theme */
-[data-theme="bamboo"] .glass-panel {
-  color: rgb(15, 20, 15);
-}
-
-[data-theme="bamboo"] .text-theme-neutral-600 {
-  color: rgb(61, 69, 61) !important;
-}
-
-[data-theme="bamboo"] .text-theme-neutral-500 {
-  color: rgb(90, 100, 90) !important;
-}
-
-[data-theme="bamboo"] .text-theme-neutral-400 {
-  color: rgb(138, 148, 138) !important;
-}
-
-[data-theme="bamboo"] .text-theme-neutral-400 {
-  color: rgba(42, 50, 42, 0.8) !important;
-}
-
-[data-theme="bamboo"] .text-theme-primary-400 {
-  color: rgba(45, 125, 45, 0.9) !important;
-}
-
-[data-theme="bamboo"] .glass-panel.glass-content-panel:hover {
-  border-color: rgba(93, 138, 58, var(--glass-focus));
-  box-shadow: 0 8px 32px 0 rgba(93, 138, 58, var(--glass-focus));
-}
-
-/* Comprehensive bamboo theme text harmonization - use extremely dark ochre everywhere */
-[data-theme="bamboo"] h1,
-[data-theme="bamboo"] h2,
-[data-theme="bamboo"] h3,
-[data-theme="bamboo"] h4,
-[data-theme="bamboo"] h5,
-[data-theme="bamboo"] h6,
-[data-theme="bamboo"] .text-header,
-[data-theme="bamboo"] .text-theme-neutral-900,
-[data-theme="bamboo"] .text-theme-neutral-800,
-[data-theme="bamboo"] .text-theme-neutral-700,
-[data-theme="bamboo"] .text-theme-primary-900,
-[data-theme="bamboo"] .text-theme-primary-800,
-[data-theme="bamboo"] .text-theme-primary-700,
-[data-theme="bamboo"] .text-theme-accent-800,
-[data-theme="bamboo"] .text-theme-accent-700,
-[data-theme="bamboo"] .text-theme-secondary-800,
-[data-theme="bamboo"] .text-theme-secondary-700,
-[data-theme="bamboo"] .text-black,
-[data-theme="bamboo"] .text-gray-900,
-[data-theme="bamboo"] .comparison-statistics-text,
-[data-theme="bamboo"] strong,
-[data-theme="bamboo"] .auto-compare-text,
-[data-theme="bamboo"] .redline-text,
-[data-theme="bamboo"] .header-card-text,
-/* Output panel wrapper class removed - using direct targeting */
-[data-theme="bamboo"] .glass-panel .output-content,
-[data-theme="bamboo"] span.bg-theme-secondary-100,
-[data-theme="bamboo"] span.bg-theme-accent-100,
-[data-theme="bamboo"] .bg-theme-secondary-100,
-[data-theme="bamboo"] .bg-theme-accent-100,
-[data-theme="bamboo"] .text-theme-primary-700,
-[data-theme="bamboo"] .text-sm,
-[data-theme="bamboo"] .font-medium,
-[data-theme="bamboo"] .font-semibold {
-  color: #2e0e01 !important;
-}
-
-/* Additional bamboo theme text coverage for edge cases */
-[data-theme="bamboo"] .glass-panel * {
-  color: inherit;
-}
-
-[data-theme="bamboo"] .segmented-control {
-  background: rgba(255, 193, 7, 0.4);
-  border: 1px solid rgba(255, 193, 7, 0.6);
-}
-
-[data-theme="bamboo"] .segmented-control:hover {
-  background: rgba(255, 193, 7, 0.45);
+/* Segmented controls */
+html[data-theme="bamboo"] .segmented-control,
+html[data-theme="bamboo"] .segmented-control:hover {
+  background: rgba(var(--theme-segmented-control-bg), 0.12);
+  border: 1px solid rgba(var(--theme-segmented-control-border), 0.2);
 }
