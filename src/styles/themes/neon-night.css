@@ -1,40 +1,42 @@
 /* Neon Night Theme - Following Kyoto Blueprint Pattern */
-/* Minimal variables, clean architecture, maximum maintainability */
-
 /* Theme-scoped CSS Variables */
 html[data-theme="neon-night"] {
-  /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
-  --theme-glass-bg: 23, 23, 23;
-  --theme-glass-border: 255, 255, 255;
-  --theme-glass-hover-border: 139, 92, 246;
-  --theme-glass-hover-shadow: 76, 29, 149;
+  /* Glass panel colors */
+  --theme-glass-bg: 8, 8, 12;
+  --theme-glass-border: 255, 0, 255;
+  --theme-glass-hover-border: 0, 255, 255;
+  --theme-glass-hover-shadow: 0, 255, 255;
 
-  /* Variables expected by glassmorphism.css - Essential only */
-  --theme-glass-panel-hover-rgb: 23, 23, 23;
-  --theme-glass-panel-hover-border-rgb: 139, 92, 246;
-  --theme-glass-panel-hover-shadow-rgb: 76, 29, 149;
+  /* Variables expected by glassmorphism.css */
+  --theme-glass-panel-hover-rgb: 8, 8, 12;
+  --theme-glass-panel-hover-border-rgb: 0, 255, 255;
+  --theme-glass-panel-hover-shadow-rgb: 0, 255, 255;
 
-  /* Text hierarchy colors - Minimal like Kyoto */
-  --theme-text-body: #f5f5f5;
-  --theme-text-header: #ffffff;
-  --theme-text-secondary: #d4d4d4;
-  --theme-text-interactive: #a78bfa;
-  --theme-text-success: #80deea;
+  /* Text hierarchy colors */
+  --theme-text-body: #e0e0ff;
+  --theme-text-header: #ff00ff;
+  --theme-text-secondary: #b0b0d0;
+  --theme-text-interactive: #00ffff;
+  --theme-text-primary: #ff00ff;
 }
 
-/* Simple theme glass panel styling - works with theme-conditional base */
+/* Neon glass panel styling */
 html[data-theme="neon-night"] .glass-panel {
-  background: rgba(var(--theme-glass-bg), var(--glass-panel));
-  border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
-  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
-  backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.8);
-  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.8);
+  background: rgba(var(--theme-glass-bg), 0.02);
+  border: 1px solid rgba(var(--theme-glass-border), 0.8);
+  box-shadow:
+    0 0 20px rgba(var(--theme-glass-border), 0.5),
+    0 0 40px rgba(var(--theme-glass-border), 0.3),
+    inset 0 0 20px rgba(var(--theme-glass-bg), 0.1);
+  backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(2.0);
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(2.0);
 }
 
-/* Simple input field styling - works with theme-conditional base */
+/* Neon input field styling */
 html[data-theme="neon-night"] .glass-input-field {
-  background: rgba(var(--theme-glass-bg), var(--glass-subtle));
-  border: 1px solid rgba(var(--theme-glass-border), var(--glass-panel));
+  background: rgba(var(--theme-glass-bg), 0.01);
+  border: 1px solid rgba(var(--theme-glass-border), 0.6);
+  box-shadow: 0 0 10px rgba(var(--theme-glass-border), 0.3);
   backdrop-filter: blur(var(--effect-backdropBlur, 12px));
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
 }
@@ -43,20 +45,21 @@ html[data-theme="neon-night"] .glass-input-field {
 html[data-theme="neon-night"] .glass-input-field:hover,
 html[data-theme="neon-night"] textarea.glass-input-field:hover,
 html[data-theme="neon-night"] input.glass-input-field:hover {
-  border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus));
+  border-color: rgba(var(--theme-glass-hover-border), 0.8);
+  box-shadow: 0 0 15px rgba(var(--theme-glass-hover-border), 0.4);
 }
 
-/* Clean Text Hierarchy - Simple and Maintainable */
+/* Clean Text Hierarchy */
 
 /* Default body text */
 html[data-theme="neon-night"] {
   color: var(--theme-text-body);
 }
 
-/* Semantic text classes - these should always work */
+/* Semantic text classes */
 html[data-theme="neon-night"] .text-theme-primary-900,
 html[data-theme="neon-night"] .text-primary {
-  color: var(--theme-text-header);
+  color: var(--theme-text-primary);
 }
 
 html[data-theme="neon-night"] .text-header {
@@ -77,36 +80,48 @@ html[data-theme="neon-night"] .text-theme-accent-500 {
 
 html[data-theme="neon-night"] .text-success,
 html[data-theme="neon-night"] .text-active {
-  color: var(--theme-text-success);
+  color: #00ff88;
 }
 
-/* Clean Hover Effects - Simple and Maintainable */
+/* Neon Hover Effects */
 html[data-theme="neon-night"] .glass-panel:hover,
 html[data-theme="neon-night"] .glass-panel.hover-from-handle,
 html[data-theme="neon-night"] .glass-panel.force-hover {
-  background: rgba(var(--theme-glass-bg), var(--glass-focus));
-  border-color: rgba(var(--theme-glass-hover-border), 0.6);
-  box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+  background: rgba(var(--theme-glass-bg), 0.06);
+  border-color: rgba(var(--theme-glass-hover-border), 1.0);
+  box-shadow:
+    0 0 30px rgba(var(--theme-glass-hover-shadow), 0.8),
+    0 0 60px rgba(var(--theme-glass-hover-border), 0.6),
+    0 0 90px rgba(var(--theme-glass-hover-shadow), 0.4),
+    inset 0 0 30px rgba(var(--theme-glass-hover-border), 0.1);
   transform: translateY(-2px);
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Text selection styling - neon night theme */
+/* Neon text selection styling */
 html[data-theme="neon-night"] ::selection {
-  background-color: rgba(139, 92, 246, 0.3);
-  /* Neon purple background */
-  color: #ffffff;
-  /* White text for contrast - theme-text-header */
+  background-color: rgba(255, 0, 255, 0.3);
+  color: #00ffff;
 }
 
 html[data-theme="neon-night"] ::-moz-selection {
-  background-color: rgba(139, 92, 246, 0.3);
-  color: #ffffff;
+  background-color: rgba(255, 0, 255, 0.3);
+  color: #00ffff;
+}
+
+/* Parent container styles - Neon Night specific */
+html[data-theme="neon-night"] .glass-panel-inner-content {
+  background: rgba(var(--theme-glass-bg), 0.01);
+}
+
+html[data-theme="neon-night"] .glass-content-panel .glass-panel-inner-content {
+  background: rgba(var(--theme-glass-bg), 0.02);
 }
 
 /* Segmented controls */
 html[data-theme="neon-night"] .segmented-control,
 html[data-theme="neon-night"] .segmented-control:hover {
-  background: rgba(139, 92, 246, 0.12);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(var(--theme-glass-hover-border), 0.12);
+  border: 1px solid rgba(var(--theme-glass-border), 0.4);
+  box-shadow: 0 0 15px rgba(var(--theme-glass-border), 0.2);
 }

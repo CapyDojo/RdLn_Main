@@ -59,7 +59,7 @@ const minimalVariables = variableCount <= 12;
 console.log(`Minimal variables (≤12): ${minimalVariables ? '✅ PASS' : '❌ FAIL'} (${variableCount})`);
 
 // 4. Proper hover effects with shadow progression
-const hasHoverProgression = content.includes('0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6)') &&
+const hasHoverProgression = content.includes('0 0 30px rgba(var(--theme-glass-hover-shadow), 0.8)') &&
                            content.includes('transform: translateY(-2px)');
 console.log(`Hover shadow progression: ${hasHoverProgression ? '✅ PASS' : '❌ FAIL'}`);
 
@@ -68,18 +68,18 @@ const noImportant = importantCount === 0;
 console.log(`No !important: ${noImportant ? '✅ PASS' : '❌ FAIL'}`);
 
 // 6. Neon Night specific colors
-const hasNeonColors = content.includes('#a78bfa') && // purple interactive
-                     content.includes('#80deea') && // electric blue success
-                     content.includes('139, 92, 246'); // purple RGB
+const hasNeonColors = content.includes('#ff00ff') && // magenta interactive
+                     content.includes('#00ff88') && // neon green success
+                     content.includes('0, 255, 255'); // cyan RGB
 console.log(`Neon Night colors: ${hasNeonColors ? '✅ PASS' : '❌ FAIL'}`);
 
 // 7. Dark theme glass background
-const hasDarkGlass = content.includes('23, 23, 23');
+const hasDarkGlass = content.includes('15, 15, 25');
 console.log(`Dark glass background: ${hasDarkGlass ? '✅ PASS' : '❌ FAIL'}`);
 
 // 8. Text selection styling
 const hasTextSelection = content.includes('::selection') && 
-                        content.includes('rgba(139, 92, 246, 0.3)');
+                        content.includes('rgba(255, 0, 255, 0.3)');
 console.log(`Text selection styling: ${hasTextSelection ? '✅ PASS' : '❌ FAIL'}`);
 
 // Overall compliance

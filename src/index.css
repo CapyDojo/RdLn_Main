@@ -321,16 +321,7 @@ textarea:focus {
   border-bottom: 1px solid rgba(255, 255, 255, var(--glass-subtle));
 }
 
-/* Text areas get higher opacity for better readability */
-.glass-content-panel .glass-panel-inner-content {
-  background: rgba(255, 255, 255, 0.15) !important;
-  /* Higher opacity for text readability */
-}
-
-/* All other glass-panel-inner-content keeps base opacity */
-.glass-panel-inner-content {
-  background: rgba(255, 255, 255, var(--glass-subtle)) !important;
-}
+/* Parent container styles moved to individual theme files for proper theme separation */
 
 /* Premium Animation Effects */
 @keyframes glassShimmer {

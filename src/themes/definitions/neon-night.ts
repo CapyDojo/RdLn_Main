@@ -10,7 +10,7 @@ export const neonNightTheme: ThemeConfig = {
   name: 'neon-night',
   displayName: 'Neon Night',
   description: 'Sophisticated dark theme with vibrant neon aesthetics',
-  background: 'linear-gradient(45deg, #1e1e1e 0%, #2d2d2d 25%, #3a3a3a 63%, #4a4a4a 85%, #5a5a5a 100%)',
+  background: 'linear-gradient(45deg, #050508 0%, #080810 25%, #0a0a12 63%, #0c0c15 85%, #0f0f18 100%)',
   colors: {
     // Inverted cool gray primary palette - dark mode adaptation
     primary: {
