@@ -1,67 +1,116 @@
-/* New York theme glassmorphism - Unified opacity system */
-[data-theme="new-york"] .glass-panel {
-  background: rgba(33, 33, 33, var(--glass-panel)) !important;
-  border: 1px solid rgba(255, 152, 0, var(--glass-focus));
-  box-shadow: 0 8px 32px 0 rgba(251, 140, 0, var(--glass-panel));
+/* New York Theme - Following Kyoto Blueprint Pattern */
+/* NYC Dusk: Urban night skyline with warm amber accents */
+/* Minimal variables, clean architecture, maximum maintainability */
+
+/* Theme-scoped CSS Variables - Following Kyoto Minimalist Pattern */
+html[data-theme="new-york"] {
+  /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
+  --theme-glass-bg: 33, 33, 33;
+  --theme-glass-border: 255, 152, 0;
+  --theme-glass-hover-border: 255, 183, 77;
+  --theme-glass-hover-shadow: 251, 140, 0;
+
+  /* Variables expected by glassmorphism.css - Essential only */
+  --theme-glass-panel-hover-rgb: 66, 66, 66;
+  --theme-glass-panel-hover-border-rgb: 255, 183, 77;
+  --theme-glass-panel-hover-shadow-rgb: 251, 140, 0;
+
+  /* Text hierarchy colors - Minimal like Kyoto */
+  --theme-text-body: #fafafa;
+  --theme-text-header: #ffffff;
+  --theme-text-secondary: #e0e0e0;
+  --theme-text-interactive: #ffb74d;
+  --theme-text-success: #4dd0e1;
+  --theme-text-primary: #ffffff;
+
+  /* Additional theme-specific colors - Minimal like Kyoto */
+  --theme-segmented-control-bg: 193, 63, 23;
+  --theme-segmented-control-border: 193, 63, 23;
+}
+
+/* Simple theme glass panel styling - works with theme-conditional base */
+html[data-theme="new-york"] .glass-panel {
+  background: rgba(var(--theme-glass-bg), var(--glass-panel));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
   backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.4);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.4);
-  color: #fafafa !important;
-  /* Bright white - enhanced with backdrop */
 }
 
-/* New York theme text hierarchy */
-[data-theme="new-york"] .text-body,
-[data-theme="new-york"] .libertinus-math-text {
-  color: #fafafa !important;
-  /* Bright white - 19.2:1 contrast */
+/* Simple input field styling - works with theme-conditional base */
+html[data-theme="new-york"] .glass-input-field {
+  background: rgba(var(--theme-glass-bg), var(--glass-subtle));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-panel));
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
 }
 
-[data-theme="new-york"] h1,
-[data-theme="new-york"] h2,
-[data-theme="new-york"] h3,
-[data-theme="new-york"] .text-header {
-  color: #ffffff !important;
-  /* Pure white - 21:1 contrast */
+/* Glass input field hover effects */
+html[data-theme="new-york"] .glass-input-field:hover,
+html[data-theme="new-york"] textarea.glass-input-field:hover,
+html[data-theme="new-york"] input.glass-input-field:hover {
+  border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus));
+}
+
+/* Clean Text Hierarchy - Simple and Maintainable */
+
+/* Default body text */
+html[data-theme="new-york"] {
+  color: var(--theme-text-body);
+}
+
+/* Semantic text classes - these should always work */
+html[data-theme="new-york"] .text-theme-primary-900,
+html[data-theme="new-york"] .text-primary {
+  color: var(--theme-text-primary);
+}
+
+html[data-theme="new-york"] .text-header {
+  color: var(--theme-text-header);
   font-weight: 600;
 }
 
-[data-theme="new-york"] .text-secondary,
-[data-theme="new-york"] .text-theme-neutral-600,
-[data-theme="new-york"] .text-theme-neutral-500 {
-  color: #e0e0e0 !important;
-  /* Light cool gray - 12.8:1 contrast */
+html[data-theme="new-york"] .text-secondary,
+html[data-theme="new-york"] .text-theme-neutral-600,
+html[data-theme="new-york"] .text-theme-neutral-500 {
+  color: var(--theme-text-secondary);
 }
 
-[data-theme="new-york"] .text-interactive,
-[data-theme="new-york"] .text-theme-accent-500,
-[data-theme="new-york"] button:not(.glass-panel),
-[data-theme="new-york"] a {
-  color: #ffb74d !important;
-  /* Warm amber - 8.9:1 contrast */
+html[data-theme="new-york"] .text-interactive,
+html[data-theme="new-york"] .text-theme-accent-500 {
+  color: var(--theme-text-interactive);
 }
 
-[data-theme="new-york"] .text-success,
-[data-theme="new-york"] .text-active {
-  color: #4dd0e1 !important;
-  /* Electric cyan - 10.2:1 contrast */
+html[data-theme="new-york"] .text-success,
+html[data-theme="new-york"] .text-active {
+  color: var(--theme-text-success);
 }
 
-[data-theme="new-york"] .glass-panel:hover {
-  background: rgba(33, 33, 33, var(--glass-focus));
-  box-shadow: 0 12px 40px 0 rgba(251, 140, 0, var(--glass-strong)), 0 4px 16px 0 rgba(14, 165, 233, var(--glass-panel)) !important;
-  border-color: rgba(255, 152, 0, var(--glass-strong));
+/* Clean Hover Effects - Simple and Maintainable */
+html[data-theme="new-york"] .glass-panel:hover,
+html[data-theme="new-york"] .glass-panel.hover-from-handle,
+html[data-theme="new-york"] .glass-panel.force-hover {
+  background: rgba(var(--theme-glass-bg), var(--glass-focus));
+  border-color: rgba(var(--theme-glass-hover-border), 0.6);
+  box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+  transform: translateY(-2px);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-[data-theme="new-york"] .glass-panel.glass-content-panel:hover {
-  border-color: rgba(255, 152, 0, var(--glass-strong));
-  box-shadow: 0 8px 32px 0 rgba(251, 140, 0, var(--glass-panel));
+/* Text selection styling - NYC urban theme */
+html[data-theme="new-york"] ::selection {
+  background-color: rgba(255, 152, 0, 0.25); /* Warm amber background */
+  color: #ffffff; /* Pure white text for contrast - theme-text-header */
 }
 
-[data-theme="new-york"] .segmented-control {
-  background: rgba(193, 63, 23, 0.2);
-  border: 1px solid rgba(193, 63, 23, 0.3);
+html[data-theme="new-york"] ::-moz-selection {
+  background-color: rgba(255, 152, 0, 0.25);
+  color: #ffffff;
 }
 
-[data-theme="new-york"] .segmented-control:hover {
-  background: rgba(193, 63, 23, 0.25);
+/* Segmented controls */
+html[data-theme="new-york"] .segmented-control,
+html[data-theme="new-york"] .segmented-control:hover {
+  background: rgba(var(--theme-segmented-control-bg), 0.12);
+  border: 1px solid rgba(var(--theme-segmented-control-border), 0.2);
 }
