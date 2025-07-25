@@ -8,8 +8,8 @@ console.log('🔄 BACKUP: Creating backup before Neon Night theme implementation
 
 // 1. Check if neon-night.css already exists
 const neonNightPath = 'src/styles/themes/neon-night.css';
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 try {
   if (fs.existsSync(neonNightPath)) {
