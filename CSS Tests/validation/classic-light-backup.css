@@ -1,0 +1,109 @@
+/* BACKUP: Original classic-light.css before Kyoto blueprint refactor */
+/* Classic Light theme glassmorphism - Light theme with orange accent borders and shadows */
+[data-theme="classic-light"] .glass-panel {
+  background: rgba(248, 250, 252, 0.65) !important; /* Increased opacity for better glass effect */
+  border: 1px solid rgba(249, 115, 22, var(--glass-focus)); /* Stronger border */
+  box-shadow: 0 6px 24px 0 rgba(249, 115, 22, var(--glass-panel)), 0 2px 8px 0 rgba(14, 165, 233, var(--glass-subtle)); /* Adjusted shadow */
+  backdrop-filter: blur(20px) saturate(1.5); /* Enhanced blur and saturation */
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  color: #1e293b !important; /* Dark text on light background */
+}
+
+/* Classic Light theme text hierarchy */
+[data-theme="classic-light"] .text-body,
+[data-theme="classic-light"] .libertinus-math-text {
+  color: #1e293b !important; /* Dark text - excellent contrast on light */
+}
+
+[data-theme="classic-light"] h1,
+[data-theme="classic-light"] h2,
+[data-theme="classic-light"] h3,
+[data-theme="classic-light"] .text-header {
+  color: #0f172a !important; /* Very dark for headers */
+  font-weight: 600;
+}
+
+[data-theme="classic-light"] .text-secondary,
+[data-theme="classic-light"] .text-theme-neutral-600,
+[data-theme="classic-light"] .text-theme-neutral-500 {
+  color: #475569 !important; /* Medium gray for secondary text */
+}
+
+[data-theme="classic-light"] .text-interactive,
+[data-theme="classic-light"] .text-theme-accent-500,
+[data-theme="classic-light"] button:not(.glass-panel),
+[data-theme="classic-light"] a {
+  color: #ea580c !important; /* Darker orange accent for better contrast */
+}
+
+[data-theme="classic-light"] .text-success,
+[data-theme="classic-light"] .text-active {
+  color: #0284c7 !important; /* Darker blue for success/active states */
+}
+
+[data-theme="classic-light"] .glass-panel:hover {
+  background: rgba(248, 250, 252, var(--glass-focus));
+  box-shadow: 0 16px 48px 0 rgba(249, 115, 22, var(--glass-strong)), 0 4px 16px 0 rgba(14, 165, 233, var(--glass-panel));
+  border-color: rgba(249, 115, 22, var(--glass-strong));
+}
+
+/* Classic Light theme input fields with glassmorphism and orange accents */
+[data-theme="classic-light"] .glass-input-field {
+  background: rgba(255, 255, 255, var(--glass-subtle)) !important;
+  border: 1px solid rgba(249, 115, 22, var(--glass-subtle)) !important;
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
+  color: #1e293b !important;
+  box-shadow: 0 2px 8px 0 rgba(249, 115, 22, var(--glass-subtle)) !important;
+  transition: all 0.3s ease !important;
+}
+
+[data-theme="classic-light"] .glass-input-field:focus {
+  background: rgba(255, 255, 255, var(--glass-panel)) !important;
+  border-color: rgba(249, 115, 22, var(--glass-focus)) !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, var(--glass-subtle)), 0 4px 16px 0 rgba(249, 115, 22, var(--glass-panel)) !important;
+  outline: none !important;
+}
+
+[data-theme="classic-light"] .glass-input-field::placeholder {
+  color: rgba(71, 85, 105, 0.7) !important;
+}
+
+/* Classic Light theme panel borders with orange accents */
+[data-theme="classic-light"] .glass-panel-header-footer {
+  background: transparent !important;
+  border-color: rgba(249, 115, 22, var(--glass-focus));
+}
+
+[data-theme="classic-light"] .glass-panel-inner-content {
+  background: rgba(255, 255, 255, var(--glass-subtle)) !important;
+}
+
+/* Enhanced orange accent borders for content panels */
+[data-theme="classic-light"] .glass-panel.glass-content-panel {
+  border: 2px solid rgba(249, 115, 22, var(--glass-subtle)) !important;
+  box-shadow: 0 4px 16px 0 rgba(249, 115, 22, var(--glass-subtle)), 0 1px 4px 0 rgba(14, 165, 233, var(--glass-subtle)) !important;
+}
+
+[data-theme="classic-light"] .glass-panel.glass-content-panel:hover {
+  border-color: rgba(249, 115, 22, var(--glass-strong)) !important;
+  box-shadow: 0 12px 40px 0 rgba(249, 115, 22, var(--glass-strong)), 0 4px 16px 0 rgba(14, 165, 233, var(--glass-panel)) !important;
+}
+
+/* Language Settings Dropdown - Enhanced opacity for classic light */
+[data-theme="classic-light"] .glass-panel.shadow-2xl {
+  background: rgba(248, 250, 252, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+  border: 1px solid rgba(249, 115, 22, 0.3) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(249, 115, 22, 0.1) !important;
+}
+
+[data-theme="classic-light"] .segmented-control {
+  background: rgba(89, 140, 193, 0.2);
+  border: 1px solid rgba(89, 140, 193, 0.3);
+}
+
+[data-theme="classic-light"] .segmented-control:hover {
+  background: rgba(89, 140, 193, 0.25);
+}

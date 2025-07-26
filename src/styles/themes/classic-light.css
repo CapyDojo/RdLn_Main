@@ -1,108 +1,115 @@
-/* Classic Light theme glassmorphism - Light theme with orange accent borders and shadows */
-[data-theme="classic-light"] .glass-panel {
-  background: rgba(248, 250, 252, 0.65) !important; /* Increased opacity for better glass effect */
-  border: 1px solid rgba(249, 115, 22, var(--glass-focus)); /* Stronger border */
-  box-shadow: 0 6px 24px 0 rgba(249, 115, 22, var(--glass-panel)), 0 2px 8px 0 rgba(14, 165, 233, var(--glass-subtle)); /* Adjusted shadow */
-  backdrop-filter: blur(20px) saturate(1.5); /* Enhanced blur and saturation */
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  color: #1e293b !important; /* Dark text on light background */
+/* Classic Light Theme - Following Kyoto Blueprint Pattern */
+/* Minimal variables, clean architecture, maximum maintainability */
+
+/* Theme-scoped CSS Variables - Following Kyoto Minimalist Pattern */
+html[data-theme="classic-light"] {
+  /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
+  --theme-glass-bg: 248, 250, 252;
+  --theme-glass-border: 249, 115, 22;
+  --theme-glass-hover-border: 234, 88, 12;
+  --theme-glass-hover-shadow: 194, 65, 12;
+
+  /* Variables expected by glassmorphism.css - Essential only */
+  --theme-glass-panel-hover-rgb: 248, 250, 252;
+  --theme-glass-panel-hover-border-rgb: 234, 88, 12;
+  --theme-glass-panel-hover-shadow-rgb: 194, 65, 12;
+
+  /* Text hierarchy colors - Minimal like Kyoto */
+  --theme-text-body: #1e293b;
+  --theme-text-header: #0f172a;
+  --theme-text-secondary: #475569;
+  --theme-text-interactive: #c2410c;
+  --theme-text-success: #0284c7;
+  --theme-text-primary: #0f172a;
+
+  /* Additional theme-specific colors - Minimal like Kyoto */
+  --theme-segmented-control-bg: 249, 115, 22;
+  --theme-segmented-control-border: 249, 115, 22;
 }
 
-/* Classic Light theme text hierarchy */
-[data-theme="classic-light"] .text-body,
-[data-theme="classic-light"] .libertinus-math-text {
-  color: #1e293b !important; /* Dark text - excellent contrast on light */
+/* Simple theme glass panel styling - works with theme-conditional base */
+html[data-theme="classic-light"] .glass-panel {
+  background: rgba(var(--theme-glass-bg), var(--glass-panel));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
+  backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 16px)) saturate(1.3);
 }
 
-[data-theme="classic-light"] h1,
-[data-theme="classic-light"] h2,
-[data-theme="classic-light"] h3,
-[data-theme="classic-light"] .text-header {
-  color: #0f172a !important; /* Very dark for headers */
+/* Simple input field styling - works with theme-conditional base */
+html[data-theme="classic-light"] .glass-input-field {
+  background: rgba(var(--theme-glass-bg), var(--glass-subtle));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-panel));
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+}
+
+/* Glass input field hover effects */
+html[data-theme="classic-light"] .glass-input-field:hover,
+html[data-theme="classic-light"] textarea.glass-input-field:hover,
+html[data-theme="classic-light"] input.glass-input-field:hover {
+  border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus));
+}
+
+/* Clean Text Hierarchy - Simple and Maintainable */
+
+/* Default body text */
+html[data-theme="classic-light"] {
+  color: var(--theme-text-body);
+}
+
+/* Semantic text classes - these should always work */
+html[data-theme="classic-light"] .text-theme-primary-900,
+html[data-theme="classic-light"] .text-primary {
+  color: var(--theme-text-primary);
+}
+
+html[data-theme="classic-light"] .text-header {
+  color: var(--theme-text-header);
   font-weight: 600;
 }
 
-[data-theme="classic-light"] .text-secondary,
-[data-theme="classic-light"] .text-theme-neutral-600,
-[data-theme="classic-light"] .text-theme-neutral-500 {
-  color: #475569 !important; /* Medium gray for secondary text */
+html[data-theme="classic-light"] .text-secondary,
+html[data-theme="classic-light"] .text-theme-neutral-600,
+html[data-theme="classic-light"] .text-theme-neutral-500 {
+  color: var(--theme-text-secondary);
 }
 
-[data-theme="classic-light"] .text-interactive,
-[data-theme="classic-light"] .text-theme-accent-500,
-[data-theme="classic-light"] button:not(.glass-panel),
-[data-theme="classic-light"] a {
-  color: #ea580c !important; /* Darker orange accent for better contrast */
+html[data-theme="classic-light"] .text-interactive,
+html[data-theme="classic-light"] .text-theme-accent-500 {
+  color: var(--theme-text-interactive);
 }
 
-[data-theme="classic-light"] .text-success,
-[data-theme="classic-light"] .text-active {
-  color: #0284c7 !important; /* Darker blue for success/active states */
+html[data-theme="classic-light"] .text-success,
+html[data-theme="classic-light"] .text-active {
+  color: var(--theme-text-success);
 }
 
-[data-theme="classic-light"] .glass-panel:hover {
-  background: rgba(248, 250, 252, var(--glass-focus));
-  box-shadow: 0 16px 48px 0 rgba(249, 115, 22, var(--glass-strong)), 0 4px 16px 0 rgba(14, 165, 233, var(--glass-panel));
-  border-color: rgba(249, 115, 22, var(--glass-strong));
+/* Clean Hover Effects - Simple and Maintainable */
+html[data-theme="classic-light"] .glass-panel:hover,
+html[data-theme="classic-light"] .glass-panel.hover-from-handle,
+html[data-theme="classic-light"] .glass-panel.force-hover {
+  background: rgba(var(--theme-glass-bg), var(--glass-focus));
+  border-color: rgba(var(--theme-glass-hover-border), 0.6);
+  box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+  transform: translateY(-2px);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Classic Light theme input fields with glassmorphism and orange accents */
-[data-theme="classic-light"] .glass-input-field {
-  background: rgba(255, 255, 255, var(--glass-subtle)) !important;
-  border: 1px solid rgba(249, 115, 22, var(--glass-subtle)) !important;
-  backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
-  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
-  color: #1e293b !important;
-  box-shadow: 0 2px 8px 0 rgba(249, 115, 22, var(--glass-subtle)) !important;
-  transition: all 0.3s ease !important;
+/* Text selection styling - classic light theme */
+html[data-theme="classic-light"] ::selection {
+  background-color: rgba(249, 115, 22, 0.25); /* Orange background */
+  color: #0f172a; /* Dark text for contrast - theme-text-header */
 }
 
-[data-theme="classic-light"] .glass-input-field:focus {
-  background: rgba(255, 255, 255, var(--glass-panel)) !important;
-  border-color: rgba(249, 115, 22, var(--glass-focus)) !important;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, var(--glass-subtle)), 0 4px 16px 0 rgba(249, 115, 22, var(--glass-panel)) !important;
-  outline: none !important;
+html[data-theme="classic-light"] ::-moz-selection {
+  background-color: rgba(249, 115, 22, 0.25);
+  color: #0f172a;
 }
 
-[data-theme="classic-light"] .glass-input-field::placeholder {
-  color: rgba(71, 85, 105, 0.7) !important;
-}
-
-/* Classic Light theme panel borders with orange accents */
-[data-theme="classic-light"] .glass-panel-header-footer {
-  background: transparent !important;
-  border-color: rgba(249, 115, 22, var(--glass-focus));
-}
-
-[data-theme="classic-light"] .glass-panel-inner-content {
-  background: rgba(255, 255, 255, var(--glass-subtle)) !important;
-}
-
-/* Enhanced orange accent borders for content panels */
-[data-theme="classic-light"] .glass-panel.glass-content-panel {
-  border: 2px solid rgba(249, 115, 22, var(--glass-subtle)) !important;
-  box-shadow: 0 4px 16px 0 rgba(249, 115, 22, var(--glass-subtle)), 0 1px 4px 0 rgba(14, 165, 233, var(--glass-subtle)) !important;
-}
-
-[data-theme="classic-light"] .glass-panel.glass-content-panel:hover {
-  border-color: rgba(249, 115, 22, var(--glass-strong)) !important;
-  box-shadow: 0 12px 40px 0 rgba(249, 115, 22, var(--glass-strong)), 0 4px 16px 0 rgba(14, 165, 233, var(--glass-panel)) !important;
-}
-
-/* Language Settings Dropdown - Enhanced opacity for classic light */
-[data-theme="classic-light"] .glass-panel.shadow-2xl {
-  background: rgba(248, 250, 252, 0.95) !important;
-  backdrop-filter: blur(20px) saturate(1.4) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
-  border: 1px solid rgba(249, 115, 22, 0.3) !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(249, 115, 22, 0.1) !important;
-}
-
-[data-theme="classic-light"] .segmented-control {
-  background: rgba(89, 140, 193, 0.2);
-  border: 1px solid rgba(89, 140, 193, 0.3);
-}
-
-[data-theme="classic-light"] .segmented-control:hover {
-  background: rgba(89, 140, 193, 0.25);
+/* Segmented controls */
+html[data-theme="classic-light"] .segmented-control,
+html[data-theme="classic-light"] .segmented-control:hover {
+  background: rgba(var(--theme-segmented-control-bg), 0.12);
+  border: 1px solid rgba(var(--theme-segmented-control-border), 0.2);
 }
