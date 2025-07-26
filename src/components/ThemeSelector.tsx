@@ -72,9 +72,9 @@ const getThemeButtonStyle = (theme: ThemeConfig, isSelected: boolean) => {
       borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
     },
     'neon-night': {
-      background: 'linear-gradient(45deg, #1e1e1e 0%, #2d2d2d 25%, #3a3a3a 63%, #4a4a4a 85%, #5a5a5a 100%)',
-      textColor: '#ffffff',
-      borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
+      background: 'linear-gradient(135deg, #050508 0%, #080810 20%, #0f0f18 40%, rgba(139, 92, 246, 0.3) 60%, rgba(0, 255, 255, 0.2) 80%, #0f0f18 100%)',
+      textColor: '#00ffff',
+      borderColor: isSelected ? '#ff00ff' : 'rgba(255, 0, 255, 0.6)'
     },
     'deep-dive': {
       background: 'linear-gradient(330deg, rgb(6, 28, 49) 0%, rgb(17, 44, 75) 25%, rgb(26, 53, 96) 63%, rgb(39, 69, 133) 85%, rgb(54, 84, 166) 100%)',

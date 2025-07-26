@@ -1,0 +1,146 @@
+/* Aurora Borealis Theme - Following Kyoto Blueprint Pattern */
+/* Minimal variables, clean architecture, maximum maintainability */
+
+/* Theme-scoped CSS Variables - Following Kyoto Minimalist Pattern */
+html[data-theme="aurora-borealis"] {
+  /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
+  --theme-glass-bg: 15, 23, 42;
+  --theme-glass-border: 56, 189, 169;
+  --theme-glass-hover-border: 100, 255, 218;
+  --theme-glass-hover-shadow: 138, 43, 226;
+
+  /* Variables expected by glassmorphism.css - Essential only */
+  --theme-glass-panel-hover-rgb: 15, 23, 42;
+  --theme-glass-panel-hover-border-rgb: 100, 255, 218;
+  --theme-glass-panel-hover-shadow-rgb: 138, 43, 226;
+
+  /* Text hierarchy colors - Minimal like Kyoto */
+  --theme-text-body: #64deea;
+  --theme-text-header: #64ffda;
+  --theme-text-secondary: #b2ebf2;
+  --theme-text-interactive: #ce93d8;
+  --theme-text-success: #b8e994;
+  --theme-text-primary: #64ffda;
+
+  /* Button color variables - Required by glassmorphism.css */
+  --button-primary-bg: #38ada9;
+  --button-primary-border: #26c6da;
+  --button-primary-text: #0f172a;
+  --button-primary-hover: #00838f;
+
+  --button-accent-bg: #ab47bc;
+  --button-accent-border: #8e24aa;
+  --button-accent-text: #ffffff;
+  --button-accent-hover: #7b1fa2;
+
+  --button-neutral-bg: #475569;
+  --button-neutral-border: #64748b;
+  --button-neutral-text: #f8fafc;
+  --button-neutral-hover: #334155;
+
+  --button-light-bg: #b2ebf2;
+  --button-light-border: #80deea;
+  --button-light-text: #0f172a;
+  --button-light-hover: #4dd0e1;
+
+  /* Additional theme-specific colors - Minimal like Kyoto */
+  --theme-segmented-control-bg: 56, 189, 169;
+  --theme-segmented-control-border: 56, 189, 169;
+}
+
+/* Simple theme glass panel styling - works with theme-conditional base */
+html[data-theme="aurora-borealis"] .glass-panel {
+  background: rgba(var(--theme-glass-bg), var(--glass-panel));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
+  backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 24px)) saturate(1.8);
+}
+
+/* Simple input field styling - works with theme-conditional base */
+html[data-theme="aurora-borealis"] .glass-input-field {
+  background: rgba(var(--theme-glass-bg), var(--glass-subtle));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-panel));
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+}
+
+/* Glass input field hover effects */
+html[data-theme="aurora-borealis"] .glass-input-field:hover,
+html[data-theme="aurora-borealis"] textarea.glass-input-field:hover,
+html[data-theme="aurora-borealis"] input.glass-input-field:hover {
+  border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus));
+}
+
+/* Clean Text Hierarchy - Simple and Maintainable */
+
+/* Default body text */
+html[data-theme="aurora-borealis"] {
+  color: var(--theme-text-body);
+}
+
+/* Semantic text classes - these should always work */
+html[data-theme="aurora-borealis"] .text-theme-primary-900,
+html[data-theme="aurora-borealis"] .text-primary {
+  color: var(--theme-text-primary);
+}
+
+html[data-theme="aurora-borealis"] .text-header {
+  color: var(--theme-text-header);
+  font-weight: 600;
+}
+
+html[data-theme="aurora-borealis"] .text-secondary,
+html[data-theme="aurora-borealis"] .text-theme-neutral-600,
+html[data-theme="aurora-borealis"] .text-theme-neutral-500 {
+  color: var(--theme-text-secondary);
+}
+
+html[data-theme="aurora-borealis"] .text-interactive,
+html[data-theme="aurora-borealis"] .text-theme-accent-500 {
+  color: var(--theme-text-interactive);
+}
+
+html[data-theme="aurora-borealis"] .text-success,
+html[data-theme="aurora-borealis"] .text-active {
+  color: var(--theme-text-success);
+}
+
+/* Additional text classes for comprehensive coverage */
+html[data-theme="aurora-borealis"] .text-theme-secondary-800 {
+  color: #0f172a;
+}
+
+html[data-theme="aurora-borealis"] .text-theme-accent-800 {
+  color: #4a148c;
+}
+
+/* Clean Hover Effects - Simple and Maintainable */
+html[data-theme="aurora-borealis"] .glass-panel:hover,
+html[data-theme="aurora-borealis"] .glass-panel.hover-from-handle,
+html[data-theme="aurora-borealis"] .glass-panel.force-hover {
+  background: rgba(var(--theme-glass-bg), var(--glass-focus));
+  border-color: rgba(var(--theme-glass-hover-border), 0.6);
+  box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+  transform: translateY(-2px);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Text selection styling - aurora borealis theme */
+html[data-theme="aurora-borealis"] ::selection {
+  background-color: rgba(100, 255, 218, 0.25); /* Aurora teal background */
+  color: #0f172a; /* Dark navy text for contrast */
+}
+
+html[data-theme="aurora-borealis"] ::-moz-selection {
+  background-color: rgba(100, 255, 218, 0.25);
+  color: #0f172a;
+}
+
+/* Segmented controls */
+html[data-theme="aurora-borealis"] .segmented-control,
+html[data-theme="aurora-borealis"] .segmented-control:hover {
+  background: rgba(var(--theme-segmented-control-bg), 0.12);
+  border: 1px solid rgba(var(--theme-segmented-control-border), 0.2);
+}
+
