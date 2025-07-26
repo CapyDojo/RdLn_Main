@@ -1,0 +1,118 @@
+/* Classic Dark theme glassmorphism - Dark theme with pure greys and orange accent borders */
+[data-theme="classic-dark"] .glass-panel {
+  background: rgba(38, 38, 38, 0.65) !important; /* Increased opacity */
+  border: 1px solid rgba(249, 115, 22, var(--glass-focus)); /* Stronger border */
+  box-shadow: 0 6px 24px 0 rgba(249, 115, 22, var(--glass-panel)), 0 2px 8px 0 rgba(14, 165, 233, var(--glass-subtle)); /* Adjusted shadow */
+  backdrop-filter: blur(20px) saturate(1.5); /* Enhanced blur and saturation */
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  color: #fafafa !important; /* Light text on dark background */
+}
+
+/* Classic Dark theme text hierarchy */
+[data-theme="classic-dark"] .text-body,
+[data-theme="classic-dark"] .libertinus-math-text,
+[data-theme="classic-dark"] .output-content {
+  color: #fafafa !important; /* Pure white for text - excellent contrast on dark */
+}
+
+[data-theme="classic-dark"] h1,
+[data-theme="classic-dark"] h2,
+[data-theme="classic-dark"] h3,
+[data-theme="classic-dark"] .text-header {
+  color: #ffffff !important; /* Pure white for headers */
+  font-weight: 600;
+}
+
+[data-theme="classic-dark"] .text-secondary,
+[data-theme="classic-dark"] .text-theme-neutral-600,
+[data-theme="classic-dark"] .text-theme-neutral-500 {
+  color: #a3a3a3 !important; /* Pure medium gray for secondary text */
+}
+
+[data-theme="classic-dark"] .text-interactive,
+[data-theme="classic-dark"] .text-theme-accent-500,
+[data-theme="classic-dark"] button:not(.glass-panel),
+[data-theme="classic-dark"] a {
+  color: #fb923c !important; /* Orange accent for interactive elements */
+}
+
+/* Ensure all output panel text is properly colored for dark mode */
+[data-theme="classic-dark"] .glass-panel-inner-content *,
+[data-theme="classic-dark"] .text-theme-neutral-800,
+[data-theme="classic-dark"] .text-theme-neutral-700,
+[data-theme="classic-dark"] .font-serif,
+[data-theme="classic-dark"] span {
+  color: #fafafa !important; /* Pure white for all output text */
+}
+
+[data-theme="classic-dark"] .text-success,
+[data-theme="classic-dark"] .text-active {
+  color: #38bdf8 !important; /* Light blue for success/active states */
+}
+
+[data-theme="classic-dark"] .glass-panel:hover {
+  background: rgba(38, 38, 38, var(--glass-focus));
+  box-shadow: 0 8px 24px 0 rgba(249, 115, 22, var(--glass-panel)), 0 2px 8px 0 rgba(14, 165, 233, var(--glass-subtle));
+  border-color: rgba(249, 115, 22, var(--glass-focus));
+}
+
+/* Classic Dark theme input fields with glassmorphism and orange accents */
+[data-theme="classic-dark"] .glass-input-field {
+  background: rgba(64, 64, 64, var(--glass-subtle)) !important;
+  border: 1px solid rgba(249, 115, 22, var(--glass-subtle)) !important;
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
+  color: #fafafa !important;
+  box-shadow: 0 2px 8px 0 rgba(249, 115, 22, var(--glass-subtle)) !important;
+  transition: all 0.3s ease !important;
+}
+
+[data-theme="classic-dark"] .glass-input-field:focus {
+  background: rgba(64, 64, 64, var(--glass-panel)) !important;
+  border-color: rgba(249, 115, 22, var(--glass-focus)) !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, var(--glass-subtle)), 0 4px 16px 0 rgba(249, 115, 22, var(--glass-panel)) !important;
+  outline: none !important;
+}
+
+[data-theme="classic-dark"] .glass-input-field::placeholder {
+  color: rgba(163, 163, 163, 0.7) !important;
+}
+
+/* Classic Dark theme panel borders with orange accents */
+[data-theme="classic-dark"] .glass-panel-header-footer {
+  background: transparent !important;
+  border-color: rgba(249, 115, 22, var(--glass-focus));
+}
+
+[data-theme="classic-dark"] .glass-panel-inner-content {
+  background: rgba(64, 64, 64, var(--glass-subtle)) !important;
+}
+
+/* Enhanced orange accent borders for content panels */
+[data-theme="classic-dark"] .glass-panel.glass-content-panel {
+  border: 2px solid rgba(249, 115, 22, var(--glass-subtle)) !important;
+  box-shadow: 0 4px 16px 0 rgba(249, 115, 22, var(--glass-subtle)), 0 1px 4px 0 rgba(14, 165, 233, var(--glass-subtle)) !important;
+}
+
+[data-theme="classic-dark"] .glass-panel.glass-content-panel:hover {
+  border-color: rgba(249, 115, 22, var(--glass-focus)) !important;
+  box-shadow: 0 8px 24px 0 rgba(249, 115, 22, var(--glass-panel)), 0 2px 8px 0 rgba(14, 165, 233, var(--glass-subtle)) !important;
+}
+
+/* Language Settings Dropdown - Enhanced opacity for classic dark */
+[data-theme="classic-dark"] .glass-panel.shadow-2xl {
+  background: rgba(38, 38, 38, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+  border: 1px solid rgba(249, 115, 22, 0.3) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(249, 115, 22, 0.2) !important;
+}
+
+[data-theme="classic-dark"] .segmented-control {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="classic-dark"] .segmented-control:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
