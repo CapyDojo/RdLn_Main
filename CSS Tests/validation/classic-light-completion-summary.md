@@ -4,7 +4,7 @@
 
 **Task:** Create Classic Light theme CSS file following Kyoto blueprint with Professional learnings
 
-**Date:** 2025-01-25  
+**Date:** 2025-07-25  
 **Status:** Successfully implemented and validated
 
 ## 📊 Achievement Metrics
@@ -55,7 +55,7 @@ html[data-theme="classic-light"] {
 ### Key Features Implemented
 1. **Clean Glass Panels:** Light blue background with orange accent borders
 2. **Professional Text Hierarchy:** Dark text on light background for excellent readability
-3. **Hover Effects:** Proper shadow strengthening with transform animations
+3. **Subtle Shadow Effects:** Reduced intensity shadows (4px/16px rest, 12px/32px hover) with proper progression
 4. **Input Fields:** Glass styling with orange accent borders
 5. **Text Selection:** Orange highlight with dark text for contrast
 6. **Segmented Controls:** Consistent orange accent theming
@@ -90,8 +90,9 @@ html[data-theme="classic-light"] {
 ### Glass Effects
 - **Backdrop Blur:** 16px with 1.3x saturation
 - **Panel Opacity:** Uses CSS variables for consistent opacity levels
-- **Shadow System:** Orange-tinted shadows that strengthen on hover
+- **Shadow System:** Subtle orange-tinted shadows (reduced intensity) that strengthen on hover
 - **Border System:** Orange accent borders with focus states
+- **Shadow Progression:** Rest (4px/16px) → Hover (12px/32px) with reduced opacity (0.25-0.4)
 
 ## 🔧 Technical Implementation
 
@@ -165,5 +166,14 @@ src/styles/themes/
 
 ### Gold Standard Quality
 The Classic Light theme now serves as a third blueprint alongside Kyoto and Professional, demonstrating that the architectural principles can be successfully applied to create high-quality, maintainable themes with excellent performance characteristics.
+
+## 🔄 Recent Updates
+
+### Shadow Intensity Reduction (2025-07-25)
+- **Rest State:** Reduced from `0 8px 32px` to `0 4px 16px` for subtler appearance
+- **Hover State:** Reduced from `0 24px 64px, 0 10px 36px` to `0 12px 32px, 0 6px 18px`
+- **Opacity Values:** Lowered from 0.6/0.4 to 0.4/0.25 for more refined look
+- **Visual Impact:** Maintains glass effect and depth while being less prominent
+- **Validation:** Created `test-classic-light-shadow-reduction.js` for testing
 
 **Implementation Status: 🏆 COMPLETE AND PRODUCTION READY**
