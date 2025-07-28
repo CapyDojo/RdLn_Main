@@ -16,11 +16,11 @@ html[data-theme="lothlorien"] {
 
   /* Text hierarchy colors - Minimal like Kyoto */
   --theme-text-body: #d1fae5;
-  --theme-text-header: #004915;
+  --theme-text-header: #1fa450;
   --theme-text-secondary: #a7f3d0;
   --theme-text-interactive: #0ea5e9;
-  --theme-text-success: #4ade80;
-  --theme-text-primary: #22c55e;
+  --theme-text-success: #1fa450;
+  --theme-text-primary: #1fa450;
 
   /* Additional theme-specific colors - Minimal like Kyoto */
   --theme-segmented-control-bg: 34, 197, 94;
