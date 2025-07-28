@@ -1,5 +1,5 @@
-/* Lothlórien Theme - Soothing Elven Forest Theme for Tired Eyes */
-/* Following Mariana Blueprint Pattern - Minimal variables, clean architecture */
+/* Lothlórien Theme - Following Kyoto Blueprint Pattern */
+/* Minimal variables, clean architecture, maximum maintainability */
 
 /* Theme-scoped CSS Variables - Following Kyoto Minimalist Pattern */
 html[data-theme="lothlorien"] {
@@ -14,28 +14,24 @@ html[data-theme="lothlorien"] {
   --theme-glass-panel-hover-border-rgb: 34, 197, 94;
   --theme-glass-panel-hover-shadow-rgb: 21, 128, 61;
 
-  /* Text hierarchy colors - Enhanced for A+ readability */
+  /* Text hierarchy colors - Minimal like Kyoto */
   --theme-text-body: #d1fae5;
   --theme-text-header: #004915;
   --theme-text-secondary: #a7f3d0;
   --theme-text-interactive: #0ea5e9;
   --theme-text-success: #4ade80;
   --theme-text-primary: #22c55e;
-  --theme-text-warning: #f59e0b;
-  --theme-text-error: #ef4444;
 
   /* Additional theme-specific colors - Minimal like Kyoto */
   --theme-segmented-control-bg: 34, 197, 94;
   --theme-segmented-control-border: 34, 197, 94;
 }
 
-/* Enhanced glass panel styling - A+ visual hierarchy */
+/* Simple theme glass panel styling - works with theme-conditional base */
 html[data-theme="lothlorien"] .glass-panel {
   background: rgba(var(--theme-glass-bg), var(--glass-panel));
   border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
-  box-shadow:
-    0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong)),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
   backdrop-filter: blur(var(--effect-backdropBlur, 20px)) saturate(1.2);
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 20px)) saturate(1.2);
 }
@@ -55,90 +51,47 @@ html[data-theme="lothlorien"] input.glass-input-field:hover {
   border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus));
 }
 
-/* Enhanced Text Hierarchy - A+ Readability with Eye Comfort */
+/* Clean Text Hierarchy - Simple and Maintainable */
 
-/* Default body text with subtle text shadow for depth */
+/* Default body text */
 html[data-theme="lothlorien"] {
   color: var(--theme-text-body);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Headers - High contrast with deep forest green */
-html[data-theme="lothlorien"] .text-header,
-html[data-theme="lothlorien"] h1,
-html[data-theme="lothlorien"] h2,
-html[data-theme="lothlorien"] h3 {
-  color: var(--theme-text-header);
-  font-weight: 600;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-}
-
-/* Primary text - Green but with better contrast */
+/* Semantic text classes - these should always work */
 html[data-theme="lothlorien"] .text-theme-primary-900,
 html[data-theme="lothlorien"] .text-primary {
   color: var(--theme-text-primary);
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Secondary text - Balanced contrast */
+html[data-theme="lothlorien"] .text-header {
+  color: var(--theme-text-header);
+  font-weight: 600;
+}
+
 html[data-theme="lothlorien"] .text-secondary,
 html[data-theme="lothlorien"] .text-theme-neutral-600,
 html[data-theme="lothlorien"] .text-theme-neutral-500 {
   color: var(--theme-text-secondary);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Interactive elements - Blue accent for clarity */
 html[data-theme="lothlorien"] .text-interactive,
-html[data-theme="lothlorien"] .text-theme-accent-500,
-html[data-theme="lothlorien"] a {
+html[data-theme="lothlorien"] .text-theme-accent-500 {
   color: var(--theme-text-interactive);
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
 }
 
-html[data-theme="lothlorien"] .text-interactive:hover,
-html[data-theme="lothlorien"] a:hover {
-  color: #38bdf8;
-  text-shadow: 0 0 8px rgba(14, 165, 233, 0.4);
-}
-
-/* Success states - Bright green for visibility */
 html[data-theme="lothlorien"] .text-success,
 html[data-theme="lothlorien"] .text-active {
   color: var(--theme-text-success);
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Warning states - Amber for attention */
-html[data-theme="lothlorien"] .text-warning {
-  color: var(--theme-text-warning);
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-/* Error states - Red for critical attention */
-html[data-theme="lothlorien"] .text-error,
-html[data-theme="lothlorien"] .text-danger {
-  color: var(--theme-text-error);
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-/* Enhanced Hover Effects - A+ Interactive Feedback */
+/* Clean Hover Effects - Simple and Maintainable */
 html[data-theme="lothlorien"] .glass-panel:hover,
 html[data-theme="lothlorien"] .glass-panel.hover-from-handle,
 html[data-theme="lothlorien"] .glass-panel.force-hover {
   background: rgba(var(--theme-glass-bg), var(--glass-focus));
-  border-color: rgba(var(--theme-glass-hover-border), 0.8);
-  box-shadow:
-    0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6),
-    0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 0 0 1px rgba(34, 197, 94, 0.3);
+  border-color: rgba(var(--theme-glass-hover-border), 0.6);
+  box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
   transform: translateY(-2px);
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -163,144 +116,7 @@ html[data-theme="lothlorien"] .segmented-control:hover {
   border: 1px solid rgba(var(--theme-segmented-control-border), 0.2);
 }
 
-/* Enhanced Button Styling - A+ Interactive Elements */
-html[data-theme="lothlorien"] button,
-html[data-theme="lothlorien"] .btn {
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: var(--theme-text-body);
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  box-shadow:
-    0 2px 8px rgba(21, 128, 61, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: all 0.2s ease;
-}
-
-html[data-theme="lothlorien"] button:hover,
-html[data-theme="lothlorien"] .btn:hover {
-  background: rgba(34, 197, 94, 0.25);
-  border-color: rgba(34, 197, 94, 0.5);
-  color: var(--theme-text-header);
-  transform: translateY(-1px);
-  box-shadow:
-    0 4px 16px rgba(21, 128, 61, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 0 0 1px rgba(34, 197, 94, 0.2);
-}
-
-/* Primary buttons - Amber accent for critical actions */
-html[data-theme="lothlorien"] button.btn-primary,
-html[data-theme="lothlorien"] .btn-primary {
-  background: rgba(245, 158, 11, 0.2);
-  border-color: rgba(245, 158, 11, 0.4);
-  color: #fbbf24;
-  font-weight: 600;
-}
-
-html[data-theme="lothlorien"] button.btn-primary:hover,
-html[data-theme="lothlorien"] .btn-primary:hover {
-  background: rgba(245, 158, 11, 0.3);
-  border-color: rgba(245, 158, 11, 0.6);
-  color: #fcd34d;
-  box-shadow:
-    0 4px 16px rgba(245, 158, 11, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 0 0 1px rgba(245, 158, 11, 0.2);
-}
-
-/* Interactive links - Blue accent */
-html[data-theme="lothlorien"] .btn-link {
-  background: transparent;
-  border: 1px solid rgba(14, 165, 233, 0.3);
-  color: var(--theme-text-interactive);
-}
-
-html[data-theme="lothlorien"] .btn-link:hover {
-  background: rgba(14, 165, 233, 0.1);
-  border-color: rgba(14, 165, 233, 0.5);
-  color: #38bdf8;
-}
-
-/* Enhanced Focus States - WCAG AAA Compliance */
-html[data-theme="lothlorien"] button:focus,
-html[data-theme="lothlorien"] a:focus,
-html[data-theme="lothlorien"] input:focus,
-html[data-theme="lothlorien"] textarea:focus {
-  outline: 2px solid #fbbf24;
-  outline-offset: 2px;
-  box-shadow:
-    0 0 0 4px rgba(245, 158, 11, 0.2),
-    0 4px 16px rgba(245, 158, 11, 0.3);
-}
-
-/* Status indicators with better contrast */
-html[data-theme="lothlorien"] .status-success {
-  background: rgba(74, 222, 128, 0.2);
-  border: 1px solid rgba(74, 222, 128, 0.4);
-  color: #4ade80;
-}
-
-html[data-theme="lothlorien"] .status-warning {
-  background: rgba(245, 158, 11, 0.2);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #fbbf24;
-}
-
-html[data-theme="lothlorien"] .status-error {
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #f87171;
-}
-
-/* Enhanced input field styling */
-html[data-theme="lothlorien"] input,
-html[data-theme="lothlorien"] textarea {
-  background: rgba(var(--theme-glass-bg), 0.3);
-  border: 1px solid rgba(var(--theme-glass-border), 0.4);
-  color: var(--theme-text-body);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-html[data-theme="lothlorien"] input:focus,
-html[data-theme="lothlorien"] textarea:focus {
-  background: rgba(var(--theme-glass-bg), 0.4);
-  border-color: rgba(34, 197, 94, 0.6);
-  color: var(--theme-text-header);
-}
-
-html[data-theme="lothlorien"] input::placeholder,
-html[data-theme="lothlorien"] textarea::placeholder {
-  color: var(--theme-text-secondary);
-  opacity: 0.7;
-}
-
-/* Document comparison diff colors - Maintain accessibility */
-html[data-theme="lothlorien"] .diff-addition {
-  background: rgba(74, 222, 128, 0.15);
-  border-left: 3px solid #4ade80;
-  color: #86efac;
-}
-
-html[data-theme="lothlorien"] .diff-deletion {
-  background: rgba(239, 68, 68, 0.15);
-  border-left: 3px solid #ef4444;
-  color: #fca5a5;
-}
-
-/* OCR language selector enhancement */
-html[data-theme="lothlorien"] .language-selector {
-  background: rgba(var(--theme-glass-bg), 0.2);
-  border: 1px solid rgba(var(--theme-glass-border), 0.3);
-}
-
-html[data-theme="lothlorien"] .language-selector:hover {
-  background: rgba(var(--theme-glass-bg), 0.3);
-  border-color: rgba(34, 197, 94, 0.5);
-}
-
-/* Header Card Controls Legibility - Following Architecture */
-/* OCR Language dropdowns and header controls */
+/* Essential legibility fixes - Minimal additions for header controls */
 html[data-theme="lothlorien"] .glass-panel .text-xs,
 html[data-theme="lothlorien"] .glass-panel .text-sm,
 html[data-theme="lothlorien"] .glass-panel select,
@@ -308,148 +124,19 @@ html[data-theme="lothlorien"] .glass-panel .dropdown-toggle,
 html[data-theme="lothlorien"] .glass-panel .control-label {
   color: var(--theme-text-header);
   font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
-/* OCR Language selector specific styling */
-html[data-theme="lothlorien"] select[name*="language"],
-html[data-theme="lothlorien"] .language-dropdown,
-html[data-theme="lothlorien"] .ocr-language-selector {
-  background: rgba(34, 197, 94, 0.2);
-  border: 1px solid rgba(34, 197, 94, 0.4);
-  color: var(--theme-text-header);
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-
-html[data-theme="lothlorien"] select[name*="language"]:hover,
-html[data-theme="lothlorien"] .language-dropdown:hover {
-  background: rgba(34, 197, 94, 0.3);
-  border-color: rgba(34, 197, 94, 0.6);
-  color: var(--theme-text-header);
-}
-
-/* Segmented Controls Enhancement - Following Architecture */
-html[data-theme="lothlorien"] .segmented-control {
-  background: rgba(34, 197, 94, 0.2);
-  border: 1px solid rgba(34, 197, 94, 0.4);
-  box-shadow:
-    0 2px 8px rgba(21, 128, 61, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
+/* Segmented control segments - Essential for legibility */
 html[data-theme="lothlorien"] .segmented-control .segment {
   color: var(--theme-text-header);
   font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  background: transparent;
 }
 
 html[data-theme="lothlorien"] .segmented-control .segment:hover {
   color: #fbbf24;
-  background: rgba(245, 158, 11, 0.15);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 html[data-theme="lothlorien"] .segmented-control .segment.active {
   color: #fcd34d;
   font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-}
-
-html[data-theme="lothlorien"] .segmented-control .sliding-indicator {
-  background: linear-gradient(135deg,
-      rgba(245, 158, 11, 0.3) 0%,
-      rgba(245, 158, 11, 0.2) 100%);
-  box-shadow:
-    0 2px 8px rgba(245, 158, 11, 0.3),
-    0 1px 4px rgba(245, 158, 11, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-/* Header panel text enhancement */
-html[data-theme="lothlorien"] .glass-panel-header,
-html[data-theme="lothlorien"] .panel-header,
-html[data-theme="lothlorien"] .card-header {
-  color: var(--theme-text-header);
-}
-
-html[data-theme="lothlorien"] .glass-panel-header *,
-html[data-theme="lothlorien"] .panel-header *,
-html[data-theme="lothlorien"] .card-header * {
-  color: var(--theme-text-header);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-/* Settings/gear icons and controls */
-html[data-theme="lothlorien"] .settings-icon,
-html[data-theme="lothlorien"] .gear-icon,
-html[data-theme="lothlorien"] .control-icon {
-  color: var(--theme-text-interactive);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
-}
-
-html[data-theme="lothlorien"] .settings-icon:hover,
-html[data-theme="lothlorien"] .gear-icon:hover,
-html[data-theme="lothlorien"] .control-icon:hover {
-  color: #fbbf24;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
-}
-
-/* Manual/Auto toggle text enhancement */
-html[data-theme="lothlorien"] .toggle-text,
-html[data-theme="lothlorien"] .mode-text,
-html[data-theme="lothlorien"] .control-text {
-  color: var(--theme-text-header);
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-
-/* Badge/count indicators */
-html[data-theme="lothlorien"] .badge,
-html[data-theme="lothlorien"] .count-badge,
-html[data-theme="lothlorien"] .notification-badge {
-  background: rgba(245, 158, 11, 0.3);
-  color: #fcd34d;
-  border: 1px solid rgba(245, 158, 11, 0.5);
-  font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-
-/* Dropdown menus and options */
-html[data-theme="lothlorien"] .dropdown-menu,
-html[data-theme="lothlorien"] .select-options {
-  background: rgba(15, 32, 39, 0.95);
-  border: 1px solid rgba(34, 197, 94, 0.4);
-  box-shadow:
-    0 8px 32px rgba(21, 128, 61, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-html[data-theme="lothlorien"] .dropdown-menu option,
-html[data-theme="lothlorien"] .dropdown-item {
-  color: var(--theme-text-body);
-  background: transparent;
-}
-
-html[data-theme="lothlorien"] .dropdown-menu option:hover,
-html[data-theme="lothlorien"] .dropdown-item:hover {
-  background: rgba(34, 197, 94, 0.2);
-  color: var(--theme-text-header);
-}
-
-/* Star/favorite icons */
-html[data-theme="lothlorien"] .star-icon,
-html[data-theme="lothlorien"] .favorite-icon {
-  color: #fbbf24;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
-}
-
-/* Panel titles and labels */
-html[data-theme="lothlorien"] .panel-title,
-html[data-theme="lothlorien"] .section-title,
-html[data-theme="lothlorien"] .card-title {
-  color: var(--theme-text-header);
-  font-weight: 600;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
