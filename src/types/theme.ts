@@ -9,7 +9,8 @@ export type ThemeName =
   | 'aurora-borealis'
   | 'ocean-deep'
   | 'professional'
-  | 'autumn';
+  | 'autumn'
+  | 'lothlorien';
 
 export interface ThemeConfig {
   name: ThemeName;

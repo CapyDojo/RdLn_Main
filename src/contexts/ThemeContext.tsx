@@ -34,6 +34,7 @@ const DEFAULT_THEME_ORDER: ThemeName[] = [
   'new-york',
   'neon-night',
   'mariana',
+  'lothlorien',
   'aurora-borealis',
   'professional',
 ];

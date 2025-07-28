@@ -118,11 +118,11 @@ onMouseEnter={() => {
 - **Issue:** Hover background same as regular background
 - **Recommended Fix:** Add distinct hover background and border colors
 
-#### 8. Deep Dive (`deep-dive`)
-- **Status:** MISSING ❌
-- **Missing:** All hover color definitions
-- **Notes:** No semantic colors defined at all
-- **Recommended Fix:** Add complete semantic color system including hover colors
+#### 8. Mariana (`mariana`)
+- **Status:** COMPLETE ✅
+- **Hover colors:** Fully implemented with deep ocean blue theme
+- **Notes:** Complete semantic color system with sophisticated glassmorphism effects
+- **Implementation:** Deep ocean theme with proper hover state transitions
 
 #### 9. Aurora Borealis (`aurora-borealis`)
 - **Status:** MISSING ❌
@@ -132,11 +132,10 @@ onMouseEnter={() => {
 
 ### ❌ Missing Implementations
 
-#### 8. Deep Dive (`deep-dive`)
-- **Status:** MISSING ❌
-- **Missing:** All hover color definitions
-- **Notes:** No semantic colors defined at all
-- **Recommended Fix:** Add complete semantic color system including hover colors
+#### 8. Mariana (`mariana`)
+- **Status:** COMPLETE ✅
+- **Implementation:** Deep ocean theme with full semantic color system and hover effects
+- **Notes:** Successfully implemented with sophisticated glassmorphism and proper hover transitions
 
 #### 9. Aurora Borealis (`aurora-borealis`)
 - **Status:** MISSING ❌
@@ -146,7 +145,7 @@ onMouseEnter={() => {
 
 #### 10. Ocean Deep (`ocean-deep`)
 - **Status:** MISSING ❌
-- **Issue:** Uses Deep Dive theme as placeholder
+- **Issue:** Uses Mariana theme as placeholder
 - **Recommended Fix:** Implement complete theme with hover colors
 
 ## Current Implementation Issues

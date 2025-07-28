@@ -15,6 +15,7 @@ import { classicDarkTheme } from './definitions/classic-dark';
 import { neonNightTheme } from './definitions/neon-night';
 import { marianaTheme } from './definitions/mariana';
 import { auroraBorealisTheme } from './definitions/aurora-borealis';
+import { lothlorienTheme } from './definitions/lothlorien';
 
 // Import utilities
 export { hexToRgb, hexToRgba } from './utils/colors';
@@ -37,6 +38,7 @@ export const themeDefinitions: Record<ThemeName, ThemeConfig> = {
   'mariana': marianaTheme,
   'ocean-deep': marianaTheme, // Using marianaTheme as placeholder
   'aurora-borealis': auroraBorealisTheme,
+  'lothlorien': lothlorienTheme,
 } as const;
 
 // Export individual themes for direct access
@@ -48,6 +50,7 @@ export {
   classicLightTheme,
   classicDarkTheme,
   neonNightTheme,
-  deepDiveTheme,
+  marianaTheme,
   auroraBorealisTheme,
+  lothlorienTheme,
 };

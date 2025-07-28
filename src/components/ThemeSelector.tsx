@@ -68,6 +68,11 @@ const getThemeButtonStyle = (theme: ThemeConfig, isSelected: boolean) => {
       textColor: '#ffffff',
       borderColor: isSelected ? '#b8e994' : 'rgba(184, 233, 148, 0.5)'
     },
+    'lothlorien': {
+      background: 'linear-gradient(330deg, rgba(15, 32, 39, 0.85) 0%, rgba(21, 46, 54, 0.85) 25%, rgba(28, 64, 72, 0.85) 63%, rgba(34, 85, 96, 0.85) 85%, rgba(44, 106, 120, 0.85) 100%), radial-gradient(circle at 20% 30%, rgba(34, 197, 94, 0.12) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(245, 158, 11, 0.08) 0%, transparent 50%)',
+      textColor: '#d1fae5',
+      borderColor: isSelected ? '#4ade80' : 'rgba(74, 222, 128, 0.5)'
+    },
   };
 
   const config = themeConfigs[theme.name as keyof typeof themeConfigs] || themeConfigs['professional'];
