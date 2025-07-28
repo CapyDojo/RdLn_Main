@@ -13,7 +13,7 @@ import { newYorkTheme } from './definitions/new-york';
 import { classicLightTheme } from './definitions/classic-light';
 import { classicDarkTheme } from './definitions/classic-dark';
 import { neonNightTheme } from './definitions/neon-night';
-import { deepDiveTheme } from './definitions/deep-dive';
+import { marianaTheme } from './definitions/mariana';
 import { auroraBorealisTheme } from './definitions/aurora-borealis';
 
 // Import utilities
@@ -34,8 +34,8 @@ export const themeDefinitions: Record<ThemeName, ThemeConfig> = {
   'classic-light': classicLightTheme,
   'classic-dark': classicDarkTheme,
   'neon-night': neonNightTheme,
-  'deep-dive': deepDiveTheme,
-  'ocean-deep': deepDiveTheme, // Using deepDiveTheme as placeholder
+  'mariana': marianaTheme,
+  'ocean-deep': marianaTheme, // Using marianaTheme as placeholder
   'aurora-borealis': auroraBorealisTheme,
 } as const;
 

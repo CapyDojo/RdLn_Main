@@ -5,7 +5,7 @@ export type ThemeName =
   | 'kyoto'
   | 'new-york'
   | 'neon-night'
-  | 'deep-dive'
+  | 'mariana'
   | 'aurora-borealis'
   | 'ocean-deep'
   | 'professional'

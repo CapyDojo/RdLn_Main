@@ -22,67 +22,49 @@ const getThemeButtonStyle = (theme: ThemeConfig, isSelected: boolean) => {
   // Theme-specific configurations
   const themeConfigs = {
     'professional': {
-      background: 'linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%, #e2e8f0 100%)',
+      background: 'linear-gradient(135deg, rgba(226, 232, 240, 0.8) 0%, rgba(241, 245, 249, 0.8) 25%, rgba(248, 250, 252, 0.8) 50%, rgba(241, 245, 249, 0.8) 75%, rgba(226, 232, 240, 0.8) 100%)',
       textColor: '#3b82f6',
       borderColor: isSelected ? '#3b82f6' : 'rgba(59, 130, 246, 0.5)'
     },
     'classic-light': {
-      background: '#F2F5F9',
-      textColor: '#1e3a8a', // Dark blue
-      borderColor: isSelected ? '#1e3a8a' : 'rgba(30, 58, 138, 0.5)'
+      background: 'rgba(248, 250, 252, 0.8)', // Light blue-grey background matching theme
+      textColor: '#0f172a', // Dark header text from theme
+      borderColor: isSelected ? '#f97316' : 'rgba(249, 115, 22, 0.4)' // Orange accent from theme
     },
     'classic-dark': {
-      background: '#171717',
-      textColor: '#ffffff', // White
-      borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
+      background: 'rgba(38, 38, 38, 0.9)', // Dark grey background matching theme
+      textColor: '#ffffff', // White header text from theme
+      borderColor: isSelected ? '#fb923c' : 'rgba(251, 146, 60, 0.4)' // Orange interactive color from theme
     },
     'bamboo': {
-      background: 'linear-gradient(45deg, #2d5016 0%, rgb(146, 183, 113) 25%, rgb(113, 155, 81) 63%, rgb(183, 203, 165) 85%, #7ba05f 100%)',
+      background: 'linear-gradient(45deg, rgba(45, 80, 22, 0.8) 0%, rgba(146, 183, 113, 0.8) 25%, rgba(113, 155, 81, 0.8) 63%, rgba(183, 203, 165, 0.8) 85%, rgba(123, 160, 95, 0.8) 100%)',
       textColor: '#2C1704',
       borderColor: isSelected ? '#2C1704' : 'rgba(44, 23, 4, 0.5)'
     },
     'kyoto': {
-      background: 'linear-gradient(160deg, #7A3D1A 0%, #9B4A1F 5%, #C55A11 10%, #D97706 15%, rgb(220, 8, 8) 18%, rgb(173, 76, 16) 27%, #6B4423 35%, #4A5D23 45%, #3A4D1F 55%, #2A3D1A 60%, #1E3A1E 65%, rgb(87, 69, 12) 70%, rgb(7, 59, 27) 80%, #C55A11 95%, rgb(186, 101, 3) 100%)',
+      background: 'linear-gradient(160deg, rgba(122, 61, 26, 0.9) 0%, rgba(155, 74, 31, 0.9) 5%, rgba(197, 90, 17, 0.9) 10%, rgba(217, 119, 6, 0.9) 15%, rgba(220, 8, 8, 0.9) 18%, rgba(173, 76, 16, 0.9) 27%, rgba(107, 68, 35, 0.9) 35%, rgba(74, 93, 35, 0.9) 45%, rgba(58, 77, 31, 0.9) 55%, rgba(42, 61, 26, 0.9) 60%, rgba(30, 58, 30, 0.9) 65%, rgba(87, 69, 12, 0.9) 70%, rgba(7, 59, 27, 0.9) 80%, rgba(197, 90, 17, 0.9) 95%, rgba(186, 101, 3, 0.9) 100%)',
       textColor: '#E4B5AE',
       borderColor: isSelected ? '#E4B5AE' : 'rgba(228, 181, 174, 0.5)'
     },
     'new-york': {
-      background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 30%, #451a03 100%)',
+      background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 30%, rgba(69, 26, 3, 0.9) 100%)',
       textColor: '#E9B64B',
       borderColor: isSelected ? '#E9B64B' : 'rgba(233, 182, 75, 0.5)'
     },
-    'apple-light': {
-      background: '#f8fafc',
-      textColor: '#1e3a8a',
-      borderColor: isSelected ? '#1e3a8a' : 'rgba(30, 58, 138, 0.5)'
-    },
-    'apple-dark': {
-      background: '#0a0a0a',
-      textColor: '#ffffff',
-      borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
-    },
-    'autumn': {
-      background: 'linear-gradient(45deg, #7c2d12 0%, #ea580c 25%, #fb923c 50%, #fdba74 75%, #fed7aa 100%)',
-      textColor: '#7c2d12',
-      borderColor: isSelected ? '#7c2d12' : 'rgba(124, 45, 18, 0.5)'
-    },
-    'ocean-deep': {
-      background: 'linear-gradient(330deg, rgb(6, 28, 49) 0%, rgb(17, 44, 75) 25%, rgb(26, 53, 96) 63%, rgb(39, 69, 133) 85%, rgb(54, 84, 166) 100%)',
-      textColor: '#ffffff',
-      borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
-    },
+
+
     'neon-night': {
-      background: 'linear-gradient(135deg, #050508 0%, #080810 20%, #0f0f18 40%, rgba(139, 92, 246, 0.3) 60%, rgba(0, 255, 255, 0.2) 80%, #0f0f18 100%)',
+      background: 'linear-gradient(135deg, rgba(5, 5, 8, 0.9) 0%, rgba(8, 8, 16, 0.9) 20%, rgba(15, 15, 24, 0.9) 40%, rgba(139, 92, 246, 0.4) 60%, rgba(0, 255, 255, 0.3) 80%, rgba(15, 15, 24, 0.9) 100%)',
       textColor: '#00ffff',
       borderColor: isSelected ? '#ff00ff' : 'rgba(255, 0, 255, 0.6)'
     },
-    'deep-dive': {
-      background: 'linear-gradient(330deg, rgb(6, 28, 49) 0%, rgb(17, 44, 75) 25%, rgb(26, 53, 96) 63%, rgb(39, 69, 133) 85%, rgb(54, 84, 166) 100%)',
+    'mariana': {
+      background: 'linear-gradient(330deg, rgba(6, 28, 49, 0.9) 0%, rgba(17, 44, 75, 0.9) 25%, rgba(26, 53, 96, 0.9) 63%, rgba(39, 69, 133, 0.9) 85%, rgba(54, 84, 166, 0.9) 100%)',
       textColor: '#ffffff',
       borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
     },
     'aurora-borealis': {
-      background: 'linear-gradient(135deg, #0f0524 0%, #1a0933 20%, #1e3799 40%, #38ada9 60%, #78e08f 80%, #b8e994 100%)',
+      background: 'linear-gradient(135deg, rgba(15, 5, 36, 0.9) 0%, rgba(26, 9, 51, 0.9) 20%, rgba(30, 55, 153, 0.9) 40%, rgba(56, 173, 169, 0.9) 60%, rgba(120, 224, 143, 0.9) 80%, rgba(184, 233, 148, 0.9) 100%)',
       textColor: '#ffffff',
       borderColor: isSelected ? '#b8e994' : 'rgba(184, 233, 148, 0.5)'
     },
@@ -94,7 +76,7 @@ const getThemeButtonStyle = (theme: ThemeConfig, isSelected: boolean) => {
     ...baseStyle,
     background: config.background,
     borderColor: config.borderColor,
-    boxShadow: isSelected 
+    boxShadow: isSelected
       ? `0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)`
       : `0 2px 8px rgba(0, 0, 0, 0.1)`,
     '--theme-text-color': config.textColor,
@@ -106,11 +88,11 @@ const getThemeButtonStyle = (theme: ThemeConfig, isSelected: boolean) => {
 const hexToRgb = (hex: string): string => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return '0, 0, 0';
-  
+
   const r = parseInt(result[1], 16);
   const g = parseInt(result[2], 16);
   const b = parseInt(result[3], 16);
-  
+
   return `${r}, ${g}, ${b}`;
 };
 
@@ -161,7 +143,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    
+
     if (dragState.dragIndex !== index) {
       setDragState(prev => ({
         ...prev,
@@ -180,11 +162,11 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-    
+
     if (dragState.dragIndex !== null && dragState.dragIndex !== dropIndex) {
       reorderThemes(dragState.dragIndex, dropIndex);
     }
-    
+
     handleDragEnd();
   };
 
@@ -196,7 +178,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
   };
 
   return (
-    <div 
+    <div
       ref={themesButtonRef}
       className={`relative segmented-control ${className || ''}`}
       style={style}
@@ -207,16 +189,16 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
         title="Hover to see themes"
         aria-label="Theme selector - hover to view available themes"
         onMouseEnter={() => setIsHovered(true)}
-        style={{ 
-          width: '48px', 
-          height: '48px', 
+        style={{
+          width: '48px',
+          height: '48px',
           aspectRatio: '1/1'
         }}
       >
         <div className="flex flex-col items-center justify-center">
           <Palette className="w-6 h-6" aria-hidden="true" />
-          <ChevronDown 
-            className={`w-2.5 h-2.5 transition-transform duration-300 ${isHovered ? 'rotate-180' : ''} mt-0.5`} 
+          <ChevronDown
+            className={`w-2.5 h-2.5 transition-transform duration-300 ${isHovered ? 'rotate-180' : ''} mt-0.5`}
             aria-hidden="true"
           />
         </div>
@@ -224,7 +206,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
 
       {/* Cascading Theme Cards - Rendered via Portal */}
       {buttonRect && createPortal(
-        <div 
+        <div
           className="fixed z-[10000]"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -241,7 +223,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
             const isDragOver = dragState.dragOverIndex === index;
             const isDragging = dragState.dragIndex === index;
             const delay = index * 50; // Staggered animation delay
-            
+
             return (
               <div
                 key={theme.name}
@@ -257,13 +239,13 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                   ${isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
                 `}
                 style={{
-                  transform: isHovered 
-                    ? `translateY(${index * 45}px) scale(1) rotateX(0deg)` 
+                  transform: isHovered
+                    ? `translateY(${index * 45}px) scale(1) rotateX(0deg)`
                     : `translateY(-30px) scale(0.8) rotateX(-15deg)`,
                   transformOrigin: 'top center',
                   transitionDelay: isHovered ? `${delay}ms` : `${(availableThemes.length - index - 1) * 50}ms`,
                   transitionDuration: '400ms',
-                  transitionTimingFunction: isHovered 
+                  transitionTimingFunction: isHovered
                     ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' // Bounce down
                     : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smooth up
                   zIndex: availableThemes.length - index, // Higher z-index for earlier themes
@@ -286,15 +268,15 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                     }
                   }}
                 >
-                  <GripVertical 
-                    className="w-4 h-4 shrink-0 opacity-60" 
+                  <GripVertical
+                    className="w-4 h-4 shrink-0 opacity-60"
                     style={{ color: 'var(--theme-dots-color)' }}
                   />
-                  
+
                   <div className="flex-1 min-w-0">
-                    <div 
+                    <div
                       className="font-semibold truncate"
-                      style={{ 
+                      style={{
                         color: `var(--theme-text-color) !important`,
                         fontFamily: 'inherit !important'
                       }}
@@ -302,10 +284,10 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                       {theme.displayName}
                     </div>
                   </div>
-                  
+
                   {currentTheme === theme.name && (
-                    <Check 
-                      className="w-5 h-5 shrink-0" 
+                    <Check
+                      className="w-5 h-5 shrink-0"
                       style={{ color: 'var(--theme-text-color)' }}
                     />
                   )}

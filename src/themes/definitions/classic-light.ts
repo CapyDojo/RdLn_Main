@@ -72,26 +72,26 @@ export const classicLightTheme: ThemeConfig = {
     textSecondary: '#475569',      // Medium gray for secondary text
     textInteractive: '#c2410c',    // Dark orange for accessibility (from accent.700)
     textSuccess: '#0284c7',        // Dark blue for success/active
-    
+
     // Glass panels - light theme with orange accents
     glassPanelBg: '#f8fafc',        // Light blue background
     glassPanelBorder: '#f97316',    // Orange accent borders
     glassPanelShadow: '#f97316',    // Orange accent shadows
     glassPanelHover: '#f8fafc',     // Hover with light blue
     glassPanelHoverShadow: '#f97316', // Darker orange hover shadow
-    
+
     // Input fields - consistent with light theme
     inputBg: '#ffffff',            // White background
     inputBorder: '#f97316',        // Orange border
     inputFocus: '#f97316',         // Orange focus
     inputPlaceholder: '#475569',   // Medium gray placeholder
-    
+
     // Button colors - keeping orange accents
     buttonPrimary: '#f97316',      // Orange primary
     buttonSecondary: '#64748b',    // Slate gray secondary (from secondary.500)
     buttonText: '#0f172a',         // Dark text for accessibility on orange buttons
     buttonHover: '#ea580c',        // Darker orange hover
-    
+
     // Resize handles - keeping coherence with theme
     resizeHandleBg: '#f8fafc',     // Light blue for handle
     resizeHandleBorder: '#f97316', // Orange border for handle

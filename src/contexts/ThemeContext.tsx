@@ -33,7 +33,7 @@ const DEFAULT_THEME_ORDER: ThemeName[] = [
   'kyoto',
   'new-york',
   'neon-night',
-  'deep-dive',
+  'mariana',
   'aurora-borealis',
   'professional',
 ];

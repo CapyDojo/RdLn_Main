@@ -1,13 +1,13 @@
 import { ThemeConfig } from '../../types/theme';
 
 /**
- * Bamboo Dawn Theme
+ * Chengdu Bamboo Dawn Theme
  * Serene nature-inspired theme with various shades of green and gold accents.
  * Enhanced contrast ratios for better accessibility.
  */
 export const bambooTheme: ThemeConfig = {
   name: 'bamboo',
-  displayName: 'Bamboo Dawn',
+  displayName: 'Chengdu 晨',
   description: 'Serene bamboo green theme with glassmorphic effects',
   background: 'linear-gradient(45deg, #2d5016 0%,rgb(146, 183, 113) 25%,rgb(113, 155, 81) 63%,rgb(183, 203, 165) 85%, #7ba05f 100%)',
   colors: {
@@ -81,26 +81,26 @@ export const bambooTheme: ThemeConfig = {
     textSecondary: '#57534e',   // Medium-dark stone for secondary text (neutral.600)
     textInteractive: '#b45309', // Accessible dark gold for interactive elements (accent.700)
     textSuccess: '#15803d',     // Dark forest green for success states (primary.700)
-    
+
     // Glass panel colors - light and natural
     glassPanelBg: '#fafaf9',           // Light stone background (neutral.50)
     glassPanelBorder: '#fbbf24',       // Vibrant gold border (accent.400)
     glassPanelShadow: '#f59e0b',       // Warm gold shadow (accent.500)
     glassPanelHover: '#f5f5f4',        // Slightly darker stone on hover (neutral.100)
     glassPanelHoverShadow: '#d97706',  // Darker gold hover shadow (accent.600)
-    
+
     // Input field colors - consistent and clear
     inputBg: '#ffffff',         // Pure white background
     inputBorder: '#16a34a',     // Accessible green border (primary.600)
     inputFocus: '#b45309',      // Accessible dark gold focus (accent.700)
     inputPlaceholder: '#78716c', // Medium stone for placeholder (neutral.500)
-    
+
     // Button colors - ACCESSIBILITY FIXED
     buttonPrimary: '#15803d',   // Dark, accessible forest green (primary.700)
     buttonSecondary: '#e7e5e4', // Light stone secondary (neutral.200)
     buttonText: '#fafaf9',      // Light stone text for high contrast (neutral.50)
     buttonHover: '#166534',     // Darker forest green hover (primary.800)
-    
+
     // Resize handle colors - consistent with theme
     resizeHandleBg: '#bbf7d0',   // Light green (primary.200)
     resizeHandleBorder: '#15803d', // Dark green border (primary.700)
