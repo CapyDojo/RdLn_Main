@@ -59,6 +59,7 @@ html[data-theme="classic-dark"] {
 4. **Input Fields:** Glass styling with orange accent borders
 5. **Text Selection:** Orange highlight with light text for contrast
 6. **Segmented Controls:** Consistent orange accent theming
+7. **Header Components:** FontSizeSelector "Aa" text and ThemeSelector button styling with proper color inheritance
 
 ## 🧪 Validation Results
 
@@ -68,6 +69,7 @@ html[data-theme="classic-dark"] {
 - ✅ **Integration Test** (`test-classic-dark-integration.js`)
 - ✅ **Comprehensive Validation** (`validate-classic-dark-theme.js`)
 - ✅ **Shadow Reduction Test** (`test-classic-dark-shadow-reduction.js`)
+- ✅ **Header Components Test** (`test-classic-dark-header-components.js`)
 
 ### Test Coverage
 - **File Size Analysis:** Validates 60-70% reduction target
@@ -111,8 +113,9 @@ CSS Tests/validation/
 ├── test-classic-dark-blueprint.js        # Blueprint compliance test
 ├── test-classic-dark-integration.js      # Integration testing
 ├── validate-classic-dark-theme.js        # Comprehensive validation
-├── test-classic-dark-shadow-reduction.js # Shadow reduction validation
-└── classic-dark-completion-summary.md    # This summary
+├── test-classic-dark-shadow-reduction.js  # Shadow reduction validation
+├── test-classic-dark-header-components.js # Header components styling test
+└── classic-dark-completion-summary.md     # This summary
 
 CSS Tests/architecture/
 └── classic-dark-blueprint-compliance.js  # Architectural compliance test
