@@ -103,7 +103,7 @@ export const classicLightTheme: ThemeConfig = {
   // No glassmorphism effects - flat design as requested
   effects: {
     glassmorphism: false,
-    backdropBlur: '0px',
+    backdropBlur: '15px',
     backgroundOpacity: '1',
     shadowIntensity: 'medium',
     gradientOverlay: false,

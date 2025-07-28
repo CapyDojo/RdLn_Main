@@ -1,14 +1,13 @@
 import { ThemeConfig } from '../../types/theme';
-import { GLASSMORPHISM_EFFECTS } from '../utils/effects';
 
 /**
- * Bamboo Morning Theme
+ * Bamboo Dawn Theme
  * Serene nature-inspired theme with various shades of green and gold accents.
  * Enhanced contrast ratios for better accessibility.
  */
 export const bambooTheme: ThemeConfig = {
   name: 'bamboo',
-  displayName: 'Bamboo Morning',
+  displayName: 'Bamboo Dawn',
   description: 'Serene bamboo green theme with glassmorphic effects',
   background: 'linear-gradient(45deg, #2d5016 0%,rgb(146, 183, 113) 25%,rgb(113, 155, 81) 63%,rgb(183, 203, 165) 85%, #7ba05f 100%)',
   colors: {
@@ -65,7 +64,15 @@ export const bambooTheme: ThemeConfig = {
       900: '#1c1917',
     },
   },
-  effects: GLASSMORPHISM_EFFECTS.premium,
+  effects: {
+    glassmorphism: true,
+    backdropBlur: '16px',
+    backgroundOpacity: '0.75',
+    shadowIntensity: 'medium',
+    gradientOverlay: true,
+    animationLevel: 'subtle',
+    textureOverlay: false,
+  },
   // Semantic color mappings - REBUILT FOR ACCESSIBILITY AND CONSISTENCY
   semanticColors: {
     // Text colors - high contrast and clear hierarchy

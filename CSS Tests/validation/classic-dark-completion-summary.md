@@ -70,6 +70,7 @@ html[data-theme="classic-dark"] {
 - ✅ **Comprehensive Validation** (`validate-classic-dark-theme.js`)
 - ✅ **Shadow Reduction Test** (`test-classic-dark-shadow-reduction.js`)
 - ✅ **Header Components Test** (`test-classic-dark-header-components.js`)
+- ✅ **Glass Panel Inheritance Test** (`test-classic-dark-glass-panel-inheritance.js`)
 
 ### Test Coverage
 - **File Size Analysis:** Validates 60-70% reduction target
@@ -114,8 +115,9 @@ CSS Tests/validation/
 ├── test-classic-dark-integration.js      # Integration testing
 ├── validate-classic-dark-theme.js        # Comprehensive validation
 ├── test-classic-dark-shadow-reduction.js  # Shadow reduction validation
-├── test-classic-dark-header-components.js # Header components styling test
-└── classic-dark-completion-summary.md     # This summary
+├── test-classic-dark-header-components.js    # Header components styling test
+├── test-classic-dark-glass-panel-inheritance.js # Glass panel inheritance validation
+└── classic-dark-completion-summary.md           # This summary
 
 CSS Tests/architecture/
 └── classic-dark-blueprint-compliance.js  # Architectural compliance test
@@ -181,5 +183,13 @@ The Classic Dark theme now serves as a fourth blueprint alongside Kyoto, Profess
 - **Opacity Values:** Lowered from 0.6/0.4 to 0.4/0.25 for more refined look
 - **Visual Impact:** Maintains glass effect and depth while being less prominent
 - **Validation:** Created `test-classic-dark-shadow-reduction.js` for testing
+
+### Architectural Fix - Glass Panel Inheritance (2025-07-25)
+- **Problem:** Header card 100% transparency due to CSS specificity conflicts
+- **Root Cause:** Theme-specific segmented control overrides fighting glass panel system
+- **Solution:** Removed conflicting variables and overrides, enabled proper inheritance
+- **Changes:** Added `--theme-glass-panel-bg-rgb` and `--theme-glass-panel-border-rgb` variables
+- **Result:** Clean architecture where segmented controls inherit from glass panel system
+- **Validation:** Created `test-classic-dark-glass-panel-inheritance.js` for testing
 
 **Implementation Status: 🏆 COMPLETE AND PRODUCTION READY**

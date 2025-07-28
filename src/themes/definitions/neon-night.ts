@@ -1,5 +1,4 @@
 import { ThemeConfig } from '../../types/theme';
-import { GLASSMORPHISM_EFFECTS } from '../utils/effects';
 
 /**
  * Neon Night Theme
@@ -100,5 +99,13 @@ export const neonNightTheme: ThemeConfig = {
     resizeHandleHoverBorder: '#8b5cf6',  // Purple hover border (accent.400)
     resizeHandleHoverShadow: '#a78bfa'  // Lighter purple hover shadow (accent.500)
   },
-  effects: GLASSMORPHISM_EFFECTS.premium
+  effects: {
+    glassmorphism: true,
+    backdropBlur: '24px',
+    backgroundOpacity: '0.85',
+    shadowIntensity: 'ultra',
+    gradientOverlay: true,
+    animationLevel: 'premium',
+    textureOverlay: true,
+  },
 }

@@ -1,5 +1,4 @@
 import { ThemeConfig } from '../../types/theme';
-import { GLASSMORPHISM_EFFECTS } from '../utils/effects';
 
 /**
  * NYC Dusk Theme
@@ -97,5 +96,13 @@ export const newYorkTheme: ThemeConfig = {
     resizeHandleHoverBorder: '#ffb74d',  // Amber hover border (secondary.300)
     resizeHandleHoverShadow: '#ff9800',  // Warm orange hover shadow (secondary.500)
   },
-  effects: GLASSMORPHISM_EFFECTS.premium
+  effects: {
+    glassmorphism: true,
+    backdropBlur: '24px',
+    backgroundOpacity: '0.85',
+    shadowIntensity: 'ultra',
+    gradientOverlay: true,
+    animationLevel: 'premium',
+    textureOverlay: true,
+  },
 };

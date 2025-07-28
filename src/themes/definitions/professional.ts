@@ -1,5 +1,4 @@
 import { ThemeConfig } from '../../types/theme';
-import { GLASSMORPHISM_EFFECTS } from '../utils/effects';
 
 /**
  * Professional Blue Theme
@@ -65,7 +64,15 @@ export const professionalTheme: ThemeConfig = {
       900: '#7c2d12',
     },
   },
-  effects: GLASSMORPHISM_EFFECTS.enhanced,
+  effects: {
+    glassmorphism: true,
+    backdropBlur: '24px',
+    backgroundOpacity: '0.8',
+    shadowIntensity: 'strong',
+    gradientOverlay: true,
+    animationLevel: 'enhanced',
+    textureOverlay: false,
+  },
   // Semantic color mappings - REBUILT FOR ACCESSIBILITY AND CONSISTENCY
   semanticColors: {
     // Text colors - high contrast and clear hierarchy

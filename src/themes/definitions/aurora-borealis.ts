@@ -126,5 +126,14 @@ export const auroraBorealisTheme: ThemeConfig = {
       800: '#1e293b',
       900: '#0f172a',
     }
-  }
+  },
+  effects: {
+    glassmorphism: true,
+    backdropBlur: '24px',
+    backgroundOpacity: '0.85',
+    shadowIntensity: 'ultra',
+    gradientOverlay: true,
+    animationLevel: 'premium',
+    textureOverlay: true,
+  },
 };

@@ -115,8 +115,8 @@ const themeVariables = [
   '--theme-text-success',
   '--theme-glass-panel-hover-bg-rgb',
   '--theme-glass-panel-hover-border-rgb',
-  '--theme-segmented-control-bg',
-  '--theme-segmented-control-border'
+  '--theme-glass-panel-bg-rgb',
+  '--theme-glass-panel-border-rgb'
 ];
 
 const rootStyle = getComputedStyle(document.documentElement);

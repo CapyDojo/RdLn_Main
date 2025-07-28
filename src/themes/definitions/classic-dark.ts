@@ -74,26 +74,26 @@ export const classicDarkTheme: ThemeConfig = {
     textSecondary: '#a3a3a3',      // Pure medium gray for secondary
     textInteractive: '#fb923c',    // Orange accent for interactive (accent.400)
     textSuccess: '#38bdf8',        // Light blue for success/active (primary.400)
-    
+
     // Glass panels - dark theme with orange accents
     glassPanelBg: '#262626',        // Dark gray background (neutral.800)
     glassPanelBorder: '#f97316',    // Orange accent borders (accent.500)
     glassPanelShadow: '#f97316',    // Orange accent shadows (accent.500)
     glassPanelHover: '#262626',     // Same dark background for hover
     glassPanelHoverShadow: '#f97316', // Orange hover shadow (accent.500)
-    
+
     // Input fields - consistent with dark theme
     inputBg: '#404040',            // Dark gray background (neutral.700)
     inputBorder: '#f97316',        // Orange border (accent.500)
     inputFocus: '#f97316',         // Orange focus (accent.500)
     inputPlaceholder: '#a3a3a3',   // Medium gray placeholder (neutral.400)
-    
+
     // Button colors - ACCESSIBILITY FIXED
     buttonPrimary: '#f97316',      // Orange primary (accent.500)
     buttonSecondary: '#737373',    // Gray secondary (neutral.500)
     buttonText: '#171717',         // Dark text for accessibility on orange buttons (neutral.900)
     buttonHover: '#fb923c',        // Lighter orange hover (accent.400)
-    
+
     // Resize handles - keeping coherence with dark theme
     resizeHandleBg: '#262626',     // Dark gray for handle (neutral.800)
     resizeHandleBorder: '#f97316', // Orange border for handle (accent.500)
@@ -114,10 +114,10 @@ export const classicDarkTheme: ThemeConfig = {
       deletionDecoration: '#F4804A',
     }
   },
-  // No glassmorphism effects - flat design as requested
+  // Minimal glassmorphism effects - flat design with solid backgrounds
   effects: {
     glassmorphism: false,
-    backdropBlur: '0px',
+    backdropBlur: '20px',
     backgroundOpacity: '1',
     shadowIntensity: 'medium',
     gradientOverlay: false,

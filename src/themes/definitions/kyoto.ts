@@ -1,5 +1,4 @@
 import { ThemeConfig } from '../../types/theme';
-import { GLASSMORPHISM_EFFECTS } from '../utils/effects';
 
 /**
  * Kyoto Zen Theme
@@ -104,5 +103,13 @@ export const kyotoTheme: ThemeConfig = {
     resizeHandleHoverBorder: '#dc2626',  // Brighter maple red hover border (secondary.600)
     resizeHandleHoverShadow: '#991b1b',  // Darker maple hover shadow (secondary.800)
   },
-  effects: GLASSMORPHISM_EFFECTS.premium,
+  effects: {
+    glassmorphism: true,
+    backdropBlur: '16px',
+    backgroundOpacity: '0.75',
+    shadowIntensity: 'medium',
+    gradientOverlay: true,
+    animationLevel: 'subtle',
+    textureOverlay: false,
+  },
 };

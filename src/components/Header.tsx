@@ -6,7 +6,7 @@ import { BaseComponentProps } from '../types/components';
 export const Header: React.FC<BaseComponentProps> = ({ style, className }) => {
   return (
     <header className={`floating-header ${className || ''}`} style={style}>
-      <nav className="glass-panel rounded-xl px-3 sm:px-4 py-2 sm:py-3 shadow-lg border border-white/20 backdrop-blur-xl transition-all duration-300 hover:shadow-xl">
+      <nav className="glass-panel rounded-xl px-3 sm:px-4 py-2 sm:py-3 transition-all duration-300">
         <div className="relative flex items-center">
           {/* Left Controls */}
           <div className="absolute left-0 flex items-center gap-3">

@@ -18,7 +18,6 @@ import { auroraBorealisTheme } from './definitions/aurora-borealis';
 
 // Import utilities
 export { hexToRgb, hexToRgba } from './utils/colors';
-export { GLASSMORPHISM_EFFECTS } from './utils/effects';
 
 export { generateColorVariables, generateGlassmorphismVariables, applyCSSVariables } from './utils/cssVariables';
 export { isValidTheme, getSafeTheme, getThemeFromStorage } from './utils/validation';

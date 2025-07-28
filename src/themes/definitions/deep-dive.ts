@@ -1,5 +1,4 @@
 import { ThemeConfig } from '../../types/theme';
-import { GLASSMORPHISM_EFFECTS } from '../utils/effects';
 
 /**
  * Deep Dive Theme
@@ -11,7 +10,15 @@ export const deepDiveTheme: ThemeConfig = {
   displayName: 'Deep Dive',
   description: 'Sophisticated deep blue gradient theme',
   background: 'linear-gradient(330deg,rgb(6, 28, 49) 0%, rgb(17, 44, 75) 25%,rgb(26, 53, 96) 63%,rgb(39, 69, 133) 85%,rgb(54, 84, 166) 100%) no-repeat fixed, radial-gradient(circle at 20% 30%, rgba(74, 106, 191, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(74, 106, 191, 0.15) 0%, transparent 50%)',
-  effects: GLASSMORPHISM_EFFECTS.premium,
+  effects: {
+    glassmorphism: true,
+    backdropBlur: '24px',
+    backgroundOpacity: '0.85',
+    shadowIntensity: 'ultra',
+    gradientOverlay: true,
+    animationLevel: 'premium',
+    textureOverlay: true,
+  },
   colors: {
     primary: {
       50: '#f0f9ff',
