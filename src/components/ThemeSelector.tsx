@@ -139,6 +139,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
   });
   const themesButtonRef = React.useRef<HTMLDivElement>(null);
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
+  const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Initialize and update button position
   React.useEffect(() => {
@@ -178,6 +179,31 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
       }
     });
   }, [currentTheme, availableThemes]);
+
+  // Hover management with delay for smooth UX
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Small delay to account for gaps between button and cards
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 150);
+  };
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSelectTheme = (themeName: string, isDragEvent = false) => {
     // Only select theme if it's not a drag event
@@ -244,7 +270,8 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
         className="flex items-center justify-center rounded-lg transition-all duration-200 shrink-0 relative group segment"
         title="Hover to see themes"
         aria-label="Theme selector - hover to view available themes"
-        onMouseEnter={() => setIsHovered(true)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         style={{
           width: '48px',
           height: '48px',
@@ -264,107 +291,115 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
       {buttonRect && createPortal(
         <div
           className="fixed z-[10000]"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           style={{
             left: buttonRect.right - 208, // Right-align cards (w-52 = 208px)
-            top: buttonRect.top, // Start from button top
+            top: buttonRect.top + buttonRect.height + 8, // Start below button with gap
             width: 208, // Match w-52 card width
-            height: buttonRect.height + 8 + (availableThemes.length * 48) + 20, // Cover button + gap + all cards (48px gaps)
-            paddingTop: buttonRect.height + 8, // Space for button + gap
             pointerEvents: isHovered ? 'auto' : 'none', // Only allow interaction when button is hovered
-
           }}
         >
-          {availableThemes.map((theme, index) => {
-            const isDragOver = dragState.dragOverIndex === index;
-            const isDragging = dragState.dragIndex === index;
-            const delay = index * 50; // Staggered animation delay
+          <div
+            className="grid gap-2"
+            style={{
+              // Remove container-level transitions to let individual cards handle the animation
+              opacity: 1,
+              transform: 'translateY(0) scale(1)',
+            }}
+          >
+            {availableThemes.map((theme, index) => {
+              const isDragOver = dragState.dragOverIndex === index;
+              const isDragging = dragState.dragIndex === index;
+              const delay = index * 50; // Staggered animation delay
 
-            return (
-              <div
-                key={theme.name}
-                draggable={true}
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnd={handleDragEnd}
-                onDrop={(e) => handleDrop(e, index)}
-                className={`
-                  absolute transition-all duration-500 ease-out
-                  ${isDragOver ? 'scale-105' : ''}
-                  ${isDragging ? 'opacity-50 scale-95' : ''}
-                  ${isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
-                `}
-                style={{
-                  transform: isHovered
-                    ? `translateY(${index * 48}px) scale(1) rotateX(0deg)`
-                    : `translateY(-30px) scale(0.8) rotateX(-15deg)`,
-                  transformOrigin: 'top center',
-                  transitionDelay: isHovered ? `${delay}ms` : `${(availableThemes.length - index - 1) * 50}ms`,
-                  transitionDuration: '400ms',
-                  transitionTimingFunction: isHovered
-                    ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' // Bounce down
-                    : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smooth up
-                  zIndex: availableThemes.length - index, // Higher z-index for earlier themes
-                }}
-              >
-                <button
-                  onClick={() => handleSelectTheme(theme.name, dragState.isDragging)}
-                  className="w-52 px-4 py-3 text-left rounded-lg flex items-center gap-3 group transition-all duration-300 border shadow-lg hover:shadow-xl"
-                  style={getThemeButtonStyle(theme, currentTheme === theme.name)}
-                  data-theme-card={theme.name}
-                  onMouseEnter={(e) => {
-                    if (currentTheme !== theme.name) {
-                      const themeConfigs = getThemeConfigs(false);
-                      const config = themeConfigs[theme.name as keyof typeof themeConfigs] || themeConfigs['professional'];
-                      // Make opaque on hover with enhanced effects
-                      e.currentTarget.style.background = config.hoverBackground;
-                      e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
-                      e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
-                      e.currentTarget.style.borderColor = config.borderColor.replace('0.4)', '0.8)').replace('0.5)', '0.9)');
-                      // Add subtle glow effect
-                      e.currentTarget.style.filter = 'brightness(1.1) saturate(1.2)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentTheme !== theme.name) {
-                      const originalStyle = getThemeButtonStyle(theme, false);
-                      // Restore translucent state
-                      e.currentTarget.style.background = originalStyle.background as string;
-                      e.currentTarget.style.boxShadow = originalStyle.boxShadow as string;
-                      e.currentTarget.style.transform = 'translateY(0px) scale(1)';
-                      e.currentTarget.style.borderColor = originalStyle.borderColor as string;
-                      e.currentTarget.style.filter = 'none';
-                    }
+              return (
+                <div
+                  key={theme.name}
+                  draggable={true}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className={`
+                    transition-all duration-500 ease-out
+                    ${isDragOver ? 'scale-105' : ''}
+                    ${isDragging ? 'opacity-50 scale-95' : ''}
+                    ${isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+                  `}
+                  style={{
+                    transform: isHovered
+                      ? 'scale(1) rotateX(0deg)'
+                      : 'scale(0.8) rotateX(-15deg)',
+                    transformOrigin: 'top center',
+                    transitionDelay: isHovered
+                      ? `${delay}ms`
+                      : `${(availableThemes.length - index - 1) * 50}ms`,
+                    transitionDuration: '400ms',
+                    transitionTimingFunction: isHovered
+                      ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' // Bounce down
+                      : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smooth up
+                    zIndex: availableThemes.length - index, // Higher z-index for earlier themes
                   }}
                 >
-                  <GripVertical
-                    className="w-4 h-4 shrink-0 opacity-60"
-                    style={{ color: 'var(--theme-dots-color)' }}
-                  />
-
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className="font-semibold truncate"
-                      style={{
-                        color: `var(--theme-text-color) !important`,
-                        fontFamily: 'inherit !important'
-                      }}
-                    >
-                      {theme.displayName}
-                    </div>
-                  </div>
-
-                  {currentTheme === theme.name && (
-                    <Check
-                      className="w-5 h-5 shrink-0"
-                      style={{ color: 'var(--theme-text-color)' }}
+                  <button
+                    onClick={() => handleSelectTheme(theme.name, dragState.isDragging)}
+                    className="w-52 px-4 py-3 text-left rounded-lg flex items-center gap-3 group transition-all duration-300 border shadow-lg hover:shadow-xl"
+                    style={getThemeButtonStyle(theme, currentTheme === theme.name)}
+                    data-theme-card={theme.name}
+                    onMouseEnter={(e) => {
+                      if (currentTheme !== theme.name) {
+                        const themeConfigs = getThemeConfigs(false);
+                        const config = themeConfigs[theme.name as keyof typeof themeConfigs] || themeConfigs['professional'];
+                        // Make opaque on hover with enhanced effects
+                        e.currentTarget.style.background = config.hoverBackground;
+                        e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                        e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
+                        e.currentTarget.style.borderColor = config.borderColor.replace('0.4)', '0.8)').replace('0.5)', '0.9)');
+                        // Add subtle glow effect
+                        e.currentTarget.style.filter = 'brightness(1.1) saturate(1.2)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentTheme !== theme.name) {
+                        const originalStyle = getThemeButtonStyle(theme, false);
+                        // Restore translucent state
+                        e.currentTarget.style.background = originalStyle.background as string;
+                        e.currentTarget.style.boxShadow = originalStyle.boxShadow as string;
+                        e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                        e.currentTarget.style.borderColor = originalStyle.borderColor as string;
+                        e.currentTarget.style.filter = 'none';
+                      }
+                    }}
+                  >
+                    <GripVertical
+                      className="w-4 h-4 shrink-0 opacity-60"
+                      style={{ color: 'var(--theme-dots-color)' }}
                     />
-                  )}
-                </button>
-              </div>
-            );
-          })}
+
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className="font-semibold truncate"
+                        style={{
+                          color: `var(--theme-text-color) !important`,
+                          fontFamily: 'inherit !important'
+                        }}
+                      >
+                        {theme.displayName}
+                      </div>
+                    </div>
+
+                    {currentTheme === theme.name && (
+                      <Check
+                        className="w-5 h-5 shrink-0"
+                        style={{ color: 'var(--theme-text-color)' }}
+                      />
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>,
         document.body
       )}
