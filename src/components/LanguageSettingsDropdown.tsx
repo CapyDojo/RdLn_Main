@@ -145,7 +145,7 @@ export const LanguageSettingsDropdown: React.FC<LanguageSettingsDropdownProps> =
                 {supportedLanguages.map(language => (
                   <label
                     key={language.code}
-                    className="flex items-center gap-2 p-2 hover:bg-theme-neutral-100 rounded cursor-pointer transition-colors"
+                    className="flex items-center gap-2 p-2 hover:bg-theme-primary-500 rounded cursor-pointer transition-colors"
                   >
                     <input
                       type="checkbox"

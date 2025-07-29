@@ -219,9 +219,10 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
             left: buttonRect.right - 208, // Right-align cards (w-52 = 208px)
             top: buttonRect.top, // Start from button top
             width: 208, // Match w-52 card width
-            height: buttonRect.height + 8 + (availableThemes.length * 45) + 20, // Cover button + gap + all cards (45px gaps)
+            height: buttonRect.height + 8 + (availableThemes.length * 48) + 20, // Cover button + gap + all cards (48px gaps)
             paddingTop: buttonRect.height + 8, // Space for button + gap
             pointerEvents: isHovered ? 'auto' : 'none', // Only allow interaction when button is hovered
+
           }}
         >
           {availableThemes.map((theme, index) => {
@@ -245,7 +246,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                 `}
                 style={{
                   transform: isHovered
-                    ? `translateY(${index * 45}px) scale(1) rotateX(0deg)`
+                    ? `translateY(${index * 48}px) scale(1) rotateX(0deg)`
                     : `translateY(-30px) scale(0.8) rotateX(-15deg)`,
                   transformOrigin: 'top center',
                   transitionDelay: isHovered ? `${delay}ms` : `${(availableThemes.length - index - 1) * 50}ms`,
