@@ -1,8 +1,8 @@
-/* Mariana Theme - Following Kyoto Blueprint Pattern */
+/* Caladan Theme - Following Kyoto Blueprint Pattern */
 /* Minimal variables, clean architecture, maximum maintainability */
 
 /* Theme-scoped CSS Variables - Following Kyoto Minimalist Pattern */
-html[data-theme="mariana"] {
+html[data-theme="caladan"] {
   /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
   --theme-glass-bg: 26, 53, 96;
   --theme-glass-border: 74, 106, 191;
@@ -28,7 +28,7 @@ html[data-theme="mariana"] {
 }
 
 /* Simple theme glass panel styling - works with theme-conditional base */
-html[data-theme="mariana"] .glass-panel {
+html[data-theme="caladan"] .glass-panel {
   background: rgba(var(--theme-glass-bg), var(--glass-panel));
   border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
   box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
@@ -37,7 +37,7 @@ html[data-theme="mariana"] .glass-panel {
 }
 
 /* Simple input field styling - works with theme-conditional base */
-html[data-theme="mariana"] .glass-input-field {
+html[data-theme="caladan"] .glass-input-field {
   background: rgba(var(--theme-glass-bg), var(--glass-subtle));
   border: 1px solid rgba(var(--theme-glass-border), var(--glass-panel));
   backdrop-filter: blur(var(--effect-backdropBlur, 12px));
@@ -45,50 +45,50 @@ html[data-theme="mariana"] .glass-input-field {
 }
 
 /* Glass input field hover effects */
-html[data-theme="mariana"] .glass-input-field:hover,
-html[data-theme="mariana"] textarea.glass-input-field:hover,
-html[data-theme="mariana"] input.glass-input-field:hover {
+html[data-theme="caladan"] .glass-input-field:hover,
+html[data-theme="caladan"] textarea.glass-input-field:hover,
+html[data-theme="caladan"] input.glass-input-field:hover {
   border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus));
 }
 
 /* Clean Text Hierarchy - Simple and Maintainable */
 
 /* Default body text */
-html[data-theme="mariana"] {
+html[data-theme="caladan"] {
   color: var(--theme-text-body);
 }
 
 /* Semantic text classes - these should always work */
-html[data-theme="mariana"] .text-theme-primary-900,
-html[data-theme="mariana"] .text-primary {
+html[data-theme="caladan"] .text-theme-primary-900,
+html[data-theme="caladan"] .text-primary {
   color: var(--theme-text-primary);
 }
 
-html[data-theme="mariana"] .text-header {
+html[data-theme="caladan"] .text-header {
   color: var(--theme-text-header);
   font-weight: 600;
 }
 
-html[data-theme="mariana"] .text-secondary,
-html[data-theme="mariana"] .text-theme-neutral-600,
-html[data-theme="mariana"] .text-theme-neutral-500 {
+html[data-theme="caladan"] .text-secondary,
+html[data-theme="caladan"] .text-theme-neutral-600,
+html[data-theme="caladan"] .text-theme-neutral-500 {
   color: var(--theme-text-secondary);
 }
 
-html[data-theme="mariana"] .text-interactive,
-html[data-theme="mariana"] .text-theme-accent-500 {
+html[data-theme="caladan"] .text-interactive,
+html[data-theme="caladan"] .text-theme-accent-500 {
   color: var(--theme-text-interactive);
 }
 
-html[data-theme="mariana"] .text-success,
-html[data-theme="mariana"] .text-active {
+html[data-theme="caladan"] .text-success,
+html[data-theme="caladan"] .text-active {
   color: var(--theme-text-success);
 }
 
 /* Clean Hover Effects - Simple and Maintainable */
-html[data-theme="mariana"] .glass-panel:hover,
-html[data-theme="mariana"] .glass-panel.hover-from-handle,
-html[data-theme="mariana"] .glass-panel.force-hover {
+html[data-theme="caladan"] .glass-panel:hover,
+html[data-theme="caladan"] .glass-panel.hover-from-handle,
+html[data-theme="caladan"] .glass-panel.force-hover {
   background: rgba(var(--theme-glass-bg), var(--glass-focus));
   border-color: rgba(var(--theme-glass-hover-border), 0.6);
   box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
@@ -97,21 +97,21 @@ html[data-theme="mariana"] .glass-panel.force-hover {
 }
 
 /* Text selection styling - deep ocean blue theme */
-html[data-theme="mariana"] ::selection {
+html[data-theme="caladan"] ::selection {
   background-color: rgba(14, 165, 233, 0.25);
   /* Deep ocean blue background */
   color: #bae6fd;
   /* Light blue text for contrast - theme-text-body */
 }
 
-html[data-theme="mariana"] ::-moz-selection {
+html[data-theme="caladan"] ::-moz-selection {
   background-color: rgba(14, 165, 233, 0.25);
   color: #bae6fd;
 }
 
 /* Segmented controls */
-html[data-theme="mariana"] .segmented-control,
-html[data-theme="mariana"] .segmented-control:hover {
+html[data-theme="caladan"] .segmented-control,
+html[data-theme="caladan"] .segmented-control:hover {
   background: rgba(var(--theme-segmented-control-bg), 0.12);
   border: 1px solid rgba(var(--theme-segmented-control-border), 0.2);
 }

@@ -1,6 +1,6 @@
-/* Neon Night Theme - Following Kyoto Blueprint Pattern */
+/* Madripoor Theme - Following Kyoto Blueprint Pattern */
 /* Theme-scoped CSS Variables */
-html[data-theme="neon-night"] {
+html[data-theme="madripoor"] {
   /* Glass panel colors */
   --theme-glass-bg: 8, 8, 12;
   --theme-glass-border: 255, 0, 255;
@@ -21,7 +21,7 @@ html[data-theme="neon-night"] {
 }
 
 /* Neon glass panel styling */
-html[data-theme="neon-night"] .glass-panel {
+html[data-theme="madripoor"] .glass-panel {
   background: rgba(var(--theme-glass-bg), 0.02);
   border: 1px solid rgba(var(--theme-glass-border), 0.8);
   box-shadow:
@@ -33,7 +33,7 @@ html[data-theme="neon-night"] .glass-panel {
 }
 
 /* Neon input field styling */
-html[data-theme="neon-night"] .glass-input-field {
+html[data-theme="madripoor"] .glass-input-field {
   background: rgba(var(--theme-glass-bg), 0.01);
   border: 1px solid rgba(var(--theme-glass-border), 0.6);
   box-shadow: 0 0 10px rgba(var(--theme-glass-border), 0.3);
@@ -42,9 +42,9 @@ html[data-theme="neon-night"] .glass-input-field {
 }
 
 /* Glass input field hover effects */
-html[data-theme="neon-night"] .glass-input-field:hover,
-html[data-theme="neon-night"] textarea.glass-input-field:hover,
-html[data-theme="neon-night"] input.glass-input-field:hover {
+html[data-theme="madripoor"] .glass-input-field:hover,
+html[data-theme="madripoor"] textarea.glass-input-field:hover,
+html[data-theme="madripoor"] input.glass-input-field:hover {
   border-color: rgba(var(--theme-glass-hover-border), 0.8);
   box-shadow: 0 0 15px rgba(var(--theme-glass-hover-border), 0.4);
 }
@@ -52,41 +52,41 @@ html[data-theme="neon-night"] input.glass-input-field:hover {
 /* Clean Text Hierarchy */
 
 /* Default body text */
-html[data-theme="neon-night"] {
+html[data-theme="madripoor"] {
   color: var(--theme-text-body);
 }
 
 /* Semantic text classes */
-html[data-theme="neon-night"] .text-theme-primary-900,
-html[data-theme="neon-night"] .text-primary {
+html[data-theme="madripoor"] .text-theme-primary-900,
+html[data-theme="madripoor"] .text-primary {
   color: var(--theme-text-primary);
 }
 
-html[data-theme="neon-night"] .text-header {
+html[data-theme="madripoor"] .text-header {
   color: var(--theme-text-header);
   font-weight: 600;
 }
 
-html[data-theme="neon-night"] .text-secondary,
-html[data-theme="neon-night"] .text-theme-neutral-600,
-html[data-theme="neon-night"] .text-theme-neutral-500 {
+html[data-theme="madripoor"] .text-secondary,
+html[data-theme="madripoor"] .text-theme-neutral-600,
+html[data-theme="madripoor"] .text-theme-neutral-500 {
   color: var(--theme-text-secondary);
 }
 
-html[data-theme="neon-night"] .text-interactive,
-html[data-theme="neon-night"] .text-theme-accent-500 {
+html[data-theme="madripoor"] .text-interactive,
+html[data-theme="madripoor"] .text-theme-accent-500 {
   color: var(--theme-text-interactive);
 }
 
-html[data-theme="neon-night"] .text-success,
-html[data-theme="neon-night"] .text-active {
+html[data-theme="madripoor"] .text-success,
+html[data-theme="madripoor"] .text-active {
   color: #00ff88;
 }
 
 /* Neon Hover Effects */
-html[data-theme="neon-night"] .glass-panel:hover,
-html[data-theme="neon-night"] .glass-panel.hover-from-handle,
-html[data-theme="neon-night"] .glass-panel.force-hover {
+html[data-theme="madripoor"] .glass-panel:hover,
+html[data-theme="madripoor"] .glass-panel.hover-from-handle,
+html[data-theme="madripoor"] .glass-panel.force-hover {
   background: rgba(var(--theme-glass-bg), 0.06);
   border-color: rgba(var(--theme-glass-hover-border), 1.0);
   box-shadow:
@@ -99,28 +99,28 @@ html[data-theme="neon-night"] .glass-panel.force-hover {
 }
 
 /* Neon text selection styling */
-html[data-theme="neon-night"] ::selection {
+html[data-theme="madripoor"] ::selection {
   background-color: rgba(255, 0, 255, 0.3);
   color: #00ffff;
 }
 
-html[data-theme="neon-night"] ::-moz-selection {
+html[data-theme="madripoor"] ::-moz-selection {
   background-color: rgba(255, 0, 255, 0.3);
   color: #00ffff;
 }
 
-/* Parent container styles - Neon Night specific */
-html[data-theme="neon-night"] .glass-panel-inner-content {
+/* Parent container styles - Madripoor specific */
+html[data-theme="madripoor"] .glass-panel-inner-content {
   background: rgba(var(--theme-glass-bg), 0.01);
 }
 
-html[data-theme="neon-night"] .glass-content-panel .glass-panel-inner-content {
+html[data-theme="madripoor"] .glass-content-panel .glass-panel-inner-content {
   background: rgba(var(--theme-glass-bg), 0.02);
 }
 
 /* Segmented controls */
-html[data-theme="neon-night"] .segmented-control,
-html[data-theme="neon-night"] .segmented-control:hover {
+html[data-theme="madripoor"] .segmented-control,
+html[data-theme="madripoor"] .segmented-control:hover {
   background: rgba(var(--theme-glass-hover-border), 0.12);
   border: 1px solid rgba(var(--theme-glass-border), 0.4);
   box-shadow: 0 0 15px rgba(var(--theme-glass-border), 0.2);

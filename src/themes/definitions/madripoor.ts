@@ -1,13 +1,13 @@
 import { ThemeConfig } from '../../types/theme';
 
 /**
- * Neon Night Theme
+ * Madripoor Theme
  * Sophisticated dark theme with vibrant neon aesthetics.
  * Features inverted cool grays and vibrant purple accents for dark mode.
  */
-export const neonNightTheme: ThemeConfig = {
-  name: 'neon-night',
-  displayName: 'Neon Night',
+export const madripoorTheme: ThemeConfig = {
+  name: 'madripoor',
+  displayName: 'Madripoor',
   description: 'Sophisticated dark theme with vibrant neon aesthetics',
   background: 'linear-gradient(45deg, #050508 0%, #080810 25%, #0a0a12 63%, #0c0c15 85%, #0f0f18 100%)',
   colors: {

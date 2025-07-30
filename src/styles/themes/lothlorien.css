@@ -133,10 +133,32 @@ html[data-theme="lothlorien"] .segmented-control .segment {
 }
 
 html[data-theme="lothlorien"] .segmented-control .segment:hover {
-  color: #fbbf24;
+  color: #ecfdf5;
 }
 
 html[data-theme="lothlorien"] .segmented-control .segment.active {
-  color: #fcd34d;
+  color: #f0fdf4;
   font-weight: 700;
+}
+
+/* Replace any yellow/amber text with pale whitish green */
+html[data-theme="lothlorien"] .text-yellow-500,
+html[data-theme="lothlorien"] .text-yellow-400,
+html[data-theme="lothlorien"] .text-amber-500,
+html[data-theme="lothlorien"] .text-amber-400,
+html[data-theme="lothlorien"] .glass-panel .text-yellow-500,
+html[data-theme="lothlorien"] .glass-panel .text-yellow-400,
+html[data-theme="lothlorien"] .glass-panel .text-amber-500,
+html[data-theme="lothlorien"] .glass-panel .text-amber-400 {
+  color: #f0fdf4 !important;
+}
+
+/* Ensure any amber/yellow colored elements become pale whitish green */
+html[data-theme="lothlorien"] span[style*="color: #fbbf24"],
+html[data-theme="lothlorien"] span[style*="color: #fcd34d"],
+html[data-theme="lothlorien"] span[style*="color: #f59e0b"],
+html[data-theme="lothlorien"] *[style*="color: #fbbf24"],
+html[data-theme="lothlorien"] *[style*="color: #fcd34d"],
+html[data-theme="lothlorien"] *[style*="color: #f59e0b"] {
+  color: #f0fdf4 !important;
 }

@@ -1,0 +1,145 @@
+/* Svínafellsjökull Theme - Following Kyoto Blueprint Pattern */
+/* Minimal variables, clean architecture, maximum maintainability */
+
+/* Theme-scoped CSS Variables - Following Kyoto Minimalist Pattern */
+html[data-theme="svinafellsjokull"] {
+  /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
+  --theme-glass-bg: 34, 87, 122;
+  --theme-glass-border: 52, 125, 146;
+  --theme-glass-hover-border: 6, 182, 212;
+  --theme-glass-hover-shadow: 8, 145, 178;
+
+  /* Variables expected by glassmorphism.css - Essential only */
+  --theme-glass-panel-hover-rgb: 67, 159, 181;
+  --theme-glass-panel-hover-border-rgb: 6, 182, 212;
+  --theme-glass-panel-hover-shadow-rgb: 8, 145, 178;
+
+  /* Text hierarchy colors - Improved contrast for legibility */
+  --theme-text-body: #ffffff;
+  --theme-text-header: #ffffff;
+  --theme-text-secondary: #e0f2fe;
+  --theme-text-interactive: #bae6fd;
+  --theme-text-success: #5eead4;
+  --theme-text-primary: #ffffff;
+
+  /* Additional theme-specific colors - Minimal like Kyoto */
+  --theme-segmented-control-bg: 6, 182, 212;
+  --theme-segmented-control-border: 6, 182, 212;
+}
+
+/* Simple theme glass panel styling - works with theme-conditional base */
+html[data-theme="svinafellsjokull"] .glass-panel {
+  background: rgba(var(--theme-glass-bg), var(--glass-panel));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+  box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
+  backdrop-filter: blur(var(--effect-backdropBlur, 20px)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 20px)) saturate(1.4);
+}
+
+/* Simple input field styling - works with theme-conditional base */
+html[data-theme="svinafellsjokull"] .glass-input-field {
+  background: rgba(var(--theme-glass-bg), var(--glass-subtle));
+  border: 1px solid rgba(var(--theme-glass-border), var(--glass-panel));
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+}
+
+/* Glass input field hover effects */
+html[data-theme="svinafellsjokull"] .glass-input-field:hover,
+html[data-theme="svinafellsjokull"] textarea.glass-input-field:hover,
+html[data-theme="svinafellsjokull"] input.glass-input-field:hover {
+  border-color: rgba(var(--theme-glass-hover-border), var(--glass-focus));
+}
+
+/* Clean Text Hierarchy - Simple and Maintainable */
+
+/* Default body text */
+html[data-theme="svinafellsjokull"] {
+  color: var(--theme-text-body);
+}
+
+/* Semantic text classes - these should always work */
+html[data-theme="svinafellsjokull"] .text-theme-primary-900,
+html[data-theme="svinafellsjokull"] .text-primary {
+  color: var(--theme-text-primary);
+}
+
+html[data-theme="svinafellsjokull"] .text-header {
+  color: var(--theme-text-header);
+  font-weight: 600;
+}
+
+html[data-theme="svinafellsjokull"] .text-secondary,
+html[data-theme="svinafellsjokull"] .text-theme-neutral-600,
+html[data-theme="svinafellsjokull"] .text-theme-neutral-500 {
+  color: var(--theme-text-secondary);
+}
+
+html[data-theme="svinafellsjokull"] .text-interactive,
+html[data-theme="svinafellsjokull"] .text-theme-accent-500 {
+  color: var(--theme-text-interactive);
+}
+
+html[data-theme="svinafellsjokull"] .text-success,
+html[data-theme="svinafellsjokull"] .text-active {
+  color: var(--theme-text-success);
+}
+
+/* Clean Hover Effects - Simple and Maintainable */
+html[data-theme="svinafellsjokull"] .glass-panel:hover,
+html[data-theme="svinafellsjokull"] .glass-panel.hover-from-handle,
+html[data-theme="svinafellsjokull"] .glass-panel.force-hover {
+  background: rgba(var(--theme-glass-bg), var(--glass-focus));
+  border-color: rgba(var(--theme-glass-hover-border), 0.6);
+  box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+  transform: translateY(-2px);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Text selection styling - coastal aqua theme */
+html[data-theme="svinafellsjokull"] ::selection {
+  background-color: rgba(6, 182, 212, 0.25);
+  /* Coastal aqua background */
+  color: #a5f3fc;
+  /* Light cyan text for contrast - theme-text-body */
+}
+
+html[data-theme="svinafellsjokull"] ::-moz-selection {
+  background-color: rgba(6, 182, 212, 0.25);
+  color: #a5f3fc;
+}
+
+/* Segmented controls */
+html[data-theme="svinafellsjokull"] .segmented-control,
+html[data-theme="svinafellsjokull"] .segmented-control:hover {
+  background: rgba(var(--theme-segmented-control-bg), 0.12);
+  border: 1px solid rgba(var(--theme-segmented-control-border), 0.2);
+}
+
+/* Active segments - ensure white text for legibility */
+html[data-theme="svinafellsjokull"] .segment.active,
+html[data-theme="svinafellsjokull"] .segment.active *,
+html[data-theme="svinafellsjokull"] .segmented-control .active,
+html[data-theme="svinafellsjokull"] .segmented-control .active * {
+  color: #ffffff !important;
+}
+
+/* Inactive segment text - icy blue for subtle appearance */
+html[data-theme="svinafellsjokull"] .segment,
+html[data-theme="svinafellsjokull"] .segment *,
+html[data-theme="svinafellsjokull"] .segmented-control button,
+html[data-theme="svinafellsjokull"] .segmented-control button * {
+  color: #a5f3fc !important;
+}
+
+/* Footer card text - icy blue for consistency */
+html[data-theme="svinafellsjokull"] .glass-panel span,
+html[data-theme="svinafellsjokull"] .glass-panel .text-sm,
+html[data-theme="svinafellsjokull"] .glass-panel .text-xs,
+html[data-theme="svinafellsjokull"] .glass-panel button span,
+html[data-theme="svinafellsjokull"] .glass-panel .opacity-60,
+html[data-theme="svinafellsjokull"] .glass-panel .opacity-70,
+html[data-theme="svinafellsjokull"] .glass-panel .text-gray-500,
+html[data-theme="svinafellsjokull"] .glass-panel .text-gray-600 {
+  color: #a5f3fc !important;
+}

@@ -57,7 +57,7 @@ const getThemeConfigs = (isSelected: boolean) => ({
     textColor: '#E9B64B',
     borderColor: isSelected ? '#E9B64B' : 'rgba(233, 182, 75, 0.5)'
   },
-  'neon-night': {
+  'madripoor': {
     background: isSelected
       ? 'linear-gradient(135deg, rgba(5, 5, 8, 1) 0%, rgba(8, 8, 16, 1) 20%, rgba(15, 15, 24, 1) 40%, rgba(139, 92, 246, 1) 60%, rgba(0, 255, 255, 1) 80%, rgba(15, 15, 24, 1) 100%)'
       : 'linear-gradient(135deg, rgba(5, 5, 8, 0.7) 0%, rgba(8, 8, 16, 0.7) 20%, rgba(15, 15, 24, 0.7) 40%, rgba(139, 92, 246, 0.3) 60%, rgba(0, 255, 255, 0.2) 80%, rgba(15, 15, 24, 0.7) 100%)',
@@ -65,13 +65,13 @@ const getThemeConfigs = (isSelected: boolean) => ({
     textColor: '#00ffff',
     borderColor: isSelected ? '#ff00ff' : 'rgba(255, 0, 255, 0.6)'
   },
-  'mariana': {
+  'caladan': {
     background: isSelected
       ? 'linear-gradient(330deg, rgba(6, 28, 49, 1) 0%, rgba(17, 44, 75, 1) 25%, rgba(26, 53, 96, 1) 63%, rgba(39, 69, 133, 1) 85%, rgba(54, 84, 166, 1) 100%)'
       : 'linear-gradient(330deg, rgba(6, 28, 49, 0.7) 0%, rgba(17, 44, 75, 0.7) 25%, rgba(26, 53, 96, 0.7) 63%, rgba(39, 69, 133, 0.7) 85%, rgba(54, 84, 166, 0.7) 100%)',
     hoverBackground: 'linear-gradient(330deg, rgba(6, 28, 49, 1) 0%, rgba(17, 44, 75, 1) 25%, rgba(26, 53, 96, 1) 63%, rgba(39, 69, 133, 1) 85%, rgba(54, 84, 166, 1) 100%)',
-    textColor: '#ffffff',
-    borderColor: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
+    textColor: '#0ea5e9',
+    borderColor: isSelected ? '#0284c7' : 'rgba(2, 132, 199, 0.6)'
   },
   'aurora-borealis': {
     background: isSelected
@@ -88,6 +88,14 @@ const getThemeConfigs = (isSelected: boolean) => ({
     hoverBackground: 'linear-gradient(330deg, rgba(15, 32, 39, 1) 0%, rgba(21, 46, 54, 1) 25%, rgba(28, 64, 72, 1) 63%, rgba(34, 85, 96, 1) 85%, rgba(44, 106, 120, 1) 100%), radial-gradient(circle at 20% 30%, rgba(34, 197, 94, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(245, 158, 11, 0.1) 0%, transparent 50%)',
     textColor: '#d1fae5',
     borderColor: isSelected ? '#4ade80' : 'rgba(74, 222, 128, 0.5)'
+  },
+  'svinafellsjokull': {
+    background: isSelected
+      ? 'linear-gradient(330deg, rgba(8, 47, 73, 1) 0%, rgba(20, 64, 89, 1) 25%, rgba(34, 87, 122, 1) 63%, rgba(52, 125, 146, 1) 85%, rgba(67, 159, 181, 1) 100%), radial-gradient(circle at 20% 30%, rgba(6, 182, 212, 0.12) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(34, 197, 94, 0.08) 0%, transparent 50%)'
+      : 'linear-gradient(330deg, rgba(8, 47, 73, 0.7) 0%, rgba(20, 64, 89, 0.7) 25%, rgba(34, 87, 122, 0.7) 63%, rgba(52, 125, 146, 0.7) 85%, rgba(67, 159, 181, 0.7) 100%), radial-gradient(circle at 20% 30%, rgba(6, 182, 212, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(34, 197, 94, 0.05) 0%, transparent 50%)',
+    hoverBackground: 'linear-gradient(330deg, rgba(8, 47, 73, 1) 0%, rgba(20, 64, 89, 1) 25%, rgba(34, 87, 122, 1) 63%, rgba(52, 125, 146, 1) 85%, rgba(67, 159, 181, 1) 100%), radial-gradient(circle at 20% 30%, rgba(6, 182, 212, 0.12) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(34, 197, 94, 0.08) 0%, transparent 50%)',
+    textColor: '#a5f3fc',
+    borderColor: isSelected ? '#06b6d4' : 'rgba(6, 182, 212, 0.5)'
   },
 });
 

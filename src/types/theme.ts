@@ -4,13 +4,14 @@ export type ThemeName =
   | 'bamboo'
   | 'kyoto'
   | 'new-york'
-  | 'neon-night'
-  | 'mariana'
+  | 'madripoor'
+  | 'caladan'
   | 'aurora-borealis'
   | 'ocean-deep'
   | 'professional'
   | 'autumn'
-  | 'lothlorien';
+  | 'lothlorien'
+  | 'svinafellsjokull';
 
 export interface ThemeConfig {
   name: ThemeName;

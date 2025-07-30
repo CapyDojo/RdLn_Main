@@ -32,9 +32,10 @@ const DEFAULT_THEME_ORDER: ThemeName[] = [
   'bamboo',
   'kyoto',
   'new-york',
-  'neon-night',
-  'mariana',
+  'madripoor',
+  'caladan',
   'lothlorien',
+  'svinafellsjokull',
   'aurora-borealis',
   'professional',
 ];

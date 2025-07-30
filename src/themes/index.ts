@@ -12,10 +12,11 @@ import { kyotoTheme } from './definitions/kyoto';
 import { newYorkTheme } from './definitions/new-york';
 import { classicLightTheme } from './definitions/classic-light';
 import { classicDarkTheme } from './definitions/classic-dark';
-import { neonNightTheme } from './definitions/neon-night';
-import { marianaTheme } from './definitions/mariana';
+import { madripoorTheme } from './definitions/madripoor';
+import { caladanTheme } from './definitions/caladan';
 import { auroraBorealisTheme } from './definitions/aurora-borealis';
 import { lothlorienTheme } from './definitions/lothlorien';
+import { svinafellsjokullTheme } from './definitions/svinafellsjokull';
 
 // Import utilities
 export { hexToRgb, hexToRgba } from './utils/colors';
@@ -34,11 +35,13 @@ export const themeDefinitions: Record<ThemeName, ThemeConfig> = {
   'new-york': newYorkTheme,
   'classic-light': classicLightTheme,
   'classic-dark': classicDarkTheme,
-  'neon-night': neonNightTheme,
-  'mariana': marianaTheme,
-  'ocean-deep': marianaTheme, // Using marianaTheme as placeholder
+  'madripoor': madripoorTheme,
+  'caladan': caladanTheme,
+  'ocean-deep': caladanTheme, // Using caladanTheme as placeholder
   'aurora-borealis': auroraBorealisTheme,
   'lothlorien': lothlorienTheme,
+  'svinafellsjokull': svinafellsjokullTheme,
+  'autumn': professionalTheme, // Using professionalTheme as placeholder
 } as const;
 
 // Export individual themes for direct access
@@ -50,7 +53,8 @@ export {
   classicLightTheme,
   classicDarkTheme,
   neonNightTheme,
-  marianaTheme,
+  caladanTheme,
   auroraBorealisTheme,
   lothlorienTheme,
+  svinafellsjokullTheme,
 };
