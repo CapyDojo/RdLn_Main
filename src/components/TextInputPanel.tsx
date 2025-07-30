@@ -8,6 +8,7 @@ import { useLayout } from '../contexts/LayoutContext';
 import { BaseComponentProps } from '../types/components';
 import { useComponentPerformance } from '../utils/performanceUtils.tsx';
 import { formatPastedText } from '../utils/paragraphFormatting';
+import { analyzePasteContext, shouldApplyAutoFormat, getSourceDescription, PasteContext } from '../utils/pastePDFdetection';
 import { useFontSize } from '../contexts/FontSizeContext';
 
 interface TextInputPanelProps extends BaseComponentProps {
@@ -39,6 +40,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isAutoFormatEnabled, setIsAutoFormatEnabled] = useState(true);
+  const [lastPasteContext, setLastPasteContext] = useState<PasteContext | null>(null);
   const { fontSize } = useFontSize();
 
   const toggleAutoFormat = () => {
@@ -160,18 +162,30 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     const imageItem = items.find(item => item.type.startsWith('image/'));
     const textItem = items.find(item => item.type.startsWith('text/plain'));
     
+    // Get plain text content for analysis
+    const plainText = textItem ? e.clipboardData.getData('text/plain') : '';
+    const normalizedText = plainText.replace(/\r\n/g, '\n');
+    
+    // Analyze paste context to determine if content was originally formatted
+    const pasteContext = analyzePasteContext(items, normalizedText);
+    setLastPasteContext(pasteContext);
+    
     performanceTracker.trackMetric('paste_operation', {
       hasImage: !!imageItem,
       hasText: !!textItem,
-      itemCount: items.length
+      itemCount: items.length,
+      sourceType: pasteContext.sourceType,
+      detectedSource: pasteContext.detectedSource
     });
     
     if (textItem && !imageItem) {
       e.preventDefault();
-      const plainText = e.clipboardData.getData('text/plain');
-      const normalizedText = plainText.replace(/\r\n/g, '\n');
       
-      const processedText = isAutoFormatEnabled ? formatPastedText(normalizedText) : normalizedText;
+      // Use intelligent format detection instead of just user preference
+      const shouldFormat = shouldApplyAutoFormat(pasteContext, isAutoFormatEnabled);
+      const processedText = shouldFormat ? formatPastedText(normalizedText) : normalizedText;
+      
+      console.log(`[Paste] Source: ${pasteContext.detectedSource}, Auto-format: ${shouldFormat ? 'APPLIED' : 'SKIPPED'}`);
       
       const textarea = textareaRef.current;
       if (textarea) {
@@ -307,6 +321,18 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           >
             <Sparkles className={`w-5 h-5 transition-all duration-300 ${isAutoFormatEnabled ? 'text-white' : 'text-theme-neutral-500'}`} />
           </button>
+          {/* Paste Context Indicator */}
+          {lastPasteContext && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-theme-neutral-100 dark:bg-theme-neutral-800 rounded-md text-xs text-theme-neutral-600 dark:text-theme-neutral-400">
+              <span className="w-2 h-2 rounded-full bg-theme-secondary-500"></span>
+              <span>{getSourceDescription(lastPasteContext)}</span>
+              {lastPasteContext.shouldAutoFormat ? (
+                <span className="text-theme-primary-600 font-medium">formatted</span>
+              ) : (
+                <span className="text-theme-neutral-500">preserved</span>
+              )}
+            </div>
+          )}
           {isProcessing && (
             <div className="flex items-center gap-2">
               <Loader className="w-4 h-4 text-theme-primary-600 animate-spin" />

@@ -55,7 +55,9 @@
   - Test that orange headers (#86efac) and peach body text (#f8b4b4) display correctly
   - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 6. Enhance layout-specific hover effects in current-layout.css
+- [x] 6. Enhance layout-specific hover effects in current-layout.css
+
+
   - Update [data-theme="kyoto"] .layout-current .hover-from-handle selector
   - Use theme CSS variables for consistent color application
   - Implement stronger shadow effects for handle-triggered hover
@@ -73,36 +75,41 @@
   - _Requirements: 5.3, 5.4_
 
 - [ ] 8. Create comprehensive test suite for cascade hierarchy validation
-  - Write automated test to verify theme styles override base styles
-  - Create visual regression test for glass panel backgrounds and hover effects
-  - Implement test for text color hierarchy across all text elements
-  - Add performance test to ensure CSS changes don't impact rendering speed
+  - Enhance existing validate-professional-rebuild.js script for Kyoto theme testing
+  - Create automated test to verify theme styles override base styles correctly
+  - Implement visual test for glass panel backgrounds showing dark theme colors (not white)
+  - Add test for text color hierarchy across all semantic text classes
+  - Test hover effects work for both direct hover and force-hover class application
   - _Requirements: 7.1, 7.2, 7.3, 8.4_
 
-- [ ] 9. Validate handle hover mechanism functionality
-  - Test that JavaScript correctly adds hover-from-handle class to panels
-  - Verify CSS rules apply correctly when hover-from-handle class is present
-  - Test both input panel handle hover and output panel handle hover
-  - Ensure hover effects work consistently across different panel types
+- [ ] 9. Investigate and implement handle hover mechanism functionality
+  - Research existing hover-from-handle class usage in codebase
+  - Identify if JavaScript mechanism exists to add hover-from-handle class to panels
+  - If missing, implement JavaScript event handlers for resize handle hover
+  - Test that CSS rules apply correctly when hover-from-handle class is present
+  - Ensure hover effects work consistently for input and output panel handles
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
 - [ ] 10. Document blueprint pattern for other themes
   - Create step-by-step guide for applying CSS hierarchy fixes to other themes
-  - Document the CSS variable pattern and specificity enhancement strategy
-  - Include color mapping process from TypeScript definitions to CSS variables
+  - Document the CSS variable pattern and specificity enhancement strategy used in Kyoto
+  - Include color mapping process from TypeScript theme definitions to CSS variables
   - Create validation checklist for blueprint application success
+  - Reference existing kyoto-blueprint-pattern.md and expand it
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
 - [ ] 11. Performance optimization and final validation
-  - Measure CSS parsing performance before and after changes
+  - Measure CSS parsing performance before and after changes using browser dev tools
   - Validate that theme switching works smoothly without visual glitches
-  - Test all functionality across different browsers and devices
+  - Test all functionality across different browsers (Chrome, Firefox, Safari, Edge)
   - Confirm no regressions in existing theme functionality
+  - Verify memory usage remains stable during theme operations
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
 - [ ] 12. Create blueprint application template
-  - Extract reusable CSS patterns from fixed Kyoto theme
+  - Extract reusable CSS patterns from fixed Kyoto theme implementation
   - Create template CSS file with placeholder variables for other themes
-  - Document the systematic approach for theme color mapping
+  - Document the systematic approach for theme color mapping and variable usage
   - Test template application on one additional theme as proof of concept
+  - Ensure template maintains same specificity levels and architectural patterns
   - _Requirements: 6.2, 6.3, 6.4_

@@ -7,7 +7,8 @@
       "Bash(grep:*)",
       "Bash(rg:*)",
       "Bash(mkdir:*)",
-      "Bash(npm i:*)"
+      "Bash(npm i:*)",
+      "WebFetch(domain:docs.anthropic.com)"
     ],
     "deny": []
   }
