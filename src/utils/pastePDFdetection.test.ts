@@ -1,4 +1,46 @@
-import { analyzePasteContext, shouldApplyAutoFormat, getSourceDescription } from './pastePDFdetection';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { test } from 'vitest';
+import { describe } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { test } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { test } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { test } from 'vitest';
+import { describe } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { test } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { test } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { test } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { test } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { expect } from 'vitest';
+import { test } from 'vitest';
+import { describe } from 'vitest';
+import { describe } from 'vitest';
+import { analyzePasteContext, getFormattingLevel, getSourceDescription, FormatLevel } from './pastePDFdetection';
 
 // Mock DataTransferItem for testing
 class MockDataTransferItem implements DataTransferItem {
@@ -29,13 +71,13 @@ describe('Paste PDF Detection', () => {
         new MockDataTransferItem('text/html'),
         new MockDataTransferItem('text/plain')
       ];
-      
+
       const context = analyzePasteContext(items);
-      
+
       expect(context.sourceType).toBe('formatted');
       expect(context.hasHtml).toBe(true);
       expect(context.hasPlainOnly).toBe(false);
-      expect(context.shouldAutoFormat).toBe(false);
+      expect(context.formatLevel).toBe('RTF_HTML_Paste_Format');
       expect(context.detectedSource).toContain('Rich text application');
     });
 
@@ -44,12 +86,12 @@ describe('Paste PDF Detection', () => {
         new MockDataTransferItem('text/rtf'),
         new MockDataTransferItem('text/plain')
       ];
-      
+
       const context = analyzePasteContext(items, 'Regular RTF content without PDF indicators');
-      
+
       expect(context.sourceType).toBe('formatted');
       expect(context.hasRtf).toBe(true);
-      expect(context.shouldAutoFormat).toBe(false);
+      expect(context.formatLevel).toBe('RTF_HTML_Paste_Format');
       expect(context.detectedSource).toContain('RTF application');
     });
 
@@ -58,19 +100,19 @@ describe('Paste PDF Detection', () => {
         new MockDataTransferItem('text/rtf'),
         new MockDataTransferItem('text/plain')
       ];
-      
+
       // Simulate PDF content: lines ending without punctuation (typical PDF artificial breaks)
       const pdfLikeContent = `This Agreement dated July 25, 2025, is entered into by Maiora Securities Limited
 a company incorporated in the British Virgin Islands with registration number
 BVI-123456 and having its registered office at Road Harbour Financial Centre
 Road Town, Tortola, British Virgin Islands VG1110 and its principal place
 of business at 1234 Financial District, Hong Kong and hereinafter referred`;
-      
+
       const context = analyzePasteContext(items, pdfLikeContent);
-      
+
       expect(context.sourceType).toBe('plain');
       expect(context.hasRtf).toBe(true);
-      expect(context.shouldAutoFormat).toBe(true);
+      expect(context.formatLevel).toBe('PDF_Paste_Format');
       expect(context.detectedSource).toContain('PDF viewer');
     });
 
@@ -78,66 +120,82 @@ of business at 1234 Financial District, Hong Kong and hereinafter referred`;
       const items = [
         new MockDataTransferItem('text/plain')
       ];
-      
+
       const context = analyzePasteContext(items);
-      
+
       expect(context.sourceType).toBe('plain');
       expect(context.hasPlainOnly).toBe(true);
-      expect(context.shouldAutoFormat).toBe(true);
+      expect(context.formatLevel).toBe('PDF_Paste_Format');
       expect(context.detectedSource).toContain('Plain text source');
     });
 
-    test('detects mixed/complex formats', () => {
+    test('detects Word document (HTML + RTF + Plain)', () => {
+      const items = [
+        new MockDataTransferItem('text/html'),
+        new MockDataTransferItem('text/rtf'),
+        new MockDataTransferItem('text/plain')
+      ];
+
+      const context = analyzePasteContext(items);
+
+      expect(context.sourceType).toBe('formatted');
+      expect(context.formatCount).toBe(3);
+      expect(context.formatLevel).toBe('RTF_HTML_Paste_Format');
+      expect(context.detectedSource).toContain('Word document');
+    });
+
+    test('detects truly complex formats (4+ formats)', () => {
       const items = [
         new MockDataTransferItem('text/html'),
         new MockDataTransferItem('text/plain'),
-        new MockDataTransferItem('text/rtf')
+        new MockDataTransferItem('text/rtf'),
+        new MockDataTransferItem('application/x-custom')
       ];
-      
+
       const context = analyzePasteContext(items);
-      
+
       expect(context.sourceType).toBe('mixed');
-      expect(context.formatCount).toBe(3);
-      expect(context.shouldAutoFormat).toBe(false);
+      expect(context.formatCount).toBe(4);
+      expect(context.formatLevel).toBe('None');
     });
   });
 
-  describe('shouldApplyAutoFormat', () => {
+  describe('getFormattingLevel', () => {
     test('respects user override', () => {
       const plainContext = analyzePasteContext([new MockDataTransferItem('text/plain')]);
-      
+
       // User forces no formatting despite plain text
-      expect(shouldApplyAutoFormat(plainContext, true, false)).toBe(false);
-      
+      expect(getFormattingLevel(plainContext, true, false)).toBe('None');
+
       // User forces formatting despite formatted text
       const htmlContext = analyzePasteContext([
         new MockDataTransferItem('text/html'),
         new MockDataTransferItem('text/plain')
       ]);
-      expect(shouldApplyAutoFormat(htmlContext, true, true)).toBe(true);
+      expect(getFormattingLevel(htmlContext, true, true)).toBe('PDF_Paste_Format');
     });
 
     test('respects user auto-format preference when no override', () => {
       const plainContext = analyzePasteContext([new MockDataTransferItem('text/plain')]);
-      
+
       // User has auto-format disabled
-      expect(shouldApplyAutoFormat(plainContext, false)).toBe(false);
-      
+      expect(getFormattingLevel(plainContext, false)).toBe('None');
+
       // User has auto-format enabled
-      expect(shouldApplyAutoFormat(plainContext, true)).toBe(true);
+      expect(getFormattingLevel(plainContext, true)).toBe('PDF_Paste_Format');
     });
 
     test('uses intelligent detection when user has auto-format enabled', () => {
-      // Plain text should be formatted
+      // Plain text should get full formatting
       const plainContext = analyzePasteContext([new MockDataTransferItem('text/plain')]);
-      expect(shouldApplyAutoFormat(plainContext, true)).toBe(true);
-      
-      // HTML content should not be formatted
+      expect(getFormattingLevel(plainContext, true)).toBe('PDF_Paste_Format');
+
+      // HTML content should get minimal formatting
       const htmlContext = analyzePasteContext([
         new MockDataTransferItem('text/html'),
         new MockDataTransferItem('text/plain')
       ]);
-      expect(shouldApplyAutoFormat(htmlContext, true)).toBe(false);
+      expect(getFormattingLevel(htmlContext, true)).toBe('RTF_HTML_Paste_Format');
     });
   });
 
@@ -145,13 +203,13 @@ of business at 1234 Financial District, Hong Kong and hereinafter referred`;
     test('returns appropriate descriptions', () => {
       const plainContext = analyzePasteContext([new MockDataTransferItem('text/plain')]);
       expect(getSourceDescription(plainContext)).toBe('Plain text');
-      
+
       const htmlContext = analyzePasteContext([
         new MockDataTransferItem('text/html'),
         new MockDataTransferItem('text/plain')
       ]);
       expect(getSourceDescription(htmlContext)).toBe('Formatted document');
-      
+
       const rtfContext = analyzePasteContext([
         new MockDataTransferItem('text/rtf'),
         new MockDataTransferItem('text/plain')

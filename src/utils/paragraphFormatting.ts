@@ -51,6 +51,15 @@ function countContentUnits(line: string): number {
   }
 }
 
+/**
+ * Minimal formatting for RTF/HTML pastes - just adds extra paragraph spacing
+ */
+export function formatRtfHtmlPaste(text: string): string {
+  // Replace single line breaks with double line breaks for better visual separation
+  // But preserve any existing double (or more) line breaks completely unchanged
+  return text.replace(/(?<!\n)\n(?!\n)/g, '\n\n');
+}
+
 export function formatPastedText(text: string): string {
   const debugMode = false;
   const debugLog = (message: string) => {

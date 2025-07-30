@@ -7,8 +7,8 @@ import { LanguageSettingsDropdown } from './LanguageSettingsDropdown';
 import { useLayout } from '../contexts/LayoutContext';
 import { BaseComponentProps } from '../types/components';
 import { useComponentPerformance } from '../utils/performanceUtils.tsx';
-import { formatPastedText } from '../utils/paragraphFormatting';
-import { analyzePasteContext, shouldApplyAutoFormat, getSourceDescription, PasteContext } from '../utils/pastePDFdetection';
+import { formatPastedText, formatRtfHtmlPaste } from '../utils/paragraphFormatting';
+import { analyzePasteContext, getFormattingLevel, getSourceDescription, PasteContext, FormatLevel } from '../utils/pastePDFdetection';
 import { useFontSize } from '../contexts/FontSizeContext';
 
 interface TextInputPanelProps extends BaseComponentProps {
@@ -181,11 +181,24 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     if (textItem && !imageItem) {
       e.preventDefault();
       
-      // Use intelligent format detection instead of just user preference
-      const shouldFormat = shouldApplyAutoFormat(pasteContext, isAutoFormatEnabled);
-      const processedText = shouldFormat ? formatPastedText(normalizedText) : normalizedText;
+      // Use intelligent format detection to determine formatting level
+      const formatLevel = getFormattingLevel(pasteContext, isAutoFormatEnabled);
       
-      console.log(`[Paste] Source: ${pasteContext.detectedSource}, Auto-format: ${shouldFormat ? 'APPLIED' : 'SKIPPED'}`);
+      let processedText: string;
+      switch (formatLevel) {
+        case 'PDF_Paste_Format':
+          processedText = formatPastedText(normalizedText);
+          break;
+        case 'RTF_HTML_Paste_Format':
+          processedText = formatRtfHtmlPaste(normalizedText);
+          break;
+        case 'None':
+        default:
+          processedText = normalizedText;
+          break;
+      }
+      
+      console.log(`[Paste] Source: ${pasteContext.detectedSource}, Format level: ${formatLevel}`);
       
       const textarea = textareaRef.current;
       if (textarea) {
