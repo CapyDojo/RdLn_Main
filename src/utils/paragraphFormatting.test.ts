@@ -86,4 +86,87 @@ Alternative option one with detailed explanation Alternative option two with com
     expect(formatPastedText(input)).toBe(expected);
   });
 
+  test('handles Chinese PDF line wrapping correctly', () => {
+    const input = `本协议规定了双方的权利
+和义务，包括但不限于
+保密条款的执行。
+第二条款明确了
+违约责任和处理方式。`;
+
+    const expected = `本协议规定了双方的权利
+
+和义务，包括但不限于
+
+保密条款的执行。
+
+第二条款明确了
+
+违约责任和处理方式。`;
+
+    expect(formatPastedText(input)).toBe(expected);
+  });
+
+  test('preserves Chinese structural elements', () => {
+    const input = `保密协议
+本协议于2025年1月22日签署
+甲方
+北京投资管理有限公司
+乙方
+上海金融服务公司`;
+
+    const expected = `保密协议
+
+本协议于2025年1月22日签署
+
+甲方
+
+北京投资管理有限公司
+
+乙方
+
+上海金融服务公司`;
+
+    expect(formatPastedText(input)).toBe(expected);
+  });
+
+  test('handles mixed Chinese and English content', () => {
+    const input = `CONFIDENTIALITY AGREEMENT 保密协议
+This Agreement 本协议 is made between
+AIA Investment Management
+和 Blackstone Alternative`;
+
+    const expected = `CONFIDENTIALITY AGREEMENT 保密协议
+
+This Agreement 本协议 is made between
+
+AIA Investment Management
+
+和 Blackstone Alternative`;
+
+    expect(formatPastedText(input)).toBe(expected);
+  });
+
+  test('handles pure English text in bilingual document', () => {
+    const input = `saction with the
+Company (a "Transaction"), you have requested certain information concerning the Company, its
+affiliates and/or the Transaction from the Company's directors, officers, employees,
+representatives and/or agents (including without limitation, attorneys, accountants, consultants and
+financial advisors) (the Company's "Representatives").`;
+
+    const expected = `saction with the
+
+Company (a "Transaction"), you have requested certain information concerning the Company, its affiliates and/or the Transaction from the Company's directors, officers, employees, representatives and/or agents (including without limitation, attorneys, accountants, consultants and financial advisors) (the Company's "Representatives").`;
+
+    expect(formatPastedText(input)).toBe(expected);
+  });
+
+  test('handles Chinese enumeration commas correctly', () => {
+    const input = `以及由贵方或贵方代表编制的包含或全部或部分基于任何该等信息的任何分析、
+汇编、预测和/或其他文件在本信函协议中合称为"保密信息"。`;
+
+    const expected = `以及由贵方或贵方代表编制的包含或全部或部分基于任何该等信息的任何分析、汇编、预测和/或其他文件在本信函协议中合称为"保密信息"。`;
+
+    expect(formatPastedText(input)).toBe(expected);
+  });
+
 });

@@ -6,6 +6,28 @@
  * 2. Is this line break intentionally structural? -> Short-line rule preserves breaks
  */
 
+/**
+ * Detects if text contains Chinese characters
+ */
+function containsChinese(text: string): boolean {
+  // Unicode ranges for CJK characters
+  return /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/.test(text);
+}
+
+/**
+ * Counts content units (words for English, characters for Chinese)
+ */
+function countContentUnits(line: string): number {
+  const trimmed = line.trim();
+  if (containsChinese(trimmed)) {
+    // For Chinese: count characters, excluding punctuation and spaces
+    return trimmed.replace(/[\s\u3000-\u303f\uff00-\uffef]/g, '').length;
+  } else {
+    // For English: count words
+    return trimmed.split(/\s+/).length;
+  }
+}
+
 export function formatPastedText(text: string): string {
   const debugMode = false;
   const debugLog = (message: string) => {
@@ -25,18 +47,26 @@ export function formatPastedText(text: string): string {
     return text;
   }
 
-  // Calculate average line length for statistical threshold
-  const wordCounts = lines.map(line => line.trim().split(/\s+/).length);
-  const averageWordCount = wordCounts.reduce((sum, count) => sum + count, 0) / wordCounts.length;
-  const shortLineThreshold = Math.max(5, Math.floor(averageWordCount * 0.5));
+  // Calculate average line length for statistical threshold using language-aware counting
+  const contentUnitCounts = lines.map(line => countContentUnits(line));
+  const averageContentUnits = contentUnitCounts.reduce((sum, count) => sum + count, 0) / contentUnitCounts.length;
+  const hasChineseContent = lines.some(line => containsChinese(line));
   
-  debugLog(`Average words per line: ${averageWordCount.toFixed(1)}`);
-  debugLog(`Short line threshold: ${shortLineThreshold} words`);
+  // Adjust thresholds based on content type
+  const baseThreshold = hasChineseContent ? 30 : 5; // Chinese: 30 chars, English: 5 words
+  const shortLineThreshold = Math.max(baseThreshold, Math.floor(averageContentUnits * 0.3)); // Lower percentage for Chinese
+  
+  debugLog(`Average content units per line: ${averageContentUnits.toFixed(1)} (Chinese: ${hasChineseContent})`);
+  debugLog(`Short line threshold: ${shortLineThreshold} units`);
 
   const isShortLine = (line: string): boolean => {
-    const wordCount = line.trim().split(/\s+/).length;
-    const isShort = wordCount <= 5 || wordCount <= shortLineThreshold;
-    debugLog(`  Line "${line.trim()}" has ${wordCount} words - ${isShort ? 'SHORT' : 'NORMAL'}`);
+    const contentUnits = countContentUnits(line);
+    // Use line-specific threshold: if this line has Chinese, use Chinese threshold; otherwise English
+    const lineThreshold = containsChinese(line) ? 
+      Math.max(30, Math.floor(averageContentUnits * 0.3)) : 
+      Math.max(5, Math.floor(averageContentUnits * 0.5));
+    const isShort = contentUnits <= lineThreshold;
+    debugLog(`  Line "${line.trim()}" has ${contentUnits} units (${containsChinese(line) ? 'Chinese' : 'English'} threshold: ${lineThreshold}) - ${isShort ? 'SHORT' : 'NORMAL'}`);
     return isShort;
   };
 
@@ -44,8 +74,8 @@ export function formatPastedText(text: string): string {
     const trimmedPrev = prevParagraph.trim();
     const trimmedCurr = currentLine.trim();
 
-    // Rule 1: Do NOT join if the previous line ends with semantic breaks.
-    if (/[.!?:;]$/.test(trimmedPrev) || 
+    // Rule 1: Do NOT join if the previous line ends with semantic breaks (English + Chinese).
+    if (/[.!?:;。！？：；]$/.test(trimmedPrev) || 
         /:-\s*$/.test(trimmedPrev) || 
         /:\s*-\s*$/.test(trimmedPrev) || 
         /;\s*or\s*$/.test(trimmedPrev) || 
@@ -60,14 +90,20 @@ export function formatPastedText(text: string): string {
       return true;
     }
 
-    // Rule 3: Join if the current line starts with a lowercase letter.
-    if (/^\p{Ll}/u.test(trimmedCurr)) {
+    // Rule 3: Join if the current line starts with a lowercase letter (English only).
+    if (/^\p{Ll}/u.test(trimmedCurr) && !containsChinese(trimmedCurr)) {
       debugLog(`      shouldContinue: true, starts with lowercase.`);
       return true;
     }
+    
+    // Rule 3b: For Chinese text, join if previous line doesn't end with Chinese punctuation
+    if (containsChinese(trimmedPrev) && !(/[。！？：；]$/.test(trimmedPrev))) {
+      debugLog(`      shouldContinue: true, Chinese text without ending punctuation.`);
+      return true;
+    }
 
-    // Rule 4: Join if the previous line does NOT end in sentence-ending punctuation.
-    if (!/[.!?:;]$/.test(trimmedPrev) && 
+    // Rule 4: Join if the previous line does NOT end in sentence-ending punctuation (English + Chinese).
+    if (!/[.!?:;。！？：；]$/.test(trimmedPrev) && 
         !/:-\s*$/.test(trimmedPrev) && 
         !/:\s*-\s*$/.test(trimmedPrev) && 
         !/;\s*or\s*$/.test(trimmedPrev) && 
@@ -94,7 +130,11 @@ export function formatPastedText(text: string): string {
       debugLog(`  -> New paragraph (short previous line): "${currentLine}"`);
     } else if (shouldContinue(currentParagraph, currentLine)) {
       // Previous line was normal length - use existing PDF wrapping logic
-      currentParagraph += ' ' + currentLine.trim();
+      // Use space separator unless both lines are purely Chinese
+      const prevPureChinese = containsChinese(currentParagraph) && !/[a-zA-Z]/.test(currentParagraph);
+      const currPureChinese = containsChinese(currentLine) && !/[a-zA-Z]/.test(currentLine);
+      const separator = prevPureChinese && currPureChinese ? '' : ' ';
+      currentParagraph += separator + currentLine.trim();
       debugLog(`  -> Joining line: "${currentLine}"`);
     } else {
       // shouldContinue said no - start new paragraph
