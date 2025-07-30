@@ -802,7 +802,18 @@ export class OCRService {
     const primaryLanguage = this.selectPrimaryLanguage(languages);
     console.log('🧘 Processing with primary language:', primaryLanguage, 'from detected:', languages.join(', '));
     
-    return this.gentleUniversalPreservation(text);
+    let processed = this.gentleUniversalPreservation(text);
+    
+    // Remove single spaces between CJK characters only - repeat until no more matches
+    const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
+    const cjkSpaceRegex = new RegExp(`(${cjk}) (${cjk})`, 'g');
+    let previousText;
+    do {
+      previousText = processed;
+      processed = processed.replace(cjkSpaceRegex, '$1$2');
+    } while (processed !== previousText);
+    
+    return processed;
   }
 
   private static chinesePostProcessing(text: string): string {
@@ -1486,9 +1497,31 @@ export class OCRService {
       return false;
     }
 
+    // DON'T join if previous line ends with punctuation and next starts like a new sentence
+    if (this.isPunctuationBreak(currentParagraph, line)) {
+      console.log('🔤 Punctuation break detected - preserving break:', currentParagraph.slice(-20), '|', line.slice(0, 30));
+      return false;
+    }
+
     // JOIN everything else - simple and effective!
     console.log('🧘 Zen joining:', currentParagraph.slice(-20), '|', line.slice(0, 30));
     return true;
+  }
+
+  // Check for punctuation-based paragraph breaks (script-agnostic)
+  private static isPunctuationBreak(currentParagraph: string, line: string): boolean {
+    const currentTrimmed = currentParagraph.trim();
+    const lineTrimmed = line.trim();
+    
+    if (!currentTrimmed || !lineTrimmed) return false;
+
+    // Check if current paragraph ends with any punctuation
+    const endsWithPunctuation = /[.!?。！？]\s*$/.test(currentTrimmed);
+    
+    // Check if next line starts like a new sentence (capital letter, CJK character, or number)
+    const startsLikeNewSentence = /^[A-Z\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af\u3000-\u303f\uff00-\uffef\d]/.test(lineTrimmed);
+    
+    return endsWithPunctuation && startsLikeNewSentence;
   }
 
   /**
