@@ -15,15 +15,38 @@ function containsChinese(text: string): boolean {
 }
 
 /**
- * Counts content units (words for English, characters for Chinese)
+ * Detects if text contains Japanese characters
+ */
+function containsJapanese(text: string): boolean {
+  // Hiragana, Katakana ranges
+  return /[\u3040-\u309f\u30a0-\u30ff]/.test(text);
+}
+
+/**
+ * Detects if text contains Korean characters
+ */
+function containsKorean(text: string): boolean {
+  // Hangul syllables
+  return /[\uac00-\ud7af]/.test(text);
+}
+
+/**
+ * Detects if text contains CJK (Chinese, Japanese, Korean) characters
+ */
+function containsCJK(text: string): boolean {
+  return containsChinese(text) || containsJapanese(text) || containsKorean(text);
+}
+
+/**
+ * Counts content units (words for European languages, characters for CJK)
  */
 function countContentUnits(line: string): number {
   const trimmed = line.trim();
-  if (containsChinese(trimmed)) {
-    // For Chinese: count characters, excluding punctuation and spaces
+  if (containsCJK(trimmed)) {
+    // For CJK: count characters, excluding punctuation and spaces
     return trimmed.replace(/[\s\u3000-\u303f\uff00-\uffef]/g, '').length;
   } else {
-    // For English: count words
+    // For European languages: count words
     return trimmed.split(/\s+/).length;
   }
 }
@@ -47,26 +70,21 @@ export function formatPastedText(text: string): string {
     return text;
   }
 
-  // Calculate average line length for statistical threshold using language-aware counting
-  const contentUnitCounts = lines.map(line => countContentUnits(line));
-  const averageContentUnits = contentUnitCounts.reduce((sum, count) => sum + count, 0) / contentUnitCounts.length;
-  const hasChineseContent = lines.some(line => containsChinese(line));
-  
-  // Adjust thresholds based on content type
-  const baseThreshold = hasChineseContent ? 30 : 5; // Chinese: 30 chars, English: 5 words
-  const shortLineThreshold = Math.max(baseThreshold, Math.floor(averageContentUnits * 0.3)); // Lower percentage for Chinese
-  
-  debugLog(`Average content units per line: ${averageContentUnits.toFixed(1)} (Chinese: ${hasChineseContent})`);
-  debugLog(`Short line threshold: ${shortLineThreshold} units`);
+  debugLog(`Using pure language detection thresholds (CJK: 30 chars, European: 5 words)`);
+
+  /**
+   * Determines language threshold for a line
+   */
+  const getLanguageThreshold = (line: string): number => {
+    if (containsCJK(line)) return 30;      // CJK (Chinese, Japanese, Korean)
+    return 5;                              // European languages (English, French, German, Spanish)
+  };
 
   const isShortLine = (line: string): boolean => {
     const contentUnits = countContentUnits(line);
-    // Use line-specific threshold: if this line has Chinese, use Chinese threshold; otherwise English
-    const lineThreshold = containsChinese(line) ? 
-      Math.max(30, Math.floor(averageContentUnits * 0.3)) : 
-      Math.max(5, Math.floor(averageContentUnits * 0.5));
-    const isShort = contentUnits <= lineThreshold;
-    debugLog(`  Line "${line.trim()}" has ${contentUnits} units (${containsChinese(line) ? 'Chinese' : 'English'} threshold: ${lineThreshold}) - ${isShort ? 'SHORT' : 'NORMAL'}`);
+    const threshold = getLanguageThreshold(line);
+    const isShort = contentUnits <= threshold;
+    debugLog(`  Line "${line.trim()}" has ${contentUnits} units (threshold: ${threshold}) - ${isShort ? 'SHORT' : 'NORMAL'}`);
     return isShort;
   };
 
@@ -74,7 +92,7 @@ export function formatPastedText(text: string): string {
     const trimmedPrev = prevParagraph.trim();
     const trimmedCurr = currentLine.trim();
 
-    // Rule 1: Do NOT join if the previous line ends with semantic breaks (English + Chinese).
+    // Rule 1: Do NOT join if the previous line ends with semantic breaks (European + CJK).
     if (/[.!?:;。！？：；]$/.test(trimmedPrev) || 
         /:-\s*$/.test(trimmedPrev) || 
         /:\s*-\s*$/.test(trimmedPrev) || 
@@ -90,19 +108,19 @@ export function formatPastedText(text: string): string {
       return true;
     }
 
-    // Rule 3: Join if the current line starts with a lowercase letter (English only).
-    if (/^\p{Ll}/u.test(trimmedCurr) && !containsChinese(trimmedCurr)) {
+    // Rule 3: Join if the current line starts with a lowercase letter (European languages only).
+    if (/^\p{Ll}/u.test(trimmedCurr) && !containsCJK(trimmedCurr)) {
       debugLog(`      shouldContinue: true, starts with lowercase.`);
       return true;
     }
     
-    // Rule 3b: For Chinese text, join if previous line doesn't end with Chinese punctuation
-    if (containsChinese(trimmedPrev) && !(/[。！？：；]$/.test(trimmedPrev))) {
-      debugLog(`      shouldContinue: true, Chinese text without ending punctuation.`);
+    // Rule 3b: For CJK text, join if previous line doesn't end with CJK punctuation
+    if (containsCJK(trimmedPrev) && !(/[。！？：；]$/.test(trimmedPrev))) {
+      debugLog(`      shouldContinue: true, CJK text without ending punctuation.`);
       return true;
     }
 
-    // Rule 4: Join if the previous line does NOT end in sentence-ending punctuation (English + Chinese).
+    // Rule 4: Join if the previous line does NOT end in sentence-ending punctuation (European + CJK).
     if (!/[.!?:;。！？：；]$/.test(trimmedPrev) && 
         !/:-\s*$/.test(trimmedPrev) && 
         !/:\s*-\s*$/.test(trimmedPrev) && 
@@ -130,10 +148,10 @@ export function formatPastedText(text: string): string {
       debugLog(`  -> New paragraph (short previous line): "${currentLine}"`);
     } else if (shouldContinue(currentParagraph, currentLine)) {
       // Previous line was normal length - use existing PDF wrapping logic
-      // Use space separator unless both lines are purely Chinese
-      const prevPureChinese = containsChinese(currentParagraph) && !/[a-zA-Z]/.test(currentParagraph);
-      const currPureChinese = containsChinese(currentLine) && !/[a-zA-Z]/.test(currentLine);
-      const separator = prevPureChinese && currPureChinese ? '' : ' ';
+      // Use space separator unless both lines are purely CJK
+      const prevPureCJK = containsCJK(currentParagraph) && !/[a-zA-Z]/.test(currentParagraph);
+      const currPureCJK = containsCJK(currentLine) && !/[a-zA-Z]/.test(currentLine);
+      const separator = prevPureCJK && currPureCJK ? '' : ' ';
       currentParagraph += separator + currentLine.trim();
       debugLog(`  -> Joining line: "${currentLine}"`);
     } else {

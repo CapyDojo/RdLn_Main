@@ -169,4 +169,62 @@ Company (a "Transaction"), you have requested certain information concerning the
     expect(formatPastedText(input)).toBe(expected);
   });
 
+  test('handles mixed Chinese/English document without cross-language contamination', () => {
+    const input = `贵方已表示有兴趣与AROG Holdings II Limited（以下称"公司"）进行一项潜在交易。
+Company (a "Transaction"), you have requested certain information concerning the Company, its
+affiliates and/or the Transaction from the Company's directors, officers, employees,
+representatives and/or agents (including without limitation, attorneys, accountants, consultants and
+financial advisors) (the Company's "Representatives").`;
+
+    const expected = `贵方已表示有兴趣与AROG Holdings II Limited（以下称"公司"）进行一项潜在交易。
+
+Company (a "Transaction"), you have requested certain information concerning the Company, its affiliates and/or the Transaction from the Company's directors, officers, employees, representatives and/or agents (including without limitation, attorneys, accountants, consultants and financial advisors) (the Company's "Representatives").`;
+
+    expect(formatPastedText(input)).toBe(expected);
+  });
+
+  test('handles Japanese text correctly', () => {
+    const input = `この契約書は機密保持に関する
+重要な条項を含んでいます。
+当事者は以下の内容に
+同意するものとします。`;
+
+    const expected = `この契約書は機密保持に関する
+
+重要な条項を含んでいます。
+
+当事者は以下の内容に
+
+同意するものとします。`;
+
+    expect(formatPastedText(input)).toBe(expected);
+  });
+
+  test('handles Korean text correctly', () => {
+    const input = `이 계약서는 기밀 유지에 관한
+중요한 조항을 포함하고 있습니다.
+당사자들은 다음 내용에
+동의하는 것으로 합니다.`;
+
+    const expected = `이 계약서는 기밀 유지에 관한
+
+중요한 조항을 포함하고 있습니다.
+
+당사자들은 다음 내용에
+
+동의하는 것으로 합니다.`;
+
+    expect(formatPastedText(input)).toBe(expected);
+  });
+
+  test('handles European languages (French/German/Spanish) like English', () => {
+    const input = `Cette convention de confidentialité établit des règles importantes pour
+la protection des informations sensibles de l'entreprise et de ses
+partenaires commerciaux dans le cadre de cette transaction potentielle.`;
+
+    const expected = `Cette convention de confidentialité établit des règles importantes pour la protection des informations sensibles de l'entreprise et de ses partenaires commerciaux dans le cadre de cette transaction potentielle.`;
+
+    expect(formatPastedText(input)).toBe(expected);
+  });
+
 });
