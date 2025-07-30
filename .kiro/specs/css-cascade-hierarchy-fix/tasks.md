@@ -58,6 +58,7 @@
 - [x] 6. Enhance layout-specific hover effects in current-layout.css
 
 
+
   - Update [data-theme="kyoto"] .layout-current .hover-from-handle selector
   - Use theme CSS variables for consistent color application
   - Implement stronger shadow effects for handle-triggered hover

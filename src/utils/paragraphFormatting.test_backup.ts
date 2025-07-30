@@ -68,22 +68,4 @@ provisions of this Undertaking shall in any way limit the activities of Blacksto
 
     expect(formatPastedText(input)).toBe(expected);
   });
-
-  test('preserves line breaks after extended semantic patterns', () => {
-    const input = `The requirements are:-
-First requirement description goes here in more detail
-Second requirement description follows with additional information
-The options include; or
-Alternative option one with detailed explanation
-Alternative option two with comprehensive details`;
-
-    const expected = `The requirements are:-
-
-First requirement description goes here in more detail Second requirement description follows with additional information The options include; or
-
-Alternative option one with detailed explanation Alternative option two with comprehensive details`;
-
-    expect(formatPastedText(input)).toBe(expected);
-  });
-
 });
