@@ -144,7 +144,7 @@ export function analyzePasteContext(clipboardItems: DataTransferItem[], plainTex
 export function getSourceDescription(context: PasteContext): string {
   switch (context.sourceType) {
     case 'formatted':
-      return context.hasHtml ? 'Formatted document' : 'RTF document';
+      return context.hasHtml ? 'Word/HTML Detected' : 'RTF document';
     case 'plain':
       return 'Plain text';
     case 'mixed':

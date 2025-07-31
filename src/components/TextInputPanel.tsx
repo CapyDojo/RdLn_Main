@@ -8,7 +8,7 @@ import { useLayout } from '../contexts/LayoutContext';
 import { BaseComponentProps } from '../types/components';
 import { useComponentPerformance } from '../utils/performanceUtils.tsx';
 import { formatPastedText, formatRtfHtmlPaste } from '../utils/paragraphFormatting';
-import { analyzePasteContext, getFormattingLevel, getSourceDescription, PasteContext, FormatLevel } from '../utils/pastePDFdetection';
+import { analyzePasteContext, getFormattingLevel, PasteContext, FormatLevel } from '../utils/pastePDFdetection';
 import { useFontSize } from '../contexts/FontSizeContext';
 
 interface TextInputPanelProps extends BaseComponentProps {
@@ -40,7 +40,6 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isAutoFormatEnabled, setIsAutoFormatEnabled] = useState(true);
-  const [lastPasteContext, setLastPasteContext] = useState<PasteContext | null>(null);
   const { fontSize } = useFontSize();
 
   const toggleAutoFormat = () => {
@@ -168,7 +167,6 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     
     // Analyze paste context to determine if content was originally formatted
     const pasteContext = analyzePasteContext(items, normalizedText);
-    setLastPasteContext(pasteContext);
     
     performanceTracker.trackMetric('paste_operation', {
       hasImage: !!imageItem,
@@ -334,18 +332,6 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           >
             <Sparkles className={`w-5 h-5 transition-all duration-300 ${isAutoFormatEnabled ? 'text-white' : 'text-theme-neutral-500'}`} />
           </button>
-          {/* Paste Context Indicator */}
-          {lastPasteContext && (
-            <div className="flex items-center gap-1 px-2 py-1 bg-theme-neutral-100 dark:bg-theme-neutral-800 rounded-md text-xs text-theme-neutral-600 dark:text-theme-neutral-400">
-              <span className="w-2 h-2 rounded-full bg-theme-secondary-500"></span>
-              <span>{getSourceDescription(lastPasteContext)}</span>
-              {lastPasteContext.shouldAutoFormat ? (
-                <span className="text-theme-primary-600 font-medium">formatted</span>
-              ) : (
-                <span className="text-theme-neutral-500">preserved</span>
-              )}
-            </div>
-          )}
           {isProcessing && (
             <div className="flex items-center gap-2">
               <Loader className="w-4 h-4 text-theme-primary-600 animate-spin" />
