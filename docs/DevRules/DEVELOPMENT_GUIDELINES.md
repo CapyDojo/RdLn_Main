@@ -202,7 +202,21 @@ project_rules:
 - Apply minimal fix to restore function
 - Start fresh with different approach
 
-## 12. OCR-Specific Guidelines
+## 12. Changelog Guidelines
+
+- **New features**: New functionality
+- **Bug fixes**: Corrected issues
+- **Refactoring**: Code structure changes
+- **Documentation**: Non-functional changes
+- **Testing**: Changes to testing infrastructure
+- **Other**: Any other significant change
+- Always add references to files, functions, issues, lines affected
+- Use bullet points for multiple changes
+- Keep changelog concise, focus on the most recent changes
+- Keep reverse chronological order (most recent at top)
+- Use date conventions (YYYY-MM-DD) 
+
+## 13. OCR-Specific Guidelines
 
 ### OCR Testing Requirements
 
@@ -227,7 +241,7 @@ project_rules:
 
 **When uncertain: ASK, don't guess**
 
-**Your role: Precise fixes, not improvements**
+**Your role: Precise fixes, not unsolicited improvements**
 
 ---
 

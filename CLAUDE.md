@@ -63,6 +63,8 @@ This is RdLn, a professional document comparison tool with OCR capabilities buil
 
 ## Development Guidelines
 
+At the start of each session, read docs\DevRules\DEVELOPMENT_GUIDELINES.md and adhere to them unless otherwise specified.
+
 ### SSMR Methodology
 This codebase follows **Safe, Step-by-step, Modular, Reversible** (SSMR) development:
 - Make incremental changes with feature flags

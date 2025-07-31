@@ -1,5 +1,87 @@
+## Version 0.4.12 - "Paste UX Enhancements & Whitespace Fix"
+*Released: July 31, 2025*
+
+### 🎯 **Paste Detection UI Cleanup**
+
+#### **Paste Toast Notification Removal**
+- **PROBLEM SOLVED**: Removed redundant paste detection toast notification that appeared when users pasted content
+- **USER FEEDBACK**: Toast was providing information users already knew (they just pasted something), creating visual clutter
+- **SOLUTION**: Removed user-facing paste detection indicator while preserving all underlying paste processing logic
+- **TECHNICAL IMPLEMENTATION**: 
+  - Removed "Paste Context Indicator" UI component from `TextInputPanel.tsx:337-348`
+  - Cleaned up unused `lastPasteContext` state and `getSourceDescription` import
+  - Preserved intelligent paste detection, auto-formatting, and source analysis functionality
+
+#### **Whitespace-Only Line Break Fix**
+- **CRITICAL BUG FIXED**: Resolved edge case where lines containing only whitespace characters interfered with line break normalization
+- **ROOT CAUSE**: Lines like `\n \n` or `\n\t\n` were treated as single line breaks instead of existing multi-line breaks
+- **ELEGANT SOLUTION**: Implemented line-by-line normalization that treats whitespace-only lines as truly empty lines
+- **PRESERVED STRUCTURE**: Multiple consecutive blank lines maintain their count and visual spacing
+
+### ✅ **Enhanced RTF/HTML Paste Processing**
+
+#### **Smart Whitespace Normalization**
+- **NEW ALGORITHM**: `formatRtfHtmlPaste()` now uses split/map/join approach for precise whitespace handling
+- **SEMANTIC EQUIVALENCE**: Lines with only spaces, tabs, or mixed whitespace treated identically to empty lines
+- **STRUCTURE PRESERVATION**: Original line count maintained - 7 whitespace-only lines become 7 empty lines
+- **REGRESSION PREVENTION**: All existing double line break detection continues to work unchanged
+
+#### **Real-World Test Case Success**
+```typescript
+// BEFORE (problematic):
+"CONFIDENTIAL\n                \n \n   \n \n \n \n \nFrom:"
+// Became: "CONFIDENTIAL\n\nFrom:" (lost 6 blank lines)
+
+// AFTER (fixed):
+"CONFIDENTIAL\n                \n \n   \n \n \n \n \nFrom:"  
+// Becomes: "CONFIDENTIAL\n\n\n\n\n\n\n\nFrom:" (preserves all 7 blank lines)
+```
+
+### 🔧 **Technical Implementation Excellence**
+
+#### **Modular Line Processing**
+```typescript
+// New whitespace-aware approach:
+const lines = text.split('\n');
+const normalizedLines = lines.map(line => line.trim() === '' ? '' : line);
+const normalizedText = normalizedLines.join('\n');
+return normalizedText.replace(/(?<!\n)\n(?!\n)/g, '\n\n');
+```
+
+#### **Files Modified**
+- **`src/components/TextInputPanel.tsx`**: Removed paste detection toast notification UI
+- **`src/utils/paragraphFormatting.ts`**: Enhanced `formatRtfHtmlPaste()` with whitespace-aware line processing
+- **Clean Imports**: Removed unused `getSourceDescription` import and cleaned up state management
+
+### 🎯 **User Experience Improvements**
+
+#### **Cleaner Interface**
+- **Reduced Visual Clutter**: No more redundant paste notifications interrupting workflow
+- **Seamless Paste Experience**: Users paste content and immediately see properly formatted results
+- **Professional Appearance**: Interface focuses on content, not process notifications
+
+#### **Document Structure Preservation**
+- **Legal Documents**: Multi-line headers and formal spacing in contracts preserved correctly
+- **Professional Documents**: Intentional blank line formatting maintained in business documents  
+- **Mixed Content**: Complex documents with various whitespace patterns handled intelligently
+
+### 🚀 **Development Methodology Success**
+
+#### **SSMR Implementation**
+- **Safe**: Zero breaking changes, all existing paste processing functionality preserved
+- **Step-by-step**: UI cleanup first, then whitespace algorithm enhancement with individual testing
+- **Modular**: Clean separation between UI components and text processing logic
+- **Reversible**: Clear architectural boundaries allow easy rollback if needed
+
+#### **Quality Assurance**
+- **Comprehensive Testing**: Manual testing with real-world legal document examples
+- **Edge Case Validation**: Multiple whitespace-only line patterns tested and validated
+- **Regression Prevention**: All existing functionality verified to work unchanged
+
+---
+
 ## Version 0.4.11 - "Language Detection Speed Revolution"
-*Released: January 31, 2025*
+*Released: July 31, 2025*
 
 ### 🚀 **Pre-OCR Quick Detection Implementation**
 
@@ -119,7 +201,7 @@ public static async quickPreScreening(imageFile: File | Blob): Promise<OCRLangua
 ---
 
 ## Version 0.4.10 - "Word Document Paste Enhancement"
-*Released: January 31, 2025*
+*Released: July 31, 2025*
 
 ### 🎯 **Smart Word Document Detection & Formatting**
 

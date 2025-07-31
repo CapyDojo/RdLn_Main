@@ -55,9 +55,15 @@ function countContentUnits(line: string): number {
  * Minimal formatting for RTF/HTML pastes - just adds extra paragraph spacing
  */
 export function formatRtfHtmlPaste(text: string): string {
+  // Split into lines, normalize whitespace-only lines to empty, then rejoin
+  // This preserves the count of blank lines while treating whitespace-only lines as truly empty
+  const lines = text.split('\n');
+  const normalizedLines = lines.map(line => line.trim() === '' ? '' : line);
+  const normalizedText = normalizedLines.join('\n');
+  
   // Replace single line breaks with double line breaks for better visual separation
   // But preserve any existing double (or more) line breaks completely unchanged
-  return text.replace(/(?<!\n)\n(?!\n)/g, '\n\n');
+  return normalizedText.replace(/(?<!\n)\n(?!\n)/g, '\n\n');
 }
 
 export function formatPastedText(text: string): string {
