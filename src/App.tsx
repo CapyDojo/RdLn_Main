@@ -14,6 +14,7 @@ import BoundaryFixTester from './components/BoundaryFixTester';
 import { SmartPasteTest } from './components/SmartPasteTest';
 import { OCRFeatureCard } from './components/OCRFeatureCard';
 import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
+import { useZoom } from './hooks/useZoom';
 import './styles/resize-overrides.css';
 
 interface AppContentProps {
@@ -129,6 +130,9 @@ function AppContent({
 }
 
 function App() {
+  // Initialize zoom functionality
+  useZoom();
+  
   // State for developer mode toggles with localStorage persistence
   const [showAdvancedOcrCardState, setShowAdvancedOcrCardState] = useState(false);
   const [showPerformanceDemoCardState, setShowPerformanceDemoCardState] = useState(false);

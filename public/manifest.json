@@ -1,0 +1,38 @@
+{
+  "name": "RdLn - Document Comparison Tool",
+  "short_name": "RdLn",
+  "description": "Professional document comparison tool with OCR capabilities",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2937",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/images/rdln-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "New Comparison",
+      "short_name": "Compare",
+      "description": "Start a new document comparison",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/images/rdln-logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": []
+}

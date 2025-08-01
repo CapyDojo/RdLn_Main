@@ -20,7 +20,10 @@
     "test:accuracy": "vitest run --config vitest.ocr.config.ts tests/accuracy",
     "test:ocr": "vitest run --config vitest.ocr.config.ts",
     "test:real": "vitest run tests/real-ocr.test.ts --no-coverage",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
@@ -34,6 +37,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@tauri-apps/api": "^2.7.0",
+    "@tauri-apps/cli": "^2.7.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -45,6 +50,8 @@
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.18",
     "canvas": "^3.1.2",
+    "electron": "^37.2.5",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
