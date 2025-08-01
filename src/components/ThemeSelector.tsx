@@ -149,21 +149,32 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
   const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize and update button position
+  // Update button position on scroll, resize, and hover changes
   React.useEffect(() => {
-    if (themesButtonRef.current) {
-      const rect = themesButtonRef.current.getBoundingClientRect();
-      setButtonRect(rect);
-    }
-  }, [isHovered]); // Update on hover state change
-
-  // Set initial position on mount
-  React.useEffect(() => {
-    if (themesButtonRef.current) {
-      const rect = themesButtonRef.current.getBoundingClientRect();
-      setButtonRect(rect);
-    }
-  }, []);
+    if (!themesButtonRef.current) return;
+    
+    const updatePosition = () => {
+      if (themesButtonRef.current) {
+        const rect = themesButtonRef.current.getBoundingClientRect();
+        setButtonRect(rect);
+      }
+    };
+    
+    // Initial position
+    updatePosition();
+    
+    // Listen for scroll and resize events (like LanguageSettingsDropdown)
+    const handleScroll = () => updatePosition();
+    const handleResize = () => updatePosition();
+    
+    window.addEventListener('scroll', handleScroll, true); // Use capture to catch all scroll events
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isHovered]); // Update on hover state change and add event listeners
 
   // Reset all card styles when theme changes to prevent stuck hover states
   React.useEffect(() => {
