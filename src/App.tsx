@@ -129,6 +129,7 @@ function AppContent({
 }
 
 function App() {
+  
   // State for developer mode toggles with localStorage persistence
   const [showAdvancedOcrCardState, setShowAdvancedOcrCardState] = useState(false);
   const [showPerformanceDemoCardState, setShowPerformanceDemoCardState] = useState(false);

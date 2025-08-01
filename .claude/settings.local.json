@@ -9,8 +9,10 @@
       "Bash(mkdir:*)",
       "Bash(npm i:*)",
       "WebFetch(domain:docs.anthropic.com)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "WebFetch(domain:stackoverflow.com)"
     ],
     "deny": []
-  }
+  },
+  "$schema": "https://json.schemastore.org/claude-code-settings.json"
 }

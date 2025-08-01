@@ -20,7 +20,6 @@ import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/pe
 // Experimental features
 import { useExperimentalFeatures, useExperimentalCSSClasses } from '../contexts/ExperimentalLayoutContext';
 import { FloatingJumpButton } from './experimental/FloatingJumpButton';
-import { FloatingDevToggle, useDevToggleKeyboard } from './FloatingDevToggle';
 import { MobileTabInterface } from './experimental/MobileTabInterface';
 import { StickyResultsPanel } from './experimental/StickyResultsPanel';
 import { ResultsOverlay } from './experimental/ResultsOverlay';
@@ -205,7 +204,6 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
   const { features } = useExperimentalFeatures();
   
   // Enable keyboard shortcut for dev dashboard
-  useDevToggleKeyboard();
   const experimentalCSSClasses = useExperimentalCSSClasses();
   
   // Jump to results functionality for experimental features
@@ -607,8 +605,6 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
         />
       )}
       
-      {/* Developer Mode Toggle - Always visible in development */}
-      <FloatingDevToggle isVisible={true} />
       
       {/* Results Overlay - Feature #8 */}
       {features.resultsOverlay && result && (

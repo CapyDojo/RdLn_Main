@@ -149,7 +149,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
   const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Update button position on scroll, resize, and hover changes
+  // Update button position on scroll and resize - separated from hover logic
   React.useEffect(() => {
     if (!themesButtonRef.current) return;
     
@@ -163,7 +163,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
     // Initial position
     updatePosition();
     
-    // Listen for scroll and resize events (like LanguageSettingsDropdown)
+    // Listen for scroll and resize events (stable listeners like LanguageSettingsDropdown)
     const handleScroll = () => updatePosition();
     const handleResize = () => updatePosition();
     
@@ -174,7 +174,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isHovered]); // Update on hover state change and add event listeners
+  }, []); // Stable dependencies - no hover state dependency
 
   // Reset all card styles when theme changes to prevent stuck hover states
   React.useEffect(() => {
