@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
       "Bash(npm run typecheck:*)",
@@ -9,7 +10,15 @@
       "Bash(mkdir:*)",
       "Bash(npm i:*)",
       "WebFetch(domain:docs.anthropic.com)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(npx tauri init:*)",
+      "Bash(copy:*)",
+      "Bash(cp:*)",
+      "Bash(rustc --version)",
+      "Bash(cargo --version)",
+      "Bash(npx @tauri-apps/cli icon:*)",
+      "Bash(rm:*)",
+      "Bash(npx @tauri-apps/cli init:*)"
     ],
     "deny": []
   }
