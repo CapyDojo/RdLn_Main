@@ -13,15 +13,18 @@ import { useFontSize } from '../contexts/FontSizeContext';
 
 // Tauri v2 file drop support using proper imports
 let tauriListen: any = null;
-let tauriReadBinaryFile: any = null;
+let tauriReadFile: any = null;
 
 // Dynamically import Tauri APIs to avoid build errors in web mode
 const initTauriApis = async () => {
   try {
     const eventModule = await import('@tauri-apps/api/event');
-    tauriListen = eventModule.listen;
+    const fsModule = await import('@tauri-apps/plugin-fs');
     
-    console.log('🔧 TAURI DEBUG: Event API imported successfully');
+    tauriListen = eventModule.listen;
+    tauriReadFile = fsModule.readFile;
+    
+    console.log('🔧 TAURI DEBUG: Event and FS APIs imported successfully');
     return true;
   } catch (error) {
     console.log('🔧 TAURI DEBUG: Running in web mode, Tauri APIs not available');
@@ -160,78 +163,50 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     }
   }, [performanceTracker, extractTextFromImage, value, onChange]);
 
-  // Tauri v2 file drop listener
+  // Tauri file drop - local event listeners only
   useEffect(() => {
-    const setupTauriFileDrop = async () => {
-      const isAvailable = await initTauriApis();
-      if (!isAvailable || !tauriListen) {
-        console.log('🔧 TAURI DEBUG: Tauri APIs not available, running in web mode');
-        return;
-      }
-
-      let unlisten: (() => void) | undefined;
-
+    // Set up local event listeners for this panel
+    const handleFileProcessed = async (event: CustomEvent) => {
+      const { file, panelTitle } = event.detail;
+      console.log(`🔧 TAURI LOCAL: File processed for ${title}:`, file.name);
+      
       try {
-        console.log('🔧 TAURI DEBUG: Setting up file drop listener');
-        console.log('🔧 TAURI DEBUG: tauriListen function available:', typeof tauriListen);
-        
-        // Listen for the correct Tauri v2 file drop event
-        console.log('🔧 TAURI DEBUG: Calling tauriListen...');
-        unlisten = await tauriListen('tauri://file-drop', async (event: any) => {
-          console.log('🔧 TAURI DEBUG: File drop event received:', event);
-          const files = event.payload as string[];
-          console.log('🔧 TAURI DEBUG: Dropped files:', files);
-          
-          const imageFiles = files.filter((path: string) => 
-            /\.(png|jpg|jpeg|gif|bmp|webp|tiff)$/i.test(path)
-          );
-          
-          if (imageFiles.length > 0) {
-            const imagePath = imageFiles[0];
-            try {
-              console.log('🔧 TAURI DEBUG: Processing image file:', imagePath);
-              
-              // For now, just try fetch method since FS API import isn't working
-              console.log('🔧 TAURI DEBUG: Trying to read file using fetch');
-              const response = await fetch(`file://${imagePath}`);
-              if (!response.ok) {
-                throw new Error(`Failed to read file: ${response.statusText}`);
-              }
-              const blob = await response.blob();
-              const fileName = imagePath.split(/[\\/]/).pop() || 'image.png';
-              const file = new File([blob], fileName, { 
-                type: `image/${fileName.split('.').pop()?.toLowerCase() || 'png'}` 
-              });
-              
-              console.log('🔧 TAURI DEBUG: File created, processing with OCR...');
-              await processImageWithOCR(file);
-              
-              performanceTracker.trackMetric('tauri_file_drop_success', {
-                filePath: imagePath,
-                fileSize: file.size
-              });
-            } catch (error) {
-              console.error('🔧 TAURI DEBUG: Failed to process dropped file:', error);
-              performanceTracker.trackMetric('tauri_drop_error', { error: String(error) });
-            }
-          }
+        await processImageWithOCR(file);
+        performanceTracker.trackMetric('tauri_file_drop_success', {
+          filePath: file.name,
+          fileSize: file.size,
+          panelTitle: title
         });
-        
-        console.log('🔧 TAURI DEBUG: File drop listener registered successfully');
-        console.log('🔧 TAURI DEBUG: Unlisten function:', typeof unlisten);
-        
-        return () => {
-          if (unlisten) {
-            unlisten();
-          }
-        };
       } catch (error) {
-        console.error('🔧 TAURI DEBUG: Failed to setup file drop listener:', error);
+        console.error(`🔧 TAURI LOCAL: OCR failed for ${title}:`, error);
+        performanceTracker.trackMetric('tauri_drop_error', { 
+          error: String(error),
+          panelTitle: title
+        });
       }
     };
-
-    setupTauriFileDrop();
-  }, [performanceTracker, processImageWithOCR]);
+    
+    const handleFileError = (event: CustomEvent) => {
+      const { error, panelTitle } = event.detail;
+      console.error(`🔧 TAURI LOCAL: File error for ${title}:`, error);
+      performanceTracker.trackMetric('tauri_drop_error', { 
+        error,
+        panelTitle: title
+      });
+    };
+    
+    // Add event listeners to this panel's div
+    const panelDiv = document.querySelector(`[data-panel-title="${title}"]`);
+    if (panelDiv) {
+      panelDiv.addEventListener('tauri-file-processed', handleFileProcessed as EventListener);
+      panelDiv.addEventListener('tauri-file-error', handleFileError as EventListener);
+      
+      return () => {
+        panelDiv.removeEventListener('tauri-file-processed', handleFileProcessed as EventListener);
+        panelDiv.removeEventListener('tauri-file-error', handleFileError as EventListener);
+      };
+    }
+  }, [title, performanceTracker, processImageWithOCR]);
 
   // Clear detected languages when content is cleared
   useEffect(() => {
@@ -411,7 +386,12 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   };
 
   return (
-    <div className="glass-panel glass-content-panel overflow-hidden transition-all duration-300" style={style}>
+    <div 
+      className="glass-panel glass-content-panel overflow-hidden transition-all duration-300" 
+      style={style}
+      data-text-input-panel
+      data-panel-title={title}
+    >
       <div className="glass-panel-header-footer px-4 py-3 border-b border-theme-neutral-200 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {iconEmoji ? (
@@ -429,6 +409,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           >
             <Sparkles className={`w-5 h-5 transition-all duration-300 ${isAutoFormatEnabled ? 'text-white' : 'text-theme-neutral-500'}`} />
           </button>
+          
           {isProcessing && (
             <div className="flex items-center gap-2">
               <Loader className="w-4 h-4 text-theme-primary-600 animate-spin" />

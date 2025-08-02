@@ -64,6 +64,33 @@ function AppContent({
     };
   }, []);
 
+  // Setup global Tauri file drop handler once at app level
+  useEffect(() => {
+    const setupGlobalTauriHandler = async () => {
+      try {
+        const { setupGlobalTauriFileDrop } = await import('./utils/tauriFileDrop');
+        await setupGlobalTauriFileDrop();
+      } catch (error) {
+        console.log('🔧 TAURI APP: Failed to setup global handler:', error);
+      }
+    };
+    
+    setupGlobalTauriHandler();
+    
+    // Cleanup on unmount
+    return () => {
+      try {
+        const cleanup = (window as any).__TAURI_FILE_DROP_CLEANUP__;
+        if (cleanup) {
+          cleanup();
+          (window as any).__TAURI_FILE_DROP_CLEANUP__ = null;
+        }
+      } catch (error) {
+        console.log('🔧 TAURI APP: Cleanup error:', error);
+      }
+    };
+  }, []);
+
   // Determine if header should be hidden (only when results overlay feature is enabled AND overlay is visible)
   const shouldHideHeader = features.resultsOverlay && isOverlayVisible;
 
