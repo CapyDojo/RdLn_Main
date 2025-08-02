@@ -91,7 +91,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
   const [isScrollLocked, setIsScrollLocked] = useState(false);
   
   // DEBUG: Immediate logging to verify component initialization
-  console.log('🔧 SCROLL LOCK DEBUG: Component initialized, isScrollLocked:', isScrollLocked);
+  // console.log('🔧 SCROLL LOCK DEBUG: Component initialized, isScrollLocked:', isScrollLocked);
   
   // Performance tracking for processing states
   useEffect(() => {

@@ -208,7 +208,7 @@ export class OCROrchestrator {
       }
       
       const { data: { text } } = extractionResult.data;
-      console.log(`DEBUG: Extracted text (from Tesseract): ${text}`);
+      // console.log(`DEBUG: Extracted text (from Tesseract): ${text}`);
 
       extractionTime = performance.now() - extractionStart;
       performanceMetrics.ocrExtractionMs = extractionTime;
@@ -236,7 +236,7 @@ export class OCROrchestrator {
       const textProcessingOptions = options.textProcessing || {};
       const textResult = await safeAsync(
         () => {
-          console.log(`DEBUG: Calling OCRTextCleanupService.processText with input text: ${text}`);
+          // console.log(`DEBUG: Calling OCRTextCleanupService.processText with input text: ${text}`);
           return OCRTextCleanupService.processText(
             text,
             detectedLanguages,
@@ -247,11 +247,11 @@ export class OCROrchestrator {
         'Text processing failed'
       );
       
-      console.log(`DEBUG: textResult.success: ${textResult.success}`);
+      // console.log(`DEBUG: textResult.success: ${textResult.success}`);
       let processingResult;
       if (textResult.success) {
         processingResult = textResult.data;
-        console.log(`DEBUG: processingResult.processedText (from cleanup service): ${processingResult.processedText}`);
+        // console.log(`DEBUG: processingResult.processedText (from cleanup service): ${processingResult.processedText}`);
       } else {
         // Text processing failed, throw error to trigger fallback
         throw new Error('Text processing failed: ' + textResult.error.message);
@@ -260,7 +260,7 @@ export class OCROrchestrator {
       // Phase 5: Final Paragraph Formatting
       const paragraphFormattingStart = performance.now();
       const finalText = formatPastedText(processingResult.processedText);
-      console.log(`DEBUG: finalText (after paragraph formatting): ${finalText}`);
+      // console.log(`DEBUG: finalText (after paragraph formatting): ${finalText}`);
       performanceMetrics.paragraphFormattingMs = performance.now() - paragraphFormattingStart;
 
       processingTime = processingResult.processingTime;
