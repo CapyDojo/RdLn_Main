@@ -11,6 +11,24 @@ import { formatPastedText, formatRtfHtmlPaste } from '../utils/paragraphFormatti
 import { analyzePasteContext, getFormattingLevel, PasteContext, FormatLevel } from '../utils/pastePDFdetection';
 import { useFontSize } from '../contexts/FontSizeContext';
 
+// Tauri v2 file drop support using proper imports
+let tauriListen: any = null;
+let tauriReadBinaryFile: any = null;
+
+// Dynamically import Tauri APIs to avoid build errors in web mode
+const initTauriApis = async () => {
+  try {
+    const eventModule = await import('@tauri-apps/api/event');
+    tauriListen = eventModule.listen;
+    
+    console.log('🔧 TAURI DEBUG: Event API imported successfully');
+    return true;
+  } catch (error) {
+    console.log('🔧 TAURI DEBUG: Running in web mode, Tauri APIs not available');
+    return false;
+  }
+};
+
 interface TextInputPanelProps extends BaseComponentProps {
   title: string;
   value: string;
@@ -67,6 +85,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+
   // Mobile view shows only emoji, desktop shows full instructions
   const renderPlaceholderContent = () => {
     if (isMobileView) {
@@ -121,6 +140,98 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     setSelectedLanguages,
     setAutoDetect
   } = useOCR();
+
+  // Shared OCR processing function for both HTML5 and Tauri file drops
+  const processImageWithOCR = useCallback(async (imageFile: File) => {
+    try {
+      const extractedText = await performanceTracker.trackOperation('ocr_extraction', async () => {
+        return await extractTextFromImage(imageFile);
+      });
+      
+      onChange(value + (value ? '\n\n' : '') + extractedText);
+      
+      performanceTracker.trackMetric('ocr_result', {
+        extractedLength: extractedText.length,
+        fileSize: imageFile.size
+      });
+    } catch (error: any) {
+      console.error('OCR failed:', error);
+      performanceTracker.trackMetric('ocr_error', { error: error.message });
+    }
+  }, [performanceTracker, extractTextFromImage, value, onChange]);
+
+  // Tauri v2 file drop listener
+  useEffect(() => {
+    const setupTauriFileDrop = async () => {
+      const isAvailable = await initTauriApis();
+      if (!isAvailable || !tauriListen) {
+        console.log('🔧 TAURI DEBUG: Tauri APIs not available, running in web mode');
+        return;
+      }
+
+      let unlisten: (() => void) | undefined;
+
+      try {
+        console.log('🔧 TAURI DEBUG: Setting up file drop listener');
+        console.log('🔧 TAURI DEBUG: tauriListen function available:', typeof tauriListen);
+        
+        // Listen for the correct Tauri v2 file drop event
+        console.log('🔧 TAURI DEBUG: Calling tauriListen...');
+        unlisten = await tauriListen('tauri://file-drop', async (event: any) => {
+          console.log('🔧 TAURI DEBUG: File drop event received:', event);
+          const files = event.payload as string[];
+          console.log('🔧 TAURI DEBUG: Dropped files:', files);
+          
+          const imageFiles = files.filter((path: string) => 
+            /\.(png|jpg|jpeg|gif|bmp|webp|tiff)$/i.test(path)
+          );
+          
+          if (imageFiles.length > 0) {
+            const imagePath = imageFiles[0];
+            try {
+              console.log('🔧 TAURI DEBUG: Processing image file:', imagePath);
+              
+              // For now, just try fetch method since FS API import isn't working
+              console.log('🔧 TAURI DEBUG: Trying to read file using fetch');
+              const response = await fetch(`file://${imagePath}`);
+              if (!response.ok) {
+                throw new Error(`Failed to read file: ${response.statusText}`);
+              }
+              const blob = await response.blob();
+              const fileName = imagePath.split(/[\\/]/).pop() || 'image.png';
+              const file = new File([blob], fileName, { 
+                type: `image/${fileName.split('.').pop()?.toLowerCase() || 'png'}` 
+              });
+              
+              console.log('🔧 TAURI DEBUG: File created, processing with OCR...');
+              await processImageWithOCR(file);
+              
+              performanceTracker.trackMetric('tauri_file_drop_success', {
+                filePath: imagePath,
+                fileSize: file.size
+              });
+            } catch (error) {
+              console.error('🔧 TAURI DEBUG: Failed to process dropped file:', error);
+              performanceTracker.trackMetric('tauri_drop_error', { error: String(error) });
+            }
+          }
+        });
+        
+        console.log('🔧 TAURI DEBUG: File drop listener registered successfully');
+        console.log('🔧 TAURI DEBUG: Unlisten function:', typeof unlisten);
+        
+        return () => {
+          if (unlisten) {
+            unlisten();
+          }
+        };
+      } catch (error) {
+        console.error('🔧 TAURI DEBUG: Failed to setup file drop listener:', error);
+      }
+    };
+
+    setupTauriFileDrop();
+  }, [performanceTracker, processImageWithOCR]);
 
   // Clear detected languages when content is cleared
   useEffect(() => {
@@ -273,23 +384,9 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     });
     
     if (imageFile) {
-      try {
-        const extractedText = await performanceTracker.trackOperation('ocr_drop', async () => {
-          return await extractTextFromImage(imageFile);
-        });
-        
-        onChange(value + (value ? '\n\n' : '') + extractedText);
-        
-        performanceTracker.trackMetric('drop_ocr_result', {
-          extractedLength: extractedText.length,
-          fileSize: imageFile.size
-        });
-      } catch (error: any) {
-        console.error('OCR failed:', error);
-        performanceTracker.trackMetric('drop_ocr_error', { error: error.message });
-      }
+      await processImageWithOCR(imageFile);
     }
-  }, [performanceTracker, extractTextFromImage, value, onChange]);
+  }, [performanceTracker, processImageWithOCR]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

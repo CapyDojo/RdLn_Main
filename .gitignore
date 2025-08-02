@@ -33,6 +33,8 @@ Thumbs.db
 
 # Tauri build artifacts (exclude large build files)
 src-tauri/target/
+src-tauri/target/release/deps
+src-tauri/target/release/build
 src-tauri/Cargo.lock
 
 # Rust installer
