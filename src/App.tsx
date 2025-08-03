@@ -14,6 +14,7 @@ import BoundaryFixTester from './components/BoundaryFixTester';
 import { SmartPasteTest } from './components/SmartPasteTest';
 import { OCRFeatureCard } from './components/OCRFeatureCard';
 import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
+import { OCRDebugPanel } from './components/OCRDebugPanel';
 import './styles/resize-overrides.css';
 
 interface AppContentProps {
@@ -243,6 +244,9 @@ function App() {
                 onToggleExtremeTestSuite={handleToggleExtremeTestSuite}
               />
             )}
+            
+            {/* OCR Debug Panel - Always available */}
+            <OCRDebugPanel />
           </div>
         </ExperimentalLayoutProvider>
       </LayoutProvider>

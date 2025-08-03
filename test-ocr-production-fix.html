@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OCR Production Fix Test</title>
+    <script src="https://unpkg.com/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        .info { color: blue; }
+        #results { white-space: pre-wrap; }
+        #drop-zone { 
+            border: 2px dashed #ccc; 
+            padding: 40px; 
+            text-align: center; 
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        #drop-zone.dragover { border-color: #007bff; background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>🧪 OCR Production Fix Test</h1>
+    
+    <div class="test-section">
+        <h2>📁 Step 1: Language File Accessibility Test</h2>
+        <button onclick="testLanguageFiles()">Test Language File Access</button>
+        <div id="file-test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔧 Step 2: Worker Initialization Test</h2>
+        <button onclick="testWorkerInit()">Test Worker Creation</button>
+        <div id="worker-test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🖼️ Step 3: OCR Functionality Test</h2>
+        <p>Drop an image file here to test OCR:</p>
+        <div id="drop-zone">
+            Drop an image file here or click to select
+            <input type="file" id="file-input" accept="image/*" style="display: none;">
+        </div>
+        <div id="ocr-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 Test Results</h2>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let testResults = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            console.log(logMessage);
+            
+            const resultsDiv = document.getElementById('results');
+            const span = document.createElement('div');
+            span.className = type;
+            span.textContent = logMessage;
+            resultsDiv.appendChild(span);
+            
+            testResults.push({ timestamp, message, type });
+        }
+        
+        async function testLanguageFiles() {
+            log('🔍 Testing language file accessibility...', 'info');
+            const fileTestDiv = document.getElementById('file-test-results');
+            fileTestDiv.innerHTML = '<p>Testing...</p>';
+            
+            const languages = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+            let results = '<h3>Language File Access Results:</h3>';
+            let successCount = 0;
+            
+            for (const lang of languages) {
+                try {
+                    const response = await fetch(`/tessdata/${lang}.traineddata`);
+                    if (response.ok) {
+                        const size = response.headers.get('content-length');
+                        const sizeMB = size ? (parseInt(size) / 1024 / 1024).toFixed(1) : 'unknown';
+                        results += `<div class="success">✅ ${lang}.traineddata - ${sizeMB}MB</div>`;
+                        successCount++;
+                        log(`✅ ${lang}.traineddata accessible (${sizeMB}MB)`, 'success');
+                    } else {
+                        results += `<div class="error">❌ ${lang}.traineddata - HTTP ${response.status}</div>`;
+                        log(`❌ ${lang}.traineddata not accessible (HTTP ${response.status})`, 'error');
+                    }
+                } catch (error) {
+                    results += `<div class="error">❌ ${lang}.traineddata - ${error.message}</div>`;
+                    log(`❌ ${lang}.traineddata error: ${error.message}`, 'error');
+                }
+            }
+            
+            results += `<p><strong>Summary: ${successCount}/${languages.length} language files accessible</strong></p>`;
+            fileTestDiv.innerHTML = results;
+            
+            if (successCount === languages.length) {
+                log('🎉 All language files are accessible!', 'success');
+            } else if (successCount > 0) {
+                log(`⚠️ ${successCount}/${languages.length} language files accessible`, 'warning');
+            } else {
+                log('❌ No language files accessible - OCR will not work', 'error');
+            }
+        }
+        
+        async function testWorkerInit() {
+            log('🔧 Testing Tesseract worker initialization...', 'info');
+            const workerTestDiv = document.getElementById('worker-test-results');
+            workerTestDiv.innerHTML = '<p>Testing worker initialization...</p>';
+            
+            try {
+                log('Creating worker with English language...', 'info');
+                const worker = await Tesseract.createWorker('eng', 1, {
+                    langPath: '/tessdata',
+                    logger: m => {
+                        if (m.status === 'loading tesseract core' || m.status === 'initializing tesseract') {
+                            log(`Worker: ${m.status}`, 'info');
+                        }
+                    }
+                });
+                
+                log('✅ Worker created successfully!', 'success');
+                workerTestDiv.innerHTML = '<div class="success">✅ Worker initialization successful!</div>';
+                
+                // Test with a simple image (1x1 white pixel)
+                const canvas = document.createElement('canvas');
+                canvas.width = 100;
+                canvas.height = 50;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, 100, 50);
+                ctx.fillStyle = 'black';
+                ctx.font = '20px Arial';
+                ctx.fillText('TEST', 10, 30);
+                
+                log('Testing OCR with sample text...', 'info');
+                const { data: { text } } = await worker.recognize(canvas);
+                log(`OCR Result: "${text.trim()}"`, text.trim().includes('TEST') ? 'success' : 'warning');
+                
+                await worker.terminate();
+                log('Worker terminated successfully', 'info');
+                
+            } catch (error) {
+                log(`❌ Worker initialization failed: ${error.message}`, 'error');
+                workerTestDiv.innerHTML = `<div class="error">❌ Worker initialization failed: ${error.message}</div>`;
+            }
+        }
+        
+        // File drop functionality
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processImage(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                processImage(e.target.files[0]);
+            }
+        });
+        
+        async function processImage(file) {
+            log(`🖼️ Processing image: ${file.name}`, 'info');
+            const ocrResultsDiv = document.getElementById('ocr-results');
+            ocrResultsDiv.innerHTML = '<p>Processing image...</p>';
+            
+            try {
+                // Test with progressive fallback (same as production code)
+                let worker;
+                let languages;
+                
+                try {
+                    log('Attempting full language detection...', 'info');
+                    languages = ['eng', 'chi_sim', 'spa']; // Core languages for test
+                    worker = await Tesseract.createWorker(languages, 1, {
+                        langPath: '/tessdata',
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                log(`OCR Progress: ${Math.round(m.progress * 100)}%`, 'info');
+                            }
+                        }
+                    });
+                    log('✅ Multi-language worker created', 'success');
+                } catch (error) {
+                    log('⚠️ Multi-language failed, trying English only...', 'warning');
+                    languages = ['eng'];
+                    worker = await Tesseract.createWorker('eng', 1, {
+                        langPath: '/tessdata',
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                log(`OCR Progress: ${Math.round(m.progress * 100)}%`, 'info');
+                            }
+                        }
+                    });
+                    log('✅ English-only worker created', 'success');
+                }
+                
+                const startTime = Date.now();
+                const { data: { text } } = await worker.recognize(file);
+                const processingTime = Date.now() - startTime;
+                
+                log(`✅ OCR completed in ${processingTime}ms`, 'success');
+                log(`Extracted text (${text.length} characters)`, 'info');
+                
+                ocrResultsDiv.innerHTML = `
+                    <div class="success">
+                        <h4>✅ OCR Success!</h4>
+                        <p><strong>Languages used:</strong> ${languages.join(', ')}</p>
+                        <p><strong>Processing time:</strong> ${processingTime}ms</p>
+                        <p><strong>Text length:</strong> ${text.length} characters</p>
+                        <h4>Extracted Text:</h4>
+                        <div style="border: 1px solid #ccc; padding: 10px; background: #f9f9f9; white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${text}</div>
+                    </div>
+                `;
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                log(`❌ OCR failed: ${error.message}`, 'error');
+                ocrResultsDiv.innerHTML = `<div class="error">❌ OCR failed: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-run file accessibility test on page load
+        window.addEventListener('load', () => {
+            log('🚀 OCR Production Fix Test Started', 'info');
+            testLanguageFiles();
+        });
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 build/
+dist-electron/
 
 # Test results and coverage
 test-results/

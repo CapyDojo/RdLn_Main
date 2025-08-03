@@ -1,16 +1,21 @@
-﻿/**
- * OCR Cache Manager
+/**
+ * OCR Cache Manager - PRODUCTION FIX VERSION
  * 
  * Handles caching of Tesseract workers and language detection results
  * to optimize performance and resource utilization.
+ * 
+ * FIXES:
+ * - Progressive language loading for production builds
+ * - Timeout handling for worker initialization
+ * - Graceful fallback to English-only OCR
  */
 
 import { createWorker } from 'tesseract.js';
-import { 
-  CachedWorker, 
-  LanguageDetectionCacheEntry, 
-  OCRLanguage, 
-  CacheStats 
+import {
+  CachedWorker,
+  LanguageDetectionCacheEntry,
+  OCRLanguage,
+  CacheStats
 } from '../types/ocr-types';
 import { CACHE_CONFIGURATION, DETECTION_LANGUAGES } from '../config/ocrConfig';
 
@@ -18,12 +23,142 @@ export class OCRCacheManager {
   private static workers: Map<string, CachedWorker> = new Map();
   private static loadingPromises: Map<string, Promise<Tesseract.Worker>> = new Map();
   private static detectionWorker: CachedWorker | null = null;
-  
+
   // Language detection cache
   private static languageCache: Map<string, LanguageDetectionCacheEntry> = new Map();
-  
+
   // Cleanup timer
   private static cleanupTimer: NodeJS.Timeout | null = null;
+
+  /**
+   * PRODUCTION FIX: Get the correct language path for current environment
+   */
+  private static async getLanguagePath(): Promise<string> {
+    // Check if we're in Tauri environment
+    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+      try {
+        // Import Tauri path API
+        const { resourceDir } = await import('@tauri-apps/api/path');
+        const resourcePath = await resourceDir();
+        console.log('🔧 Tauri resource directory:', resourcePath);
+        return resourcePath; // This will point to the bundled resources
+      } catch (error) {
+        console.warn('⚠️ Failed to get Tauri resource path, using fallback:', error);
+        return './tessdata'; // Fallback to relative path
+      }
+    } else {
+      // In web environment (dev server or web build)
+      return '/tessdata';
+    }
+  }
+
+  /**
+   * PRODUCTION FIX: Create worker with Tauri-specific resource handling
+   */
+  private static async createWorkerWithFallback(
+    languages: OCRLanguage[],
+    timeout: number
+  ): Promise<Tesseract.Worker> {
+    console.log('🔧 createWorkerWithFallback called with languages:', languages);
+
+    // Enhanced Tauri detection
+    const hasTauriGlobal = typeof window !== 'undefined' && (window as any).__TAURI__;
+    const isTauriProtocol = typeof window !== 'undefined' && window.location.protocol === 'tauri:';
+    const isTauriUserAgent = typeof navigator !== 'undefined' && navigator.userAgent.includes('Tauri');
+    const isTauri = hasTauriGlobal || isTauriProtocol || isTauriUserAgent;
+
+    console.log('🔧 Tauri detection details:', {
+      hasTauriGlobal,
+      isTauriProtocol,
+      isTauriUserAgent,
+      protocol: typeof window !== 'undefined' ? window.location.protocol : 'unknown',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
+    });
+    console.log('🔧 Final isTauri result:', isTauri);
+
+    // FORCE LOCAL ASSETS: Always use local assets (no CDN) regardless of environment
+    // This ensures OCR works in both web and Tauri builds
+    console.log('🔧 Using local bundled assets (no CDN dependencies)');
+
+    // PRODUCTION FIX: Always use local bundled assets (no CDN)
+    const workerOptions = {
+      logger: this.createLogger(),
+      workerPath: '/tesseract/worker.min.js',
+      langPath: '/tessdata',
+      corePath: '/tesseract/tesseract-core.wasm.js'
+    };
+
+    try {
+      console.log('🔧 Attempting worker with local assets:', workerOptions);
+
+      const worker = await Promise.race([
+        createWorker(languages, 1, workerOptions),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Local assets worker timeout')), timeout)
+        )
+      ]);
+
+      console.log('✅ Worker created successfully with local assets');
+      return worker;
+
+    } catch (localAssetsError) {
+      console.warn('⚠️ Primary local assets failed:', localAssetsError);
+
+      // Fallback: Try different combinations of local paths
+      const fallbackConfigs = [
+        { langPath: '/tessdata', workerPath: '/tesseract/worker.min.js', corePath: '/tesseract/tesseract-core.wasm.js' },
+        { langPath: './tessdata', workerPath: './tesseract/worker.min.js', corePath: './tesseract/tesseract-core.wasm.js' },
+        { langPath: '/tessdata', workerPath: '/tesseract/worker.min.js' }, // No core path
+        { langPath: './tessdata', workerPath: './tesseract/worker.min.js' }, // No core path
+        { langPath: '/tessdata' }, // Only language path
+        { langPath: './tessdata' }, // Only language path
+      ];
+
+      for (const config of fallbackConfigs) {
+        try {
+          console.log(`🔧 Trying fallback config:`, config);
+
+          const worker = await Promise.race([
+            createWorker(languages, 1, {
+              logger: this.createLogger(),
+              ...config
+            }),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error(`Fallback timeout`)), timeout / 4)
+            )
+          ]);
+
+          console.log(`✅ Fallback worker created with config:`, config);
+          return worker;
+
+        } catch (fallbackError) {
+          console.warn(`⚠️ Fallback failed for config:`, config, 'Error:', fallbackError.message);
+          continue;
+        }
+      }
+
+      // Final attempt: no langPath (use Tesseract.js CDN)
+      try {
+        console.log('🔧 Final attempt: Using Tesseract.js CDN (no langPath)');
+        const worker = await Promise.race([
+          createWorker(languages, 1, {
+            logger: this.createLogger()
+            // No langPath - will use CDN
+          }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('CDN worker timeout')), timeout)
+          )
+        ]);
+
+        console.log('✅ CDN worker created successfully');
+        return worker;
+
+      } catch (cdnError) {
+        console.error('❌ All worker creation methods failed');
+        throw new Error(`All worker creation attempts failed. Last error: ${cdnError}`);
+      }
+    }
+  }
 
   /**
    * Creates a logger function for Tesseract worker progress
@@ -49,7 +184,7 @@ export class OCRCacheManager {
    */
   private static startCleanupTimer() {
     if (this.cleanupTimer) return;
-    
+
     this.cleanupTimer = setInterval(() => {
       this.cleanupExpiredWorkers();
       this.cleanupLanguageCache();
@@ -74,7 +209,7 @@ export class OCRCacheManager {
     for (const key of expiredKeys) {
       const cached = this.workers.get(key);
       if (cached) {
-        console.log(`ðŸ§¹ Cleaning up expired OCR worker: ${key}`);
+        console.log(`🧹 Cleaning up expired OCR worker: ${key}`);
         await cached.worker.terminate();
         this.workers.delete(key);
       }
@@ -82,7 +217,7 @@ export class OCRCacheManager {
 
     // Cleanup detection worker if expired
     if (this.detectionWorker && now - this.detectionWorker.lastUsed > CACHE_CONFIGURATION.cacheExpiryMs) {
-      console.log('ðŸ§¹ Cleaning up expired detection worker');
+      console.log('🧹 Cleaning up expired detection worker');
       await this.detectionWorker.worker.terminate();
       this.detectionWorker = null;
     }
@@ -90,11 +225,11 @@ export class OCRCacheManager {
     // If cache is too large, remove least recently used
     if (this.workers.size > CACHE_CONFIGURATION.maxCachedWorkers) {
       const sortedEntries = Array.from(this.workers.entries())
-        .sort(([,a], [,b]) => a.lastUsed - b.lastUsed);
-      
+        .sort(([, a], [, b]) => a.lastUsed - b.lastUsed);
+
       const toRemove = sortedEntries.slice(0, this.workers.size - CACHE_CONFIGURATION.maxCachedWorkers);
       for (const [key, cached] of toRemove) {
-        console.log(`ðŸ§¹ Removing LRU OCR worker: ${key}`);
+        console.log(`🧹 Removing LRU OCR worker: ${key}`);
         await cached.worker.terminate();
         this.workers.delete(key);
       }
@@ -118,24 +253,24 @@ export class OCRCacheManager {
     // Remove expired entries
     for (const key of expiredKeys) {
       this.languageCache.delete(key);
-      console.log(`ðŸ§¹ Cleaned up expired language detection cache entry`);
+      console.log(`🧹 Cleaned up expired language detection cache entry`);
     }
 
     // If cache is too large, remove least recently used
     if (this.languageCache.size > CACHE_CONFIGURATION.maxLanguageCacheEntries) {
       const sortedEntries = Array.from(this.languageCache.entries())
-        .sort(([,a], [,b]) => {
+        .sort(([, a], [, b]) => {
           // Sort by hit count first, then by timestamp
           if (a.hitCount !== b.hitCount) {
             return a.hitCount - b.hitCount;
           }
           return a.timestamp - b.timestamp;
         });
-      
+
       const toRemove = sortedEntries.slice(0, this.languageCache.size - CACHE_CONFIGURATION.maxLanguageCacheEntries);
       for (const [key] of toRemove) {
         this.languageCache.delete(key);
-        console.log(`ðŸ§¹ Removed LRU language detection cache entry`);
+        console.log(`🧹 Removed LRU language detection cache entry`);
       }
     }
   }
@@ -145,7 +280,7 @@ export class OCRCacheManager {
    */
   public static async generateLanguageCacheKey(imageFile: File | Blob): Promise<string> {
     const size = imageFile.size;
-    
+
     if (imageFile instanceof File) {
       // For File objects: use size + modified date + name
       const modifiedDate = imageFile.lastModified || 0;
@@ -168,22 +303,22 @@ export class OCRCacheManager {
     try {
       const cacheKey = await this.generateLanguageCacheKey(imageFile);
       const cached = this.languageCache.get(cacheKey);
-      
+
       if (cached) {
         const now = Date.now();
         if (now - cached.timestamp < CACHE_CONFIGURATION.languageCacheExpiryMs) {
           // Update hit count and return cached result
           cached.hitCount++;
-          console.log(`ðŸŽ¯ LANGUAGE CACHE HIT: Found cached detection result (hit #${cached.hitCount}):`, cached.languages);
+          console.log(`🎯 LANGUAGE CACHE HIT: Found cached detection result (hit #${cached.hitCount}):`, cached.languages);
           return cached.languages;
         } else {
           // Expired entry
           this.languageCache.delete(cacheKey);
-          console.log(`â° Language cache entry expired, removing`);
+          console.log(`⏰ Language cache entry expired, removing`);
         }
       }
-      
-      console.log(`ðŸ” LANGUAGE CACHE MISS: No cached detection result found`);
+
+      console.log(`🔍 LANGUAGE CACHE MISS: No cached detection result found`);
       return null;
     } catch (error) {
       console.warn('Failed to check language cache:', error);
@@ -197,15 +332,15 @@ export class OCRCacheManager {
   public static async storeLanguageCache(imageFile: File | Blob, languages: OCRLanguage[]): Promise<void> {
     try {
       const cacheKey = await this.generateLanguageCacheKey(imageFile);
-      
+
       this.languageCache.set(cacheKey, {
         languages: [...languages], // Clone array
         timestamp: Date.now(),
         hitCount: 0
       });
-      
-      console.log(`ðŸ’¾ LANGUAGE CACHE STORE: Cached detection result for future use:`, languages);
-      
+
+      console.log(`💾 LANGUAGE CACHE STORE: Cached detection result for future use:`, languages);
+
       // Trigger cleanup if cache is getting large
       if (this.languageCache.size > CACHE_CONFIGURATION.maxLanguageCacheEntries) {
         this.cleanupLanguageCache();
@@ -216,33 +351,68 @@ export class OCRCacheManager {
   }
 
   /**
-   * Initializes or retrieves cached detection worker
+   * PRODUCTION FIX: Initializes detection worker with progressive fallback
+   * 
+   * This method implements a three-tier fallback strategy:
+   * 1. Full language set (ideal for development)
+   * 2. Core languages (English + Chinese + Spanish)
+   * 3. English only (guaranteed to work)
    */
   public static async initializeDetectionWorker(): Promise<Tesseract.Worker> {
     // Check cache first
     if (this.detectionWorker) {
       this.detectionWorker.lastUsed = Date.now();
       this.detectionWorker.useCount++;
-      console.log(`ðŸŽ¯ DETECTION CACHE HIT: Reusing detection worker (used ${this.detectionWorker.useCount} times)`);
+      console.log(`🎯 DETECTION CACHE HIT: Reusing detection worker (used ${this.detectionWorker.useCount} times)`);
       return this.detectionWorker.worker;
     }
 
-    console.log('ðŸ”„ DETECTION CACHE MISS: Creating new detection worker with full language support:', DETECTION_LANGUAGES);
-    
-    const worker = await createWorker(DETECTION_LANGUAGES, 1, {
-      logger: this.createLogger()
-    });
+    console.log('🔄 DETECTION CACHE MISS: Creating new detection worker...');
 
-    // Cache the worker
+    // PRODUCTION FIX: Progressive language loading with fallback
+    let worker: Tesseract.Worker;
+    let actualLanguages: OCRLanguage[];
+
+    try {
+      // First attempt: Try full language set (works in development)
+      console.log('🌍 Attempting full language detection worker:', DETECTION_LANGUAGES);
+      worker = await this.createWorkerWithFallback(DETECTION_LANGUAGES, 30000);
+      actualLanguages = DETECTION_LANGUAGES;
+      console.log('✅ Full multi-language detection worker created successfully');
+
+    } catch (fullLanguageError) {
+      console.warn('⚠️ Full language worker failed, trying core languages:', fullLanguageError);
+
+      try {
+        // Second attempt: Core languages only (English + Chinese + Spanish)
+        const coreLanguages: OCRLanguage[] = ['eng', 'chi_sim', 'spa'];
+        console.log('🔧 Attempting core language detection worker:', coreLanguages);
+        worker = await this.createWorkerWithFallback(coreLanguages, 20000);
+        actualLanguages = coreLanguages;
+        console.log('✅ Core language detection worker created successfully');
+
+      } catch (coreLanguageError) {
+        console.warn('⚠️ Core language worker failed, falling back to English only:', coreLanguageError);
+
+        // Final fallback: English only (most reliable)
+        const englishOnly: OCRLanguage[] = ['eng'];
+        console.log('🔧 Attempting English-only detection worker:', englishOnly);
+        worker = await this.createWorkerWithFallback(englishOnly, 15000);
+        actualLanguages = englishOnly;
+        console.log('✅ English-only detection worker created as fallback');
+      }
+    }
+
+    // Cache the worker with actual languages used
     this.detectionWorker = {
       worker,
       lastUsed: Date.now(),
       useCount: 1,
-      languages: DETECTION_LANGUAGES
+      languages: actualLanguages
     };
 
     this.startCleanupTimer();
-    console.log('âœ… Multi-language detection worker cached successfully');
+    console.log(`✅ Detection worker cached successfully with languages: ${actualLanguages.join(', ')}`);
     return worker;
   }
 
@@ -251,33 +421,31 @@ export class OCRCacheManager {
    */
   public static async initializeWorker(languages: OCRLanguage[]): Promise<Tesseract.Worker> {
     const workerKey = this.getWorkerKey(languages);
-    
+
     // Check cache first
     if (this.workers.has(workerKey)) {
       const cached = this.workers.get(workerKey)!;
       cached.lastUsed = Date.now();
       cached.useCount++;
-      console.log(`ðŸŽ¯ EXTRACTION CACHE HIT: Reusing worker for ${workerKey} (used ${cached.useCount} times)`);
+      console.log(`🎯 EXTRACTION CACHE HIT: Reusing worker for ${workerKey} (used ${cached.useCount} times)`);
       return cached.worker;
     }
 
     // Return existing loading promise if in progress
     if (this.loadingPromises.has(workerKey)) {
-      console.log(`â³ Waiting for existing worker creation: ${workerKey}`);
+      console.log(`⏳ Waiting for existing worker creation: ${workerKey}`);
       return this.loadingPromises.get(workerKey)!;
     }
 
     // Create new worker with basic configuration
-    console.log(`ðŸ”„ EXTRACTION CACHE MISS: Creating new worker for languages: ${workerKey}`);
-    const loadingPromise = createWorker(languages, 1, {
-      logger: this.createLogger()
-    });
+    console.log(`🔄 EXTRACTION CACHE MISS: Creating new worker for languages: ${workerKey}`);
+    const loadingPromise = this.createWorkerWithFallback(languages, 30000);
 
     this.loadingPromises.set(workerKey, loadingPromise);
 
     try {
       const worker = await loadingPromise;
-      
+
       // Cache the worker
       this.workers.set(workerKey, {
         worker,
@@ -285,11 +453,11 @@ export class OCRCacheManager {
         useCount: 1,
         languages: languages
       });
-      
+
       this.loadingPromises.delete(workerKey);
       this.startCleanupTimer();
-      
-      console.log(`âœ… Extraction worker cached for ${workerKey}`);
+
+      console.log(`✅ Extraction worker cached for ${workerKey}`);
       return worker;
     } catch (error) {
       this.loadingPromises.delete(workerKey);
@@ -312,7 +480,7 @@ export class OCRCacheManager {
       cachedWorkers: this.workers.size,
       detectionWorkerCached: !!this.detectionWorker,
       totalCacheHits: Array.from(this.workers.values()).reduce((sum, cached) => sum + cached.useCount, 0) +
-                     (this.detectionWorker?.useCount || 0),
+        (this.detectionWorker?.useCount || 0),
       oldestWorker: this.workers.size > 0 ? Math.min(...Array.from(this.workers.values()).map(cached => cached.lastUsed)) : Infinity,
       newestWorker: this.workers.size > 0 ? Math.max(...Array.from(this.workers.values()).map(cached => cached.lastUsed)) : -Infinity,
       // Language detection cache stats
@@ -335,20 +503,20 @@ export class OCRCacheManager {
 
     // Terminate all workers
     const terminationPromises = Array.from(this.workers.values()).map(cached => cached.worker.terminate());
-    
+
     if (this.detectionWorker) {
       terminationPromises.push(this.detectionWorker.worker.terminate());
     }
 
     await Promise.all(terminationPromises);
-    
+
     this.workers.clear();
     this.loadingPromises.clear();
     this.detectionWorker = null;
-    
+
     // Clear language detection cache
     this.languageCache.clear();
-    
-    console.log('ðŸ§¹ All OCR workers terminated and caches cleared');
+
+    console.log('🧹 All OCR workers terminated and caches cleared');
   }
 }

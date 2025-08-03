@@ -14,7 +14,12 @@
       "WebFetch(domain:stackoverflow.com)",
       "Bash(ls:*)",
       "WebFetch(domain:v2.tauri.app)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(mv:*)",
+      "Bash(dir dist-electron)",
+      "Bash(.RdLn-0.0.0-portable.exe)",
+      "Bash(\"C:\\temp\\RdLn_MVP_Stream\\dist-electron\\RdLn-0.0.0-portable.exe\")",
+      "Bash(dir)"
     ],
     "deny": []
   }

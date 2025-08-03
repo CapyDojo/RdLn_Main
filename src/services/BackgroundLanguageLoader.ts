@@ -38,7 +38,7 @@ export interface BackgroundLoaderConfig {
 export class BackgroundLanguageLoader {
   // Configuration - easily modifiable
   private static config: BackgroundLoaderConfig = {
-    enabled: true, // Set to false to disable completely
+    enabled: false, // PRODUCTION FIX: Disabled to prevent CDN issues in Tauri
     loadingIntervalMs: 3000, // 3 seconds between loads
     respectIdleTime: true, // Pause during user activity
     maxConcurrentLoads: 1, // Conservative loading

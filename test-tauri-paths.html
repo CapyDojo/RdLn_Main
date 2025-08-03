@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tauri Path Test</title>
+</head>
+<body>
+    <h1>🔍 Tauri Path Resolution Test</h1>
+    <button onclick="testPaths()">Test Tauri Paths</button>
+    <div id="results"></div>
+
+    <script>
+        async function testPaths() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>Testing Tauri Paths...</h2>';
+            
+            // Check if we're in Tauri
+            if (typeof window !== 'undefined' && window.__TAURI__) {
+                resultsDiv.innerHTML += '<p>✅ Tauri environment detected</p>';
+                
+                try {
+                    // Test Tauri path APIs
+                    const { resourceDir, appDataDir, appDir } = await import('@tauri-apps/api/path');
+                    
+                    const resourcePath = await resourceDir();
+                    const appDataPath = await appDataDir();
+                    const appPath = await appDir();
+                    
+                    resultsDiv.innerHTML += `<p><strong>Resource Directory:</strong> ${resourcePath}</p>`;
+                    resultsDiv.innerHTML += `<p><strong>App Data Directory:</strong> ${appDataPath}</p>`;
+                    resultsDiv.innerHTML += `<p><strong>App Directory:</strong> ${appPath}</p>`;
+                    
+                    // Test file access
+                    const pathsToTest = [
+                        '/tessdata/eng.traineddata',
+                        './tessdata/eng.traineddata',
+                        'tessdata/eng.traineddata',
+                        resourcePath + '/eng.traineddata',
+                        resourcePath + '/tessdata/eng.traineddata',
+                    ];
+                    
+                    resultsDiv.innerHTML += '<h3>Testing File Access:</h3>';
+                    
+                    for (const path of pathsToTest) {
+                        try {
+                            const response = await fetch(path);
+                            const status = response.ok ? '✅ ACCESSIBLE' : '❌ NOT FOUND';
+                            resultsDiv.innerHTML += `<p>${path}: ${status}</p>`;
+                        } catch (error) {
+                            resultsDiv.innerHTML += `<p>${path}: ❌ ERROR - ${error.message}</p>`;
+                        }
+                    }
+                    
+                } catch (error) {
+                    resultsDiv.innerHTML += `<p>❌ Error testing paths: ${error.message}</p>`;
+                }
+            } else {
+                resultsDiv.innerHTML += '<p>❌ Not in Tauri environment</p>';
+            }
+        }
+    </script>
+</body>
+</html>

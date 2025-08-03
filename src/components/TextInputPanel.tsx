@@ -166,8 +166,29 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       });
     } catch (error: any) {
       console.error(`🔍 GHOST DEBUG: OCR failed for ${instanceId.current}:`, error);
+      
+      // PRODUCTION FIX: Provide user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      let userFriendlyMessage = 'Failed to extract text from image: Unknown error';
+      
+      if (errorMessage.includes('timeout')) {
+        userFriendlyMessage = 'Failed to extract text from image: Processing timeout - try a smaller image or restart the application';
+      } else if (errorMessage.includes('Worker')) {
+        userFriendlyMessage = 'Failed to extract text from image: OCR engine initialization failed - please restart the application';
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        userFriendlyMessage = 'Failed to extract text from image: Unable to load language files - check your internet connection';
+      } else if (errorMessage.includes('language')) {
+        userFriendlyMessage = 'Failed to extract text from image: Language detection failed - the image may not contain readable text';
+      } else {
+        userFriendlyMessage = `Failed to extract text from image: ${errorMessage}`;
+      }
+      
+      // Show error to user (you may want to implement a proper error display mechanism)
+      console.error('USER ERROR:', userFriendlyMessage);
+      
       performanceTracker.trackMetric('ocr_error', { 
         error: error.message,
+        userMessage: userFriendlyMessage,
         instanceId: instanceId.current
       });
     }

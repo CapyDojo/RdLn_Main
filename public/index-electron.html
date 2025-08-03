@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="./images/rdln-logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RdLn - Professional Legal Text Comparison Redlining with OCR</title>
+    <meta name="description" content="Lightning-fast, professional-grade document comparison tool for corporate lawyers and legal professionals. Features advanced OCR for screenshot-to-text conversion and beautiful Apple-inspired themes with glassmorphic effects. Client-side processing ensures complete confidentiality." />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#1f2937" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="RdLn" />
+    <link rel="apple-touch-icon" href="./images/rdln-logo.png" />
+    
+    <!-- Local fonts instead of CDN - for offline functionality -->
+    <link rel="stylesheet" href="./fonts/fonts.css">
+    
+    <!-- Electron environment flag -->
+    <script>
+      window.isElectron = true;
+      window.isOffline = true;
+    </script>
+  </head>
+<body style="background: linear-gradient(135deg, #1c1917 0%, #292524 100%);">
+    <div id="root"></div>
+    <script type="module" src="./src/main.tsx"></script>
+    
+    <!-- Electron-specific scripts -->
+    <script>
+      // Listen for Electron file drop events
+      if (window.electronAPI) {
+        document.addEventListener('electron-file-drop', (event) => {
+          console.log('📁 File dropped via Electron:', event.detail);
+          
+          // Find text input panels and trigger file processing
+          const panels = document.querySelectorAll('[data-text-input-panel]');
+          panels.forEach(panel => {
+            const customEvent = new CustomEvent('tauri-file-processed', {
+              detail: {
+                file: event.detail.file,
+                panelTitle: panel.getAttribute('data-panel-title') || 'unknown'
+              }
+            });
+            panel.dispatchEvent(customEvent);
+          });
+        });
+      }
+      
+      // Override Tesseract.js configuration for offline mode
+      window.TESSERACT_CONFIG = {
+        langPath: './tessdata/',
+        corePath: './tesseract/',
+        workerPath: './tesseract/worker.min.js'
+      };
+    </script>
+  </body>
+</html>

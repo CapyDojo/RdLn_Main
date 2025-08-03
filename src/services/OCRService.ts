@@ -13,6 +13,8 @@ import { SUPPORTED_LANGUAGES } from '../config/ocrConfig';
 import { OCROrchestrator, OrchestrationOptions } from '../services/OCROrchestrator';
 // Import Language Detection Service for modular language detection
 import { LanguageDetectionService } from '../services/LanguageDetectionService';
+// Import OCRCacheManager for production-ready worker creation
+import { OCRCacheManager } from '../services/OCRCacheManager';
 
 // Note: Re-exports removed to avoid module resolution conflicts
 
@@ -218,9 +220,21 @@ export class OCRService {
     const detectionLanguages: OCRLanguage[] = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
     console.log('🔄 DETECTION CACHE MISS: Creating new detection worker with full language support:', detectionLanguages);
     
-    const worker = await createWorker(detectionLanguages, 1, {
+    // Configure paths for offline/Electron mode  
+    const detectionConfig: any = {
       logger: this.createLogger()
-    });
+    };
+    
+    // Use local assets if in Electron or offline mode
+    if (typeof window !== 'undefined' && (window.isElectron || window.TESSERACT_CONFIG)) {
+      const config = window.TESSERACT_CONFIG || {};
+      detectionConfig.langPath = config.langPath || './tessdata/';
+      detectionConfig.corePath = config.corePath || './tesseract/';
+      detectionConfig.workerPath = config.workerPath || './tesseract/worker.min.js';
+      console.log('🔧 Using local Tesseract assets for detection worker');
+    }
+    
+    const worker = await createWorker(detectionLanguages, 1, detectionConfig);
 
     // Cache the worker
     this.detectionWorker = {
@@ -236,28 +250,9 @@ export class OCRService {
   }
 
   private static async initializeWorker(languages: OCRLanguage[]): Promise<TesseractWorker> {
-    const workerKey = this.getWorkerKey(languages);
-    
-    // Check cache first
-    if (this.workers.has(workerKey)) {
-      const cached = this.workers.get(workerKey)!;
-      cached.lastUsed = Date.now();
-      cached.useCount++;
-      console.log(`🎯 EXTRACTION CACHE HIT: Reusing worker for ${workerKey} (used ${cached.useCount} times)`);
-      return cached.worker;
-    }
-
-    // Return existing loading promise if in progress
-    if (this.loadingPromises.has(workerKey)) {
-      console.log(`⏳ Waiting for existing worker creation: ${workerKey}`);
-      return this.loadingPromises.get(workerKey)!;
-    }
-
-    // Create new worker with basic configuration
-    console.log(`🔄 EXTRACTION CACHE MISS: Creating new worker for languages: ${workerKey}`);
-    const loadingPromise = createWorker(languages, 1, {
-      logger: this.createLogger()
-    });
+    // PRODUCTION FIX: Use OCRCacheManager's fixed worker creation
+    console.log(`🔄 OCRService delegating to OCRCacheManager for languages: ${languages.join(', ')}`);
+    return OCRCacheManager.initializeWorker(languages);
 
     this.loadingPromises.set(workerKey, loadingPromise);
 

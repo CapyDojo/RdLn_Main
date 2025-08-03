@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Tessdata Access</title>
+</head>
+<body>
+    <h1>Testing Tessdata File Access</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testLanguageFileAccess() {
+            const results = document.getElementById('results');
+            const languages = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+            
+            results.innerHTML = '<h2>Testing language file access...</h2>';
+            
+            for (const lang of languages) {
+                try {
+                    const response = await fetch(`/tessdata/${lang}.traineddata`);
+                    const status = response.ok ? '✅ ACCESSIBLE' : '❌ NOT FOUND';
+                    const size = response.ok ? `(${Math.round(response.headers.get('content-length') / 1024 / 1024 * 100) / 100} MB)` : '';
+                    results.innerHTML += `<p>${lang}.traineddata: ${status} ${size}</p>`;
+                } catch (error) {
+                    results.innerHTML += `<p>${lang}.traineddata: ❌ ERROR - ${error.message}</p>`;
+                }
+            }
+            
+            results.innerHTML += '<h2>Test completed!</h2>';
+        }
+        
+        // Run test when page loads
+        testLanguageFileAccess();
+    </script>
+</body>
+</html>
