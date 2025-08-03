@@ -31,29 +31,84 @@ export class OCRCacheManager {
   private static cleanupTimer: NodeJS.Timeout | null = null;
 
   /**
-   * PRODUCTION FIX: Get the correct language path for current environment
+   * PRODUCTION FIX: Enhanced Tauri environment detection
    */
-  private static async getLanguagePath(): Promise<string> {
-    // Check if we're in Tauri environment
-    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+  private static async detectTauriEnvironment(): Promise<boolean> {
+    // Multiple detection methods for robust Tauri identification
+    const checks = [
+      // Check for Tauri global object
+      typeof window !== 'undefined' && (window as any).__TAURI__,
+      // Check for Tauri protocol
+      typeof window !== 'undefined' && window.location.protocol === 'tauri:',
+      // Check for Tauri in user agent
+      typeof navigator !== 'undefined' && navigator.userAgent.includes('Tauri'),
+      // Check for Tauri-specific APIs
+      typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__,
+      // Check for file:// protocol (common in desktop apps)
+      typeof window !== 'undefined' && window.location.protocol === 'file:',
+    ];
+
+    const isTauri = checks.some(check => check);
+    console.log('🔧 Enhanced Tauri detection:', {
+      globalObject: checks[0],
+      protocol: checks[1],
+      userAgent: checks[2],
+      internals: checks[3],
+      fileProtocol: checks[4],
+      finalResult: isTauri
+    });
+
+    return isTauri;
+  }
+
+  /**
+   * PRODUCTION FIX: Get the correct resource paths for current environment
+   */
+  private static async getTauriResourcePaths(): Promise<{
+    langPath: string;
+    workerPath: string;
+    corePath: string;
+  }> {
+    const isTauri = await this.detectTauriEnvironment();
+
+    if (isTauri) {
       try {
-        // Import Tauri path API
-        const { resourceDir } = await import('@tauri-apps/api/path');
+        // Import Tauri path API dynamically
+        const { resourceDir, join } = await import('@tauri-apps/api/path');
+        const { convertFileSrc } = await import('@tauri-apps/api/core');
+
         const resourcePath = await resourceDir();
         console.log('🔧 Tauri resource directory:', resourcePath);
-        return resourcePath; // This will point to the bundled resources
+
+        // Build proper Tauri resource URLs
+        const langPath = convertFileSrc(await join(resourcePath, 'tessdata'));
+        const workerPath = convertFileSrc(await join(resourcePath, 'tesseract', 'worker.min.js'));
+        const corePath = convertFileSrc(await join(resourcePath, 'tesseract', 'tesseract-core.wasm.js'));
+
+        console.log('🔧 Tauri resource paths:', { langPath, workerPath, corePath });
+
+        return { langPath, workerPath, corePath };
       } catch (error) {
-        console.warn('⚠️ Failed to get Tauri resource path, using fallback:', error);
-        return './tessdata'; // Fallback to relative path
+        console.warn('⚠️ Failed to get Tauri resource paths, using fallback:', error);
+        // Fallback to relative paths for Tauri
+        return {
+          langPath: './tessdata',
+          workerPath: './tesseract/worker.min.js',
+          corePath: './tesseract/tesseract-core.wasm.js'
+        };
       }
     } else {
-      // In web environment (dev server or web build)
-      return '/tessdata';
+      // Web environment paths
+      return {
+        langPath: '/tessdata',
+        workerPath: '/tesseract/worker.min.js',
+        corePath: '/tesseract/tesseract-core.wasm.js'
+      };
     }
   }
 
   /**
-   * PRODUCTION FIX: Create worker with Tauri-specific resource handling
+   * PRODUCTION FIX: Create worker with enhanced Tauri-specific resource handling
    */
   private static async createWorkerWithFallback(
     languages: OCRLanguage[],
@@ -61,51 +116,47 @@ export class OCRCacheManager {
   ): Promise<Tesseract.Worker> {
     console.log('🔧 createWorkerWithFallback called with languages:', languages);
 
-    // Enhanced Tauri detection
-    const hasTauriGlobal = typeof window !== 'undefined' && (window as any).__TAURI__;
-    const isTauriProtocol = typeof window !== 'undefined' && window.location.protocol === 'tauri:';
-    const isTauriUserAgent = typeof navigator !== 'undefined' && navigator.userAgent.includes('Tauri');
-    const isTauri = hasTauriGlobal || isTauriProtocol || isTauriUserAgent;
-
-    console.log('🔧 Tauri detection details:', {
-      hasTauriGlobal,
-      isTauriProtocol,
-      isTauriUserAgent,
-      protocol: typeof window !== 'undefined' ? window.location.protocol : 'unknown',
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
-    });
-    console.log('🔧 Final isTauri result:', isTauri);
-
-    // FORCE LOCAL ASSETS: Always use local assets (no CDN) regardless of environment
-    // This ensures OCR works in both web and Tauri builds
-    console.log('🔧 Using local bundled assets (no CDN dependencies)');
-
-    // PRODUCTION FIX: Always use local bundled assets (no CDN)
-    const workerOptions = {
-      logger: this.createLogger(),
-      workerPath: '/tesseract/worker.min.js',
-      langPath: '/tessdata',
-      corePath: '/tesseract/tesseract-core.wasm.js'
-    };
+    const isTauri = await this.detectTauriEnvironment();
+    console.log('🔧 Environment detected as Tauri:', isTauri);
 
     try {
-      console.log('🔧 Attempting worker with local assets:', workerOptions);
+      // Get environment-specific resource paths
+      const resourcePaths = await this.getTauriResourcePaths();
+      console.log('🔧 Using resource paths:', resourcePaths);
+
+      const workerOptions = {
+        logger: this.createLogger(),
+        langPath: resourcePaths.langPath,
+        workerPath: resourcePaths.workerPath,
+        corePath: resourcePaths.corePath
+      };
+
+      console.log('🔧 Attempting worker with optimized paths:', workerOptions);
 
       const worker = await Promise.race([
         createWorker(languages, 1, workerOptions),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Local assets worker timeout')), timeout)
+          setTimeout(() => reject(new Error('Primary worker timeout')), timeout)
         )
       ]);
 
-      console.log('✅ Worker created successfully with local assets');
+      console.log('✅ Worker created successfully with optimized paths');
       return worker;
 
-    } catch (localAssetsError) {
-      console.warn('⚠️ Primary local assets failed:', localAssetsError);
+    } catch (primaryError) {
+      console.warn('⚠️ Primary optimized path failed:', primaryError);
 
-      // Fallback: Try different combinations of local paths
-      const fallbackConfigs = [
+      // Enhanced fallback strategy with environment-aware paths
+      const fallbackConfigs = isTauri ? [
+        // Tauri-specific fallback paths
+        { langPath: './tessdata', workerPath: './tesseract/worker.min.js', corePath: './tesseract/tesseract-core.wasm.js' },
+        { langPath: 'tessdata', workerPath: 'tesseract/worker.min.js', corePath: 'tesseract/tesseract-core.wasm.js' },
+        { langPath: './tessdata', workerPath: './tesseract/worker.min.js' }, // No core path
+        { langPath: 'tessdata', workerPath: 'tesseract/worker.min.js' }, // No core path
+        { langPath: './tessdata' }, // Only language path
+        { langPath: 'tessdata' }, // Only language path
+      ] : [
+        // Web-specific fallback paths
         { langPath: '/tessdata', workerPath: '/tesseract/worker.min.js', corePath: '/tesseract/tesseract-core.wasm.js' },
         { langPath: './tessdata', workerPath: './tesseract/worker.min.js', corePath: './tesseract/tesseract-core.wasm.js' },
         { langPath: '/tessdata', workerPath: '/tesseract/worker.min.js' }, // No core path
@@ -132,31 +183,38 @@ export class OCRCacheManager {
           return worker;
 
         } catch (fallbackError) {
-          console.warn(`⚠️ Fallback failed for config:`, config, 'Error:', fallbackError.message);
+          const errorMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+          console.warn(`⚠️ Fallback failed for config:`, config, 'Error:', errorMessage);
           continue;
         }
       }
 
-      // Final attempt: no langPath (use Tesseract.js CDN)
-      try {
-        console.log('🔧 Final attempt: Using Tesseract.js CDN (no langPath)');
-        const worker = await Promise.race([
-          createWorker(languages, 1, {
-            logger: this.createLogger()
-            // No langPath - will use CDN
-          }),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('CDN worker timeout')), timeout)
-          )
-        ]);
+      // Final attempt: CDN (only for web environment)
+      if (!isTauri) {
+        try {
+          console.log('🔧 Final attempt: Using Tesseract.js CDN (web environment only)');
+          const worker = await Promise.race([
+            createWorker(languages, 1, {
+              logger: this.createLogger()
+              // No langPath - will use CDN
+            }),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('CDN worker timeout')), timeout)
+            )
+          ]);
 
-        console.log('✅ CDN worker created successfully');
-        return worker;
+          console.log('✅ CDN worker created successfully');
+          return worker;
 
-      } catch (cdnError) {
-        console.error('❌ All worker creation methods failed');
-        throw new Error(`All worker creation attempts failed. Last error: ${cdnError}`);
+        } catch (cdnError) {
+          console.error('❌ CDN fallback also failed:', cdnError);
+        }
+      } else {
+        console.log('🚫 Skipping CDN fallback in Tauri environment (network restricted)');
       }
+
+      console.error('❌ All worker creation methods failed');
+      throw new Error(`All worker creation attempts failed. Last error: ${primaryError}`);
     }
   }
 

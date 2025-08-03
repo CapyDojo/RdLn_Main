@@ -1,14 +1,22 @@
-const { app, BrowserWindow, Menu } = require('electron');
+const { app, BrowserWindow, Menu, screen, ipcMain } = require('electron');
+const fs = require('fs').promises;
 const path = require('path');
 const isDev = process.env.NODE_ENV === 'development';
 
 let mainWindow;
 
 function createWindow() {
+  // Get primary display dimensions
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  
+  // Calculate window size - use 90% of screen width and full height minus taskbar
+  const windowWidth = Math.min(1400, Math.floor(screenWidth * 0.9));
+  const windowHeight = Math.floor(screenHeight * 0.95);
+  
   // Create the browser window
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: windowWidth,
+    height: windowHeight,
     minWidth: 800,
     minHeight: 600,
     webPreferences: {
@@ -16,7 +24,8 @@ function createWindow() {
       contextIsolation: true,
       enableRemoteModule: false,
       preload: path.join(__dirname, 'preload.cjs'),
-      webSecurity: true
+      webSecurity: true,
+      zoomFactor: 1.0
     },
     icon: path.join(__dirname, '../public/images/rdln-logo.png'),
     title: 'RdLn - Document Comparison Tool',
@@ -31,8 +40,6 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index-electron.html'));
-    // TEMP: Open DevTools in production for debugging
-    mainWindow.webContents.openDevTools();
   }
 
   // Show window when ready to prevent visual flash
@@ -58,6 +65,45 @@ function createWindow() {
         mainWindow.webContents.send('file-dropped', filePath);
       }
     }
+  });
+
+  // Enable zoom functionality
+  mainWindow.webContents.on('dom-ready', () => {
+    // Handle zoom with Ctrl+Scroll
+    mainWindow.webContents.executeJavaScript(`
+      let zoomLevel = 1.0;
+      
+      document.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
+          
+          const zoomDelta = e.deltaY > 0 ? -0.1 : 0.1;
+          zoomLevel = Math.max(0.25, Math.min(3.0, zoomLevel + zoomDelta));
+          
+          document.body.style.zoom = zoomLevel;
+          console.log('Zoom level:', zoomLevel);
+        }
+      }, { passive: false });
+      
+      // Handle keyboard zoom shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey) {
+          if (e.key === '=' || e.key === '+') {
+            e.preventDefault();
+            zoomLevel = Math.min(3.0, zoomLevel + 0.1);
+            document.body.style.zoom = zoomLevel;
+          } else if (e.key === '-') {
+            e.preventDefault();
+            zoomLevel = Math.max(0.25, zoomLevel - 0.1);
+            document.body.style.zoom = zoomLevel;
+          } else if (e.key === '0') {
+            e.preventDefault();
+            zoomLevel = 1.0;
+            document.body.style.zoom = zoomLevel;
+          }
+        }
+      });
+    `);
   });
 
   // Enable drag and drop
@@ -154,9 +200,36 @@ function createMenu() {
         { role: 'forceReload' },
         { role: 'toggleDevTools' },
         { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { 
+          label: 'Zoom In',
+          accelerator: 'CmdOrCtrl+Plus',
+          click: () => {
+            mainWindow.webContents.executeJavaScript(`
+              zoomLevel = Math.min(3.0, zoomLevel + 0.1);
+              document.body.style.zoom = zoomLevel;
+            `);
+          }
+        },
+        { 
+          label: 'Zoom Out',
+          accelerator: 'CmdOrCtrl+-',
+          click: () => {
+            mainWindow.webContents.executeJavaScript(`
+              zoomLevel = Math.max(0.25, zoomLevel - 0.1);
+              document.body.style.zoom = zoomLevel;
+            `);
+          }
+        },
+        { 
+          label: 'Reset Zoom',
+          accelerator: 'CmdOrCtrl+0',
+          click: () => {
+            mainWindow.webContents.executeJavaScript(`
+              zoomLevel = 1.0;
+              document.body.style.zoom = zoomLevel;
+            `);
+          }
+        },
         { type: 'separator' },
         { role: 'togglefullscreen' }
       ]
@@ -190,6 +263,48 @@ function createMenu() {
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }
+
+// IPC handlers for secure file operations
+ipcMain.handle('read-file', async (event, filePath) => {
+  try {
+    const buffer = await fs.readFile(filePath);
+    const fileName = path.basename(filePath);
+    const fileType = `image/${path.extname(filePath).slice(1).toLowerCase()}`;
+    
+    return {
+      buffer: Array.from(buffer), // Convert buffer to array for JSON serialization
+      name: fileName,
+      type: fileType
+    };
+  } catch (error) {
+    throw new Error(`Failed to read file: ${error.message}`);
+  }
+});
+
+ipcMain.handle('file-exists', async (event, filePath) => {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+});
+
+ipcMain.handle('get-platform', () => {
+  return process.platform;
+});
+
+ipcMain.handle('get-app-version', () => {
+  return app.getVersion();
+});
+
+ipcMain.handle('get-resource-path', (event, relativePath) => {
+  if (isDev) {
+    return path.join(process.cwd(), 'public', relativePath);
+  } else {
+    return path.join(process.resourcesPath, 'app', 'dist', relativePath);
+  }
+});
 
 app.whenReady().then(() => {
   createMenu();

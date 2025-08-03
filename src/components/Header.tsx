@@ -16,7 +16,7 @@ export const Header: React.FC<BaseComponentProps> = ({ style, className }) => {
           {/* Logo Section - Centered */}
           <div className="w-full flex items-center justify-center">
             <img 
-              src="/images/rdln-logo.png" 
+              src={window.isElectron ? "./images/rdln-logo.png" : "/images/rdln-logo.png"} 
               alt="RdLn Logo" 
               className="object-contain rounded-3xl shadow-md transform hover:scale-105 transition-all duration-200"
               style={{ flexShrink: 0, aspectRatio: '1/1', width: '72px', height: '72px' }}

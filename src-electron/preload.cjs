@@ -1,58 +1,44 @@
 const { contextBridge, ipcRenderer } = require('electron');
-const fs = require('fs').promises;
-const path = require('path');
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
-  // File drop handling
-  handleFileDrop: (filePath) => {
-    // Read file and convert to File object for the React app
-    return fs.readFile(filePath)
-      .then(buffer => {
-        const fileName = path.basename(filePath);
-        const fileType = `image/${path.extname(filePath).slice(1).toLowerCase()}`;
-        
-        // Create a Blob from the buffer
-        const blob = new Blob([buffer], { type: fileType });
-        
-        // Create File object
-        const file = new File([blob], fileName, { type: fileType });
-        
-        // Dispatch custom event to React app
-        const event = new CustomEvent('electron-file-drop', {
-          detail: { file, filePath }
-        });
-        document.dispatchEvent(event);
-        
-        return file;
-      })
-      .catch(error => {
-        console.error('Failed to read dropped file:', error);
-        throw error;
+  // File drop handling - use IPC to main process
+  handleFileDrop: async (filePath) => {
+    try {
+      const fileData = await ipcRenderer.invoke('read-file', filePath);
+      
+      // Create File object from the received data
+      const blob = new Blob([fileData.buffer], { type: fileData.type });
+      const file = new File([blob], fileData.name, { type: fileData.type });
+      
+      // Dispatch custom event to React app
+      const event = new CustomEvent('electron-file-drop', {
+        detail: { file, filePath }
       });
+      document.dispatchEvent(event);
+      
+      return file;
+    } catch (error) {
+      console.error('Failed to read dropped file:', error);
+      throw error;
+    }
   },
 
   // Platform detection
-  getPlatform: () => process.platform,
+  getPlatform: () => ipcRenderer.invoke('get-platform'),
   
   // App info
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   
-  // File system access for OCR assets
-  readFile: (filePath) => fs.readFile(filePath),
+  // File system access for OCR assets - use IPC
+  readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
   
-  // Check if file exists
-  fileExists: (filePath) => fs.access(filePath).then(() => true).catch(() => false),
+  // Check if file exists - use IPC
+  fileExists: (filePath) => ipcRenderer.invoke('file-exists', filePath),
   
-  // Get resource path for bundled assets
-  getResourcePath: (relativePath) => {
-    if (process.env.NODE_ENV === 'development') {
-      return path.join(process.cwd(), 'public', relativePath);
-    } else {
-      return path.join(process.resourcesPath, 'app', 'dist', relativePath);
-    }
-  }
+  // Get resource path for bundled assets - use IPC
+  getResourcePath: (relativePath) => ipcRenderer.invoke('get-resource-path', relativePath)
 });
 
 // Listen for file drop events from main process

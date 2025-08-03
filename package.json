@@ -34,7 +34,9 @@
     "electron:build:linux": "npm run build && electron-builder --linux --config src-electron/builder.config.cjs",
     "download:fonts": "node scripts/download-fonts.js",
     "download:tesseract": "node scripts/download-tesseract-assets.js",
+    "copy:tesseract": "node scripts/copy-tesseract-assets.js",
     "download:all": "npm run download:fonts && npm run download:tesseract",
+    "prepare:tauri": "npm run copy:tesseract && npm run build",
     "prepare:electron": "npm run download:all && npm run build",
     "setup:electron": "node scripts/setup-electron.js"
   },

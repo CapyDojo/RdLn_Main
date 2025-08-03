@@ -13,4 +13,15 @@ export default defineConfig({
       port: 5173,
     },
   },
+  base: './', // Use relative paths for assets (needed for Electron)
+  build: {
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+      },
+    },
+  },
 });

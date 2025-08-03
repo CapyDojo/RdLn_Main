@@ -19,7 +19,8 @@
       "Bash(dir dist-electron)",
       "Bash(.RdLn-0.0.0-portable.exe)",
       "Bash(\"C:\\temp\\RdLn_MVP_Stream\\dist-electron\\RdLn-0.0.0-portable.exe\")",
-      "Bash(dir)"
+      "Bash(dir)",
+      "Bash(npx electron-builder:*)"
     ],
     "deny": []
   }

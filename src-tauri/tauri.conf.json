@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "identifier": "com.rdln.desktop",
   "build": {
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "npm run prepare:tauri",
     "beforeDevCommand": "npm run dev",
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173"
@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com https://fonts.cdnfonts.com; connect-src 'self' https://cdn.jsdelivr.net; worker-src 'self' blob: data:;",
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' tauri:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com; img-src 'self' data: blob: tauri:; font-src 'self' data: https://fonts.gstatic.com https://fonts.cdnfonts.com tauri:; connect-src 'self' https://cdn.jsdelivr.net tauri:; worker-src 'self' blob: data: tauri:; object-src 'self' tauri:;",
       "capabilities": ["main"]
     }
   },
@@ -39,7 +39,10 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "tessdata/*.traineddata"
+      "tessdata/*.traineddata",
+      "tesseract/worker.min.js",
+      "tesseract/tesseract-core.wasm",
+      "tesseract/tesseract-core.wasm.js"
     ]
   }
 }
