@@ -11,7 +11,9 @@ export default defineConfig({
     port: 5173,
     hmr: {
       port: 5173,
+      overlay: false, // Disable error overlay to prevent WebSocket issues
     },
+    strictPort: false, // Allow port fallback
   },
   base: './', // Use relative paths for assets (needed for Electron)
   build: {

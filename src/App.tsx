@@ -69,8 +69,11 @@ function AppContent({
   useEffect(() => {
     const setupGlobalTauriHandler = async () => {
       try {
-        const { setupGlobalTauriFileDrop } = await import('./utils/tauriFileDrop');
-        await setupGlobalTauriFileDrop();
+        // Only setup in Tauri environment
+        if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+          const { setupGlobalTauriFileDrop } = await import('./utils/tauriFileDrop');
+          await setupGlobalTauriFileDrop();
+        }
       } catch (error) {
         console.log('🔧 TAURI APP: Failed to setup global handler:', error);
       }
