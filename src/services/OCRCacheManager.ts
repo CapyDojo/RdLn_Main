@@ -34,6 +34,12 @@ export class OCRCacheManager {
    * PRODUCTION FIX: Enhanced Tauri environment detection
    */
   private static async detectTauriEnvironment(): Promise<boolean> {
+    // CRITICAL: Check for Electron first - it also uses file:// protocol
+    if (typeof window !== 'undefined' && (window as any).isElectron) {
+      console.log('🔧 Electron environment detected, not Tauri');
+      return false;
+    }
+
     // Multiple detection methods for robust Tauri identification
     const checks = [
       // Check for Tauri global object
@@ -44,12 +50,13 @@ export class OCRCacheManager {
       typeof navigator !== 'undefined' && navigator.userAgent.includes('Tauri'),
       // Check for Tauri-specific APIs
       typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__,
-      // Check for file:// protocol (common in desktop apps)
-      typeof window !== 'undefined' && window.location.protocol === 'file:',
+      // Check for file:// protocol (only if NOT Electron)
+      typeof window !== 'undefined' && window.location.protocol === 'file:' && !(window as any).isElectron,
     ];
 
     const isTauri = checks.some(check => check);
     console.log('🔧 Enhanced Tauri detection:', {
+      isElectron: (window as any).isElectron,
       globalObject: checks[0],
       protocol: checks[1],
       userAgent: checks[2],
@@ -90,6 +97,14 @@ export class OCRCacheManager {
           corePath: 'https://asset.localhost/tesseract/tesseract-core.wasm.js'
         };
       }
+    } else if (typeof window !== 'undefined' && (window as any).isElectron) {
+      // Electron environment - use relative paths and override config
+      console.log('🔧 Using Electron-specific OCR paths');
+      return {
+        langPath: './tessdata/',
+        workerPath: './tesseract/worker.min.js',
+        corePath: './tesseract/tesseract-core.wasm.js'
+      };
     } else {
       // Web environment paths
       return {

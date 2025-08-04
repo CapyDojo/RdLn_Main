@@ -15,6 +15,8 @@ import { OCROrchestrator, OrchestrationOptions } from '../services/OCROrchestrat
 import { LanguageDetectionService } from '../services/LanguageDetectionService';
 // Import OCRCacheManager for production-ready worker creation
 import { OCRCacheManager } from '../services/OCRCacheManager';
+// TAURI INTEGRATION: Import OCR router for Tauri-specific OCR handling
+import { OCRRouter } from './OCRRouter';
 
 // Note: Re-exports removed to avoid module resolution conflicts
 
@@ -282,10 +284,24 @@ export class OCRService {
    * Language detection - delegated to LanguageDetectionService for modularity
    */
   public static async detectLanguage(imageFile: File | Blob): Promise<OCRLanguage[]> {
-    return LanguageDetectionService.detectLanguage(imageFile);
+    // TAURI INTEGRATION: Route to appropriate language detection provider
+    return OCRRouter.routeLanguageDetection(imageFile, (imageFile) => {
+      return LanguageDetectionService.detectLanguage(imageFile);
+    });
   }
 
   public static async extractTextFromImage(
+    imageFile: File | Blob, 
+    options: OCROptions = {}
+  ): Promise<string> {
+    // TAURI INTEGRATION: Route to appropriate OCR provider
+    return OCRRouter.routeOCRRequest(imageFile, options, (imageFile, options) => {
+      return this.extractTextFromImageLegacy(imageFile, options);
+    });
+  }
+
+  // TAURI INTEGRATION: Renamed original method to avoid conflicts
+  private static async extractTextFromImageLegacy(
     imageFile: File | Blob, 
     options: OCROptions = {}
   ): Promise<string> {
