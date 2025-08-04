@@ -49,29 +49,37 @@ createRoot(document.getElementById('root')!).render(
     : AppWithProvider
 );
 
-// STEP 1b: Safe Background Language Loading (SSMR Implementation)
-// Initialize after a short delay to ensure app is fully loaded
-setTimeout(async () => {
-  try {
-    if (process.env.NODE_ENV === 'development') {
-      // console.log('🚀 Initializing background language loading...');
+// ELECTRON PERFORMANCE FIX: Disable OCR preloading to improve startup time
+// Only load OCR services when actually needed by user
+if (typeof window !== 'undefined' && !window.isElectron) {
+  // STEP 1b: Safe Background Language Loading (SSMR Implementation) - Web/Tauri only
+  // Initialize after a short delay to ensure app is fully loaded
+  setTimeout(async () => {
+    try {
+      if (process.env.NODE_ENV === 'development') {
+        // console.log('🚀 Initializing background language loading...');
+      }
+      await BackgroundLanguageLoader.startBackgroundLoading();
+      if (process.env.NODE_ENV === 'development') {
+        // console.log('✅ Background language loading started successfully');
+      }
+    } catch (error) {
+      console.warn('⚠️ Background language loading failed (non-critical):', error);
+      // Graceful degradation - app continues to work normally
     }
-    await BackgroundLanguageLoader.startBackgroundLoading();
-    if (process.env.NODE_ENV === 'development') {
-      // console.log('✅ Background language loading started successfully');
-    }
-  } catch (error) {
-    console.warn('⚠️ Background language loading failed (non-critical):', error);
-    // Graceful degradation - app continues to work normally
-  }
-}, 2000); // 2 second delay ensures app is ready
+  }, 2000); // 2 second delay ensures app is ready
+} else {
+  console.log('🔧 Electron detected: Skipping OCR preloading for faster startup');
+}
 
-// STEP 1c: Safe Cleanup (Reversible)
+// STEP 1c: Safe Cleanup (Reversible) - only for non-Electron
 // Cleanup background loader on page unload
-window.addEventListener('beforeunload', async () => {
-  try {
-    await BackgroundLanguageLoader.cleanup();
-  } catch (error) {
-    console.warn('Background loader cleanup error (non-critical):', error);
-  }
-});
+if (typeof window !== 'undefined' && !window.isElectron) {
+  window.addEventListener('beforeunload', async () => {
+    try {
+      await BackgroundLanguageLoader.cleanup();
+    } catch (error) {
+      console.warn('Background loader cleanup error (non-critical):', error);
+    }
+  });
+}

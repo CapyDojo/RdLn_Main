@@ -18,8 +18,25 @@
     
     <!-- Electron environment flag -->
     <script>
+      // PERFORMANCE PROFILING: Track renderer process startup
+      console.time('🎨 RENDERER-INIT');
+      console.log('⏱️  RENDERER: Script execution started at', new Date().toISOString());
+      
       window.isElectron = true;
       window.isOffline = true;
+      
+      // Track when DOM content is loaded
+      document.addEventListener('DOMContentLoaded', () => {
+        console.timeEnd('🎨 RENDERER-INIT');
+        console.time('⚛️  REACT-LOAD');
+        console.log('⏱️  RENDERER: DOMContentLoaded at', new Date().toISOString());
+      });
+      
+      // Track when everything is loaded
+      window.addEventListener('load', () => {
+        console.timeEnd('⚛️  REACT-LOAD');
+        console.log('✅ RENDERER: Window fully loaded at', new Date().toISOString());
+      });
     </script>
     <!-- ASSETS_PLACEHOLDER -->
   </head>

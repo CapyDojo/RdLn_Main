@@ -12,7 +12,7 @@ module.exports = {
   
   // Build directories
   directories: {
-    output: 'dist-electron',
+    output: 'dist-electron-new',
     buildResources: 'src-electron/build-resources'
   },
   
@@ -60,23 +60,48 @@ module.exports = {
   // App metadata
   publish: null, // Disable auto-publish
   
-  // Window configuration
+  // Window configuration - multiple distribution options
   win: {
     target: [
       {
-        target: 'portable',
+        target: 'nsis', // NSIS installer - professional and user-friendly
+        arch: ['x64']
+      },
+      {
+        target: 'dir', // Unpacked directory - for development/testing
+        arch: ['x64']
+      },
+      {
+        target: 'portable', // Single file version - for quick testing
         arch: ['x64']
       }
     ],
     icon: 'public/images/rdln-logo.png',
     requestedExecutionLevel: 'asInvoker'
   },
-  
-  
+
+  // NSIS Installer Configuration
+  nsis: {
+    oneClick: false, // Allow user to choose install directory
+    allowElevation: true, // Allow admin installation
+    allowToChangeInstallationDirectory: true,
+    // Note: Icons need to be .ico format, not .png
+    // installerIcon: 'public/images/rdln-logo.ico',
+    // uninstallerIcon: 'public/images/rdln-logo.ico',  
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    shortcutName: 'RdLn Document Comparison',
+    displayLanguageSelector: false,
+    runAfterFinish: true, // Launch app after installation
+    menuCategory: 'Productivity',
+    artifactName: 'RdLn-${version}-Setup.${ext}'
+  },
+
   // Portable configuration
   portable: {
-    artifactName: '${productName}-${version}-portable.${ext}'
+    artifactName: 'RdLn-${version}-Portable.${ext}'
   },
+  
   
   // macOS configuration
   mac: {

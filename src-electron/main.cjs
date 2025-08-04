@@ -1,19 +1,32 @@
+// PERFORMANCE PROFILING: Start timing the entire app startup
+console.time('🚀 TOTAL-APP-STARTUP');
+console.log('⏱️  STARTUP: Process started at', new Date().toISOString());
+
 const { app, BrowserWindow, Menu, screen, ipcMain } = require('electron');
 const fs = require('fs').promises;
 const path = require('path');
 const isDev = process.env.NODE_ENV === 'development';
 
+console.time('📦 MODULE-IMPORTS');
+console.timeEnd('📦 MODULE-IMPORTS');
+
 let mainWindow;
 
 function createWindow() {
+  console.time('🖥️  WINDOW-CREATION');
+  console.log('⏱️  WINDOW: createWindow() called at', new Date().toISOString());
+  
   // Get primary display dimensions
+  console.time('📐 SCREEN-DETECTION');
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  console.timeEnd('📐 SCREEN-DETECTION');
   
   // Calculate window size - use 90% of screen width and full height minus taskbar
   const windowWidth = Math.min(1400, Math.floor(screenWidth * 0.9));
   const windowHeight = Math.floor(screenHeight * 0.95);
   
   // Create the browser window
+  console.time('🏗️  BROWSERWINDOW-INIT');
   mainWindow = new BrowserWindow({
     width: windowWidth,
     height: windowHeight,
@@ -32,18 +45,35 @@ function createWindow() {
     titleBarStyle: 'default',
     show: false // Don't show until ready
   });
+  console.timeEnd('🏗️  BROWSERWINDOW-INIT');
 
   // Load the app
+  console.time('📄 HTML-LOADING');
+  console.log('⏱️  LOAD: Starting to load HTML at', new Date().toISOString());
+  
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
     // Open DevTools in development
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index-electron.html'));
+    const htmlPath = path.join(__dirname, '../dist/index-electron.html');
+    console.log('⏱️  LOAD: Loading HTML from:', htmlPath);
+    mainWindow.loadFile(htmlPath);
   }
+
+  // Track when DOM is ready
+  mainWindow.webContents.once('dom-ready', () => {
+    console.timeEnd('📄 HTML-LOADING');
+    console.time('⚡ DOM-TO-READY-TO-SHOW');
+    console.log('⏱️  DOM: DOM ready at', new Date().toISOString());
+  });
 
   // Show window when ready to prevent visual flash
   mainWindow.once('ready-to-show', () => {
+    console.timeEnd('⚡ DOM-TO-READY-TO-SHOW');
+    console.timeEnd('🖥️  WINDOW-CREATION');
+    console.timeEnd('🚀 TOTAL-APP-STARTUP');
+    console.log('✅ READY: Window visible at', new Date().toISOString());
     mainWindow.show();
   });
 
@@ -150,7 +180,13 @@ function createWindow() {
 }
 
 // App event handlers
+console.time('🔧 APP-READY-WAIT');
+console.log('⏱️  APP: Waiting for app.whenReady() at', new Date().toISOString());
+
 app.whenReady().then(() => {
+  console.timeEnd('🔧 APP-READY-WAIT');
+  console.log('⏱️  APP: app.whenReady() fired at', new Date().toISOString());
+  
   createWindow();
 
   // Handle app activation (macOS)

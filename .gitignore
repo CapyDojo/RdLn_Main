@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 dist-electron/
+dist-electron-new/
 
 # Test results and coverage
 test-results/

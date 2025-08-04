@@ -31,6 +31,7 @@
     "process:electron-html": "node scripts/process-electron-html.js",
     "electron:build": "npm run build && npm run process:electron-html && electron-builder --config src-electron/builder.config.cjs",
     "electron:build:win": "npm run build && npm run process:electron-html && electron-builder --win --config src-electron/builder.config.cjs",
+    "electron:run": "dist-electron-new/win-unpacked/RdLn.exe",
     "electron:build:mac": "npm run build && npm run process:electron-html && electron-builder --mac --config src-electron/builder.config.cjs",
     "electron:build:linux": "npm run build && npm run process:electron-html && electron-builder --linux --config src-electron/builder.config.cjs",
     "download:fonts": "node scripts/download-fonts.js",
