@@ -38,7 +38,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   fileExists: (filePath) => ipcRenderer.invoke('file-exists', filePath),
   
   // Get resource path for bundled assets - use IPC
-  getResourcePath: (relativePath) => ipcRenderer.invoke('get-resource-path', relativePath)
+  getResourcePath: (relativePath) => ipcRenderer.invoke('get-resource-path', relativePath),
+  
+  // Zoom change notification for dropdown positioning
+  notifyZoomChange: (zoomLevel) => {
+    const event = new CustomEvent('electron-zoom-change', { detail: { zoomLevel } });
+    document.dispatchEvent(event);
+  }
 });
 
 // Listen for file drop events from main process

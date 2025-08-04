@@ -82,6 +82,11 @@ function createWindow() {
           
           document.body.style.zoom = zoomLevel;
           console.log('Zoom level:', zoomLevel);
+          
+          // Notify renderer process about zoom change
+          if (typeof electronAPI !== 'undefined' && electronAPI.notifyZoomChange) {
+            electronAPI.notifyZoomChange(zoomLevel);
+          }
         }
       }, { passive: false });
       
@@ -92,14 +97,26 @@ function createWindow() {
             e.preventDefault();
             zoomLevel = Math.min(3.0, zoomLevel + 0.1);
             document.body.style.zoom = zoomLevel;
+            // Notify renderer process
+            if (typeof electronAPI !== 'undefined' && electronAPI.notifyZoomChange) {
+              electronAPI.notifyZoomChange(zoomLevel);
+            }
           } else if (e.key === '-') {
             e.preventDefault();
             zoomLevel = Math.max(0.25, zoomLevel - 0.1);
             document.body.style.zoom = zoomLevel;
+            // Notify renderer process
+            if (typeof electronAPI !== 'undefined' && electronAPI.notifyZoomChange) {
+              electronAPI.notifyZoomChange(zoomLevel);
+            }
           } else if (e.key === '0') {
             e.preventDefault();
             zoomLevel = 1.0;
             document.body.style.zoom = zoomLevel;
+            // Notify renderer process
+            if (typeof electronAPI !== 'undefined' && electronAPI.notifyZoomChange) {
+              electronAPI.notifyZoomChange(zoomLevel);
+            }
           }
         }
       });
