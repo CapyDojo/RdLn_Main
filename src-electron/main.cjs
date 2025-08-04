@@ -41,7 +41,7 @@ function createWindow() {
       zoomFactor: 1.0
     },
     icon: path.join(__dirname, '../public/images/rdln-logo.png'),
-    title: 'RdLn - Document Comparison Tool',
+    title: 'RdLn Beta - Document Comparison Tool',
     titleBarStyle: 'default',
     show: false // Don't show until ready
   });

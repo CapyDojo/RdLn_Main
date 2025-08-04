@@ -8,6 +8,79 @@ import { FontSizeProvider } from './contexts/FontSizeContext';
 // STEP 1: Import Background Language Loader (Safe, Modular)
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
 
+// Update document title to include Beta
+document.title = 'RdLn Beta - Professional Legal Text Comparison Redlining with OCR';
+
+// BETA EXPIRY CHECK: Hard block expiry for beta version
+const BETA_EXPIRY_DATE = new Date('2025-08-31T23:59:59.999Z');
+const currentDate = new Date();
+
+// Check for developer bypass
+const isDeveloperMode = (typeof process !== 'undefined' && process.env?.RDLN_DEV_MODE === 'true') || 
+                       (typeof window !== 'undefined' && window.location?.search?.includes('dev=true'));
+
+if (currentDate > BETA_EXPIRY_DATE && !isDeveloperMode) {
+  // Create expiry message element
+  const expiryMessage = document.createElement('div');
+  expiryMessage.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #1c1917 0%, #292524 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      text-align: center;
+      z-index: 10000;
+      padding: 20px;
+      box-sizing: border-box;
+    ">
+      <div style="
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 40px;
+        max-width: 500px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      ">
+        <h1 style="margin: 0 0 20px 0; font-size: 2.5em; font-weight: 300;">RdLn Beta Expired</h1>
+        <p style="margin: 0 0 20px 0; font-size: 1.2em; line-height: 1.6; opacity: 0.9;">
+          This beta version of RdLn expired on August 31, 2025.
+        </p>
+        <p style="margin: 0 0 30px 0; font-size: 1em; line-height: 1.6; opacity: 0.7;">
+          Thank you for testing RdLn! Please contact the development team for the latest version.
+        </p>
+        <div style="
+          display: inline-block;
+          padding: 12px 24px;
+          background: rgba(59, 130, 246, 0.2);
+          border: 1px solid rgba(59, 130, 246, 0.3);
+          border-radius: 8px;
+          color: #60a5fa;
+          font-size: 0.9em;
+          font-weight: 500;
+        ">
+          Beta expired: ${BETA_EXPIRY_DATE.toLocaleDateString()}
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Replace entire page content
+  document.body.innerHTML = '';
+  document.body.appendChild(expiryMessage);
+  
+  // Prevent any further script execution
+  throw new Error('Beta version expired');
+}
+
 // Development console control - set to false for quiet development
 const ENABLE_DEV_LOGS = true; // Toggle this for clean development console
 
