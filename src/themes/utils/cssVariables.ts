@@ -49,13 +49,6 @@ const generateButtonVariables = (themeConfig: ThemeConfig): Array<[string, strin
       light: { bg: '#f4f4f5', border: '#e4e4e7', text: '#1f2937', hover: '#e4e4e7', hoverText: '#111827' },
       light2: { bg: '#e4e4e7', border: '#d4d4d8', text: '#1f2937' }
     },
-    'apple-dark': {
-      primary: { bg: '#3b82f6', border: '#60a5fa', text: '#ffffff', hover: '#3b82f6' },
-      accent: { bg: '#dc2626', border: '#ef4444', text: '#ffffff', hover: '#dc2626' },
-      neutral: { bg: '#4b5563', border: '#6b7280', text: '#ffffff', hover: '#374151' },
-      light: { bg: '#374151', border: '#4b5563', text: '#f9fafb', hover: '#4b5563', hoverText: '#ffffff' },
-      light2: { bg: '#4b5563', border: '#6b7280', text: '#f9fafb' }
-    },
     'kyoto': {
       primary: { bg: '#0f172a', border: '#1e293b', text: '#ffffff', hover: '#000000' },
       accent: { bg: '#7f1d1d', border: '#991b1b', text: '#ffffff', hover: '#7f1d1d' },
@@ -69,13 +62,6 @@ const generateButtonVariables = (themeConfig: ThemeConfig): Array<[string, strin
       neutral: { bg: '#374151', border: '#4b5563', text: '#ffffff', hover: '#1f2937' },
       light: { bg: '#374151', border: '#4b5563', text: '#f9fafb', hover: '#4b5563', hoverText: '#ffffff' },
       light2: { bg: '#4b5563', border: '#6b7280', text: '#f9fafb' }
-    },
-    'autumn': {
-      primary: { bg: '#0f172a', border: '#1e293b', text: '#ffffff', hover: '#000000' },
-      accent: { bg: '#7f1d1d', border: '#991b1b', text: '#ffffff', hover: '#7f1d1d' },
-      neutral: { bg: '#0f172a', border: '#1e293b', text: '#ffffff', hover: '#000000' },
-      light: { bg: '#e7e5e4', border: '#d6d3d1', text: '#1c1917', hover: '#d6d3d1', hoverText: '#0c0a09' },
-      light2: { bg: '#d6d3d1', border: '#a8a29e', text: '#1c1917' }
     }
   };
   

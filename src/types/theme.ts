@@ -9,7 +9,6 @@ export type ThemeName =
   | 'aurora-borealis'
   | 'ocean-deep'
   | 'professional'
-  | 'autumn'
   | 'lothlorien'
   | 'svinafellsjokull';
 

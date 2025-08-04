@@ -125,3 +125,70 @@ html[data-theme="madripoor"] .segmented-control:hover {
   border: 1px solid rgba(var(--theme-glass-border), 0.4);
   box-shadow: 0 0 15px rgba(var(--theme-glass-border), 0.2);
 }
+
+/* OCR Language Detection - Detected language cards glassmorphic styling */
+html[data-theme="madripoor"] .bg-theme-secondary-50 {
+  background: rgba(var(--theme-glass-bg), 0.01);
+  border: 1px solid rgba(var(--theme-glass-border), 0.6);
+  box-shadow: 0 0 10px rgba(var(--theme-glass-border), 0.3);
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+}
+
+html[data-theme="madripoor"] .border-theme-secondary-200 {
+  border-color: rgba(var(--theme-glass-border), 0.6);
+}
+
+html[data-theme="madripoor"] .text-theme-secondary-800 {
+  color: var(--theme-text-interactive);
+}
+
+html[data-theme="madripoor"] .bg-theme-secondary-200 {
+  background: rgba(var(--theme-glass-border), 0.15);
+  box-shadow: 0 0 8px rgba(var(--theme-glass-border), 0.2);
+  backdrop-filter: blur(var(--effect-backdropBlur, 8px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 8px));
+}
+
+/* OCR Quick Presets - Glassmorphic button styling with neon effects */
+html[data-theme="madripoor"] .bg-theme-primary-100 {
+  background: rgba(var(--theme-glass-bg), 0.01);
+  border: 1px solid rgba(var(--theme-glass-border), 0.6);
+  box-shadow: 0 0 10px rgba(var(--theme-glass-border), 0.3);
+  backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px));
+}
+
+html[data-theme="madripoor"] .text-theme-primary-800 {
+  color: var(--theme-text-interactive);
+}
+
+html[data-theme="madripoor"] .bg-theme-primary-100:hover,
+html[data-theme="madripoor"] .hover\:bg-theme-primary-200:hover {
+  background: rgba(var(--theme-glass-bg), 0.06);
+  border-color: rgba(var(--theme-glass-hover-border), 0.8);
+  box-shadow: 0 0 15px rgba(var(--theme-glass-hover-border), 0.4), 0 0 30px rgba(var(--theme-glass-hover-shadow), 0.2);
+}
+
+/* Language Detection Alerts - Glassmorphic styling with neon effects */
+html[data-theme="madripoor"] .border-white\/20 {
+  background: rgba(var(--theme-glass-bg), 0.01);
+  border: 1px solid rgba(var(--theme-glass-border), 0.6) !important;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 0 10px rgba(var(--theme-glass-border), 0.3);
+  backdrop-filter: blur(var(--effect-backdropBlur, 10px));
+  -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 10px));
+}
+
+html[data-theme="madripoor"] .text-theme-neutral-700 {
+  color: var(--theme-text-interactive);
+}
+
+html[data-theme="madripoor"] .text-theme-primary-700 {
+  color: var(--theme-text-interactive);
+}
+
+html[data-theme="madripoor"] .text-theme-primary-600 {
+  color: var(--theme-text-interactive);
+}

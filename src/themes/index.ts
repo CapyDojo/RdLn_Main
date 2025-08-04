@@ -41,7 +41,6 @@ export const themeDefinitions: Record<ThemeName, ThemeConfig> = {
   'aurora-borealis': auroraBorealisTheme,
   'lothlorien': lothlorienTheme,
   'svinafellsjokull': svinafellsjokullTheme,
-  'autumn': professionalTheme, // Using professionalTheme as placeholder
 } as const;
 
 // Export individual themes for direct access
