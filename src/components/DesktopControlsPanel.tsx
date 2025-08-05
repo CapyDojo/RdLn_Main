@@ -115,8 +115,8 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
           )}
         </button>
         
-        {/* System Protection Toggle for stress testing */}
-        <button
+        {/* System Protection Toggle for stress testing - HIDDEN FOR BETA */}
+        {/* <button
           data-system-protection-toggle
           onClick={onToggleSystemProtection}
           className={`enhanced-button flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl text-lg ${
@@ -127,7 +127,7 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
           title={systemProtectionEnabled ? 'System protection enabled - safe mode with resource limits' : 'System protection disabled - stress testing mode (may crash browser!)'}
         >
           🛡️
-        </button>
+        </button> */}
         
         {/* Spacer to separate dangerous action */}
         <div className="h-4"></div>
