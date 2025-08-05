@@ -6,7 +6,6 @@ export type ThemeName =
   | 'new-york'
   | 'madripoor'
   | 'caladan'
-  | 'aurora-borealis'
   | 'ocean-deep'
   | 'professional'
   | 'lothlorien'

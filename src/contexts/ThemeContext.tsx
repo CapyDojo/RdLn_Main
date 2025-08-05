@@ -29,15 +29,14 @@ interface ThemeProviderProps {
 const DEFAULT_THEME_ORDER: ThemeName[] = [
   'classic-light',
   'classic-dark',
+  'professional',
   'bamboo',
   'kyoto',
   'new-york',
-  'madripoor',
+  'svinafellsjokull',
   'caladan',
   'lothlorien',
-  'svinafellsjokull',
-  'aurora-borealis',
-  'professional',
+  'madripoor',
 ];
 
 const THEME_ORDER_STORAGE_KEY = 'rdln-theme-order';

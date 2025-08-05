@@ -74,14 +74,14 @@ const getThemeConfigs = (isSelected: boolean) => ({
     textColor: '#0ea5e9',
     borderColor: isSelected ? '#0284c7' : 'rgba(2, 132, 199, 0.6)'
   },
-  'aurora-borealis': {
-    background: isSelected
-      ? 'linear-gradient(135deg, rgba(15, 5, 36, 1) 0%, rgba(26, 9, 51, 1) 20%, rgba(30, 55, 153, 1) 40%, rgba(56, 173, 169, 1) 60%, rgba(120, 224, 143, 1) 80%, rgba(184, 233, 148, 1) 100%)'
-      : 'linear-gradient(135deg, rgba(15, 5, 36, 0.7) 0%, rgba(26, 9, 51, 0.7) 20%, rgba(30, 55, 153, 0.7) 40%, rgba(56, 173, 169, 0.7) 60%, rgba(120, 224, 143, 0.7) 80%, rgba(184, 233, 148, 0.7) 100%)',
-    hoverBackground: 'linear-gradient(135deg, rgba(15, 5, 36, 1) 0%, rgba(26, 9, 51, 1) 20%, rgba(30, 55, 153, 1) 40%, rgba(56, 173, 169, 1) 60%, rgba(120, 224, 143, 1) 80%, rgba(184, 233, 148, 1) 100%)',
-    textColor: '#ffffff',
-    borderColor: isSelected ? '#b8e994' : 'rgba(184, 233, 148, 0.5)'
-  },
+  // 'aurora-borealis': { // Temporarily disabled - not ready for production
+  //   background: isSelected
+  //     ? 'linear-gradient(135deg, rgba(15, 5, 36, 1) 0%, rgba(26, 9, 51, 1) 20%, rgba(30, 55, 153, 1) 40%, rgba(56, 173, 169, 1) 60%, rgba(120, 224, 143, 1) 80%, rgba(184, 233, 148, 1) 100%)'
+  //     : 'linear-gradient(135deg, rgba(15, 5, 36, 0.7) 0%, rgba(26, 9, 51, 0.7) 20%, rgba(30, 55, 153, 0.7) 40%, rgba(56, 173, 169, 0.7) 60%, rgba(120, 224, 143, 0.7) 80%, rgba(184, 233, 148, 0.7) 100%)',
+  //   hoverBackground: 'linear-gradient(135deg, rgba(15, 5, 36, 1) 0%, rgba(26, 9, 51, 1) 20%, rgba(30, 55, 153, 1) 40%, rgba(56, 173, 169, 1) 60%, rgba(120, 224, 143, 1) 80%, rgba(184, 233, 148, 1) 100%)',
+  //   textColor: '#ffffff',
+  //   borderColor: isSelected ? '#b8e994' : 'rgba(184, 233, 148, 0.5)'
+  // },
   'lothlorien': {
     background: isSelected
       ? 'linear-gradient(330deg, rgba(15, 32, 39, 1) 0%, rgba(21, 46, 54, 1) 25%, rgba(28, 64, 72, 1) 63%, rgba(34, 85, 96, 1) 85%, rgba(44, 106, 120, 1) 100%), radial-gradient(circle at 20% 30%, rgba(34, 197, 94, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(245, 158, 11, 0.1) 0%, transparent 50%)'

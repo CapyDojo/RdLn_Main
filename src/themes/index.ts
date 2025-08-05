@@ -14,7 +14,7 @@ import { classicLightTheme } from './definitions/classic-light';
 import { classicDarkTheme } from './definitions/classic-dark';
 import { madripoorTheme } from './definitions/madripoor';
 import { caladanTheme } from './definitions/caladan';
-import { auroraBorealisTheme } from './definitions/aurora-borealis';
+// import { auroraBorealisTheme } from './definitions/aurora-borealis'; // Temporarily disabled - not ready for production
 import { lothlorienTheme } from './definitions/lothlorien';
 import { svinafellsjokullTheme } from './definitions/svinafellsjokull';
 
@@ -38,7 +38,6 @@ export const themeDefinitions: Record<ThemeName, ThemeConfig> = {
   'madripoor': madripoorTheme,
   'caladan': caladanTheme,
   'ocean-deep': caladanTheme, // Using caladanTheme as placeholder
-  'aurora-borealis': auroraBorealisTheme,
   'lothlorien': lothlorienTheme,
   'svinafellsjokull': svinafellsjokullTheme,
 } as const;
