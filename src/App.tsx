@@ -1,3 +1,18 @@
+/*
+ * RdLn™ - Professional Document Comparison Tool
+ * Copyright (c) 2025 RdLn Team. All rights reserved.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ComparisonInterface } from './components/ComparisonInterface';
@@ -149,7 +164,7 @@ function AppContent({
           {/* Professional attribution */}
           <div className="mt-6 pt-4 border-t border-theme-neutral-200">
             <div style={{ fontFamily: 'inherit' }}>
-              2025 RdLn - Professional Text Redlining with OCR.<br />
+              © 2025 RdLn™ - Professional Text Redlining with OCR.<br />
               All rights reserved.<br /><br />
             </div>
           </div>

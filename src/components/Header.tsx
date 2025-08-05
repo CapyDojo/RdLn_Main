@@ -1,6 +1,7 @@
 import React from 'react';
 import { ThemeSelector } from './ThemeSelector';
 import { FontSizeSelector } from './FontSizeSelector';
+import { AboutDialog } from './AboutDialog';
 import { BaseComponentProps } from '../types/components';
 
 // Beta countdown component
@@ -45,7 +46,8 @@ export const Header: React.FC<BaseComponentProps> = ({ style, className }) => {
             <div className="flex items-center">
               <img 
                 src={window.isElectron ? "./images/rdln-logo.png" : "/images/rdln-logo.png"} 
-                alt="RdLn Logo" 
+                alt="RdLn™ Logo" 
+                title="RdLn™ - Professional Document Comparison Tool"
                 className="object-contain rounded-3xl shadow-md transform hover:scale-105 transition-all duration-200"
                 style={{ flexShrink: 0, aspectRatio: '1/1', width: '72px', height: '72px' }}
               />
@@ -55,6 +57,7 @@ export const Header: React.FC<BaseComponentProps> = ({ style, className }) => {
           
           {/* Right Controls */}
           <div className="absolute right-0 flex items-center gap-3">
+            <AboutDialog />
             <ThemeSelector />
           </div>
         </div>

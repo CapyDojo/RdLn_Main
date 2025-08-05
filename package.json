@@ -1,10 +1,12 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "rdln",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.5.0",
   "type": "module",
-  "description": "Professional document comparison tool with OCR capabilities",
+  "description": "RdLn™ - Professional document comparison tool with OCR capabilities",
   "author": "RdLn Team",
+  "copyright": "Copyright (c) 2025 RdLn Team. All rights reserved.",
+  "license": "AGPL-3.0-or-later",
   "main": "src-electron/main.cjs",
   "scripts": {
     "dev": "vite",

@@ -63,7 +63,7 @@ function AppContent({ isLogoTestPage }: AppContentProps) {
             
             {/* Professional attribution */}
             <div className="mt-6 pt-4 border-t border-theme-neutral-200">
-              <div style={{ fontFamily: 'inherit' }}>© 2025 RdLn - Professional Text Redlining with OCR. All rights reserved.</div>
+              <div style={{ fontFamily: 'inherit' }}>© 2025 RdLn™ - Professional Text Redlining with OCR. All rights reserved.</div>
             </div>
           </div>
         </div>

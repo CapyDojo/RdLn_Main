@@ -1,3 +1,18 @@
+/*
+ * RdLn™ - Professional Document Comparison Tool
+ * Copyright (c) 2025 RdLn Team. All rights reserved.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ */
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
@@ -9,7 +24,7 @@ import { FontSizeProvider } from './contexts/FontSizeContext';
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
 
 // Update document title to include Beta
-document.title = 'RdLn Beta - Professional Legal Text Comparison Redlining with OCR';
+document.title = 'RdLn™ Beta - Professional Legal Text Comparison Redlining with OCR';
 
 // BETA EXPIRY CHECK: Hard block expiry for beta version
 const BETA_EXPIRY_DATE = new Date('2025-08-31T23:59:59.999Z');
@@ -50,12 +65,12 @@ if (currentDate > BETA_EXPIRY_DATE && !isDeveloperMode) {
         max-width: 500px;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
       ">
-        <h1 style="margin: 0 0 20px 0; font-size: 2.5em; font-weight: 300;">RdLn Beta Expired</h1>
+        <h1 style="margin: 0 0 20px 0; font-size: 2.5em; font-weight: 300;">RdLn™ Beta Expired</h1>
         <p style="margin: 0 0 20px 0; font-size: 1.2em; line-height: 1.6; opacity: 0.9;">
-          This beta version of RdLn expired on August 31, 2025.
+          This beta version of RdLn™ expired on August 31, 2025.
         </p>
         <p style="margin: 0 0 30px 0; font-size: 1em; line-height: 1.6; opacity: 0.7;">
-          Thank you for testing RdLn! Please contact the development team for the latest version.
+          Thank you for testing RdLn™! Please contact the development team for the latest version.
         </p>
         <div style="
           display: inline-block;
