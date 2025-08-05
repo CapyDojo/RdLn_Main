@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronDown, Languages } from 'lucide-react';
 import { OCRLanguage } from '../types/ocr-types';
 import { BaseComponentProps } from '../types/components';
-import { useZoomDetection } from '../hooks/useZoomDetection';
+import { useZoomLevel } from '../hooks/useZoom';
 
 interface LanguageSettingsDropdownProps extends BaseComponentProps {
   isOpen: boolean;
@@ -41,8 +41,8 @@ export const LanguageSettingsDropdown: React.FC<LanguageSettingsDropdownProps> =
 }) => {
   const [currentRect, setCurrentRect] = useState<DOMRect | null>(controlRect);
   
-  // SSMR Enhancement: CSS zoom detection for Electron
-  const zoomLevel = useZoomDetection();
+  // Modern zoom detection - works with native zoom on all platforms
+  const zoomLevel = useZoomLevel();
   
   // Update position on scroll or resize
   useEffect(() => {
@@ -71,16 +71,14 @@ export const LanguageSettingsDropdown: React.FC<LanguageSettingsDropdownProps> =
     };
   }, [isOpen, controlRef]);
 
-  // SSMR Enhancement: Update position when zoom level changes (Electron)
+  // Update position when zoom level changes - now works on all platforms
   useEffect(() => {
     if (!isOpen || !controlRef.current) return;
     
-    // Update position when zoom changes in Electron
-    if (controlRef.current) {
-      const rect = controlRef.current.getBoundingClientRect();
-      setCurrentRect(rect);
-    }
-  }, [zoomLevel, isOpen, controlRef]); // Trigger position update on zoom changes
+    // Update position when zoom changes - getBoundingClientRect() now returns correct values
+    const rect = controlRef.current.getBoundingClientRect();
+    setCurrentRect(rect);
+  }, [zoomLevel, isOpen, controlRef]);
   
   if (!isOpen || !currentRect) return null;
 

@@ -4,7 +4,7 @@ import { Palette, Check, ChevronDown, GripVertical } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { ThemeConfig } from '../types/theme';
 import { BaseComponentProps } from '../types/components';
-import { useZoomDetection } from '../hooks/useZoomDetection';
+import { useZoomLevel } from '../hooks/useZoom';
 
 interface DragState {
   isDragging: boolean;
@@ -150,8 +150,8 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
   const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   
-  // SSMR Enhancement: CSS zoom detection for Electron
-  const zoomLevel = useZoomDetection();
+  // Modern zoom detection - works with native zoom on all platforms
+  const zoomLevel = useZoomLevel();
 
   // Update button position on scroll and resize - separated from hover logic
   React.useEffect(() => {
@@ -180,16 +180,14 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
     };
   }, []); // Stable dependencies - no hover state dependency
 
-  // SSMR Enhancement: Update position when zoom level changes (Electron)
+  // Update position when zoom level changes - now works on all platforms
   React.useEffect(() => {
     if (!themesButtonRef.current) return;
     
-    // Update position when zoom changes in Electron
-    if (themesButtonRef.current) {
-      const rect = themesButtonRef.current.getBoundingClientRect();
-      setButtonRect(rect);
-    }
-  }, [zoomLevel]); // Trigger position update on zoom changes
+    // Update position when zoom changes - getBoundingClientRect() now returns correct values
+    const rect = themesButtonRef.current.getBoundingClientRect();
+    setButtonRect(rect);
+  }, [zoomLevel]);
 
   // Reset all card styles when theme changes to prevent stuck hover states
   React.useEffect(() => {

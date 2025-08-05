@@ -21,7 +21,8 @@
       "Bash(\"C:\\temp\\RdLn_MVP_Stream\\dist-electron\\RdLn-0.0.0-portable.exe\")",
       "Bash(dir)",
       "Bash(npx electron-builder:*)",
-      "WebFetch(domain:www.electronjs.org)"
+      "WebFetch(domain:www.electronjs.org)",
+      "Bash(npx electron:*)"
     ],
     "deny": []
   }

@@ -10,6 +10,9 @@ declare global {
       readFile: (filePath: string) => Promise<Buffer>;
       fileExists: (filePath: string) => Promise<boolean>;
       getResourcePath: (relativePath: string) => string;
+      setZoomFactor: (factor: number) => Promise<void>;
+      getZoomFactor: () => Promise<number>;
+      notifyZoomChange: (factor: number) => void;
     };
     isElectron?: boolean;
     isOffline?: boolean;

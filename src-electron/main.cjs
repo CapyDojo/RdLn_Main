@@ -11,6 +11,8 @@ console.time('📦 MODULE-IMPORTS');
 console.timeEnd('📦 MODULE-IMPORTS');
 
 let mainWindow;
+let currentZoomFactor = 1.0;
+let handleZoomChange;
 
 function createWindow() {
   console.time('🖥️  WINDOW-CREATION');
@@ -97,55 +99,76 @@ function createWindow() {
     }
   });
 
-  // Enable zoom functionality
-  mainWindow.webContents.on('dom-ready', () => {
-    // Handle zoom with Ctrl+Scroll
+  // Native Electron zoom functionality - replaces CSS zoom for better coordinate handling
+  // Set up zoom change handler
+  handleZoomChange = (newZoomFactor) => {
+    currentZoomFactor = Math.max(0.25, Math.min(3.0, newZoomFactor));
+    mainWindow.webContents.setZoomFactor(currentZoomFactor);
+    
+    // Notify renderer process about zoom change
     mainWindow.webContents.executeJavaScript(`
-      let zoomLevel = 1.0;
+      document.dispatchEvent(new CustomEvent('electron-zoom-change', {
+        detail: { zoomLevel: ${currentZoomFactor} }
+      }));
+    `);
+    
+    console.log('🔍 Native Electron zoom level:', currentZoomFactor);
+  };
+
+  mainWindow.webContents.on('dom-ready', () => {
+    // Handle zoom with Ctrl+Scroll using native zoom - with dynamic zoom tracking
+    mainWindow.webContents.executeJavaScript(`
+      // Track current zoom level in renderer process
+      let rendererZoomLevel = 1.0;
+      
+      // Listen for zoom changes from main process
+      document.addEventListener('electron-zoom-change', (event) => {
+        rendererZoomLevel = event.detail.zoomLevel;
+        console.log('🔍 Renderer zoom level updated:', rendererZoomLevel);
+      });
+      
+      // Sync initial zoom level
+      if (typeof electronAPI !== 'undefined' && electronAPI.getZoomFactor) {
+        electronAPI.getZoomFactor().then(factor => {
+          rendererZoomLevel = factor;
+          console.log('🔍 Initial renderer zoom level:', rendererZoomLevel);
+        });  
+      }
       
       document.addEventListener('wheel', (e) => {
         if (e.ctrlKey) {
           e.preventDefault();
           
           const zoomDelta = e.deltaY > 0 ? -0.1 : 0.1;
-          zoomLevel = Math.max(0.25, Math.min(3.0, zoomLevel + zoomDelta));
+          const newZoomLevel = Math.max(0.25, Math.min(3.0, rendererZoomLevel + zoomDelta));
           
-          document.body.style.zoom = zoomLevel;
-          console.log('Zoom level:', zoomLevel);
-          
-          // Notify renderer process about zoom change
-          if (typeof electronAPI !== 'undefined' && electronAPI.notifyZoomChange) {
-            electronAPI.notifyZoomChange(zoomLevel);
+          // Request zoom change from main process
+          if (typeof electronAPI !== 'undefined' && electronAPI.setZoomFactor) {
+            electronAPI.setZoomFactor(newZoomLevel);
           }
         }
       }, { passive: false });
       
-      // Handle keyboard zoom shortcuts
+      // Handle keyboard zoom shortcuts using native zoom
       document.addEventListener('keydown', (e) => {
         if (e.ctrlKey) {
+          let newZoomLevel = rendererZoomLevel;
+          
           if (e.key === '=' || e.key === '+') {
             e.preventDefault();
-            zoomLevel = Math.min(3.0, zoomLevel + 0.1);
-            document.body.style.zoom = zoomLevel;
-            // Notify renderer process
-            if (typeof electronAPI !== 'undefined' && electronAPI.notifyZoomChange) {
-              electronAPI.notifyZoomChange(zoomLevel);
-            }
+            newZoomLevel = Math.min(3.0, rendererZoomLevel + 0.1);
           } else if (e.key === '-') {
             e.preventDefault();
-            zoomLevel = Math.max(0.25, zoomLevel - 0.1);
-            document.body.style.zoom = zoomLevel;
-            // Notify renderer process
-            if (typeof electronAPI !== 'undefined' && electronAPI.notifyZoomChange) {
-              electronAPI.notifyZoomChange(zoomLevel);
-            }
+            newZoomLevel = Math.max(0.25, rendererZoomLevel - 0.1);
           } else if (e.key === '0') {
             e.preventDefault();
-            zoomLevel = 1.0;
-            document.body.style.zoom = zoomLevel;
-            // Notify renderer process
-            if (typeof electronAPI !== 'undefined' && electronAPI.notifyZoomChange) {
-              electronAPI.notifyZoomChange(zoomLevel);
+            newZoomLevel = 1.0;
+          }
+          
+          if (newZoomLevel !== rendererZoomLevel) {
+            // Request zoom change from main process
+            if (typeof electronAPI !== 'undefined' && electronAPI.setZoomFactor) {
+              electronAPI.setZoomFactor(newZoomLevel);
             }
           }
         }
@@ -257,30 +280,21 @@ function createMenu() {
           label: 'Zoom In',
           accelerator: 'CmdOrCtrl+Plus',
           click: () => {
-            mainWindow.webContents.executeJavaScript(`
-              zoomLevel = Math.min(3.0, zoomLevel + 0.1);
-              document.body.style.zoom = zoomLevel;
-            `);
+            handleZoomChange(currentZoomFactor + 0.1);
           }
         },
         { 
           label: 'Zoom Out',
           accelerator: 'CmdOrCtrl+-',
           click: () => {
-            mainWindow.webContents.executeJavaScript(`
-              zoomLevel = Math.max(0.25, zoomLevel - 0.1);
-              document.body.style.zoom = zoomLevel;
-            `);
+            handleZoomChange(currentZoomFactor - 0.1);
           }
         },
         { 
           label: 'Reset Zoom',
           accelerator: 'CmdOrCtrl+0',
           click: () => {
-            mainWindow.webContents.executeJavaScript(`
-              zoomLevel = 1.0;
-              document.body.style.zoom = zoomLevel;
-            `);
+            handleZoomChange(1.0);
           }
         },
         { type: 'separator' },
@@ -357,6 +371,19 @@ ipcMain.handle('get-resource-path', (event, relativePath) => {
   } else {
     return path.join(process.resourcesPath, 'app', 'dist', relativePath);
   }
+});
+
+// Zoom IPC handlers for native zoom functionality
+ipcMain.handle('set-zoom-factor', async (event, factor) => {
+  if (mainWindow && typeof factor === 'number' && factor > 0) {
+    handleZoomChange(factor);
+    return currentZoomFactor;
+  }
+  throw new Error('Invalid zoom factor or window not available');
+});
+
+ipcMain.handle('get-zoom-factor', () => {
+  return currentZoomFactor;
 });
 
 app.whenReady().then(() => {

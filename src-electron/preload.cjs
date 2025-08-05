@@ -40,6 +40,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Get resource path for bundled assets - use IPC
   getResourcePath: (relativePath) => ipcRenderer.invoke('get-resource-path', relativePath),
   
+  // Native zoom functionality - replaces CSS zoom for better coordinate handling
+  setZoomFactor: (factor) => ipcRenderer.invoke('set-zoom-factor', factor),
+  getZoomFactor: () => ipcRenderer.invoke('get-zoom-factor'),
+  
   // Zoom change notification for dropdown positioning
   notifyZoomChange: (zoomLevel) => {
     const event = new CustomEvent('electron-zoom-change', { detail: { zoomLevel } });
