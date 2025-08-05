@@ -24,7 +24,7 @@ import { FontSizeProvider } from './contexts/FontSizeContext';
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
 
 // Update document title to include Beta
-document.title = 'RdLn™ Beta - Professional Legal Text Comparison Redlining with OCR';
+document.title = 'RdLn™ Beta - Professional Text Comparison Redlining with OCR';
 
 // BETA EXPIRY CHECK: Hard block expiry for beta version
 const BETA_EXPIRY_DATE = new Date('2025-08-31T23:59:59.999Z');

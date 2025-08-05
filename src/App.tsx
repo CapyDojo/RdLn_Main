@@ -142,21 +142,21 @@ function AppContent({
           {/* Enhanced footer features with glassmorphic styling */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
-              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Privacy First</h4>
+              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm">🔒 Privacy First</h4>
               <p className="text-xs text-theme-neutral-600">
                 Client-side processing ensures complete confidentiality
               </p>
             </div>
             <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
-              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Lightning Fast</h4>
+              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm">⚡ Lightning Fast</h4>
               <p className="text-xs text-theme-neutral-600">
-                Optimized Myers algorithm for instant results
+                Optimized redlining engine for instant results
               </p>
             </div>
             <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
-              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm"> Multi-Language</h4>
+              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm">✨ Multi-Language</h4>
               <p className="text-xs text-theme-neutral-600">
-                Advanced OCR supports 10+ languages
+                Advanced OCR supports 10 languages
               </p>
             </div>
           </div>
@@ -164,8 +164,7 @@ function AppContent({
           {/* Professional attribution */}
           <div className="mt-6 pt-4 border-t border-theme-neutral-200">
             <div style={{ fontFamily: 'inherit' }}>
-              © 2025 RdLn™ - Professional Text Redlining with OCR.<br />
-              All rights reserved.<br /><br />
+              © 2025 RdLn™ - Professional Text Comparison Redlining with OCR. All rights reserved.
             </div>
           </div>
         </div>
