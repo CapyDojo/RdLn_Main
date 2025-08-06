@@ -213,17 +213,26 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
               isInOverlayMode={isInOverlayMode}
             />
 
-            <button
-              onClick={copyToClipboard}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-theme-neutral-100 hover:bg-theme-neutral-200 rounded-lg transition-colors"
-              title={isMultiFormatClipboardSupported()
-                ? "Copy redlined document with formatting (HTML + plain text)"
-                : "Copy redlined document as plain text"
-              }
-            >
-              <Copy className="w-4 h-4" />
-              <span className="hidden sm:inline">Copy</span>
-            </button>
+            <div className="relative segmented-control">
+              <button
+                onClick={copyToClipboard}
+                className="flex items-center justify-center rounded-lg transition-all duration-200 shrink-0 relative group segment"
+                title={isMultiFormatClipboardSupported()
+                  ? "Copy redlined document with formatting (HTML + plain text)"
+                  : "Copy redlined document as plain text"
+                }
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  aspectRatio: '1/1'
+                }}
+              >
+                <div className="flex flex-col items-center justify-center">
+                  <Copy className="w-6 h-6" aria-hidden="true" />
+                  <span className="text-xs mt-0.5 hidden sm:block">Copy</span>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       )}
