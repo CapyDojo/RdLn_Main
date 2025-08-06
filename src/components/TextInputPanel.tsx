@@ -20,10 +20,10 @@ const initTauriApis = async () => {
   try {
     const eventModule = await import('@tauri-apps/api/event');
     const fsModule = await import('@tauri-apps/plugin-fs');
-    
+
     tauriListen = eventModule.listen;
     tauriReadFile = fsModule.readFile;
-    
+
     console.log('🔧 TAURI DEBUG: Event and FS APIs imported successfully');
     return true;
   } catch (error) {
@@ -70,19 +70,19 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   const segmentedControlRef = useRef<HTMLDivElement>(null);
   const [showLanguageSettings, setShowLanguageSettings] = useState(false);
   const [controlRect, setControlRect] = useState<DOMRect | null>(null);
-  
+
   // Detect layout to conditionally apply dynamic scaling behavior
   const { currentLayout } = useLayout();
   const isDynamicScaling = currentLayout === 'current';
-  
+
   // Check for mobile viewport
   const [isMobileView, setIsMobileView] = useState(false);
-  
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobileView(window.innerWidth < 768); // Standard mobile breakpoint
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -93,13 +93,15 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   const renderPlaceholderContent = () => {
     if (isMobileView) {
       return (
-        <div className="text-center">
+        <div className="text-center text-theme-neutral-400 max-w-sm">
+          <br />
+          <br />
           <br />
           <br />
           <br />
           <span className="text-6xl block" role="img" aria-label="Document">🤖</span>
           <br />
-          <p className="text-base mt-2 font-sans">Paste text or screenshot</p>
+          <p className="text-lg mt-2 font-sans"><i>Paste (Ctrl+V)<br></br>your screenshot for OCR</i></p>
         </div>
       );
     }
@@ -112,10 +114,10 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         <span className="text-6xl mb-3 block" role="img" aria-label="Document">📑</span>
         <br></br>
         <p className="text-lg font-sans"><i>
-          PASTE (Ctrl+V) your screenshot</i>   
+          PASTE (Ctrl+V) your screenshot</i>
         </p>
         <p className="text-lg font-sans">
-          <i>to extract text with OCR</i>             
+          <i>to extract text with OCR</i>
         </p>
         <br></br>
         <p className="text-base mt-1 text-theme-primary-400 font-sans">
@@ -125,15 +127,15 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     );
   };
 
-  const { 
-    isProcessing, 
-    progress, 
-    error, 
+  const {
+    isProcessing,
+    progress,
+    error,
     detectedLanguages,
     selectedLanguages,
     autoDetect,
     supportedLanguages,
-    extractTextFromImage, 
+    extractTextFromImage,
     resetOCRState,
     clearDetectedLanguages,
     setSelectedLanguages,
@@ -146,15 +148,15 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     console.log(`🔍 GHOST DEBUG: processImageWithOCR called for ${instanceId.current}`);
     console.log(`🔍 GHOST DEBUG: File: ${imageFile.name}, Current value length: ${value.length}`);
     console.log(`🔍 GHOST DEBUG: Call stack:`, callStack?.split('\n').slice(0, 5).join('\n'));
-    
+
     try {
       const extractedText = await performanceTracker.trackOperation('ocr_extraction', async () => {
         return await extractTextFromImage(imageFile);
       });
-      
+
       console.log(`🔍 GHOST DEBUG: OCR extracted ${extractedText.length} chars, adding to ${value.length} existing chars`);
       onChange(value + (value ? '\n\n' : '') + extractedText);
-      
+
       performanceTracker.trackMetric('ocr_result', {
         extractedLength: extractedText.length,
         fileSize: imageFile.size,
@@ -162,11 +164,11 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       });
     } catch (error: any) {
       console.error(`🔍 GHOST DEBUG: OCR failed for ${instanceId.current}:`, error);
-      
+
       // PRODUCTION FIX: Provide user-friendly error message
       const errorMessage = error instanceof Error ? error.message : String(error);
       let userFriendlyMessage = 'Failed to extract text from image: Unknown error';
-      
+
       if (errorMessage.includes('timeout')) {
         userFriendlyMessage = 'Failed to extract text from image: Processing timeout - try a smaller image or restart the application';
       } else if (errorMessage.includes('Worker')) {
@@ -178,11 +180,11 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       } else {
         userFriendlyMessage = `Failed to extract text from image: ${errorMessage}`;
       }
-      
+
       // Show error to user (you may want to implement a proper error display mechanism)
       console.error('USER ERROR:', userFriendlyMessage);
-      
-      performanceTracker.trackMetric('ocr_error', { 
+
+      performanceTracker.trackMetric('ocr_error', {
         error: error.message,
         userMessage: userFriendlyMessage,
         instanceId: instanceId.current
@@ -192,14 +194,14 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
   // Generate unique instance ID for this component
   const instanceId = useRef(`${title}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  
+
   // Store processImageWithOCR in a ref to avoid re-renders
   const processImageWithOCRRef = useRef(processImageWithOCR);
   processImageWithOCRRef.current = processImageWithOCR;
-  
+
   // Track if component is mounted to prevent ghost OCR
   const isMountedRef = useRef(true);
-  
+
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -207,35 +209,35 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       console.log(`🔍 GHOST DEBUG: Component ${instanceId.current} unmounting`);
     };
   }, []);
-  
+
   // Tauri file drop - local event listeners with ghost OCR debugging
   useEffect(() => {
     const currentInstanceId = instanceId.current;
     console.log(`🔍 GHOST DEBUG: Setting up listeners for ${currentInstanceId} - FINAL ATTEMPT`);
-    
+
     // Set up local event listeners for this panel
     const handleFileProcessed = async (event: CustomEvent) => {
       const { file, panelTitle } = event.detail;
       console.log(`🔍 GHOST DEBUG: Event triggered for ${currentInstanceId}, file: ${file.name}`);
-      
+
       // Check if component is still mounted
       if (!isMountedRef.current) {
         console.log(`🔍 GHOST DEBUG: Component ${currentInstanceId} unmounted, ignoring OCR`);
         return;
       }
-      
+
       try {
         console.log(`🔍 GHOST DEBUG: Starting OCR for ${currentInstanceId}`);
         await processImageWithOCRRef.current(file);
-        
+
         // Double-check if still mounted after async operation
         if (!isMountedRef.current) {
           console.log(`🔍 GHOST DEBUG: Component ${currentInstanceId} unmounted during OCR, ignoring result`);
           return;
         }
-        
+
         console.log(`🔍 GHOST DEBUG: OCR completed for ${currentInstanceId}`);
-        
+
         performanceTracker.trackMetric('tauri_file_drop_success', {
           filePath: file.name,
           fileSize: file.size,
@@ -244,31 +246,31 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         });
       } catch (error) {
         console.error(`🔍 GHOST DEBUG: OCR failed for ${currentInstanceId}:`, error);
-        performanceTracker.trackMetric('tauri_drop_error', { 
+        performanceTracker.trackMetric('tauri_drop_error', {
           error: String(error),
           panelTitle: title,
           instanceId: currentInstanceId
         });
       }
     };
-    
+
     const handleFileError = (event: CustomEvent) => {
       const { error, panelTitle } = event.detail;
       console.error(`🔍 GHOST DEBUG: File error for ${currentInstanceId}:`, error);
-      performanceTracker.trackMetric('tauri_drop_error', { 
+      performanceTracker.trackMetric('tauri_drop_error', {
         error,
         panelTitle: title,
         instanceId: currentInstanceId
       });
     };
-    
+
     // Add event listeners to this panel's div using unique instance ID
     const panelDiv = document.querySelector(`[data-instance-id="${currentInstanceId}"]`);
     if (panelDiv) {
       console.log(`🔍 GHOST DEBUG: Adding listeners to DOM element for ${currentInstanceId}`);
       panelDiv.addEventListener('tauri-file-processed', handleFileProcessed as EventListener);
       panelDiv.addEventListener('tauri-file-error', handleFileError as EventListener);
-      
+
       return () => {
         console.log(`🔍 GHOST DEBUG: Cleaning up listeners for ${currentInstanceId}`);
         panelDiv.removeEventListener('tauri-file-processed', handleFileProcessed as EventListener);
@@ -285,7 +287,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       clearDetectedLanguages();
     }
   }, [value, detectedLanguages.length, clearDetectedLanguages]);
-  
+
   // Update sliding indicator width based on badge visibility
   useEffect(() => {
     if (segmentedControlRef.current) {
@@ -293,7 +295,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       segmentedControlRef.current.style.setProperty('--manual-badge-width', `${badgeWidth}px`);
     }
   }, [autoDetect, selectedLanguages.length]);
-  
+
   // Track input performance metrics
   useEffect(() => {
     try {
@@ -311,20 +313,20 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       textareaRef.current.setAttribute('data-user-font-size', fontSize);
     }
   }, [fontSize]);
-  
+
 
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const items = Array.from(e.clipboardData.items);
     const imageItem = items.find(item => item.type.startsWith('image/'));
     const textItem = items.find(item => item.type.startsWith('text/plain'));
-    
+
     // Get plain text content for analysis
     const plainText = textItem ? e.clipboardData.getData('text/plain') : '';
     const normalizedText = plainText.replace(/\r\n/g, '\n');
-    
+
     // Analyze paste context to determine if content was originally formatted
     const pasteContext = analyzePasteContext(items, normalizedText);
-    
+
     performanceTracker.trackMetric('paste_operation', {
       hasImage: !!imageItem,
       hasText: !!textItem,
@@ -332,13 +334,13 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       sourceType: pasteContext.sourceType,
       detectedSource: pasteContext.detectedSource
     });
-    
+
     if (textItem && !imageItem) {
       e.preventDefault();
-      
+
       // Use intelligent format detection to determine formatting level
       const formatLevel = getFormattingLevel(pasteContext, isAutoFormatEnabled);
-      
+
       let processedText: string;
       switch (formatLevel) {
         case 'PDF_Paste_Format':
@@ -352,21 +354,21 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           processedText = normalizedText;
           break;
       }
-      
+
       console.log(`[Paste] Source: ${pasteContext.detectedSource}, Format level: ${formatLevel}`);
-      
+
       const textarea = textareaRef.current;
       if (textarea) {
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
         const newValue = textarea.value.substring(0, start) + processedText + textarea.value.substring(end);
-        
+
         if (onChange.length > 1) {
           (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
         } else {
           onChange(newValue);
         }
-        
+
         setTimeout(() => {
           textarea.setSelectionRange(start + processedText.length, start + processedText.length);
           textarea.focus();
@@ -375,34 +377,34 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         onChange(processedText);
       }
     }
-    
+
     if (imageItem) {
       e.preventDefault();
       try {
         const imageFile = imageItem.getAsFile();
         if (!imageFile) return;
-        
+
         const extractedText = await performanceTracker.trackOperation('ocr_extraction', async () => {
           return await extractTextFromImage(imageFile);
         });
-        
+
         const textarea = textareaRef.current;
         if (textarea) {
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
-          const newValue = 
-            textarea.value.substring(0, start) + 
+          const newValue =
+            textarea.value.substring(0, start) +
             (start > 0 && textarea.value[start - 1] !== '\n' ? '\n\n' : '') +
-            extractedText + 
+            extractedText +
             (end < textarea.value.length && textarea.value[end] !== '\n' ? '\n\n' : '') +
             textarea.value.substring(end);
-          
+
           if (onChange.length > 1) {
             (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
           } else {
             onChange(newValue);
           }
-          
+
           setTimeout(() => {
             const newCursorPos = start + extractedText.length + (start > 0 ? 2 : 0);
             textarea.setSelectionRange(newCursorPos, newCursorPos);
@@ -420,15 +422,15 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
-    
+
     const files = Array.from(e.dataTransfer.files);
     const imageFile = files.find(file => file.type.startsWith('image/'));
-    
+
     performanceTracker.trackMetric('drop_operation', {
       fileCount: files.length,
       hasImage: !!imageFile
     });
-    
+
     if (imageFile) {
       await processImageWithOCR(imageFile);
     }
@@ -456,9 +458,49 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     return lang ? `${lang.flag} ${lang.name.split(' ')[0]}` : languageCode;
   };
 
+  // Language code to country code mapping for badge display
+  const getLanguageAbbreviation = (languageCode: OCRLanguage): string => {
+    const abbreviationMap: Record<OCRLanguage, string> = {
+      eng: 'EN',
+      chi_sim: 'CN',
+      chi_tra: 'TW',
+      deu: 'DE',
+      fra: 'FR',
+      spa: 'ES',
+      jpn: 'JP',
+      kor: 'KR',
+      ara: 'SA',
+      rus: 'RU'
+    };
+    return abbreviationMap[languageCode] || languageCode.toUpperCase();
+  };
+
+  // Generate display text for selected languages badge (with truncation)
+  const getSelectedLanguagesDisplay = (): string => {
+    if (selectedLanguages.length === 0) return '0';
+
+    const abbreviations = selectedLanguages.map(getLanguageAbbreviation);
+
+    if (abbreviations.length <= 3) {
+      return abbreviations.join(', ');
+    } else {
+      const shown = abbreviations.slice(0, 3).join(', ');
+      const remaining = abbreviations.length - 3;
+      return `${shown} +${remaining}`;
+    }
+  };
+
+  // Generate full display text for selected languages (no truncation)
+  const getSelectedLanguagesFullDisplay = (): string => {
+    if (selectedLanguages.length === 0) return '';
+
+    const abbreviations = selectedLanguages.map(getLanguageAbbreviation);
+    return abbreviations.join(', ');
+  };
+
   return (
-    <div 
-      className="glass-panel glass-content-panel overflow-hidden transition-all duration-300" 
+    <div
+      className="glass-panel glass-content-panel overflow-hidden transition-all duration-300"
       style={style}
       data-text-input-panel
       data-panel-title={title}
@@ -475,13 +517,13 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <button
             onClick={toggleAutoFormat}
             className={`flex items-center justify-center p-3 rounded-lg backdrop-blur-sm border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] ${isAutoFormatEnabled
-                ? 'bg-theme-primary-500 border-transparent text-white hover:shadow-lg'
-                : 'bg-theme-neutral-200/70 border-transparent hover:border-theme-neutral-300/50 text-theme-neutral-800 hover:shadow-theme-neutral-200/50'}`}
+              ? 'bg-theme-primary-500 border-transparent text-white hover:shadow-lg'
+              : 'bg-theme-neutral-200/70 border-transparent hover:border-theme-neutral-300/50 text-theme-neutral-800 hover:shadow-theme-neutral-200/50'}`}
             title={`Auto-format paragraphs on paste: ${isAutoFormatEnabled ? 'ON' : 'OFF'}`}
           >
             <Sparkles className={`w-5 h-5 transition-all duration-300 ${isAutoFormatEnabled ? 'text-white' : 'text-theme-neutral-500'}`} />
           </button>
-          
+
           {isProcessing && (
             <div className="flex items-center gap-2">
               <Loader className="w-4 h-4 text-theme-primary-600 animate-spin" />
@@ -492,7 +534,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         <div className="flex items-center gap-2">
           {/* OCR Language Segmented Control */}
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-theme-neutral-700 hidden sm:inline">OCR Language</span>
+            <span className="text-base font-medium text-theme-neutral-700 hidden sm:inline">OCR Languages</span>
             <div className="segmented-control" ref={segmentedControlRef} role="group" aria-label="OCR Language Detection Mode">
               <button
                 onClick={() => {
@@ -516,7 +558,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                     setAutoDetect(false);
                     setShowLanguageSettings(true);
                   }
-                  
+
                   // Update control position for dropdown
                   if (segmentedControlRef.current) {
                     const rect = segmentedControlRef.current.getBoundingClientRect();
@@ -529,31 +571,30 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                 aria-label={`Manual language selection${!autoDetect && selectedLanguages.length > 0 ? ` (${selectedLanguages.length} selected)` : ''}`}
                 title={`Manually select OCR languages${!autoDetect && selectedLanguages.length > 0 ? ` - ${selectedLanguages.length} languages selected` : ''}`}
               >
-                ⚙️ Manual
+                ☰
                 {!autoDetect && selectedLanguages.length > 0 && (
                   <span className="text-xs bg-theme-primary-100 text-theme-primary-800 px-1.5 py-0.5 rounded-full ml-1">
-                    {selectedLanguages.length}
+                    {getSelectedLanguagesDisplay()}
                   </span>
                 )}
                 <ChevronDown
-                  className={`w-3 h-3 transition-transform duration-200 ${
-                    showLanguageSettings ? 'rotate-180' : ''
-                  }`}
+                  className={`w-3 h-3 transition-transform duration-200 ${showLanguageSettings ? 'rotate-180' : ''
+                    }`}
                   aria-hidden="true"
                 />
               </button>
               <div className={`sliding-indicator ${autoDetect ? 'to-left' : 'to-right'}`} aria-hidden="true"></div>
             </div>
-            
+
             {/* Show dropdown arrow when manual mode */}
           </div>
         </div>
       </div>
 
-      
 
-      
-      
+
+
+
 
       <div
         className="glass-panel-inner-content overflow-y-auto"
@@ -582,7 +623,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           className="glass-input-field user-text-area w-full h-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 leading-relaxed disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent"
           style={{ minHeight: '200px' }}
         />
-        
+
         {/* Enhanced OCR Progress Bar */}
         {isProcessing && (
           <div className="absolute top-2 left-2 right-2 bg-white/90 dark:bg-black/80 backdrop-blur-md border border-white/30 rounded-lg p-4 shadow-lg">
@@ -594,14 +635,14 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium text-theme-neutral-800">
-                    {progress < 30 ? 'Initializing OCR...' : 
-                     progress < 60 ? 'Detecting language...' : 
-                     progress < 90 ? 'Extracting text...' : 'Finalizing...'}
+                    {progress < 30 ? 'Initializing OCR...' :
+                      progress < 60 ? 'Detecting language...' :
+                        progress < 90 ? 'Extracting text...' : 'Finalizing...'}
                   </span>
                   <span className="text-xs text-theme-neutral-600 font-mono">{progress}%</span>
                 </div>
                 <div className="w-full bg-theme-neutral-200 rounded-full h-2 overflow-hidden">
-                  <div 
+                  <div
                     className="bg-gradient-to-r from-theme-primary-500 to-theme-primary-600 h-2 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${progress}%` }}
                   ></div>
@@ -618,7 +659,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
             )}
           </div>
         )}
-        
+
         {/* OCR Error */}
         {error && (
           <div className="absolute top-2 left-2 right-2 bg-red-50 border border-red-200 rounded-lg p-3">
@@ -634,18 +675,18 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
             </div>
           </div>
         )}
-        
+
         {/* OCR Instructions - Only show when not processing and no content */}
         {!value && !isProcessing && (
           <div className="absolute inset-4 flex items-center justify-center pointer-events-none">
             {renderPlaceholderContent()}
           </div>
         )}
-        
+
       </div>
-      
-      
-      
+
+
+
       {/* Consolidated Language Status - Shows detection and selection */}
       {((detectedLanguages.length > 0 && !isProcessing && value.trim()) || (!autoDetect && selectedLanguages.length > 0)) && (
         <div className="absolute bottom-2 left-2 flex items-center gap-2 px-3 py-1.5 bg-white/80 dark:bg-black/60 backdrop-blur-sm border border-white/30 rounded-lg text-xs shadow-sm">
@@ -661,18 +702,18 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                 </span>
               </div>
             )}
-            
+
             {/* Show separator if both detected and selected are present */}
             {detectedLanguages.length > 0 && !isProcessing && value.trim() && !autoDetect && selectedLanguages.length > 0 && (
               <span className="text-theme-neutral-400">|</span>
             )}
-            
+
             {/* Show selected languages when in manual mode */}
             {!autoDetect && selectedLanguages.length > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-theme-primary-700 font-medium">Selected:</span>
                 <span className="text-theme-primary-600">
-                  {selectedLanguages.length} language{selectedLanguages.length !== 1 ? 's' : ''}
+                  {getSelectedLanguagesFullDisplay()}
                 </span>
               </div>
             )}
@@ -694,18 +735,18 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                 </span>
               </div>
             )}
-            
+
             {/* Show separator if both detected and selected are present */}
             {detectedLanguages.length > 0 && !isProcessing && value.trim() && !autoDetect && selectedLanguages.length > 0 && (
               <span className="text-theme-neutral-400">|</span>
             )}
-            
+
             {/* Show selected languages when in manual mode */}
             {!autoDetect && selectedLanguages.length > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-theme-primary-700 font-medium">Selected:</span>
                 <span className="text-theme-primary-600">
-                  {selectedLanguages.length} language{selectedLanguages.length !== 1 ? 's' : ''}
+                  {getSelectedLanguagesFullDisplay()}
                 </span>
               </div>
             )}
@@ -727,18 +768,18 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                 </span>
               </div>
             )}
-            
+
             {/* Show separator if both detected and selected are present */}
             {detectedLanguages.length > 0 && !isProcessing && value.trim() && !autoDetect && selectedLanguages.length > 0 && (
               <span className="text-theme-neutral-400">|</span>
             )}
-            
+
             {/* Show selected languages when in manual mode */}
             {!autoDetect && selectedLanguages.length > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-theme-primary-700 font-medium">Selected:</span>
                 <span className="text-theme-primary-600">
-                  {selectedLanguages.length} language{selectedLanguages.length !== 1 ? 's' : ''}
+                  {getSelectedLanguagesFullDisplay()}
                 </span>
               </div>
             )}

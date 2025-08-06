@@ -1,5 +1,5 @@
-import React from 'react';
-import { BarChart3, Plus, Minus, FileText, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { BarChart3, Plus, Minus, FileText, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
 
 interface ComparisonStatsProps extends BaseComponentProps {
@@ -17,6 +17,7 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
   style,
   className
 }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
   const total = stats.additions + stats.deletions + stats.unchanged + stats.changed;
   const additionPercent = total > 0 ? (stats.additions / total) * 100 : 0;
   const deletionPercent = total > 0 ? (stats.deletions / total) * 100 : 0;
@@ -24,12 +25,44 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
 
   return (
     <div className={`glass-panel border border-theme-neutral-300 rounded-lg p-4 shadow-lg transition-all duration-300 ${className || ''}`} style={style}>
-      <div className="flex items-center gap-2 mb-4">
-        <BarChart3 className="w-5 h-5 text-theme-primary-900" />
-        <h3 className="text-lg font-semibold text-theme-primary-900">Comparison Statistics</h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-theme-primary-900" />
+          <h3 className="text-lg font-semibold text-theme-primary-900">Comparison Statistics</h3>
+        </div>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="p-1 rounded hover:bg-theme-neutral-100 transition-colors duration-200"
+          aria-label={isExpanded ? 'Collapse stats' : 'Expand stats'}
+        >
+          {isExpanded ? (
+            <ChevronUp className="w-5 h-5 text-theme-neutral-600" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-theme-neutral-600" />
+          )}
+        </button>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      {!isExpanded && (
+        <div className="flex items-center justify-between text-sm text-theme-neutral-600">
+          <span className="flex items-center gap-2">
+            <Plus className="w-4 h-4 text-theme-secondary-600" />
+            {stats.additions}
+          </span>
+          <span className="flex items-center gap-2">
+            <Minus className="w-4 h-4 text-theme-accent-600" />
+            {stats.deletions}
+          </span>
+          <span className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-theme-primary-600" />
+            {stats.totalChanges} changes
+          </span>
+        </div>
+      )}
+      
+      {isExpanded && (
+        <>
+          <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="bg-[#dcfce7] border border-[#bbf7d0] rounded p-3 subtle-button">
           <div className="flex items-center gap-2 text-theme-secondary-800">
             <Plus className="w-4 h-4" />
@@ -94,6 +127,8 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
           ></div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

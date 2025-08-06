@@ -27,9 +27,9 @@ interface ThemeProviderProps {
 }
 
 const DEFAULT_THEME_ORDER: ThemeName[] = [
+  'professional',
   'classic-light',
   'classic-dark',
-  'professional',
   'bamboo',
   'kyoto',
   'new-york',
@@ -42,7 +42,7 @@ const DEFAULT_THEME_ORDER: ThemeName[] = [
 const THEME_ORDER_STORAGE_KEY = 'rdln-theme-order';
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [currentTheme, setCurrentTheme] = useState<ThemeName>('professional');
+  const [currentTheme, setCurrentTheme] = useState<ThemeName>('svinafellsjokull');
   const [themeOrder, setThemeOrder] = useState<ThemeName[]>(DEFAULT_THEME_ORDER);
 
   // Load theme and theme order from localStorage on mount

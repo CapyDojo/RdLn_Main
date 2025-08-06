@@ -154,7 +154,7 @@ export const LanguageSettingsDropdown: React.FC<LanguageSettingsDropdownProps> =
               <label className="text-sm font-medium text-theme-neutral-700 mb-3 block">
                 Select Languages ({selectedLanguages.length} selected)
               </label>
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-theme-neutral-200 rounded-lg p-3">
+              <div className="grid grid-cols-2 gap-2 max-h-90 overflow-y-auto border border-theme-neutral-200 rounded-lg p-3">
                 {supportedLanguages.map(language => (
                   <label
                     key={language.code}
@@ -168,9 +168,6 @@ export const LanguageSettingsDropdown: React.FC<LanguageSettingsDropdownProps> =
                     />
                     <span className="text-sm flex-1">
                       {language.flag} {language.name}
-                    </span>
-                    <span className="text-xs text-theme-neutral-500">
-                      {language.downloadSize}
                     </span>
                   </label>
                 ))}

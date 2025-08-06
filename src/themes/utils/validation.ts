@@ -15,7 +15,7 @@ export const isValidTheme = (themeName: string): themeName is ThemeName => {
 /**
  * Gets a safe theme name, falling back to default if invalid
  */
-export const getSafeTheme = (themeName: string | null, fallback: ThemeName = 'professional'): ThemeName => {
+export const getSafeTheme = (themeName: string | null, fallback: ThemeName = 'svinafellsjokull'): ThemeName => {
   if (!themeName) return fallback;
   return isValidTheme(themeName) ? themeName : fallback;
 };
@@ -29,6 +29,6 @@ export const getThemeFromStorage = (storageKey: string = 'rdln-theme'): ThemeNam
     return getSafeTheme(savedTheme);
   } catch (error) {
     console.warn('Failed to read theme from localStorage:', error);
-    return 'professional';
+    return 'svinafellsjokull';
   }
 };

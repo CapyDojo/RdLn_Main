@@ -201,6 +201,13 @@ html[data-theme="bamboo"] .backdrop-blur-sm {
   -webkit-backdrop-filter: blur(var(--effect-backdropBlur, 12px)) !important;
 }
 
+/* Beta badge styling */
+html[data-theme="bamboo"] .beta-badge {
+  background: rgba(var(--theme-glass-border), 0.1) !important;
+  border: 1px solid rgba(var(--theme-glass-border), 0.3) !important;
+  color: var(--theme-text-interactive) !important;
+}
+
 /* Language detection alert text colors */
 html[data-theme="bamboo"] .text-theme-neutral-700 {
   color: var(--theme-text-interactive);

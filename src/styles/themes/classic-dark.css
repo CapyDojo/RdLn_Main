@@ -15,12 +15,12 @@ html[data-theme="classic-dark"] {
   --theme-glass-panel-hover-shadow-rgb: 249, 115, 22;
 
   /* Text hierarchy colors - Minimal like Kyoto */
-  --theme-text-body: #fafafa;
-  --theme-text-header: #ffffff;
+  --theme-text-body: #dbdbdb;
+  --theme-text-header: #d4d4d4;
   --theme-text-secondary: #a3a3a3;
   --theme-text-interactive: #fb923c;
   --theme-text-success: #38bdf8;
-  --theme-text-primary: #ffffff;
+  --theme-text-primary: #fb923c;
 
   /* Additional theme-specific colors - Minimal like Kyoto */
   --theme-segmented-control-bg: 255, 255, 255;
@@ -207,4 +207,11 @@ html[data-theme="classic-dark"] .text-theme-secondary-700 {
 
 html[data-theme="classic-dark"] .text-theme-secondary-600 {
   color: var(--theme-text-interactive);
+}
+
+/* Beta badge styling */
+html[data-theme="classic-dark"] .beta-badge {
+  background: rgba(var(--theme-glass-border), 0.1) !important;
+  border: 1px solid rgba(var(--theme-glass-border), 0.3) !important;
+  color: var(--theme-text-interactive) !important;
 }

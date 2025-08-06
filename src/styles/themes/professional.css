@@ -195,3 +195,10 @@ html[data-theme="professional"] .text-theme-secondary-700 {
 html[data-theme="professional"] .text-theme-secondary-600 {
   color: var(--theme-text-interactive);
 }
+
+/* Beta badge styling */
+html[data-theme="professional"] .beta-badge {
+  background: rgba(var(--theme-glass-border), 0.1) !important;
+  border: 1px solid rgba(var(--theme-glass-border), 0.3) !important;
+  color: var(--theme-text-interactive) !important;
+}

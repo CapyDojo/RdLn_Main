@@ -265,7 +265,7 @@ textarea:focus {
   transform: translateX(-50%) !important;
   z-index: 9999 !important;
   width: 100% !important;
-  max-width: 90rem !important;
+  max-width: 32rem !important;
   padding-left: 1rem !important;
   padding-right: 1rem !important;
 }

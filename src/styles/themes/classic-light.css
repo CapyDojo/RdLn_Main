@@ -20,7 +20,7 @@ html[data-theme="classic-light"] {
   --theme-text-secondary: #694747;
   --theme-text-interactive: #c2410c;
   --theme-text-success: #0284c7;
-  --theme-text-primary: #0f172a;
+  --theme-text-primary: #c2410c;
 
   /* Additional theme-specific colors - Minimal like Kyoto */
   --theme-segmented-control-bg: 249, 115, 22;
@@ -202,4 +202,11 @@ html[data-theme="classic-light"] .text-theme-secondary-700 {
 
 html[data-theme="classic-light"] .text-theme-secondary-600 {
   color: var(--theme-text-interactive);
+}
+
+/* Beta badge styling */
+html[data-theme="classic-light"] .beta-badge {
+  background: rgba(var(--theme-glass-border), 0.1) !important;
+  border: 1px solid rgba(var(--theme-glass-border), 0.3) !important;
+  color: var(--theme-text-interactive) !important;
 }

@@ -13,11 +13,8 @@ const BetaBadge: React.FC = () => {
   }
   
   return (
-    <div className="px-3 py-1 rounded-md text-xs font-medium border text-center"
+    <div className="beta-badge px-3 py-1 rounded-md text-xs font-medium border text-center"
          style={{
-           background: 'rgba(59, 130, 246, 0.1)',
-           border: '1px solid rgba(59, 130, 246, 0.3)',
-           color: '#60a5fa',
            backdropFilter: 'blur(10px)',
            lineHeight: '1.2'
          }}>
@@ -32,11 +29,11 @@ export const StatusBar: React.FC<BaseComponentProps> = ({ style, className }) =>
       className={`status-bar ${className || ''}`} 
       style={{
         position: 'fixed',
-        top: '8rem', // Position further below the header 
+        top: '8.3rem', // Position further below the header 
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 9998, // Just below header's 9999
-        maxWidth: '1440px', // Match ComparisonInterface container
+        maxWidth: '360px', // Match ComparisonInterface container
         minWidth: '320px',
         width: '95vw',
         paddingLeft: '0.75rem',
