@@ -5,26 +5,26 @@
 html[data-theme="bamboo"] {
   /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
   --theme-glass-bg: 113, 155, 81;
-  --theme-glass-border: 251, 191, 36;
-  --theme-glass-hover-border: 217, 119, 6;
-  --theme-glass-hover-shadow: 180, 83, 9;
+  --theme-glass-border: 6, 95, 70;
+  --theme-glass-hover-border: 6, 95, 70;
+  --theme-glass-hover-shadow: 4, 75, 56;
 
   /* Variables expected by glassmorphism.css - Essential only */
   --theme-glass-panel-hover-rgb: 86, 134, 61;
-  --theme-glass-panel-hover-border-rgb: 217, 119, 6;
-  --theme-glass-panel-hover-shadow-rgb: 180, 83, 9;
+  --theme-glass-panel-hover-border-rgb: 6, 95, 70;
+  --theme-glass-panel-hover-shadow-rgb: 4, 75, 56;
 
   /* Text hierarchy colors - Minimal like Kyoto */
   --theme-text-body: #4a3728;
-  --theme-text-header: #fbbf24;
+  --theme-text-header: #065f46;
   --theme-text-secondary: #6b4e3d;
-  --theme-text-interactive: #fbbf24;
+  --theme-text-interactive: #065f46;
   --theme-text-success: #bbf7d0;
-  --theme-text-primary: #fbbf24;
+  --theme-text-primary: #065f46;
 
   /* Additional theme-specific colors - Minimal like Kyoto */
-  --theme-segmented-control-bg: 251, 191, 36;
-  --theme-segmented-control-border: 251, 191, 36;
+  --theme-segmented-control-bg: 6, 95, 70;
+  --theme-segmented-control-border: 6, 95, 70;
 }
 
 /* Simple theme glass panel styling - works with theme-conditional base */
@@ -88,6 +88,15 @@ html[data-theme="bamboo"] .text-theme-accent-500 {
 html[data-theme="bamboo"] .text-success,
 html[data-theme="bamboo"] .text-active {
   color: var(--theme-text-success);
+}
+
+/* Additional neutral text colors for better readability */
+html[data-theme="bamboo"] .text-theme-neutral-400 {
+  color: rgba(107, 78, 61, 0.9) !important;
+}
+
+html[data-theme="bamboo"] .text-theme-primary-400 {
+  color: rgba(107, 78, 61, 0.9) !important;
 }
 
 /* Clean Hover Effects - Simple and Maintainable */

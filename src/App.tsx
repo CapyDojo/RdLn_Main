@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
+import { StatusBar } from './components/StatusBar';
 import { ComparisonInterface } from './components/ComparisonInterface';
 import { BetaTermsDialog } from './components/BetaTermsDialog';
 import { BetaAgreementDialog } from './components/BetaAgreementDialog';
@@ -151,7 +152,8 @@ function AppContent({
   return (
     <div className="min-h-screen flex flex-col">
       {!shouldHideHeader && <Header />}
-      <main className={`flex-1 overflow-y-auto ${shouldHideHeader ? "pt-0" : "pt-36"}`}>
+      {!shouldHideHeader && <StatusBar />}
+      <main className={`flex-1 overflow-y-auto ${shouldHideHeader ? "pt-0" : "pt-56"}`}>
         <ComparisonInterface
           showAdvancedOcrCard={showAdvancedOcrCard}
           showPerformanceDemoCard={showPerformanceDemoCard}

@@ -97,9 +97,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <br />
           <br />
           <br />
+          <span className="text-6xl block" role="img" aria-label="Document">🤖</span>
           <br />
-          <br />
-          <span className="text-4xl block" role="img" aria-label="Document">📜</span>
           <p className="text-base mt-2 font-sans">Paste text or screenshot</p>
         </div>
       );
@@ -110,12 +109,10 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         <br />
         <br />
         <br />
-        <br />
-        <br />
-        <span className="text-5xl mb-3 block" role="img" aria-label="Document">📜</span>
-        
+        <span className="text-6xl mb-3 block" role="img" aria-label="Document">📑</span>
+        <br></br>
         <p className="text-lg font-sans"><i>
-          Take a screenshot and paste (Ctrl+V)</i>   
+          PASTE (Ctrl+V) your screenshot</i>   
         </p>
         <p className="text-lg font-sans">
           <i>to extract text with OCR</i>             
