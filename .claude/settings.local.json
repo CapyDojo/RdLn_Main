@@ -22,7 +22,9 @@
       "Bash(dir)",
       "Bash(npx electron-builder:*)",
       "WebFetch(domain:www.electronjs.org)",
-      "Bash(npx electron:*)"
+      "Bash(npx electron:*)",
+      "WebFetch(domain:wordribbon.tips.net)",
+      "WebFetch(domain:www.draftable.com)"
     ],
     "deny": []
   }
