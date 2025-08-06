@@ -1,7 +1,6 @@
 import React from 'react';
 import { ThemeSelector } from './ThemeSelector';
 import { FontSizeSelector } from './FontSizeSelector';
-import { AboutDialog } from './AboutDialog';
 import { BaseComponentProps } from '../types/components';
 
 // Beta countdown component
@@ -57,7 +56,6 @@ export const Header: React.FC<BaseComponentProps> = ({ style, className }) => {
           
           {/* Right Controls */}
           <div className="absolute right-0 flex items-center gap-3">
-            <AboutDialog />
             <ThemeSelector />
           </div>
         </div>

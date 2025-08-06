@@ -7,11 +7,9 @@
 **RdLn™** is a trademark of RdLn Team.  
 **Copyright © 2025 RdLn Team. All rights reserved.**
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+**PROPRIETARY SOFTWARE** - This software is proprietary and confidential to RdLn Team. All rights are reserved.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+Unauthorized copying, distribution, modification, or use of this software is strictly prohibited and may be unlawful. This software is provided "AS IS" without warranty of any kind, express or implied.
 
 ## Overview
 
@@ -97,7 +95,7 @@ npm run build
 
 ## License
 
-This project is licensed under the GNU Affero General Public License v3.0 or later - see the [LICENSE](LICENSE) file for details.
+This project is proprietary software owned by RdLn Team. See the [LICENSE](LICENSE) file for full terms and conditions.
 
 ## Trademarks
 

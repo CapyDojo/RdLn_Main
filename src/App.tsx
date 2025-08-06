@@ -2,20 +2,20 @@
  * RdLn™ - Professional Document Comparison Tool
  * Copyright (c) 2025 RdLn Team. All rights reserved.
  * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * PROPRIETARY AND CONFIDENTIAL
  * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * This software is proprietary to RdLn Team and may not be copied,
+ * distributed, modified, or used without express written permission.
+ * 
+ * For licensing information, see LICENSE file.
  */
 
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ComparisonInterface } from './components/ComparisonInterface';
+import { BetaTermsDialog } from './components/BetaTermsDialog';
+import { BetaAgreementDialog } from './components/BetaAgreementDialog';
+import { AboutDialog } from './components/AboutDialog';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useTheme } from './contexts/ThemeContext';
 import { LayoutProvider } from './contexts/LayoutContext';
@@ -29,7 +29,6 @@ import BoundaryFixTester from './components/BoundaryFixTester';
 import { SmartPasteTest } from './components/SmartPasteTest';
 import { OCRFeatureCard } from './components/OCRFeatureCard';
 import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
-import { OCRDebugPanel } from './components/OCRDebugPanel';
 import './styles/resize-overrides.css';
 
 interface AppContentProps {
@@ -56,6 +55,42 @@ function AppContent({
 
   // State for overlay visibility (only used when results overlay feature is enabled)
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+
+  // Beta agreement state
+  const [showBetaAgreement, setShowBetaAgreement] = useState(false);
+
+  // About dialog state
+  const [showAboutDialog, setShowAboutDialog] = useState(false);
+
+  // Beta terms dialog state
+  const [showBetaTermsDialog, setShowBetaTermsDialog] = useState(false);
+
+  // Check beta agreement acceptance on mount
+  useEffect(() => {
+    const checkBetaAgreement = () => {
+      try {
+        const betaAcceptance = localStorage.getItem('rdln_beta_terms_accepted');
+        if (!betaAcceptance) {
+          setShowBetaAgreement(true);
+        } else {
+          const acceptanceData = JSON.parse(betaAcceptance);
+          // Check if acceptance is for current version
+          if (!acceptanceData.accepted || acceptanceData.version !== '0.5.0') {
+            setShowBetaAgreement(true);
+          }
+        }
+      } catch (error) {
+        console.log('Beta agreement check error:', error);
+        setShowBetaAgreement(true);
+      }
+    };
+
+    checkBetaAgreement();
+  }, []);
+
+  const handleBetaAgreementAccept = () => {
+    setShowBetaAgreement(false);
+  };
 
   // Overlay visibility handlers (only used when results overlay feature is enabled)
   const handleOverlayShow = () => {
@@ -144,7 +179,7 @@ function AppContent({
             <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
               <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm">🔒 Privacy First</h4>
               <p className="text-xs text-theme-neutral-600">
-                Client-side processing ensures complete confidentiality
+                Client-side processing ensures data privacy
               </p>
             </div>
             <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
@@ -163,12 +198,46 @@ function AppContent({
 
           {/* Professional attribution */}
           <div className="mt-6 pt-4 border-t border-theme-neutral-200">
-            <div style={{ fontFamily: 'inherit' }}>
+            <div style={{ fontFamily: 'inherit' }} className="text-center">
               © 2025 RdLn™ - Professional Text Comparison Redlining with OCR. All rights reserved.
+              <div className="mt-2 flex justify-center items-center gap-4">
+                <button
+                  onClick={() => setShowAboutDialog(true)}
+                  className="text-xs opacity-70 hover:opacity-100 hover:text-theme-accent-500 transition-all duration-200 underline"
+                >
+                  About
+                </button>
+                <span className="text-xs opacity-50">|</span>
+                <button
+                  onClick={() => setShowBetaTermsDialog(true)}
+                  className="text-xs opacity-70 hover:opacity-100 hover:text-theme-accent-500 transition-all duration-200 underline"
+                >
+                  Beta Terms
+                </button>
+                <span className="text-xs opacity-50">|</span>
+                <span className="text-xs opacity-70">Contact: <a href="mailto:kai@rdln.io" className="text-theme-accent-500 hover:text-theme-accent-400 underline transition-colors">kai@rdln.io</a></span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Beta Agreement Dialog - Show on first launch */}
+      {showBetaAgreement && (
+        <BetaAgreementDialog onAccept={handleBetaAgreementAccept} />
+      )}
+
+      {/* About Dialog */}
+      <AboutDialog 
+        isOpen={showAboutDialog} 
+        onClose={() => setShowAboutDialog(false)} 
+      />
+
+      {/* Beta Terms Dialog */}
+      <BetaTermsDialog 
+        isOpen={showBetaTermsDialog} 
+        onClose={() => setShowBetaTermsDialog(false)} 
+      />
     </div>
   );
 }
@@ -261,9 +330,6 @@ function App() {
                 onToggleExtremeTestSuite={handleToggleExtremeTestSuite}
               />
             )}
-            
-            {/* OCR Debug Panel - Always available */}
-            <OCRDebugPanel />
           </div>
         </ExperimentalLayoutProvider>
       </LayoutProvider>

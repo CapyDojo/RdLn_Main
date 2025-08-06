@@ -112,18 +112,17 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         <br />
         <br />
         <br />
-        <span className="text-4xl mb-3 block" role="img" aria-label="Document">📜</span>
-        <p className="text-base mb-2 font-sans">Paste text or screenshot</p>
+        <span className="text-5xl mb-3 block" role="img" aria-label="Document">📜</span>
         
-        <p className="text-base font-sans"><i>
+        <p className="text-lg font-sans"><i>
           Take a screenshot and paste (Ctrl+V)</i>   
         </p>
-        <p className="text-base font-sans">
+        <p className="text-lg font-sans">
           <i>to extract text with OCR</i>             
         </p>
         <br></br>
-        <p className="text-sm mt-1 text-theme-primary-400 font-sans">
-          <i>Supports {supportedLanguages.length} languages including Chinese, German, French, Arabic, Japanese, Korean & more</i>
+        <p className="text-base mt-1 text-theme-primary-400 font-sans">
+          <i>Supports {supportedLanguages.length} languages including English, Chinese, Japanese, German, French, Arabic & more</i>
         </p>
       </div>
     );

@@ -2,15 +2,12 @@
  * RdLn™ - Professional Document Comparison Tool
  * Copyright (c) 2025 RdLn Team. All rights reserved.
  * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * PROPRIETARY AND CONFIDENTIAL
  * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * This software is proprietary to RdLn Team and may not be copied,
+ * distributed, modified, or used without express written permission.
+ * 
+ * For licensing information, see LICENSE file.
  */
 
 import React, { useEffect, useState, useRef } from 'react';

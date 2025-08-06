@@ -2,133 +2,195 @@
  * RdLn™ - Professional Document Comparison Tool
  * Copyright (c) 2025 RdLn Team. All rights reserved.
  * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * PROPRIETARY AND CONFIDENTIAL
  * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * This software is proprietary to RdLn Team and may not be copied,
+ * distributed, modified, or used without express written permission.
+ * 
+ * For licensing information, see LICENSE file.
  */
 
-import React, { useState } from 'react';
-import { Info, X, ExternalLink } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { X } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
-export const AboutDialog: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface AboutDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
+export const AboutDialog: React.FC<AboutDialogProps> = ({ isOpen, onClose }) => {
+  const { themeConfig } = useTheme();
   const currentYear = new Date().getFullYear();
 
+  // Detect if theme is light or dark
+  const isLightTheme = () => {
+    // Check theme name patterns
+    if (themeConfig.name?.includes('light') || 
+        themeConfig.name?.includes('Light') || 
+        themeConfig.name?.includes('professional') || 
+        themeConfig.name?.includes('bamboo')) {
+      return true;
+    }
+    
+    // Check if text body color is dark (indicates light theme)
+    const textBody = themeConfig.semanticColors?.textBody;
+    if (textBody && (textBody.startsWith('#1') || textBody.startsWith('#2') || textBody.startsWith('#3') || textBody.startsWith('#4'))) {
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Get overlay background based on theme brightness
+  const getOverlayClasses = () => {
+    return isLightTheme() ? 'bg-white/70' : 'bg-black/70';
+  };
+
+  // Get appropriate modal styling based on theme
+  const getModalClasses = () => {
+    if (themeConfig.effects?.glassmorphism) {
+      // Use glass-panel for glassmorphism themes
+      return 'glass-panel';
+    } else {
+      // Use solid background for non-glassmorphism themes with actual theme background
+      const isDarkTheme = themeConfig.name?.includes('dark') || themeConfig.name?.includes('Dark');
+      
+      // Use the theme's semantic colors for better consistency
+      const bgClass = isDarkTheme ? 'bg-theme-neutral-800' : 'bg-theme-neutral-50';
+      const borderClass = isDarkTheme ? 'border-theme-neutral-600' : 'border-theme-neutral-200';
+      
+      return `${bgClass} border ${borderClass} shadow-xl`;
+    }
+  };
+
+  // Get inline styles for theme-specific background
+  const getModalStyle = () => {
+    if (!themeConfig.effects?.glassmorphism && themeConfig.background) {
+      // For non-glassmorphism themes, use the theme's actual background
+      return {
+        backgroundColor: themeConfig.background,
+        // Ensure good contrast for text
+        color: themeConfig.semanticColors?.textBody || 'inherit'
+      };
+    }
+    return {};
+  };
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = 'unset';
+      };
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
   return (
-    <>
-      {/* About Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="p-2 rounded-lg transition-all duration-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
-        title="About RdLn™"
-        aria-label="About RdLn"
-      >
-        <Info size={18} className="text-current opacity-70 hover:opacity-100" />
-      </button>
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${getOverlayClasses()} backdrop-blur-sm`}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      {/* Dialog */}
+      <div className={`${getModalClasses()} relative w-full max-w-lg rounded-xl p-6 text-current`} style={getModalStyle()}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">About RdLn™</h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="Close dialog"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-      {/* Dialog Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsOpen(false)}
-          />
-          
-          {/* Dialog */}
-          <div className="glass-panel relative w-full max-w-lg rounded-xl p-6 text-current">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">About RdLn™</h2>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1 rounded-lg hover:bg-white/10 transition-colors"
-                aria-label="Close dialog"
-              >
-                <X size={20} />
-              </button>
+        {/* Content */}
+        <div className="space-y-4 text-sm">
+          {/* Logo and Version */}
+          <div className="flex items-center gap-3 mb-4">
+            <img 
+              src={window.isElectron ? "./images/rdln-logo.png" : "/images/rdln-logo.png"} 
+              alt="RdLn Logo" 
+              className="w-12 h-12 rounded-lg shadow-sm"
+            />
+            <div>
+              <div className="font-medium">RdLn™</div>
+              <div className="text-xs opacity-70">Version 0.5.0 Beta</div>
             </div>
+          </div>
 
-            {/* Content */}
-            <div className="space-y-4 text-sm">
-              {/* Logo and Version */}
-              <div className="flex items-center gap-3 mb-4">
-                <img 
-                  src={window.isElectron ? "./images/rdln-logo.png" : "/images/rdln-logo.png"} 
-                  alt="RdLn Logo" 
-                  className="w-12 h-12 rounded-lg shadow-sm"
-                />
-                <div>
-                  <div className="font-medium">RdLn™</div>
-                  <div className="text-xs opacity-70">Version 0.5.0 Beta</div>
-                </div>
-              </div>
+          {/* Description */}
+          <p className="leading-relaxed">
+            Professional document comparison tool with advanced OCR capabilities. 
+            Built for legal professionals and organizations requiring precise document analysis 
+            with complete confidentiality through client-side processing.
+          </p>
 
-              {/* Description */}
-              <p className="leading-relaxed">
-                Professional document comparison tool with advanced OCR capabilities. 
-                Built for legal professionals and organizations requiring precise document analysis 
-                with complete confidentiality through client-side processing.
+          {/* Copyright */}
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="font-medium mb-2">Copyright & License</h3>
+            <div className="text-xs space-y-1 opacity-80">
+              <p>© {currentYear} RdLn Team. All rights reserved.</p>
+              <p>RdLn™ is a trademark of RdLn Team.</p>
+              <p>
+                <strong>Proprietary Software</strong> - All rights reserved.
               </p>
+            </div>
+          </div>
 
-              {/* Copyright */}
-              <div className="border-t border-white/10 pt-4">
-                <h3 className="font-medium mb-2">Copyright & License</h3>
-                <div className="text-xs space-y-1 opacity-80">
-                  <p>© {currentYear} RdLn Team. All rights reserved.</p>
-                  <p>RdLn™ is a trademark of RdLn Team.</p>
-                  <p>
-                    Licensed under the{' '}
-                    <a 
-                      href="https://www.gnu.org/licenses/agpl-3.0.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:no-underline inline-flex items-center gap-1"
-                    >
-                      GNU AGPL v3.0
-                      <ExternalLink size={10} />
-                    </a>
-                  </p>
-                </div>
-              </div>
+          {/* Legal Notice */}
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="font-medium mb-2">Legal Notice</h3>
+            <div className="text-xs space-y-1 opacity-80">
+              <p>
+                This software is proprietary and confidential. Unauthorized copying, 
+                distribution, modification, or use is strictly prohibited.
+              </p>
+              <p>
+                This software is provided "AS IS" without warranty of any kind, 
+                express or implied.
+              </p>
+            </div>
+          </div>
 
-              {/* Legal Notice */}
-              <div className="border-t border-white/10 pt-4">
-                <h3 className="font-medium mb-2">Legal Notice</h3>
-                <div className="text-xs space-y-1 opacity-80">
-                  <p>
-                    This program is distributed in the hope that it will be useful, 
-                    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-                    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-                  </p>
-                  <p>
-                    See the GNU Affero General Public License for more details.
-                  </p>
-                </div>
-              </div>
+          {/* License Information */}
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="font-medium mb-2">License Information</h3>
+            <div className="text-xs opacity-80">
+              <p>
+                For licensing inquiries and commercial use permissions, 
+                please contact RdLn Team.
+              </p>
+            </div>
+          </div>
 
-              {/* Source Code Notice (AGPL Requirement) */}
-              <div className="border-t border-white/10 pt-4">
-                <h3 className="font-medium mb-2">Source Code</h3>
-                <div className="text-xs opacity-80">
-                  <p>
-                    The complete source code for this application is available under the terms 
-                    of the GNU AGPL v3.0 license. For source code access and license details, 
-                    please contact the RdLn Team.
-                  </p>
-                </div>
-              </div>
+          {/* Beta Testing Terms */}
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="font-medium mb-2">Beta Testing Agreement</h3>
+            <div className="text-xs opacity-80">
+              <p className="mb-2">
+                This is beta software provided for testing purposes. 
+                Key terms include:
+              </p>
+              <ul className="space-y-1 ml-4 text-xs">
+                <li>• Features are experimental and may change</li>
+                <li>• Beta features are confidential</li>                
+              </ul>
+              <p className="mt-2">
+                <strong>Contact:</strong> <a href="mailto:kai@rdln.io" className="text-blue-400 hover:text-blue-300 underline transition-colors">kai@rdln.io</a> for questions, suggestions and feedback
+              </p>
             </div>
           </div>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };

@@ -1,3 +1,111 @@
+## Version 0.5.5 - "Modal Dialog Architecture & Email Enhancement"
+*Released: August 6, 2025*
+
+### 🎯 **Modal Dialog System Redesign**
+
+#### **Floating Modal Architecture Achievement**
+- **PROBLEM SOLVED**: About and Beta Terms dialogs were trapped within header/footer card constraints, preventing proper floating modal behavior
+- **ROOT CAUSE**: Self-contained components with built-in buttons created modal dialogs within DOM hierarchy constraints
+- **BREAKTHROUGH**: Converted to controlled component pattern with external state management like BetaAgreementDialog
+- **RESULT**: All dialogs now float properly above entire application with consistent theme-aware overlays
+
+#### **Theme-Aware Modal System**
+- **Unified Pattern**: All modals (About, Beta Terms, Beta Agreement) now use identical theme detection and overlay logic
+- **Light Theme Support**: Professional, Bamboo, and other light themes get white/70 overlay backgrounds
+- **Dark Theme Support**: Dark themes get black/70 overlay backgrounds for proper contrast
+- **Background Scroll Prevention**: All modals prevent background scrolling when open
+- **Click-Outside-to-Close**: Consistent interaction behavior across all modal dialogs
+
+#### **Footer Layout Reorganization**
+- **About Dialog Relocation**: Moved About dialog from header Info button to footer "About" text link
+- **Navigation Consistency**: Footer now shows "About | Beta Terms | Contact: kai@rdln.io" layout
+- **User Experience**: More intuitive placement of legal/company information in footer area
+- **Header Simplification**: Cleaner header with just theme selector and logo, reducing visual clutter
+
+### ✅ **Email Link Enhancement**
+
+#### **Universal Email Clickability**
+- **Comprehensive Update**: Made all references to kai@rdln.io clickable across the entire application
+- **Files Updated**: BetaTermsDialog, AboutDialog, App.tsx footer, BetaAgreementDialog (was already clickable)
+- **Consistent Styling**: All email links use appropriate hover effects and color transitions
+- **Professional Interaction**: Email links open default mail client with proper mailto: functionality
+
+#### **Theme-Appropriate Colors**
+- **Dialog Emails**: Blue hover effects (text-blue-400 hover:text-blue-300) in modal dialogs
+- **Footer Email**: Theme accent colors (text-theme-accent-500 hover:text-theme-accent-400) for footer integration
+- **Visual Consistency**: Underlined links with smooth transition animations
+- **Accessibility**: Proper contrast ratios and hover states for all themes
+
+### 🔧 **Technical Implementation Excellence**
+
+#### **Modal Component Refactoring**
+- **AboutDialog.tsx**: Converted from self-contained to controlled component with isOpen/onClose props
+- **BetaTermsDialog.tsx**: Refactored to match AboutDialog pattern with proper theme-aware overlays
+- **App.tsx State Management**: Added state management for both About and Beta Terms dialogs
+- **Consistent Architecture**: All modals follow identical implementation pattern for maintainability
+
+#### **Component Pattern Standardization**
+```typescript
+// Standard Modal Props Interface
+interface ModalDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+// Theme-Aware Overlay Logic
+const getOverlayClasses = () => {
+  return isLightTheme() ? 'bg-white/70' : 'bg-black/70';
+};
+```
+
+#### **DOM Structure Optimization**
+- **Fixed z-index**: All modals use z-50 for consistent layering above application content
+- **Portal-Free Architecture**: Proper DOM structure without needing React portals
+- **Background Scroll Control**: useEffect hooks manage document.body.overflow for all modals
+- **Memory Management**: Proper cleanup of scroll prevention on modal close
+
+### 🎯 **User Experience Transformation**
+
+#### **Professional Modal Behavior**
+- **Proper Floating**: Modals now appear above all content without constraint issues
+- **Theme Consistency**: Modal overlays adapt to light/dark themes for optimal visibility
+- **Intuitive Navigation**: Footer placement of About/Terms links follows web conventions
+- **Seamless Interaction**: Click outside to close, ESC key support, proper focus management
+
+#### **Enhanced Contact Accessibility**
+- **One-Click Email**: All kai@rdln.io references open email client immediately
+- **Multiple Touch Points**: Email accessible from About dialog, Beta Terms, footer, and Beta Agreement
+- **Professional Appearance**: Consistent styling maintains professional look across all contexts
+- **Mobile Friendly**: All email links work properly on mobile devices with native email apps
+
+### 🚀 **Development Methodology Success**
+
+#### **Consistent Component Patterns**
+- **Architectural Alignment**: All modal dialogs now follow identical patterns for maintainability
+- **Code Reusability**: Theme detection and overlay logic shared across modal components
+- **TypeScript Safety**: Proper interfaces and type safety throughout modal system
+- **Testing Ready**: Standardized patterns make unit testing straightforward
+
+#### **Future-Proof Design**
+- **Scalable Architecture**: Easy to add new modal dialogs following established pattern
+- **Theme System Integration**: Automatic adaptation to new themes without modal-specific changes
+- **Accessibility Ready**: Foundation prepared for enhanced keyboard navigation and screen reader support
+- **Performance Optimized**: Efficient rendering with proper React optimization opportunities
+
+### 📁 **Files Modified**
+
+- **`src/components/AboutDialog.tsx`** - Converted to controlled component with theme-aware overlays
+- **`src/components/BetaTermsDialog.tsx`** - Refactored to floating modal with consistent architecture  
+- **`src/components/Header.tsx`** - Removed AboutDialog button, simplified header layout
+- **`src/App.tsx`** - Added modal state management and footer About/Beta Terms buttons
+- **Multiple Components** - Updated all kai@rdln.io references to clickable mailto links
+
+### 🏆 **User Interface Excellence**
+
+**Achievement**: Transformed the modal dialog system from constrained, inconsistent behavior to professional-grade floating modals with perfect theme integration and comprehensive email link accessibility, creating a cohesive user experience that meets modern web application standards.
+
+---
+
 ## Version 0.5.4 - "Multi-Format Rich Text Clipboard"
 *Released: August 6, 2025*
 
@@ -1468,4 +1576,4 @@ We welcome contributions to improve the document comparison algorithm and user e
 
 ## License
 
-This project is licensed under the MIT License. See LICENSE file for details.
+This project is proprietary software owned by RdLn Team. See LICENSE file for full terms and conditions.

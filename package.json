@@ -6,7 +6,7 @@
   "description": "RdLn™ - Professional document comparison tool with OCR capabilities",
   "author": "RdLn Team",
   "copyright": "Copyright (c) 2025 RdLn Team. All rights reserved.",
-  "license": "AGPL-3.0-or-later",
+  "license": "UNLICENSED",
   "main": "src-electron/main.cjs",
   "scripts": {
     "dev": "vite",
