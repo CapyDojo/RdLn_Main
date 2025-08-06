@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Languages } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatusBar } from './components/StatusBar';
 import { ComparisonInterface } from './components/ComparisonInterface';
@@ -129,9 +130,9 @@ function AppContent({
         console.log('🔧 TAURI APP: Failed to setup global handler:', error);
       }
     };
-    
+
     setupGlobalTauriHandler();
-    
+
     // Cleanup on unmount
     return () => {
       try {
@@ -191,7 +192,10 @@ function AppContent({
               </p>
             </div>
             <div className="glass-panel p-4 rounded-lg border border-theme-neutral-200 subtle-button">
-              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm">✨ Multi-Language</h4>
+              <h4 className="font-semibold text-theme-primary-800 mb-2 text-sm flex items-center justify-center gap-1">
+                <Languages className="w-4 h-4" />
+                Multi-Language
+              </h4>
               <p className="text-xs text-theme-neutral-600">
                 Advanced OCR supports 10 languages
               </p>
@@ -230,22 +234,22 @@ function AppContent({
       )}
 
       {/* About Dialog */}
-      <AboutDialog 
-        isOpen={showAboutDialog} 
-        onClose={() => setShowAboutDialog(false)} 
+      <AboutDialog
+        isOpen={showAboutDialog}
+        onClose={() => setShowAboutDialog(false)}
       />
 
       {/* Beta Terms Dialog */}
-      <BetaTermsDialog 
-        isOpen={showBetaTermsDialog} 
-        onClose={() => setShowBetaTermsDialog(false)} 
+      <BetaTermsDialog
+        isOpen={showBetaTermsDialog}
+        onClose={() => setShowBetaTermsDialog(false)}
       />
     </div>
   );
 }
 
 function App() {
-  
+
   // State for developer mode toggles with localStorage persistence
   const [showAdvancedOcrCardState, setShowAdvancedOcrCardState] = useState(false);
   const [showPerformanceDemoCardState, setShowPerformanceDemoCardState] = useState(false);
