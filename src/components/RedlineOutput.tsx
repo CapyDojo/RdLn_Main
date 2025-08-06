@@ -7,6 +7,7 @@ import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/pe
 import { useExperimentalFeatures } from '../contexts/ExperimentalLayoutContext';
 import { ResultsOverlayTrigger } from './experimental/ResultsOverlayTrigger';
 import { useFontSize } from '../contexts/FontSizeContext';
+import { copyToClipboardMultiFormat, isMultiFormatClipboardSupported } from '../utils/clipboardUtils';
 
 interface RedlineOutputProps extends BaseComponentProps {
   changes: DiffChange[];
@@ -46,16 +47,16 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     autoTrackRender: true
   });
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
-  
+
   // Get experimental features for overlay trigger
   const { features } = useExperimentalFeatures();
-  
+
   // Background mode state (only used in overlay mode)
   const [backgroundMode, setBackgroundMode] = React.useState<'theme' | 'glassmorphism'>('theme');
-  
+
   // Font size context
   const { fontSize } = useFontSize();
-  
+
   // Handle background mode toggle
   const handleBackgroundToggle = () => {
     const newMode = backgroundMode === 'theme' ? 'glassmorphism' : 'theme';
@@ -76,9 +77,9 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
     // Track input metrics
     performanceTracker.trackMetric('changes_count', changes.length);
-    
+
     // Boundary fragments are handled in the Myers algorithm implementation
-    
+
     // Check if chunked rendering is enabled
     if (!FEATURE_FLAGS.ENABLE_CHUNKED_RENDERING) {
       if (DEV_CONFIG.DEBUGGING.SEMANTIC_CHUNKING_DEBUG) {
@@ -90,17 +91,17 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
         changes: changes,
         html: generateHTMLString(changes),
       }];
-      
+
       const renderingTime = performance.now() - startTime;
       performanceTracker.trackMetric('rendering_performance', {
         duration: renderingTime,
         chunkCount: 1,
         totalChanges: changes.length
       });
-      
+
       return result;
     }
-    
+
     if (DEV_CONFIG.DEBUGGING.SEMANTIC_CHUNKING_DEBUG) {
       performanceTracker.trackMetric('memoizing_changes', { count: changes.length, chunkSize: CHUNK_SIZE });
     }
@@ -110,11 +111,11 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       const chunkEnd = FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
         ? findSemanticChunkBoundary(changes, i, CHUNK_SIZE)
         : Math.min(i + CHUNK_SIZE, changes.length);
-      
+
       chunkedChanges.push(changes.slice(i, chunkEnd));
       i = chunkEnd;
     }
-    
+
     const result = chunkedChanges.map((chunk, index) => ({
       id: `chunk-${index}`,
       changes: chunk,
@@ -122,7 +123,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
         ? generateSemanticHTMLString(chunk)
         : generateHTMLString(chunk),
     }));
-    
+
     // Track chunking performance
     const chunkingTime = performance.now() - startTime;
     performanceTracker.trackMetric('chunking_performance', {
@@ -130,7 +131,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       chunkCount: result.length,
       avgChunkSize: changes.length / result.length
     });
-    
+
     return result;
   }, [changes, performanceTracker]);
 
@@ -138,26 +139,29 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     if (!changes || !Array.isArray(changes)) {
       return;
     }
-    const text = changes.map(change => {
-      switch (change.type) {
-        case 'changed': return change.revisedContent || '';
-        case 'removed': return '';
-        default: return change.content;
-      }
-    }).join('');
+
     try {
-      // Check if clipboard API is available
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        // Fallback for test environments or unsupported browsers
-        console.log('Clipboard API not available, simulating copy operation');
-      }
+      await copyToClipboardMultiFormat(changes);
       onCopy();
-      performanceTracker.trackMetric('copy_success', { textLength: text.length });
+
+      // Track success metrics
+      const textLength = changes.reduce((acc, change) => {
+        const content = change.type === 'changed' ? change.revisedContent || '' : change.content || '';
+        return acc + content.length;
+      }, 0);
+
+      performanceTracker.trackMetric('copy_success', {
+        textLength,
+        multiFormat: isMultiFormatClipboardSupported(),
+        changeCount: changes.length
+      });
+
     } catch (err) {
       console.error('Failed to copy text:', err);
-      performanceTracker.trackMetric('copy_failure', { error: err instanceof Error ? err.message : 'Unknown error' });
+      performanceTracker.trackMetric('copy_failure', {
+        error: err instanceof Error ? err.message : 'Unknown error',
+        multiFormat: isMultiFormatClipboardSupported()
+      });
       // Still call onCopy in case of error for testing purposes
       onCopy();
     }
@@ -181,11 +185,10 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             {isInOverlayMode && (
               <button
                 onClick={handleBackgroundToggle}
-                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  backgroundMode === 'theme' 
-                    ? 'bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200'
-                    : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200'
-                }`}
+                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors ${backgroundMode === 'theme'
+                  ? 'bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200'
+                  : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200'
+                  }`}
                 title={`Switch to ${backgroundMode === 'theme' ? 'glassmorphism' : 'theme'} background`}
               >
                 {backgroundMode === 'theme' ? (
@@ -201,19 +204,22 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                 )}
               </button>
             )}
-            
+
             {/* Results Overlay Trigger - Feature #8 */}
             <ResultsOverlayTrigger
               isVisible={features.resultsOverlay}
               hasResults={changes && changes.length > 0}
-              onClick={onShowOverlay || (() => console.log('🎯 Results Overlay: Manual trigger (no handler)'))} 
+              onClick={onShowOverlay || (() => console.log('🎯 Results Overlay: Manual trigger (no handler)'))}
               isInOverlayMode={isInOverlayMode}
             />
-            
+
             <button
               onClick={copyToClipboard}
               className="flex items-center gap-2 px-3 py-1.5 text-sm bg-theme-neutral-100 hover:bg-theme-neutral-200 rounded-lg transition-colors"
-              title="Copy redlined document to clipboard"
+              title={isMultiFormatClipboardSupported()
+                ? "Copy redlined document with formatting (HTML + plain text)"
+                : "Copy redlined document as plain text"
+              }
             >
               <Copy className="w-4 h-4" />
               <span className="hidden sm:inline">Copy</span>
@@ -268,8 +274,8 @@ const Chunk: React.FC<{ html: string, estimatedHeight: number, root: Element | n
   React.useEffect(() => {
     // Check if we're in a test environment or if IntersectionObserver is not available
     if (typeof IntersectionObserver === 'undefined' ||
-        typeof process !== 'undefined' && process.env.NODE_ENV === 'test' ||
-        typeof window !== 'undefined' && window.location.href.includes('vitest')) {
+      typeof process !== 'undefined' && process.env.NODE_ENV === 'test' ||
+      typeof window !== 'undefined' && window.location.href.includes('vitest')) {
       // In test environments or unsupported browsers, make chunks visible immediately
       setIsVisible(true);
       return;
@@ -305,17 +311,17 @@ const Chunk: React.FC<{ html: string, estimatedHeight: number, root: Element | n
 
   if (isVisible) {
     return (
-      <div 
-        ref={placeholderRef} 
+      <div
+        ref={placeholderRef}
         className="chunk-container"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );
   }
-  
+
   return (
-    <div 
-      ref={placeholderRef} 
+    <div
+      ref={placeholderRef}
       style={{ height: `${estimatedHeight}px` }}
       className="chunk-container"
     />
@@ -327,7 +333,7 @@ const generateHTMLString = (changes: DiffChange[]) => {
   let html = '';
   changes.forEach(change => {
     const escape = (str: string) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
-    
+
     switch (change.type) {
       case 'added':
         html += `<span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(change.content || '')}</span>`;
@@ -357,23 +363,23 @@ const findSemanticChunkBoundary = (changes: DiffChange[], startIndex: number, ta
   if (!UI_CONFIG.RENDERING.SEMANTIC_CHUNKING.ENABLED) {
     return Math.min(startIndex + targetSize, changes.length);
   }
-  
+
   let currentSize = 0;
   let lastGoodBoundary = startIndex;
-  
+
   for (let i = startIndex; i < changes.length && currentSize < targetSize * 1.2; i++) {
     currentSize++;
-    
+
     // Look for natural boundaries
     if (isSemanticBoundary(changes[i])) {
       lastGoodBoundary = i + 1;
     }
-    
+
     if (currentSize >= targetSize && lastGoodBoundary > startIndex) {
       return lastGoodBoundary;
     }
   }
-  
+
   return Math.min(startIndex + targetSize, changes.length);
 };
 
@@ -383,32 +389,32 @@ const collectConsecutiveChanges = (changes: DiffChange[], startIndex: number, ty
   const group = [];
   let i = startIndex;
   const maxGroup = UI_CONFIG.RENDERING.SEMANTIC_CHUNKING.MAX_CONSECUTIVE_SAME_TYPE;
-  
+
   while (i < changes.length && changes[i].type === type && group.length < maxGroup) {
     group.push(changes[i]);
     i++;
   }
-  
+
   return group;
 };
 
 const renderChangeGroup = (group: DiffChange[], type: string) => {
   const escape = (str: string) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
-  
+
   if (type === 'changed') {
     // For changed type, combine all original content and all revised content
     const combinedOriginal = group.map(change => change.originalContent || '').join('');
     const combinedRevised = group.map(change => change.revisedContent || '').join('');
-    
+
     return `<span class="bg-theme-accent-100 text-theme-accent-800 border border-theme-accent-300 line-through decoration-2 decoration-theme-accent-600">${escape(combinedOriginal)}</span>` +
-           `<span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(combinedRevised)}</span>`;
+      `<span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(combinedRevised)}</span>`;
   } else {
     // For added/removed, combine content
     const combinedContent = group.map(change => change.content || '').join('');
     const className = type === 'added'
       ? 'bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600'
       : 'bg-theme-accent-100 text-theme-accent-800 border border-theme-accent-300 line-through decoration-2 decoration-theme-accent-600';
-      
+
     return `<span class="${className}">${escape(combinedContent)}</span>`;
   }
 };
@@ -416,7 +422,7 @@ const renderChangeGroup = (group: DiffChange[], type: string) => {
 const renderSingleChange = (change: DiffChange) => {
   // Use existing logic for single changes
   const escape = (str: string) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
-  
+
   switch (change.type) {
     case 'added':
       return `<span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(change.content || '')}</span>`;
@@ -424,7 +430,7 @@ const renderSingleChange = (change: DiffChange) => {
       return `<span class="bg-theme-accent-100 text-theme-accent-800 border border-theme-accent-300 line-through decoration-2 decoration-theme-accent-600">${escape(change.content || '')}</span>`;
     case 'changed':
       return `<span class="bg-theme-accent-100 text-theme-accent-800 border border-theme-accent-300 line-through decoration-2 decoration-theme-accent-600">${escape(change.originalContent || '')}</span>` +
-             `<span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(change.revisedContent || '')}</span>`;
+        `<span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(change.revisedContent || '')}</span>`;
     default:
       return `<span>${escape(change.content || '')}</span>`;
   }
@@ -436,26 +442,26 @@ const generateSemanticHTMLString = (changes: DiffChange[]) => {
   if (!FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING) {
     return generateHTMLString(changes); // Fallback to original
   }
-  
+
   if (DEV_CONFIG.DEBUGGING.SEMANTIC_CHUNKING_DEBUG) {
     console.log('🔧 Semantic chunking processing', changes.length, 'changes');
   }
-  
+
   let html = '';
   let i = 0;
   let groupsCreated = 0;
-  
+
   while (i < changes.length) {
     const current = changes[i];
-    
+
     // Group consecutive changes of same type (including 'changed')
     if (current.type === 'added' || current.type === 'removed' || current.type === 'changed') {
       const group = collectConsecutiveChanges(changes, i, current.type);
-      
+
       if (DEV_CONFIG.DEBUGGING.SEMANTIC_CHUNKING_DEBUG) {
         console.log(`🔧 Found group of ${group.length} ${current.type} changes`);
       }
-      
+
       if (group.length > 1) {
         html += renderChangeGroup(group, current.type);
         groupsCreated++;
@@ -468,7 +474,7 @@ const generateSemanticHTMLString = (changes: DiffChange[]) => {
       i++;
     }
   }
-  
+
   if (DEV_CONFIG.DEBUGGING.SEMANTIC_CHUNKING_DEBUG) {
     console.log('🔧 Semantic chunking results:', {
       originalLength: changes.length,
@@ -476,7 +482,7 @@ const generateSemanticHTMLString = (changes: DiffChange[]) => {
       enabled: FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
     });
   }
-  
+
   return html;
 };
 

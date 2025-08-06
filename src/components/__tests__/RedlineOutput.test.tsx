@@ -30,6 +30,18 @@ vi.mock('../experimental/ResultsOverlayTrigger', () => ({
   ResultsOverlayTrigger: vi.fn(({ children }) => <div data-testid="overlay-trigger">{children}</div>)
 }));
 
+// Mock clipboard utils
+vi.mock('../../utils/clipboardUtils', () => ({
+  copyToClipboardMultiFormat: vi.fn(),
+  isMultiFormatClipboardSupported: vi.fn(() => true)
+}));
+
+// Mock FontSizeContext
+vi.mock('../../contexts/FontSizeContext', () => ({
+  useFontSize: vi.fn(() => ({ fontSize: 'medium' })),
+  FontSizeProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+}));
+
 describe('RedlineOutput Component', () => {
   const mockChanges: DiffChange[] = [
     { type: 'unchanged', content: 'This is unchanged text.', index: 0 },
@@ -222,8 +234,9 @@ describe('RedlineOutput Component', () => {
   });
 
   describe('User Interactions', () => {
-    it('should call onCopy when copy button is clicked', () => {
+    it('should call onCopy when copy button is clicked', async () => {
       const mockOnCopy = vi.fn();
+      const { copyToClipboardMultiFormat } = await import('../../utils/clipboardUtils');
       
       render(
         <ExperimentalLayoutProvider>
@@ -234,7 +247,10 @@ describe('RedlineOutput Component', () => {
       const copyButton = screen.getByRole('button', { name: /copy/i });
       fireEvent.click(copyButton);
       
-      expect(mockOnCopy).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(copyToClipboardMultiFormat).toHaveBeenCalledWith(mockChanges);
+        expect(mockOnCopy).toHaveBeenCalledTimes(1);
+      });
     });
 
     it('should handle scroll events', () => {
