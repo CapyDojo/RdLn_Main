@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Sparkles, Image } from 'lucide-react';
+import { Copy, Sparkles, Image, Check } from 'lucide-react';
 import { DiffChange } from '../types';
 import { BaseComponentProps } from '../types/components';
 import { UI_CONFIG, FEATURE_FLAGS, DEV_CONFIG } from '../config/appConfig';
@@ -53,6 +53,9 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
   // Background mode state (only used in overlay mode)
   const [backgroundMode, setBackgroundMode] = React.useState<'theme' | 'glassmorphism'>('theme');
+  
+  // Copy success state for microinteraction
+  const [copySuccess, setCopySuccess] = React.useState(false);
 
   // Font size context
   const { fontSize } = useFontSize();
@@ -142,6 +145,11 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
     try {
       await copyToClipboardMultiFormat(changes);
+      
+      // Show success microinteraction
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 1500);
+      
       onCopy();
 
       // Track success metrics
@@ -216,7 +224,9 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             <div className="relative segmented-control">
               <button
                 onClick={copyToClipboard}
-                className="flex items-center justify-center rounded-lg transition-all duration-200 shrink-0 relative group segment"
+                className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
+                  copySuccess ? 'bg-green-100 border-green-300' : ''
+                }`}
                 title={isMultiFormatClipboardSupported()
                   ? "Copy redlined document with formatting (HTML + plain text)"
                   : "Copy redlined document as plain text"
@@ -224,12 +234,21 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                 style={{
                   width: '48px',
                   height: '48px',
-                  aspectRatio: '1/1'
+                  aspectRatio: '1/1',
+                  transform: copySuccess ? 'scale(1.05)' : 'scale(1)',
                 }}
               >
                 <div className="flex flex-col items-center justify-center">
-                  <Copy className="w-6 h-6" aria-hidden="true" />
-                  <span className="text-xs mt-0.5 hidden sm:block">Copy</span>
+                  {copySuccess ? (
+                    <Check className={`w-6 h-6 text-green-600 transition-all duration-300`} aria-hidden="true" />
+                  ) : (
+                    <Copy className="w-6 h-6 transition-all duration-300" aria-hidden="true" />
+                  )}
+                  <span className={`text-xs mt-0.5 hidden sm:block transition-all duration-300 ${
+                    copySuccess ? 'text-green-600' : ''
+                  }`}>
+                    {copySuccess ? 'Copied!' : 'Copy'}
+                  </span>
                 </div>
               </button>
             </div>

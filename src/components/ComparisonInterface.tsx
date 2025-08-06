@@ -14,7 +14,7 @@
  */
 
 import React, { useEffect, useState, useRef } from 'react';
-import { AlertCircle, CheckCircle, GripHorizontal } from 'lucide-react';
+import { AlertCircle, GripHorizontal } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
 import { TextInputPanel } from './TextInputPanel';
 import { RedlineOutput } from './RedlineOutput';
@@ -100,7 +100,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
 
   const redlineOutputRef = useRef<HTMLDivElement>(null);
 
-  const [copySuccess, setCopySuccess] = React.useState(false);
+
   
   // SSMR Step 1: Scroll lock state (Safe - no functionality yet)
   const [isScrollLocked, setIsScrollLocked] = useState(false);
@@ -271,10 +271,6 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
   }, [compareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible]);
 
   // Performance-aware handlers
-  const handleCopy = usePerformanceAwareHandler(() => {
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
-  }, 'copy_output', performanceTracker);
 
   const handleLoadTest = usePerformanceAwareHandler(async (originalText: string, revisedText: string) => {
     // Track load test operation
@@ -557,12 +553,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
         </div>
       )}
       
-      {copySuccess && (
-        <div className="mt-3 flex items-center gap-2 text-theme-secondary-600 text-sm">
-          <CheckCircle className="w-4 h-4" />
-          Redlined text copied to clipboard!
-        </div>
-      )}
+
 
       
       {(result || isProcessing) && (
@@ -587,7 +578,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
                   stats={result.stats}
                   USE_CSS_RESIZE={USE_CSS_RESIZE}
                   outputHeight={outputHeight}
-                  onCopy={handleCopy}
+                  onCopy={() => {}}
                   outputResizeHandlers={outputResizeHandlers}
                   scrollRef={redlineOutputRef}
                   onShowOverlay={showOverlay}
@@ -600,7 +591,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
                 stats={result.stats}
                 USE_CSS_RESIZE={USE_CSS_RESIZE}
                 outputHeight={outputHeight}
-                onCopy={handleCopy}
+                onCopy={() => {}}
                 outputResizeHandlers={outputResizeHandlers}
                 scrollRef={redlineOutputRef}
                 onShowOverlay={showOverlay}
@@ -630,7 +621,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
         >
           <RedlineOutput
             changes={result.changes}
-            onCopy={handleCopy}
+            onCopy={() => {}}
             height={9999} // Full height in overlay
             isProcessing={false}
             processingStatus=""
