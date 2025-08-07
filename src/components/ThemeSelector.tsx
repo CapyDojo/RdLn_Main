@@ -182,8 +182,19 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
       }
     };
 
-    // Initial position
-    updatePosition();
+    // Initial position with layout settling delay
+    const initializePosition = () => {
+      // Use requestAnimationFrame to ensure layout is complete
+      requestAnimationFrame(() => {
+        // Double RAF to ensure all layout calculations are done
+        requestAnimationFrame(() => {
+          updatePosition();
+        });
+      });
+    };
+
+    // Initialize position after layout settles
+    initializePosition();
 
     // Listen for scroll and resize events (stable listeners like LanguageSettingsDropdown)
     const handleScroll = () => updatePosition();
@@ -202,9 +213,13 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
   React.useEffect(() => {
     if (!themesButtonRef.current) return;
 
-    // Update position when zoom changes - getBoundingClientRect() now returns correct values
-    const rect = themesButtonRef.current.getBoundingClientRect();
-    setButtonRect(rect);
+    // Update position when zoom changes with layout settling
+    requestAnimationFrame(() => {
+      if (themesButtonRef.current) {
+        const rect = themesButtonRef.current.getBoundingClientRect();
+        setButtonRect(rect);
+      }
+    });
   }, [zoomLevel]);
 
   // Reset all card styles when theme changes to prevent stuck hover states

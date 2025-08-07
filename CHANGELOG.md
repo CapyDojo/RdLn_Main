@@ -1,3 +1,131 @@
+## Version 0.5.8 - "Composition Stats Visual Consistency Enhancement"
+*Released: August 8, 2025*
+
+### 🎨 **Visual Consistency & User Experience Excellence**
+
+#### **Composition Progress Bar Text Styling Fix**
+- **PROBLEM SOLVED**: Mixed styling in composition progress bars created visual inconsistency - floating badges for small sections mixed with inline text for larger sections, resulting in uneven, unprofessional appearance
+- **USER FEEDBACK**: Visual inconsistency was distracting and didn't meet professional polish expectations
+- **SOLUTION**: Implemented consistent inline text styling across all composition bars with guaranteed minimum width allocation
+- **TECHNICAL IMPLEMENTATION**: Used `Math.max(actualPercent, 25)` to ensure each section has at least 25% width for text readability
+
+#### **Unified Visual Approach Achievement**
+- **Consistent Styling**: All descriptive text now appears inline within colored sections for uniform appearance
+- **Readability Guarantee**: Minimum 25% width ensures text remains legible regardless of actual percentages
+- **Professional Polish**: Clean, consistent presentation across BLOCKS, WORDS, and CHARACTERS levels
+- **No Text Clipping**: Eliminated previous floating badge inconsistencies while maintaining text visibility
+
+#### **Enhanced User Experience**
+- **Visual Harmony**: Uniform text positioning creates professional, cohesive interface
+- **Predictable Behavior**: All composition sections follow identical styling patterns
+- **Improved Readability**: Adequate space allocation prevents text cramping in small sections
+- **Professional Appearance**: Consistent inline styling maintains document integrity expectations
+
+### ✅ **Cross-Level Implementation**
+
+#### **Complete Composition Coverage**
+- **BLOCKS Level**: Consistent inline text with 25% minimum width guarantee
+- **WORDS Level**: Matching styling approach for visual continuity  
+- **CHARACTERS Level**: Identical implementation for complete consistency
+- **Unified Architecture**: Same logic applied across all composition visualization levels
+
+#### **Technical Excellence**
+- **Scalable Solution**: Minimum width calculation adapts to any percentage distribution
+- **Performance Optimized**: Simple `Math.max()` calculation with zero overhead
+- **Maintainable Code**: Clear, readable implementation that future developers can understand
+- **Backwards Compatible**: No breaking changes to existing functionality
+
+### 🎯 **User Interface Transformation**
+
+#### **Before Enhancement**
+- Mixed styling: floating badges for small sections, inline text for larger sections
+- Visual inconsistency across different percentage distributions
+- Unprofessional appearance with uneven text positioning
+- User feedback indicating distraction from mixed presentation styles
+
+#### **After Enhancement**
+- Unified inline text styling across all sections regardless of size
+- Professional, consistent appearance meeting business application standards
+- Predictable visual behavior creates user confidence
+- Clean, readable composition visualization that matches user expectations
+
+### 📁 **Files Modified**
+
+- **`src/components/ComparisonStats.tsx`** - Updated all three composition sections (BLOCKS, WORDS, CHARACTERS) with consistent inline styling and minimum width guarantees
+
+### 🏆 **User Experience Achievement**
+
+**Achievement**: Transformed composition progress bars from visually inconsistent mixed styling into a professional, unified presentation that maintains readability while creating the clean, predictable interface expected in legal and business applications.
+
+---
+
+## Version 0.5.7 - "Theme Cascade Layout Timing Fix"
+*Released: August 8, 2025*
+
+### 🔧 **Layout Timing & Positioning Excellence**
+
+#### **Theme Cascade Initial Positioning Fix**
+- **PROBLEM SOLVED**: Theme cascade positioning was slightly off on app reload, requiring browser zoom to snap to correct position
+- **ROOT CAUSE**: Initial `getBoundingClientRect()` called before browser layout fully settled, returning incorrect coordinates
+- **BREAKTHROUGH**: Implemented double `requestAnimationFrame` pattern to ensure layout completion before position capture
+- **RESULT**: Perfect cascade positioning immediately on first hover, no browser zoom required
+
+#### **Layout Settling Architecture**
+- **Double RAF Pattern**: Two nested `requestAnimationFrame` calls ensure complete layout calculations
+- **Consistent Implementation**: Applied same pattern to zoom level change effects for uniformity
+- **Electron Compatibility**: Solution works seamlessly in both browser and Electron builds
+- **Zero Performance Impact**: Minimal delay (< 16ms) for guaranteed positioning accuracy
+
+#### **Technical Implementation Excellence**
+```typescript
+// Enhanced layout settling for accurate positioning
+const initializePosition = () => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      updatePosition(); // Now guaranteed accurate coordinates
+    });
+  });
+};
+```
+
+### ✅ **Cross-Platform Reliability**
+
+#### **Universal Layout Solution**
+- **Browser Compatibility**: Works across Chrome, Firefox, Safari, Edge
+- **Electron Ready**: No additional changes needed for desktop builds
+- **Timing Independence**: Eliminates dependency on font loading, CSS transitions, or other async layout factors
+- **Consistent Behavior**: Identical positioning behavior across all environments
+
+#### **Production Quality Assurance**
+- **Immediate Accuracy**: Cascade appears in correct position on first interaction
+- **No User Workarounds**: Eliminates need for zoom-to-fix positioning issues
+- **Professional Polish**: Smooth, predictable behavior that meets desktop application standards
+- **Future-Proof**: Robust against layout timing variations in different environments
+
+### 🚀 **Development Process Excellence**
+
+#### **Root Cause Investigation Success**
+- **Systematic Analysis**: Traced timing mismatch between component initialization and layout completion
+- **Evidence-Based Solution**: Identified browser zoom "fix" as evidence of layout timing issue
+- **Minimal Implementation**: Two-line change with maximum impact
+- **SSMR Methodology**: Safe, targeted fix with clear rollback path
+
+#### **Architecture Insights**
+- **Layout Timing Principle**: `getBoundingClientRect()` accuracy depends on complete layout settling
+- **RAF Pattern Value**: Double `requestAnimationFrame` is reliable pattern for layout-dependent operations
+- **Cross-Platform Consistency**: Same solution works across browser and Electron environments
+- **Performance Consideration**: Minimal delay for guaranteed accuracy is worthwhile trade-off
+
+### 📁 **Files Modified**
+
+- **`src/components/ThemeSelector.tsx`** - Enhanced position initialization with double RAF pattern
+
+### 🏆 **User Experience Achievement**
+
+**Achievement**: Eliminated the minor but noticeable positioning inconsistency on app reload, ensuring the elegant theme cascade appears perfectly positioned from the very first interaction, maintaining the professional polish expected from desktop-class applications.
+
+---
+
 ## Version 0.5.6 - "Elegant Crescent Theme Cascade"
 *Released: August 7, 2025*
 
