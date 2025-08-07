@@ -506,7 +506,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       data-panel-title={title}
       data-instance-id={instanceId.current}
     >
-      <div className="glass-panel-header-footer px-4 py-3 border-b border-theme-neutral-200 flex items-center justify-between">
+      <div className="glass-panel-header-footer px-4 py-3 flex items-center justify-between relative">
+        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-theme-neutral-300 to-transparent"></div>
         <div className="flex items-center gap-2">
           {iconEmoji ? (
             <span className="text-5xl" role="img" aria-label="Input panel">{iconEmoji}</span>

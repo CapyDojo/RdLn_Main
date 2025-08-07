@@ -2,7 +2,7 @@
 
 **Date:** July 3, 2025  
 **Reviewer:** AI Security Audit  
-**Project:** RdLn - Professional Text Redlining with OCR  
+**Project:** RdLn - Professional Text Comparison Redlining with OCR  
 **Version:** Current as of 2025-07-03T05:20:53Z  
 
 ## Executive Summary

@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { BarChart3, Plus, Minus, FileText, ChevronDown, ChevronUp, Type, Hash, AlertTriangle, CheckCircle, Info, TrendingUp, HelpCircle } from 'lucide-react';
+import { Plus, Minus, FileText, ChevronDown, ChevronUp, Type, Hash, AlertTriangle, CheckCircle, Info, TrendingUp, HelpCircle } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
 import { ComparisonStats as ComparisonStatsType } from '../types';
 
@@ -170,24 +170,29 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
   return (
     <div className={`space-y-4 ${className || ''}`} style={style}>
       {/* Executive Summary Card */}
-      <div className="glass-panel border border-theme-neutral-300 rounded-xl p-6 shadow-lg">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-3xl" role="img" aria-label="Analysis panel">📊</span>
-            <h3 className="text-2xl font-semibold text-theme-primary-900">Comparison Analysis</h3>
-          </div>
-          <div className="flex justify-center">
-            <Tooltip content={`${impactLevel.charAt(0).toUpperCase() + impactLevel.slice(1)} Impact: ${impactLevel === 'low' ? 'Minor changes (≤10%), routine review expected' : impactLevel === 'medium' ? 'Moderate changes (11-30%), careful review required' : 'Significant changes (>30%), thorough legal analysis needed'}`}>
-              <div className="glass-panel flex items-center gap-2 px-3 py-2 rounded-lg border border-theme-neutral-300 cursor-help">
-                <ImpactIcon className="w-4 h-4 text-theme-primary-600" />
-                <span className="text-sm font-medium text-theme-primary-900 capitalize">
-                  {impactLevel} Impact
-                </span>
-                <HelpCircle className="w-3 h-3 text-theme-neutral-500 opacity-60" />
-              </div>
-            </Tooltip>
+      <div className="glass-panel border border-theme-neutral-300 rounded-xl shadow-lg">
+        <div className="px-6 pt-6 pb-2">
+          <div className="flex items-center mb-4 relative">
+            <div className="flex-1 flex items-center gap-2">
+              <span className="text-3xl" role="img" aria-label="Analysis panel">📊</span>
+              <h3 className="text-2xl font-semibold text-theme-primary-900">Comparison Analysis</h3>
+            </div>
+            <div className="flex-1 flex justify-center">
+              <Tooltip content={`${impactLevel.charAt(0).toUpperCase() + impactLevel.slice(1)} Impact: ${impactLevel === 'low' ? 'Minor changes (≤10%), routine review expected' : impactLevel === 'medium' ? 'Moderate changes (11-30%), careful review required' : 'Significant changes (>30%), thorough legal analysis needed'}`}>
+                <div className="glass-panel flex items-center gap-2 px-3 py-2 rounded-lg border border-theme-neutral-300 cursor-help">
+                  <ImpactIcon className="w-4 h-4 text-theme-primary-600" />
+                  <span className="text-sm font-medium text-theme-primary-900 capitalize">
+                    {impactLevel} Impact
+                  </span>
+                  <HelpCircle className="w-3 h-3 text-theme-neutral-500 opacity-60" />
+                </div>
+              </Tooltip>
+            </div>
+            <div className="flex-1"></div>
           </div>
         </div>
+        <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-theme-neutral-300 to-transparent mb-4 -mx-6" style={{ width: 'calc(100% + 3.9rem)' }}></div>
+        <div className="px-6 pb-6">
         
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -283,215 +288,99 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
             </div>
           </div>
         </div>
+        </div>
       </div>
       
       {/* Detailed Analysis Section */}
       {isExpanded && (
         <div className="space-y-4">
-          {/* Change Breakdown Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Additions Card */}
-            <div className="glass-panel bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Plus className="w-5 h-5 text-green-700" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-green-800">Additions</h4>
-                    <p className="text-xs text-green-600">Content added to document</p>
-                  </div>
-                </div>
-                <CircularProgress 
-                  percentage={additionPercent} 
-                  color="#059669" 
-                  size={50}
-                  showText={false}
-                />
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-green-700">Blocks:</span>
-                  <span className="font-bold text-green-800">{stats.additions}</span>
-                </div>
-                {stats.wordStats && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-green-700">Words:</span>
-                    <span className="font-bold text-green-800">{stats.wordStats.addedWords}</span>
-                  </div>
-                )}
-                {stats.characterStats && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-green-700">Characters:</span>
-                    <span className="font-bold text-green-800">{stats.characterStats.addedCharacters}</span>
-                  </div>
-                )}
-                <div className="text-xs text-green-600 bg-green-100 rounded px-2 py-1">
-                  {additionPercent.toFixed(1)}% of total document
-                </div>
-              </div>
-            </div>
-            
-            {/* Deletions Card */}
-            <div className="glass-panel bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <Minus className="w-5 h-5 text-red-700" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-red-800">Deletions</h4>
-                    <p className="text-xs text-red-600">Content removed from document</p>
-                  </div>
-                </div>
-                <CircularProgress 
-                  percentage={deletionPercent} 
-                  color="#dc2626" 
-                  size={50}
-                  showText={false}
-                />
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-red-700">Blocks:</span>
-                  <span className="font-bold text-red-800">{stats.deletions}</span>
-                </div>
-                {stats.wordStats && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-red-700">Words:</span>
-                    <span className="font-bold text-red-800">{stats.wordStats.deletedWords}</span>
-                  </div>
-                )}
-                {stats.characterStats && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-red-700">Characters:</span>
-                    <span className="font-bold text-red-800">{stats.characterStats.deletedCharacters}</span>
-                  </div>
-                )}
-                <div className="text-xs text-red-600 bg-red-100 rounded px-2 py-1">
-                  {deletionPercent.toFixed(1)}% of total document
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Detailed Statistics Grid */}
+          {/* Additions and Deletions Side by Side */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Word Statistics */}
-            {stats.wordStats && (
-              <div className="glass-panel border border-theme-neutral-200 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Type className="w-5 h-5 text-blue-700" />
-                  </div>
-                  <Tooltip content="Word-level analysis provides precise measurement of textual changes, essential for legal document review and compliance tracking.">
-                    <div>
-                      <h4 className="font-semibold text-theme-primary-800 flex items-center gap-1">
-                        Word Analysis
-                        <HelpCircle className="w-3 h-3 opacity-60" />
-                      </h4>
-                      <p className="text-xs text-theme-neutral-600">Detailed word-level breakdown</p>
-                    </div>
-                  </Tooltip>
+            {/* Additions Section */}
+            <div className="glass-panel bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Plus className="w-5 h-5 text-green-700" />
                 </div>
-                
-                <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="bg-green-50 rounded-lg p-3">
-                      <div className="text-lg font-bold text-green-700">{stats.wordStats.addedWords}</div>
-                      <div className="text-xs text-green-600">Added</div>
-                    </div>
-                    <div className="bg-red-50 rounded-lg p-3">
-                      <div className="text-lg font-bold text-red-700">{stats.wordStats.deletedWords}</div>
-                      <div className="text-xs text-red-600">Deleted</div>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-lg font-bold text-gray-700">{stats.wordStats.unchangedWords}</div>
-                      <div className="text-xs text-gray-600">Unchanged</div>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-3 border-t border-theme-neutral-200 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-theme-neutral-600">Total Words:</span>
-                      <span className="font-semibold">{stats.wordStats.totalWords}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <Tooltip content="The number of words that require legal review - additions plus deletions. This directly correlates to billable review time.">
-                        <span className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                          Review Workload:
-                          <HelpCircle className="w-3 h-3 opacity-60" />
-                        </span>
-                      </Tooltip>
-                      <span className="font-semibold text-theme-accent-700">{stats.wordStats.reviewWorkload}</span>
-                    </div>
-                  </div>
+                <div>
+                  <h4 className="font-semibold text-green-800 text-lg">Additions</h4>
+                  <p className="text-xs text-green-600">Content added to document</p>
                 </div>
               </div>
-            )}
-            
-            {/* Character Statistics */}
-            {stats.characterStats && (
-              <div className="glass-panel border border-theme-neutral-200 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Hash className="w-5 h-5 text-purple-700" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-theme-primary-800">Character Analysis</h4>
-                    <p className="text-xs text-theme-neutral-600">Character-level precision metrics</p>
-                  </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div className="bg-green-100 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-green-700">{stats.additions}</div>
+                  <div className="text-sm text-green-600">Blocks</div>
                 </div>
-                
-                <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="bg-green-50 rounded-lg p-3">
-                      <div className="text-lg font-bold text-green-700">{stats.characterStats.addedCharacters}</div>
-                      <div className="text-xs text-green-600">Added</div>
-                    </div>
-                    <div className="bg-red-50 rounded-lg p-3">
-                      <div className="text-lg font-bold text-red-700">{stats.characterStats.deletedCharacters}</div>
-                      <div className="text-xs text-red-600">Deleted</div>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-lg font-bold text-gray-700">{stats.characterStats.unchangedCharacters}</div>
-                      <div className="text-xs text-gray-600">Unchanged</div>
-                    </div>
+                {stats.wordStats && (
+                  <div className="bg-green-100 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-green-700">{stats.wordStats.addedWords.toLocaleString()}</div>
+                    <div className="text-sm text-green-600">Words</div>
                   </div>
-                  
-                  <div className="pt-3 border-t border-theme-neutral-200 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-theme-neutral-600">Total Characters:</span>
-                      <span className="font-semibold">{stats.characterStats.totalCharacters}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-theme-neutral-600">Review Workload:</span>
-                      <span className="font-semibold text-theme-accent-700">{stats.characterStats.reviewWorkload}</span>
-                    </div>
+                )}
+                {stats.characterStats && (
+                  <div className="bg-green-100 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-green-700">{stats.characterStats.addedCharacters.toLocaleString()}</div>
+                    <div className="text-sm text-green-600">Characters</div>
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* Deletions Section */}
+            <div className="glass-panel bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <Minus className="w-5 h-5 text-red-700" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-red-800 text-lg">Deletions</h4>
+                  <p className="text-xs text-red-600">Content removed from document</p>
                 </div>
               </div>
-            )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div className="bg-red-100 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-red-700">{stats.deletions}</div>
+                  <div className="text-sm text-red-600">Blocks</div>
+                </div>
+                {stats.wordStats && (
+                  <div className="bg-red-100 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-red-700">{stats.wordStats.deletedWords.toLocaleString()}</div>
+                    <div className="text-sm text-red-600">Words</div>
+                  </div>
+                )}
+                {stats.characterStats && (
+                  <div className="bg-red-100 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-red-700">{stats.characterStats.deletedCharacters.toLocaleString()}</div>
+                    <div className="text-sm text-red-600">Characters</div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          
-          {/* Visual Document Composition */}
+
+          {/* Composition Section */}
           <div className="glass-panel border border-theme-neutral-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-theme-primary-100 rounded-lg">
-                <BarChart3 className="w-5 h-5 text-theme-primary-700" />
-              </div>
+              <span className="text-2xl" role="img" aria-label="Composition analysis">🧮</span>
               <div>
-                <h4 className="font-semibold text-theme-primary-800">Document Composition</h4>
-                <p className="text-xs text-theme-neutral-600">Visual breakdown of changes</p>
+                <h4 className="font-semibold text-theme-primary-800 text-lg">Composition</h4>
+                <p className="text-xs text-theme-neutral-600">Visual breakdown of changes across all levels</p>
               </div>
             </div>
             
-            <div className="space-y-4">
-              {/* Enhanced Progress Bar */}
-              <div className="relative">
-                <div className="flex rounded-full overflow-hidden h-4 bg-gray-200 shadow-inner">
+            <div className="space-y-6">
+              {/* Blocks Composition */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-theme-primary-800">BLOCKS</span>
+                  <span className="text-sm text-theme-neutral-600">
+                    {stats.additions + stats.deletions + stats.unchanged} total
+                  </span>
+                </div>
+                <div className="flex rounded-full overflow-hidden h-3 bg-gray-200 shadow-inner mb-2">
                   <div 
                     className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500" 
                     style={{ width: `${additionPercent}%` }}
@@ -508,23 +397,116 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                     title={`${(100 - additionPercent - deletionPercent).toFixed(1)}% unchanged`}
                   ></div>
                 </div>
-                
-                {/* Legend */}
-                <div className="flex justify-center gap-6 mt-3 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-green-500 rounded-full"></div>
-                    <span>Added ({additionPercent.toFixed(1)}%)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-red-400 to-red-500 rounded-full"></div>
-                    <span>Deleted ({deletionPercent.toFixed(1)}%)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-gray-300 to-gray-400 rounded-full"></div>
-                    <span>Unchanged ({(100 - additionPercent - deletionPercent).toFixed(1)}%)</span>
-                  </div>
+                <div className="relative text-xs text-theme-neutral-600" style={{ height: '16px' }}>
+                  {stats.additions > 0 && (
+                    <div className="absolute left-0" style={{ width: `${Math.max(additionPercent, 25)}%` }}>
+                      <div className="text-left px-1">{stats.additions} added ({additionPercent.toFixed(1)}%)</div>
+                    </div>
+                  )}
+                  
+                  {stats.deletions > 0 && (
+                    <div className="absolute left-0" style={{ left: `${additionPercent}%`, width: `${Math.max(deletionPercent, 25)}%` }}>
+                      <div className="text-center px-1">{stats.deletions} deleted ({deletionPercent.toFixed(1)}%)</div>
+                    </div>
+                  )}
+                  
+                  {stats.unchanged > 0 && (
+                    <div className="absolute right-0" style={{ width: `${Math.max(100 - additionPercent - deletionPercent, 25)}%` }}>
+                      <div className="text-right px-1">{stats.unchanged} unchanged ({(100 - additionPercent - deletionPercent).toFixed(1)}%)</div>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Words Composition */}
+              {stats.wordStats && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-theme-primary-800">WORDS</span>
+                    <span className="text-sm text-theme-neutral-600">
+                      {stats.wordStats.totalWords.toLocaleString()} total
+                    </span>
+                  </div>
+                  <div className="flex rounded-full overflow-hidden h-3 bg-gray-200 shadow-inner mb-2">
+                    <div 
+                      className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500" 
+                      style={{ width: `${(stats.wordStats.addedWords / stats.wordStats.totalWords) * 100}%` }}
+                    ></div>
+                    <div 
+                      className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-500" 
+                      style={{ width: `${(stats.wordStats.deletedWords / stats.wordStats.totalWords) * 100}%` }}
+                    ></div>
+                    <div 
+                      className="bg-gradient-to-r from-gray-300 to-gray-400" 
+                      style={{ width: `${(stats.wordStats.unchangedWords / stats.wordStats.totalWords) * 100}%` }}
+                    ></div>
+                  </div>
+                  <div className="relative text-xs text-theme-neutral-600" style={{ height: '16px' }}>
+                    {stats.wordStats.addedWords > 0 && (
+                      <div className="absolute left-0" style={{ width: `${Math.max((stats.wordStats.addedWords / stats.wordStats.totalWords) * 100, 25)}%` }}>
+                        <div className="text-left px-1">{stats.wordStats.addedWords.toLocaleString()} added ({((stats.wordStats.addedWords / stats.wordStats.totalWords) * 100).toFixed(1)}%)</div>
+                      </div>
+                    )}
+                    
+                    {stats.wordStats.deletedWords > 0 && (
+                      <div className="absolute left-0" style={{ left: `${(stats.wordStats.addedWords / stats.wordStats.totalWords) * 100}%`, width: `${Math.max((stats.wordStats.deletedWords / stats.wordStats.totalWords) * 100, 25)}%` }}>
+                        <div className="text-center px-1">{stats.wordStats.deletedWords.toLocaleString()} deleted ({((stats.wordStats.deletedWords / stats.wordStats.totalWords) * 100).toFixed(1)}%)</div>
+                      </div>
+                    )}
+                    
+                    {stats.wordStats.unchangedWords > 0 && (
+                      <div className="absolute right-0" style={{ width: `${Math.max((stats.wordStats.unchangedWords / stats.wordStats.totalWords) * 100, 25)}%` }}>
+                        <div className="text-right px-1">{stats.wordStats.unchangedWords.toLocaleString()} unchanged ({((stats.wordStats.unchangedWords / stats.wordStats.totalWords) * 100).toFixed(1)}%)</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Characters Composition */}
+              {stats.characterStats && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-theme-primary-800">CHARACTERS</span>
+                    <span className="text-sm text-theme-neutral-600">
+                      {stats.characterStats.totalCharacters.toLocaleString()} total
+                    </span>
+                  </div>
+                  <div className="flex rounded-full overflow-hidden h-3 bg-gray-200 shadow-inner mb-2">
+                    <div 
+                      className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500" 
+                      style={{ width: `${(stats.characterStats.addedCharacters / stats.characterStats.totalCharacters) * 100}%` }}
+                    ></div>
+                    <div 
+                      className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-500" 
+                      style={{ width: `${(stats.characterStats.deletedCharacters / stats.characterStats.totalCharacters) * 100}%` }}
+                    ></div>
+                    <div 
+                      className="bg-gradient-to-r from-gray-300 to-gray-400" 
+                      style={{ width: `${(stats.characterStats.unchangedCharacters / stats.characterStats.totalCharacters) * 100}%` }}
+                    ></div>
+                  </div>
+                  <div className="relative text-xs text-theme-neutral-600" style={{ height: '16px' }}>
+                    {stats.characterStats.addedCharacters > 0 && (
+                      <div className="absolute left-0" style={{ width: `${Math.max((stats.characterStats.addedCharacters / stats.characterStats.totalCharacters) * 100, 25)}%` }}>
+                        <div className="text-left px-1">{stats.characterStats.addedCharacters.toLocaleString()} added ({((stats.characterStats.addedCharacters / stats.characterStats.totalCharacters) * 100).toFixed(1)}%)</div>
+                      </div>
+                    )}
+                    
+                    {stats.characterStats.deletedCharacters > 0 && (
+                      <div className="absolute left-0" style={{ left: `${(stats.characterStats.addedCharacters / stats.characterStats.totalCharacters) * 100}%`, width: `${Math.max((stats.characterStats.deletedCharacters / stats.characterStats.totalCharacters) * 100, 25)}%` }}>
+                        <div className="text-center px-1">{stats.characterStats.deletedCharacters.toLocaleString()} deleted ({((stats.characterStats.deletedCharacters / stats.characterStats.totalCharacters) * 100).toFixed(1)}%)</div>
+                      </div>
+                    )}
+                    
+                    {stats.characterStats.unchangedCharacters > 0 && (
+                      <div className="absolute right-0" style={{ width: `${Math.max((stats.characterStats.unchangedCharacters / stats.characterStats.totalCharacters) * 100, 25)}%` }}>
+                        <div className="text-right px-1">{stats.characterStats.unchangedCharacters.toLocaleString()} unchanged ({((stats.characterStats.unchangedCharacters / stats.characterStats.totalCharacters) * 100).toFixed(1)}%)</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
