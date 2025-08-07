@@ -1,4 +1,5 @@
-import { DiffChange, ComparisonResult } from '../types';
+import { DiffChange, ComparisonResult, ComparisonStats } from '../types';
+import { getWordStatsForBlocks } from '../utils/wordTokenization';
 
 // DEBUG MODE: Set to true to enable detailed logging for debugging
 const DEBUG_MODE = false;
@@ -1562,12 +1563,73 @@ export class MyersAlgorithm {
     }
 
     // Calculate stats before using in progressive sections
-    const stats = {
-      additions: finalChanges.filter(c => c.type === 'added').length,
-      deletions: finalChanges.filter(c => c.type === 'removed').length,
-      unchanged: finalChanges.filter(c => c.type === 'unchanged').length,
-      changed: finalChanges.filter(c => c.type === 'changed').length,
-      totalChanges: finalChanges.filter(c => c.type !== 'unchanged').length
+    const addedChanges = finalChanges.filter(c => c.type === 'added');
+    const deletedChanges = finalChanges.filter(c => c.type === 'removed');
+    const unchangedChanges = finalChanges.filter(c => c.type === 'unchanged');
+    const changedChanges = finalChanges.filter(c => c.type === 'changed');
+
+    // Calculate word and character statistics
+    // For 'added' and 'removed', use the content directly
+    const addedTexts = addedChanges.map(c => c.content);
+    const deletedTexts = deletedChanges.map(c => c.content);
+    const unchangedTexts = unchangedChanges.map(c => c.content);
+    
+    // For 'changed', treat as separate deletions and additions
+    const changedDeletedTexts = changedChanges.map(c => c.originalContent || '');
+    const changedAddedTexts = changedChanges.map(c => c.revisedContent || '');
+
+    // Calculate base word stats
+    const addedWordStats = getWordStatsForBlocks(addedTexts);
+    const deletedWordStats = getWordStatsForBlocks(deletedTexts);
+    const unchangedWordStats = getWordStatsForBlocks(unchangedTexts);
+    
+    // Calculate word stats for substitutions (separate deletions and additions)
+    const changedDeletedWordStats = getWordStatsForBlocks(changedDeletedTexts);
+    const changedAddedWordStats = getWordStatsForBlocks(changedAddedTexts);
+
+    // Aggregate: additions include both pure additions and substitution additions
+    const totalAddedWords = addedWordStats.wordCount + changedAddedWordStats.wordCount;
+    const totalDeletedWords = deletedWordStats.wordCount + changedDeletedWordStats.wordCount;
+    
+    const totalAddedCharacters = addedWordStats.characterCount + changedAddedWordStats.characterCount;
+    const totalDeletedCharacters = deletedWordStats.characterCount + changedDeletedWordStats.characterCount;
+    
+    const totalAddedCharactersNoSpaces = addedWordStats.characterCountNoSpaces + changedAddedWordStats.characterCountNoSpaces;
+    const totalDeletedCharactersNoSpaces = deletedWordStats.characterCountNoSpaces + changedDeletedWordStats.characterCountNoSpaces;
+
+    // Calculate review workload and percentages
+    const wordReviewWorkload = totalAddedWords + totalDeletedWords;
+    const characterReviewWorkload = totalAddedCharacters + totalDeletedCharacters;
+    
+    const totalWordsInDocument = totalAddedWords + totalDeletedWords + unchangedWordStats.wordCount;
+    const totalCharactersInDocument = totalAddedCharacters + totalDeletedCharacters + unchangedWordStats.characterCount;
+    
+    const wordPercentageChanged = totalWordsInDocument > 0 ? (wordReviewWorkload / totalWordsInDocument) * 100 : 0;
+    const characterPercentageChanged = totalCharactersInDocument > 0 ? (characterReviewWorkload / totalCharactersInDocument) * 100 : 0;
+
+    const stats: ComparisonStats = {
+      // Block-level counts: substitutions count as both addition and deletion blocks
+      additions: addedChanges.length + changedChanges.length,
+      deletions: deletedChanges.length + changedChanges.length,
+      unchanged: unchangedChanges.length,
+      totalChanges: addedChanges.length + deletedChanges.length + (changedChanges.length * 2),
+      wordStats: {
+        addedWords: totalAddedWords,
+        deletedWords: totalDeletedWords,
+        unchangedWords: unchangedWordStats.wordCount,
+        totalWords: totalWordsInDocument,
+        reviewWorkload: wordReviewWorkload,
+        percentageChanged: Math.round(wordPercentageChanged * 10) / 10 // Round to 1 decimal place
+      },
+      characterStats: {
+        addedCharacters: totalAddedCharacters,
+        deletedCharacters: totalDeletedCharacters,
+        unchangedCharacters: unchangedWordStats.characterCount,
+        totalCharacters: totalCharactersInDocument,
+        totalCharactersNoSpaces: totalAddedCharactersNoSpaces + totalDeletedCharactersNoSpaces + unchangedWordStats.characterCountNoSpaces,
+        reviewWorkload: characterReviewWorkload,
+        percentageChanged: Math.round(characterPercentageChanged * 10) / 10 // Round to 1 decimal place
+      }
     };
 
     // SSMR: Progressive section streaming for large result sets
@@ -1751,7 +1813,7 @@ export class MyersAlgorithm {
    */
   private static async createProgressiveSectionResult(
     changes: DiffChange[],
-    stats: any,
+    stats: ComparisonStats,
     progressCallback?: (progress: number, stage: string) => void
   ): Promise<ComparisonResult> {
     if (progressCallback) {

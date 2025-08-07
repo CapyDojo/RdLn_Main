@@ -138,6 +138,54 @@ const hexToRgb = (hex: string): string => {
   return `${r}, ${g}, ${b}`;
 };
 
+// Helper function to calculate simple "(" crescent positions
+const calculateCrescentPosition = (index: number, totalItems: number) => {
+  // Step 1: Refined linear cascade - shifted further left to clear button
+  const baseLeftOffset = -180; // Move first card much further left to clear button
+  const downwardStep = 50;     // Reduced vertical spacing for tighter cascade
+  const maxLeftwardStep = -15; // Maximum leftward drift at the beginning
+
+  // Basic vertical position
+  let y = index * downwardStep;
+
+  // Step 2: Parabolic curve with 2-card plateau at deepest point (pushed later)
+  const midStart = Math.floor((totalItems - 1) / 2) + 0.5; // Start of 2-card plateau (later)
+  const midEnd = Math.floor((totalItems - 1) / 2) + 1.5;   // End of 2-card plateau (later)
+
+  let x;
+
+  if (index <= midStart) {
+    // Before plateau: parabolic deceleration (fast start, slow approach)
+    const progress = index / midStart; // 0 to 1
+    const easedProgress = 1 - Math.pow(1 - progress, 2); // Ease-out quadratic
+    const totalDrift = midStart * maxLeftwardStep; // Total leftward distance
+    x = baseLeftOffset + (easedProgress * totalDrift);
+  } else if (index <= midEnd) {
+    // Plateau zone: maintain deepest position
+    const totalDrift = midStart * maxLeftwardStep;
+    x = baseLeftOffset + totalDrift;
+  } else {
+    // After plateau: curve back symmetrically toward first card position
+    const totalDrift = midStart * maxLeftwardStep;
+    const pastPlateau = index - midEnd;
+    const remainingCards = (totalItems - 1) - midEnd; // Cards after plateau
+    const returnProgress = pastPlateau / remainingCards; // 0 to 1
+    const returnAmount = totalDrift * returnProgress; // How much to return rightward
+    x = baseLeftOffset + totalDrift - returnAmount; // Subtract to move back right
+  }
+
+  // Step 3: Subtle scale variation for depth
+  const distanceFromMid = Math.abs(index - (totalItems - 1) / 2);
+  const scaleVariation = 1 - (distanceFromMid * 0.008);
+
+  return {
+    x,
+    y,
+    scale: Math.max(0.94, scaleVariation),
+    depth: index
+  };
+};
+
 export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }) => {
   const { currentTheme, setTheme, availableThemes, reorderThemes } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
@@ -149,31 +197,31 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
   const themesButtonRef = React.useRef<HTMLDivElement>(null);
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
   const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-  
+
   // Modern zoom detection - works with native zoom on all platforms
   const zoomLevel = useZoomLevel();
 
   // Update button position on scroll and resize - separated from hover logic
   React.useEffect(() => {
     if (!themesButtonRef.current) return;
-    
+
     const updatePosition = () => {
       if (themesButtonRef.current) {
         const rect = themesButtonRef.current.getBoundingClientRect();
         setButtonRect(rect);
       }
     };
-    
+
     // Initial position
     updatePosition();
-    
+
     // Listen for scroll and resize events (stable listeners like LanguageSettingsDropdown)
     const handleScroll = () => updatePosition();
     const handleResize = () => updatePosition();
-    
+
     window.addEventListener('scroll', handleScroll, true); // Use capture to catch all scroll events
     window.addEventListener('resize', handleResize);
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleResize);
@@ -183,7 +231,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
   // Update position when zoom level changes - now works on all platforms
   React.useEffect(() => {
     if (!themesButtonRef.current) return;
-    
+
     // Update position when zoom changes - getBoundingClientRect() now returns correct values
     const rect = themesButtonRef.current.getBoundingClientRect();
     setButtonRect(rect);
@@ -326,24 +374,30 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           style={{
-            left: buttonRect.right - 208, // Right-align cards (w-52 = 208px)
-            top: buttonRect.top + buttonRect.height + 8, // Start below button with gap
-            width: 208, // Match w-52 card width
-            pointerEvents: isHovered ? 'auto' : 'none', // Only allow interaction when button is hovered
+            // Position the arc origin at the button center
+            left: buttonRect.left + buttonRect.width / 2, // Button center X
+            top: buttonRect.top + buttonRect.height / 2, // Button center Y (no gap)
+            pointerEvents: isHovered ? 'auto' : 'none',
           }}
         >
           <div
-            className="grid gap-2"
+            className="relative"
             style={{
-              // Remove container-level transitions to let individual cards handle the animation
-              opacity: 1,
-              transform: 'translateY(0) scale(1)',
+              // Container for leftward crescent - origin at button center
+              width: '500px',
+              height: '500px',
+              // No transform needed - cards position relative to button center
             }}
           >
             {availableThemes.map((theme, index) => {
               const isDragOver = dragState.dragOverIndex === index;
               const isDragging = dragState.dragIndex === index;
-              const delay = index * 50; // Staggered animation delay
+              const delay = index * 60; // Slightly longer staggered delay for arc effect
+
+              // Calculate gentle crescent position for this card
+              const cascadePosition = calculateCrescentPosition(index, availableThemes.length);
+
+
 
               return (
                 <div
@@ -354,30 +408,39 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                   onDragEnd={handleDragEnd}
                   onDrop={(e) => handleDrop(e, index)}
                   className={`
-                    transition-all duration-500 ease-out
+                    absolute transition-all duration-500 ease-out
                     ${isDragOver ? 'scale-105' : ''}
                     ${isDragging ? 'opacity-50 scale-95' : ''}
                     ${isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
                   `}
                   style={{
+                    // Position along the leftward crescent - collapse to first card position
+                    left: isHovered ? `${cascadePosition.x}px` : '-180px', // Collapse to first card position
+                    top: isHovered ? `${cascadePosition.y}px` : '0px', // Collapse to button level
                     transform: isHovered
-                      ? 'scale(1) rotateX(0deg)'
-                      : 'scale(0.8) rotateX(-15deg)',
-                    transformOrigin: 'top center',
+                      ? `scale(${cascadePosition.scale}) rotateX(0deg)` // Scale for depth
+                      : 'scale(0.7) rotateX(-20deg)', // Collapsed at button center
+                    transformOrigin: 'center center',
                     transitionDelay: isHovered
                       ? `${delay}ms`
-                      : `${(availableThemes.length - index - 1) * 50}ms`,
+                      : `${(availableThemes.length - index - 1) * 30}ms`,
                     transitionDuration: '400ms',
                     transitionTimingFunction: isHovered
-                      ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' // Bounce down
-                      : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smooth up
-                    zIndex: availableThemes.length - index, // Higher z-index for earlier themes
+                      ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' // Bounce out to arc
+                      : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smooth collapse to center
+                    zIndex: availableThemes.length - index,
                   }}
                 >
                   <button
                     onClick={() => handleSelectTheme(theme.name, dragState.isDragging)}
                     className="w-52 px-4 py-3 text-left rounded-lg flex items-center gap-3 group transition-all duration-300 border shadow-lg hover:shadow-xl"
-                    style={getThemeButtonStyle(theme, currentTheme === theme.name)}
+                    style={{
+                      ...getThemeButtonStyle(theme, currentTheme === theme.name),
+                      // Add depth shadow that increases with cascade depth
+                      boxShadow: isHovered
+                        ? `0 ${6 + cascadePosition.depth * 2}px ${12 + cascadePosition.depth * 3}px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                        : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    }}
                     data-theme-card={theme.name}
                     onMouseEnter={(e) => {
                       if (currentTheme !== theme.name) {
@@ -385,11 +448,11 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                         const config = themeConfigs[theme.name as keyof typeof themeConfigs] || themeConfigs['professional'];
                         // Make opaque on hover with enhanced effects
                         e.currentTarget.style.background = config.hoverBackground;
-                        e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
-                        e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
-                        e.currentTarget.style.borderColor = config.borderColor.replace('0.4)', '0.8)').replace('0.5)', '0.9)');
-                        // Add subtle glow effect
-                        e.currentTarget.style.filter = 'brightness(1.1) saturate(1.2)';
+                        e.currentTarget.style.boxShadow = `0 16px 40px rgba(0, 0, 0, 0.25), 0 8px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)`;
+                        e.currentTarget.style.transform = 'translateY(-6px) scale(1.08)';
+                        e.currentTarget.style.borderColor = config.borderColor.replace('0.4)', '0.9)').replace('0.5)', '1)');
+                        // Add enhanced glow effect for arc positioning
+                        e.currentTarget.style.filter = 'brightness(1.15) saturate(1.3)';
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -397,7 +460,9 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                         const originalStyle = getThemeButtonStyle(theme, false);
                         // Restore translucent state
                         e.currentTarget.style.background = originalStyle.background as string;
-                        e.currentTarget.style.boxShadow = originalStyle.boxShadow as string;
+                        e.currentTarget.style.boxShadow = isHovered
+                          ? `0 ${6 + cascadePosition.depth * 2}px ${12 + cascadePosition.depth * 3}px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                          : '0 2px 8px rgba(0, 0, 0, 0.1)';
                         e.currentTarget.style.transform = 'translateY(0px) scale(1)';
                         e.currentTarget.style.borderColor = originalStyle.borderColor as string;
                         e.currentTarget.style.filter = 'none';

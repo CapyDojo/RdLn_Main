@@ -24,7 +24,8 @@
       "WebFetch(domain:www.electronjs.org)",
       "Bash(npx electron:*)",
       "WebFetch(domain:wordribbon.tips.net)",
-      "WebFetch(domain:www.draftable.com)"
+      "WebFetch(domain:www.draftable.com)",
+      "WebFetch(domain:adamfard.com)"
     ],
     "deny": []
   }

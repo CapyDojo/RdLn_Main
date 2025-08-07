@@ -15,8 +15,24 @@ describe('ComparisonStats Component', () => {
     additions: 5,
     deletions: 3,
     unchanged: 10,
-    changed: 2,
-    totalChanges: 10
+    totalChanges: 8,  // additions + deletions
+    wordStats: {
+      addedWords: 25,
+      deletedWords: 15,
+      unchangedWords: 100,
+      totalWords: 140,
+      reviewWorkload: 40,
+      percentageChanged: 28.6
+    },
+    characterStats: {
+      addedCharacters: 150,
+      deletedCharacters: 90,
+      unchangedCharacters: 600,
+      totalCharacters: 840,
+      totalCharactersNoSpaces: 700,
+      reviewWorkload: 240,
+      percentageChanged: 28.6
+    }
   };
 
   const defaultProps = {
@@ -66,32 +82,34 @@ describe('ComparisonStats Component', () => {
     it('should display all statistics correctly', () => {
       render(<ComparisonStats {...defaultProps} />);
 
+      // Block-level stats
       expect(screen.getByText('5')).toBeTruthy(); // additions
       expect(screen.getByText('3')).toBeTruthy(); // deletions
-      expect(screen.getByText('2')).toBeTruthy(); // changed
 
-      // Check for multiple instances of "10" (unchanged and totalChanges)
-      const tensElements = screen.getAllByText('10');
-      expect(tensElements.length).toBe(2); // unchanged and totalChanges
+      // Word-level stats (new format) - use getAllByText for duplicates
+      expect(screen.getByText('25')).toBeTruthy(); // words added
+      expect(screen.getByText('15')).toBeTruthy(); // words deleted
+      expect(screen.getByText('100')).toBeTruthy(); // words unchanged
+      expect(screen.getAllByText('40 words').length).toBeGreaterThan(0); // review workload (appears multiple times)
+      expect(screen.getAllByText('140 words (28.6% changed)').length).toBeGreaterThan(0); // document size (appears multiple times)
     });
 
     it('should calculate and display percentages correctly', () => {
       render(<ComparisonStats {...defaultProps} />);
       
-      // Total = 5 + 3 + 10 + 2 = 20
-      // Additions: 5/20 = 25.0%
-      // Deletions: 3/20 = 15.0%
-      // Changed: 2/20 = 10.0%
-      expect(screen.getByText('25.0% of total')).toBeTruthy();
-      expect(screen.getByText('15.0% of total')).toBeTruthy();
-      expect(screen.getByText('10.0% of total')).toBeTruthy();
+      // Total = 5 + 3 + 10 = 18
+      // Additions: 5/18 = 27.8%
+      // Deletions: 3/18 = 16.7%
+      expect(screen.getByText('27.8% of total')).toBeTruthy();
+      expect(screen.getByText('16.7% of total')).toBeTruthy();
     });
 
-    it('should display total elements correctly', () => {
+    it('should display review workload correctly', () => {
       render(<ComparisonStats {...defaultProps} />);
       
-      // Total elements = 5 + 3 + 10 + 2 = 20
-      expect(screen.getByText('20')).toBeTruthy();
+      // Should show review workload instead of total elements
+      expect(screen.getAllByText('Total Review Load:').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('40 words').length).toBeGreaterThan(0); // review workload (appears multiple times)
     });
 
     it('should show labels for each statistic', () => {
@@ -99,10 +117,11 @@ describe('ComparisonStats Component', () => {
 
       expect(screen.getByText('Additions')).toBeTruthy();
       expect(screen.getByText('Deletions')).toBeTruthy();
-      expect(screen.getByText('Substitutions')).toBeTruthy(); // Component shows "Substitutions" not "Changes"
-      expect(screen.getByText('Total Changes:')).toBeTruthy();
-      expect(screen.getByText('Unchanged:')).toBeTruthy();
-      expect(screen.getByText('Total Elements:')).toBeTruthy();
+      expect(screen.getAllByText('Total Review Load:').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Document Size:').length).toBeGreaterThan(0);
+      expect(screen.getByText('Word Statistics')).toBeTruthy();
+      expect(screen.getByText('Words Unchanged:')).toBeTruthy();
+      expect(screen.getByText('Characters Unchanged:')).toBeTruthy();
     });
   });
 
@@ -118,7 +137,7 @@ describe('ComparisonStats Component', () => {
       const { container } = render(<ComparisonStats {...defaultProps} />);
       
       const segments = container.querySelectorAll('.flex.rounded-full.overflow-hidden.h-2 > div');
-      expect(segments.length).toBe(3); // additions, deletions, changed
+      expect(segments.length).toBe(2); // additions, deletions only
       
       // Check that segments have style attributes (widths)
       segments.forEach(segment => {
@@ -131,10 +150,10 @@ describe('ComparisonStats Component', () => {
       
       const segments = container.querySelectorAll('.flex.rounded-full.overflow-hidden.h-2 > div');
       
-      // Check for expected background colors
+      // Check for expected background colors (only 2 segments now)
       expect(segments[0].className).toContain('bg-[#34c759]'); // additions - green
       expect(segments[1].className).toContain('bg-[#ff3b3f]'); // deletions - red
-      expect(segments[2].className).toContain('bg-[#ff3b3f]'); // changed - red
+      expect(segments.length).toBe(2); // Only additions and deletions
     });
   });
 
@@ -144,8 +163,15 @@ describe('ComparisonStats Component', () => {
         additions: 0,
         deletions: 0,
         unchanged: 0,
-        changed: 0,
-        totalChanges: 0
+        totalChanges: 0,
+        wordStats: {
+          addedWords: 0,
+          deletedWords: 0,
+          unchangedWords: 0,
+          totalWords: 0,
+          reviewWorkload: 0,
+          percentageChanged: 0
+        }
       };
 
       render(<ComparisonStats stats={zeroStats} />);
@@ -164,17 +190,23 @@ describe('ComparisonStats Component', () => {
         additions: 1000,
         deletions: 500,
         unchanged: 2000,
-        changed: 250,
-        totalChanges: 1750
+        totalChanges: 1500,
+        wordStats: {
+          addedWords: 5000,
+          deletedWords: 2500,
+          unchangedWords: 10000,
+          totalWords: 17500,
+          reviewWorkload: 7500,
+          percentageChanged: 42.9
+        }
       };
       
       render(<ComparisonStats stats={largeStats} />);
       
-      expect(screen.getByText('1000')).toBeTruthy();
-      expect(screen.getByText('500')).toBeTruthy();
-      expect(screen.getByText('2000')).toBeTruthy();
-      expect(screen.getByText('250')).toBeTruthy();
-      expect(screen.getByText('1750')).toBeTruthy();
+      expect(screen.getByText('1000')).toBeTruthy(); // block additions
+      expect(screen.getByText('500')).toBeTruthy(); // block deletions
+      expect(screen.getByText('5000')).toBeTruthy(); // word additions
+      expect(screen.getByText('2500')).toBeTruthy(); // word deletions
     });
 
     it('should handle decimal percentages correctly', () => {
@@ -182,8 +214,15 @@ describe('ComparisonStats Component', () => {
         additions: 1,
         deletions: 1,
         unchanged: 1,
-        changed: 0,
-        totalChanges: 2
+        totalChanges: 2,
+        wordStats: {
+          addedWords: 10,
+          deletedWords: 10,
+          unchangedWords: 10,
+          totalWords: 30,
+          reviewWorkload: 20,
+          percentageChanged: 66.7
+        }
       };
 
       render(<ComparisonStats stats={oddStats} />);
@@ -198,8 +237,8 @@ describe('ComparisonStats Component', () => {
         additions: 5,
         deletions: 3,
         unchanged: 10,
-        changed: 2,
         totalChanges: 0
+        // No wordStats - should fallback to legacy format
       };
       
       const { container } = render(<ComparisonStats stats={statsWithoutTotal} />);
@@ -272,7 +311,6 @@ describe('ComparisonStats Component', () => {
       // All statistics should be visible and readable
       expect(screen.getByText('Additions')).toBeTruthy();
       expect(screen.getByText('Deletions')).toBeTruthy();
-      expect(screen.getByText('Substitutions')).toBeTruthy(); // Component shows "Substitutions" not "Changes"
     });
   });
 

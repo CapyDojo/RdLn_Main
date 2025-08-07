@@ -67,11 +67,53 @@ export interface ComparisonStats {
   /** Number of text segments that remained unchanged */
   unchanged: number;
   
-  /** Number of text segments that were modified (content changed) */
-  changed: number;
-  
-  /** Total number of changes (additions + deletions + changed) */
+  /** Total number of changes (additions + deletions) - legacy field for backward compatibility */
   totalChanges: number;
+  
+  /** Word-level statistics */
+  wordStats?: {
+    /** Number of words that were added (includes words from substitutions) */
+    addedWords: number;
+    
+    /** Number of words that were removed (includes words from substitutions) */
+    deletedWords: number;
+    
+    /** Number of words that remained unchanged */
+    unchangedWords: number;
+    
+    /** Total words in the comparison */
+    totalWords: number;
+    
+    /** Total review workload: words that need to be reviewed (added + deleted) */
+    reviewWorkload: number;
+    
+    /** Percentage of document that changed */
+    percentageChanged: number;
+  };
+  
+  /** Character-level statistics */
+  characterStats?: {
+    /** Number of characters that were added (includes chars from substitutions) */
+    addedCharacters: number;
+    
+    /** Number of characters that were removed (includes chars from substitutions) */
+    deletedCharacters: number;
+    
+    /** Number of characters that remained unchanged */
+    unchangedCharacters: number;
+    
+    /** Total characters in the comparison */
+    totalCharacters: number;
+    
+    /** Total characters excluding spaces */
+    totalCharactersNoSpaces: number;
+    
+    /** Total review workload: characters that need to be reviewed (added + deleted) */
+    reviewWorkload: number;
+    
+    /** Percentage of document that changed (by characters) */
+    percentageChanged: number;
+  };
 }
 
 /**
