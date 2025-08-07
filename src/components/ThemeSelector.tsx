@@ -148,31 +148,16 @@ const calculateCrescentPosition = (index: number, totalItems: number) => {
   // Basic vertical position
   let y = index * downwardStep;
 
-  // Step 2: Parabolic curve with 2-card plateau at deepest point (pushed later)
-  const midStart = Math.floor((totalItems - 1) / 2) + 0.5; // Start of 2-card plateau (later)
-  const midEnd = Math.floor((totalItems - 1) / 2) + 1.5;   // End of 2-card plateau (later)
-
-  let x;
-
-  if (index <= midStart) {
-    // Before plateau: parabolic deceleration (fast start, slow approach)
-    const progress = index / midStart; // 0 to 1
-    const easedProgress = 1 - Math.pow(1 - progress, 2); // Ease-out quadratic
-    const totalDrift = midStart * maxLeftwardStep; // Total leftward distance
-    x = baseLeftOffset + (easedProgress * totalDrift);
-  } else if (index <= midEnd) {
-    // Plateau zone: maintain deepest position
-    const totalDrift = midStart * maxLeftwardStep;
-    x = baseLeftOffset + totalDrift;
-  } else {
-    // After plateau: curve back symmetrically toward first card position
-    const totalDrift = midStart * maxLeftwardStep;
-    const pastPlateau = index - midEnd;
-    const remainingCards = (totalItems - 1) - midEnd; // Cards after plateau
-    const returnProgress = pastPlateau / remainingCards; // 0 to 1
-    const returnAmount = totalDrift * returnProgress; // How much to return rightward
-    x = baseLeftOffset + totalDrift - returnAmount; // Subtract to move back right
-  }
+  // Step 2: Pure parabolic crescent - elegant mathematical symmetry (inverted)
+  const center = (totalItems - 1) / 2; // True center of cascade (4.5 for 10 items)
+  const distanceFromCenter = Math.abs(index - center); // Distance from center (0 to 4.5)
+  const maxDistance = center; // Maximum distance from center to edge
+  
+  // Inverted parabola: edges closest to button, center deepest left
+  const parabolicValue = 1 - Math.pow(distanceFromCenter / maxDistance, 2); // 1 at center, 0 at edges
+  const maxLeftwardDrift = center * maxLeftwardStep; // Maximum drift at center
+  
+  let x = baseLeftOffset + (parabolicValue * maxLeftwardDrift);
 
   // Step 3: Subtle scale variation for depth
   const distanceFromMid = Math.abs(index - (totalItems - 1) / 2);
