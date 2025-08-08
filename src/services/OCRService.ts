@@ -217,40 +217,21 @@ export class OCRService {
       return this.detectionWorker.worker;
     }
 
-    // RESTORED: Use comprehensive language set for detection to enable proper multi-language detection
-    // This includes all the languages we want to support: English, Chinese (both), Spanish, French, German, Japanese, Korean, Arabic, Russian
-    const detectionLanguages: OCRLanguage[] = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
-    console.log('🔄 DETECTION CACHE MISS: Creating new detection worker with full language support:', detectionLanguages);
+    // Use OCRCacheManager's centralized detection worker initialization
+    console.log('🔄 DETECTION CACHE MISS: Delegating to OCRCacheManager for detection worker');
     
-    // Configure paths using centralized path resolution
-    const detectionConfig: any = {
-      logger: this.createLogger()
-    };
-    
-    // Get environment-appropriate paths from OCRCacheManager
-    try {
-      const resourcePaths = await OCRCacheManager.getTauriResourcePaths();
-      detectionConfig.langPath = resourcePaths.langPath;
-      detectionConfig.corePath = resourcePaths.corePath;
-      detectionConfig.workerPath = resourcePaths.workerPath;
-      console.log('🔧 Using centralized resource paths for detection worker:', resourcePaths);
-    } catch (error) {
-      console.warn('⚠️ Failed to get resource paths, using fallback configuration:', error);
-      // Fallback to basic configuration without paths (let Tesseract.js use defaults)
-    }
-    
-    const worker = await createWorker(detectionLanguages, 1, detectionConfig);
+    const worker = await OCRCacheManager.initializeDetectionWorker();
 
-    // Cache the worker
+    // Cache the worker locally for OCRService tracking
     this.detectionWorker = {
       worker,
       lastUsed: Date.now(),
       useCount: 1,
-      languages: detectionLanguages
+      languages: ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'] // Full language set for detection
     };
 
     this.startCleanupTimer();
-    console.log('✅ Multi-language detection worker cached successfully');
+    console.log('✅ Detection worker obtained from OCRCacheManager and cached locally');
     return worker;
   }
 
