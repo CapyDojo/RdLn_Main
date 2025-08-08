@@ -35,6 +35,8 @@ import { FloatingJumpButton } from './experimental/FloatingJumpButton';
 import { MobileTabInterface } from './experimental/MobileTabInterface';
 import { StickyResultsPanel } from './experimental/StickyResultsPanel';
 import { ResultsOverlay } from './experimental/ResultsOverlay';
+import { FullScreenOverlay } from './FullScreenOverlay';
+import { FullScreenButton } from './FullScreenButton';
 import { useJumpToResults } from '../hooks/useJumpToResults';
 import { useMobileTabInterface } from '../hooks/useMobileTabInterface';
 import { useResultsOverlay } from '../hooks/useResultsOverlay';
@@ -101,6 +103,15 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
   
   // SSMR Step 1: Scroll lock state (Safe - no functionality yet)
   const [isScrollLocked, setIsScrollLocked] = useState(false);
+  
+  // Full screen overlay state
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [fullScreenBackgroundMode, setFullScreenBackgroundMode] = useState<'theme' | 'glassmorphism'>('theme');
+  
+  // Full screen toggle handler
+  const toggleFullScreen = () => {
+    setIsFullScreen(prev => !prev);
+  };
   
   // DEBUG: Immediate logging to verify component initialization
   // console.log('🔧 SCROLL LOCK DEBUG: Component initialized, isScrollLocked:', isScrollLocked);
@@ -580,6 +591,8 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
                   scrollRef={redlineOutputRef}
                   onShowOverlay={showOverlay}
                   isInOverlayMode={false}
+                  onToggleFullScreen={toggleFullScreen}
+                  isFullScreen={isFullScreen}
                 />
               </StickyResultsPanel>
             ) : (
@@ -593,6 +606,8 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
                 scrollRef={redlineOutputRef}
                 onShowOverlay={showOverlay}
                 isInOverlayMode={false}
+                onToggleFullScreen={toggleFullScreen}
+                isFullScreen={isFullScreen}
               />
             )
           )}
@@ -641,6 +656,37 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
           />
         </ResultsOverlay>
       )}
+
+      {/* Full Screen Overlay - Full screen version of OutputLayout */}
+      <FullScreenOverlay
+        isVisible={isFullScreen}
+        onClose={toggleFullScreen}
+        className={fullScreenBackgroundMode === 'glassmorphism' ? 'glassmorphism-mode' : ''}
+      >
+        {result && (
+          <div className="w-full h-full">
+            {/* Full screen version - no margins or padding */}
+            <div className="h-full flex flex-col">
+              <div data-output-panel className="flex-1">
+                <RedlineOutput
+                  changes={result.changes} 
+                  onCopy={() => {}}
+                  height={window.innerHeight}
+                  isProcessing={false}
+                  processingStatus=""
+                  scrollRef={redlineOutputRef}
+                  onShowOverlay={toggleFullScreen}
+                  isInOverlayMode={true}
+                  hideHeader={false}
+                  onToggleFullScreen={toggleFullScreen}
+                  isFullScreen={true}
+                  onBackgroundModeChange={(mode) => setFullScreenBackgroundMode(mode)}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </FullScreenOverlay>
 
     </div>
   );

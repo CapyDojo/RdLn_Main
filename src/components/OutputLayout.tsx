@@ -29,6 +29,10 @@ interface OutputLayoutProps extends BaseComponentProps {
   isInOverlayMode?: boolean;
   /** Whether to hide the header */
   hideHeader?: boolean;
+  /** Callback for toggling full screen mode */
+  onToggleFullScreen?: () => void;
+  /** Whether currently in full screen mode */
+  isFullScreen?: boolean;
 }
 
 /**
@@ -54,6 +58,8 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
   onShowOverlay,
   isInOverlayMode = false,
   hideHeader = false,
+  onToggleFullScreen,
+  isFullScreen = false,
   style,
   className
 }) => {
@@ -71,6 +77,8 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
           onShowOverlay={onShowOverlay}
           isInOverlayMode={isInOverlayMode}
           hideHeader={hideHeader}
+          onToggleFullScreen={onToggleFullScreen}
+          isFullScreen={isFullScreen}
         />
       </div>
       

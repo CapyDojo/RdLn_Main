@@ -6,6 +6,7 @@ import { UI_CONFIG, FEATURE_FLAGS, DEV_CONFIG } from '../config/appConfig';
 import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/performanceUtils.tsx';
 import { useExperimentalFeatures } from '../contexts/ExperimentalLayoutContext';
 import { ResultsOverlayTrigger } from './experimental/ResultsOverlayTrigger';
+import { FullScreenButton } from './FullScreenButton';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { copyToClipboardMultiFormat, isMultiFormatClipboardSupported } from '../utils/clipboardUtils';
 
@@ -20,6 +21,8 @@ interface RedlineOutputProps extends BaseComponentProps {
   isInOverlayMode?: boolean;
   hideHeader?: boolean;
   onBackgroundModeChange?: (mode: 'theme' | 'glassmorphism') => void;
+  onToggleFullScreen?: () => void;
+  isFullScreen?: boolean;
 }
 
 // SSMR: Use centralized configuration for consistent chunk rendering
@@ -37,6 +40,8 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   isInOverlayMode = false,
   hideHeader = false,
   onBackgroundModeChange,
+  onToggleFullScreen,
+  isFullScreen = false,
   style,
   className,
   ...props
@@ -59,6 +64,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
   // Font size context
   const { fontSize } = useFontSize();
+
 
   // Handle background mode toggle
   const handleBackgroundToggle = () => {
@@ -192,26 +198,27 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
           <div className="flex items-center gap-2">
             {/* Background Mode Toggle - only in overlay mode */}
             {isInOverlayMode && (
-              <button
-                onClick={handleBackgroundToggle}
-                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors ${backgroundMode === 'theme'
-                  ? 'bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200'
-                  : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200'
-                  }`}
-                title={`Switch to ${backgroundMode === 'theme' ? 'glassmorphism' : 'theme'} background`}
-              >
-                {backgroundMode === 'theme' ? (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    <span className="hidden sm:inline">Glassmorphism</span>
-                  </>
-                ) : (
-                  <>
-                    <Image className="w-4 h-4" />
-                    <span className="hidden sm:inline">Theme</span>
-                  </>
-                )}
-              </button>
+              <div className="relative segmented-control">
+                <button
+                  onClick={() => {
+                    setBackgroundMode('theme');
+                    if (onBackgroundModeChange) onBackgroundModeChange('theme');
+                  }}
+                  className={`segment ${backgroundMode === 'theme' ? 'active' : ''}`}
+                >
+                  Flat
+                </button>
+                <button
+                  onClick={() => {
+                    setBackgroundMode('glassmorphism');
+                    if (onBackgroundModeChange) onBackgroundModeChange('glassmorphism');
+                  }}
+                  className={`segment ${backgroundMode === 'glassmorphism' ? 'active' : ''}`}
+                >
+                  Glass
+                </button>
+                <div className={`sliding-indicator ${backgroundMode === 'theme' ? 'to-left' : 'to-right'}`}></div>
+              </div>
             )}
 
             {/* Results Overlay Trigger - Feature #8 */}
@@ -222,10 +229,11 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
               isInOverlayMode={isInOverlayMode}
             />
 
-            <div className="relative segmented-control">
+            {/* Copy Button */}
+            <div className="relative">
               <button
                 onClick={copyToClipboard}
-                className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
+                className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group squircle-button ${
                   copySuccess ? 'bg-green-100 border-green-300' : ''
                 }`}
                 title={isMultiFormatClipboardSupported()
@@ -252,6 +260,15 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                   </span>
                 </div>
               </button>
+            </div>
+
+            {/* Full Screen Button - Separate from copy button */}
+            <div className="relative">
+              <FullScreenButton
+                isFullScreen={isFullScreen}
+                onToggle={onToggleFullScreen || (() => {})}
+                hasResults={changes && changes.length > 0}
+              />
             </div>
           </div>
         </div>

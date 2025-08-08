@@ -25,7 +25,9 @@
       "Bash(npx electron:*)",
       "WebFetch(domain:wordribbon.tips.net)",
       "WebFetch(domain:www.draftable.com)",
-      "WebFetch(domain:adamfard.com)"
+      "WebFetch(domain:adamfard.com)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c:*)"
     ],
     "deny": []
   }
