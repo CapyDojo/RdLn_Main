@@ -88,24 +88,24 @@
 }
 
 
-/* Glass/Flat segmented control styles for overlay */
-.results-overlay .segmented-control {
+/* Glass/Flat background mode toggle - specific styling for overlay */
+.results-overlay .background-mode-toggle {
   min-width: 120px;
 }
 
-.results-overlay .segmented-control .segment {
+.results-overlay .background-mode-toggle .segment {
   font-size: 0.95rem;
   font-weight: 500;
   padding: 8px 16px;
   min-width: 60px;
 }
 
-.results-overlay .segmented-control .sliding-indicator.to-left {
+.results-overlay .background-mode-toggle .sliding-indicator.to-left {
   width: 50%;
   transform: translateX(0%);
 }
 
-.results-overlay .segmented-control .sliding-indicator.to-right {
+.results-overlay .background-mode-toggle .sliding-indicator.to-right {
   width: 50%;
   transform: translateX(100%);
 }

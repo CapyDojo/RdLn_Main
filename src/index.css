@@ -595,34 +595,3 @@ h3 {
   transition: all 0.3s ease;
 }
 
-/* ========================================
-   SQUIRCLE BUTTON COMPONENT - Individual Action Buttons
-   ======================================== */
-
-.squircle-button {
-  /* Remove any segmented control inheritance */
-  position: relative;
-  background: transparent;
-  border: 1px solid rgba(var(--color-neutral-300, 209 213 219), 0.6);
-  color: rgb(var(--color-neutral-600, 75 85 99));
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  border-radius: 12px;
-}
-
-.squircle-button:hover {
-  background: rgba(var(--color-primary-50, 239 246 255), 0.5);
-  border-color: rgba(var(--color-primary-300, 147 197 253), 0.8);
-  color: rgb(var(--color-primary-700, 29 78 216));
-  transform: translateY(-1px);
-}
-
-.squircle-button:active {
-  transform: translateY(0px);
-  transition: all 0.1s ease;
-}
-
-.squircle-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(var(--color-primary-500, 59 130 246), 0.5);
-}

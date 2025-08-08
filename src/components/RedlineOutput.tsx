@@ -198,7 +198,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
           <div className="flex items-center gap-2">
             {/* Background Mode Toggle - only in overlay mode */}
             {isInOverlayMode && (
-              <div className="relative segmented-control">
+              <div className="relative segmented-control background-mode-toggle">
                 <button
                   onClick={() => {
                     setBackgroundMode('theme');
@@ -230,10 +230,10 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             />
 
             {/* Copy Button */}
-            <div className="relative">
+            <div className="relative segmented-control">
               <button
                 onClick={copyToClipboard}
-                className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group squircle-button ${
+                className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
                   copySuccess ? 'bg-green-100 border-green-300' : ''
                 }`}
                 title={isMultiFormatClipboardSupported()
@@ -263,7 +263,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             </div>
 
             {/* Full Screen Button - Separate from copy button */}
-            <div className="relative">
+            <div className="relative segmented-control">
               <FullScreenButton
                 isFullScreen={isFullScreen}
                 onToggle={onToggleFullScreen || (() => {})}

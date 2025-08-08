@@ -26,7 +26,7 @@ export const FullScreenButton: React.FC<FullScreenButtonProps> = ({
     <button
       onClick={onToggle}
       className={`
-        flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group squircle-button
+        flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment
         ${className}
       `}
       style={{
@@ -66,7 +66,7 @@ export const FullScreenButtonCompact: React.FC<FullScreenButtonProps> = ({
     <button
       onClick={onToggle}
       className={`
-        flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group squircle-button
+        flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment
         ${className}
       `}
       style={{
