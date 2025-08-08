@@ -1,6 +1,21 @@
 [build]
-  command = "npm run build"
+  command = "npm run build:web"
   publish = "dist"
+
+[[headers]]
+  for = "*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+
+[[headers]]
+  for = "/tesseract/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "/tessdata/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
 
 [[redirects]]
   from = "/*"
