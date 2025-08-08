@@ -142,10 +142,22 @@ export class OCRCacheManager {
         logger: this.createLogger(),
         langPath: resourcePaths.langPath,
         workerPath: resourcePaths.workerPath,
-        corePath: resourcePaths.corePath
+        corePath: resourcePaths.corePath,
+        // Try setting TESSDATA_PREFIX explicitly
+        env: {
+          TESSDATA_PREFIX: resourcePaths.langPath
+        }
       };
 
       console.log('🔧 Attempting worker with optimized paths:', workerOptions);
+
+      // Debug: Test if assets are accessible
+      try {
+        const testResponse = await fetch(`${resourcePaths.langPath}/eng.traineddata`);
+        console.log('🔍 Asset accessibility test - eng.traineddata:', testResponse.status, testResponse.statusText);
+      } catch (error) {
+        console.warn('⚠️ Asset accessibility test failed:', error);
+      }
 
       const worker = await Promise.race([
         createWorker(languages, 1, workerOptions),
