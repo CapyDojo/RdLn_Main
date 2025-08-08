@@ -116,12 +116,12 @@ export class LanguageDetectionService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.warn('⚠️ Language detection failed:', errorMessage);
-      
+
       // PRODUCTION DEBUG: Log environment details
       const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
       const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
       const currentUrl = typeof window !== 'undefined' ? window.location.href : 'unknown';
-      
+
       console.warn('🔍 Environment Debug Info:', {
         isTauri,
         userAgent,
@@ -181,36 +181,64 @@ export class LanguageDetectionService {
       console.log('✅ Arabic script detected');
     }
 
-    if (this.containsCyrillic(text)) {
-      detectedLanguages.push('rus');
-      console.log('✅ Cyrillic/Russian script detected');
+    // PRIORITY FIX: Check Latin-based languages first, then Cyrillic
+    // This prioritizes English over Russian for ambiguous cases
+    let hasLatinLanguage = false;
+
+    // Check for English first with strong indicators
+    if (this.containsEnglish(text)) {
+      detectedLanguages.push('eng');
+      hasLatinLanguage = true;
+      console.log('✅ English detected based on common words and patterns');
     }
 
-    // If no non-Latin script detected, check for Latin-based languages
+    // Check for Spanish (has unique characters)
+    if (this.containsSpanish(text)) {
+      detectedLanguages.push('spa');
+      hasLatinLanguage = true;
+      console.log('✅ Spanish detected based on unique characters and patterns');
+    }
+
+    // Check for French
+    if (this.containsFrench(text)) {
+      detectedLanguages.push('fra');
+      hasLatinLanguage = true;
+      console.log('✅ French detected based on unique characters and patterns');
+    }
+
+    // Check for German
+    if (this.containsGerman(text)) {
+      detectedLanguages.push('deu');
+      hasLatinLanguage = true;
+      console.log('✅ German detected based on unique characters and patterns');
+    }
+
+    // ENHANCED RUSSIAN DETECTION: Only add Russian if we have strong Cyrillic evidence
+    // AND either no Latin language was detected OR it's clearly a mixed-script document
+    if (this.containsCyrillic(text)) {
+      if (!hasLatinLanguage) {
+        // Pure Cyrillic document - definitely Russian
+        detectedLanguages.push('rus');
+        console.log('✅ Russian detected - pure Cyrillic text with no Latin languages');
+      } else {
+        // Mixed script - only add Russian if we have substantial Cyrillic content
+        const cyrillicChars = text.match(/[АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя]/g);
+        const totalChars = text.replace(/\s/g, '').length;
+        const cyrillicRatio = cyrillicChars ? cyrillicChars.length / totalChars : 0;
+
+        if (cyrillicRatio > 0.1) { // At least 10% Cyrillic characters
+          detectedLanguages.push('rus');
+          console.log(`✅ Russian added to mixed-script document (${Math.round(cyrillicRatio * 100)}% Cyrillic)`);
+        } else {
+          console.log(`⚠️ Cyrillic detected but ratio too low (${Math.round(cyrillicRatio * 100)}%) - skipping Russian`);
+        }
+      }
+    }
+
+    // If no languages detected at all, default to English
     if (detectedLanguages.length === 0) {
-      // Check for Spanish first (has unique characters)
-      if (this.containsSpanish(text)) {
-        detectedLanguages.push('spa');
-        console.log('✅ Spanish detected based on unique characters and patterns');
-      }
-
-      // Check for French
-      if (this.containsFrench(text)) {
-        detectedLanguages.push('fra');
-        console.log('✅ French detected based on unique characters and patterns');
-      }
-
-      // Check for German
-      if (this.containsGerman(text)) {
-        detectedLanguages.push('deu');
-        console.log('✅ German detected based on unique characters and patterns');
-      }
-
-      // If no specific Latin language detected, default to English
-      if (detectedLanguages.length === 0) {
-        detectedLanguages.push('eng');
-        console.log('🔍 Defaulting to English - no specific language patterns detected');
-      }
+      detectedLanguages.push('eng');
+      console.log('🔍 Defaulting to English - no specific language patterns detected');
     }
 
     // Always include English as fallback for mixed documents (unless it's already primary)
@@ -265,8 +293,67 @@ export class LanguageDetectionService {
    * Checks if text contains Cyrillic characters
    */
   private static containsCyrillic(text: string): boolean {
-    // Cyrillic script
-    return /[\u0400-\u04ff]/.test(text);
+    // ENHANCED: More precise Cyrillic detection to prevent false positives
+    // Only match actual Cyrillic letters, not extended symbols that might be confused
+    const cyrillicLetters = /[АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя]/;
+
+    // Check for actual Cyrillic characters
+    const hasBasicCyrillic = cyrillicLetters.test(text);
+
+    if (hasBasicCyrillic) {
+      // Count Cyrillic characters to ensure it's not just OCR noise
+      const cyrillicMatches = text.match(/[АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя]/g);
+      const cyrillicCount = cyrillicMatches ? cyrillicMatches.length : 0;
+
+      console.log('🔍 Cyrillic analysis:', {
+        hasBasicCyrillic,
+        cyrillicCount,
+        sample: cyrillicMatches?.slice(0, 10)
+      });
+
+      // Require at least 3 Cyrillic characters to avoid false positives
+      return cyrillicCount >= 3;
+    }
+
+    return false;
+  }
+
+  /**
+   * Enhanced English detection
+   */
+  private static containsEnglish(text: string): boolean {
+    // Common English words that are unlikely to appear in other languages
+    const englishWords = /\b(the|and|that|have|for|not|with|you|this|but|his|from|they|she|her|been|than|its|who|did|get|may|him|old|see|now|way|could|people|my|than|first|water|been|call|who|oil|sit|now|find|long|down|day|did|get|come|made|may|part)\b/gi;
+
+    const englishMatches = text.match(englishWords);
+    if (englishMatches && englishMatches.length >= 3) {
+      console.log('🔍 English words found:', englishMatches.slice(0, 5));
+      return true;
+    }
+
+    // English-specific patterns
+    const englishPatterns = [
+      /\b(ing|tion|ness|ment|able|ible)\b/gi,  // Common English suffixes
+      /\b(un|re|pre|dis|mis|over|under|out)\w+/gi,  // Common English prefixes
+      /\b(I|I'm|I've|I'll|I'd|you're|we're|they're|it's|that's|what's|where's|how's)\b/gi,  // English contractions
+    ];
+
+    for (const pattern of englishPatterns) {
+      if (pattern.test(text)) {
+        console.log('🔍 English patterns found');
+        return true;
+      }
+    }
+
+    // Check for typical English legal/business terms (relevant for your use case)
+    const legalEnglish = /\b(party|parties|agreement|contract|shall|whereas|therefore|pursuant|herein|thereof|hereof|witnesseth|consideration|covenant|provision|section|paragraph|clause|article|schedule|exhibit|attachment|addendum|amendment|modification|termination|breach|default|remedy|damages|liability|indemnify|represent|warrant|acknowledge|certify|execute|deliver|effective|binding|enforceable|jurisdiction|governing|applicable|compliance|performance|obligation|responsibility|authority|capacity|power|right|title|interest|ownership|possession|control|management|operation|maintenance|repair|replacement|improvement|development|construction|installation|implementation|completion|delivery|acceptance|approval|consent|permission|authorization|license|permit|registration|filing|recording|notice|notification|communication|correspondence|document|instrument|certificate|statement|report|disclosure|representation|warranty|guarantee|assurance|confirmation|verification|validation|authentication|identification|designation|appointment|nomination|selection|election|determination|decision|resolution|conclusion|settlement|compromise|mediation|arbitration|litigation|dispute|controversy|claim|demand|request|application|petition|motion|pleading|brief|memorandum|opinion|order|judgment|decree|award|ruling|finding|holding|precedent|authority|citation|reference|source|basis|ground|reason|cause|purpose|objective|goal|intent|intention|meaning|interpretation|construction|understanding|knowledge|awareness|notice|information|data|fact|evidence|proof|documentation|record|file|archive|database|system|process|procedure|method|technique|approach|strategy|plan|program|project|initiative|effort|activity|action|step|measure|requirement|condition|term|provision|stipulation|specification|standard|criterion|benchmark|guideline|policy|rule|regulation|law|statute|ordinance|code|act|bill|legislation|enactment|promulgation|publication|issuance|adoption|implementation|enforcement|compliance|violation|infringement|breach|default|failure|omission|neglect|misconduct|malpractice|negligence|fault|error|mistake|defect|deficiency|inadequacy|insufficiency|shortage|lack|absence|unavailability|inaccessibility|impossibility|impracticability|unfeasibility|difficulty|complexity|complication|obstacle|barrier|impediment|hindrance|interference|disruption|interruption|suspension|delay|postponement|extension|renewal|continuation|resumption|restoration|recovery|rehabilitation|reconstruction|renovation|modernization|upgrade|enhancement|improvement|optimization|efficiency|effectiveness|productivity|performance|quality|excellence|superiority|advantage|benefit|value|worth|importance|significance|relevance|applicability|suitability|appropriateness|adequacy|sufficiency|completeness|thoroughness|comprehensiveness|accuracy|precision|correctness|validity|reliability|credibility|trustworthiness|integrity|honesty|transparency|openness|disclosure|accountability|responsibility|liability|culpability|blame|fault|guilt|innocence|exoneration|vindication|justification|excuse|defense|protection|security|safety|risk|danger|hazard|threat|vulnerability|exposure|susceptibility|immunity|resistance|tolerance|acceptance|approval|endorsement|support|backing|sponsorship|patronage|advocacy|promotion|encouragement|assistance|aid|help|cooperation|collaboration|partnership|alliance|association|affiliation|membership|participation|involvement|engagement|commitment|dedication|devotion|loyalty|faithfulness|fidelity|allegiance|obedience|compliance|conformity|adherence|observance|respect|regard|consideration|attention|focus|concentration|emphasis|priority|preference|choice|selection|option|alternative|possibility|opportunity|chance|prospect|potential|capability|capacity|ability|skill|talent|expertise|experience|knowledge|understanding|comprehension|awareness|consciousness|recognition|acknowledgment|admission|confession|declaration|statement|assertion|claim|allegation|accusation|charge|complaint|grievance|objection|protest|opposition|resistance|refusal|rejection|denial|contradiction|dispute|disagreement|conflict|controversy|debate|discussion|negotiation|bargaining|compromise|settlement|resolution|solution|answer|response|reply|reaction|feedback|comment|remark|observation|note|annotation|explanation|clarification|interpretation|translation|conversion|transformation|change|modification|alteration|adjustment|adaptation|accommodation|customization|personalization|individualization|specialization|differentiation|distinction|discrimination|separation|division|classification|categorization|organization|arrangement|structure|framework|system|model|pattern|design|plan|blueprint|scheme|strategy|approach|method|technique|procedure|process|operation|function|activity|task|job|work|labor|effort|endeavor|undertaking|venture|enterprise|business|company|corporation|organization|institution|establishment|entity|body|group|team|committee|board|council|assembly|meeting|conference|convention|symposium|seminar|workshop|training|education|instruction|teaching|learning|study|research|investigation|inquiry|examination|analysis|evaluation|assessment|appraisal|review|audit|inspection|survey|poll|questionnaire|interview|consultation|discussion|conversation|dialogue|communication|correspondence|exchange|interaction|relationship|connection|association|link|tie|bond|attachment|affiliation|membership|participation|involvement|engagement|commitment|obligation|duty|responsibility|accountability|liability|culpability|blame|fault|guilt|innocence|exoneration|vindication|justification|excuse|defense|protection|security|safety|risk|danger|hazard|threat|vulnerability|exposure|susceptibility|immunity|resistance|tolerance|acceptance|approval|endorsement|support|backing|sponsorship|patronage|advocacy|promotion|encouragement|assistance|aid|help|cooperation|collaboration|partnership|alliance)\b/gi;
+
+    if (legalEnglish.test(text)) {
+      console.log('🔍 English legal/business terms found');
+      return true;
+    }
+
+    return false;
   }
 
   /**

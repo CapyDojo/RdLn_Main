@@ -398,6 +398,45 @@ export class OCRCacheManager {
   }
 
   /**
+   * PRIORITY FIX: Reorders detection languages to prioritize English over Russian
+   * This helps prevent false positives where English text is detected as Russian
+   */
+  private static getPrioritizedDetectionLanguages(languages: OCRLanguage[]): OCRLanguage[] {
+    // Define priority order: English first, then other Latin scripts, then non-Latin scripts, Russian last
+    const priorityOrder: OCRLanguage[] = [
+      'eng',        // English - highest priority
+      'spa',        // Spanish
+      'fra',        // French  
+      'deu',        // German
+      'chi_sim',    // Chinese Simplified
+      'chi_tra',    // Chinese Traditional
+      'jpn',        // Japanese
+      'kor',        // Korean
+      'ara',        // Arabic
+      'rus'         // Russian - lowest priority to prevent false positives
+    ];
+
+    // Reorder the languages according to priority
+    const prioritized: OCRLanguage[] = [];
+    const remaining = [...languages];
+
+    // Add languages in priority order
+    for (const lang of priorityOrder) {
+      const index = remaining.indexOf(lang);
+      if (index !== -1) {
+        prioritized.push(lang);
+        remaining.splice(index, 1);
+      }
+    }
+
+    // Add any remaining languages that weren't in the priority list
+    prioritized.push(...remaining);
+
+    console.log('🎯 Language detection priority order:', prioritized);
+    return prioritized;
+  }
+
+  /**
    * Creates a logger function for Tesseract worker progress
    */
   private static createLogger() {
@@ -611,10 +650,14 @@ export class OCRCacheManager {
     let actualLanguages: OCRLanguage[];
 
     try {
+      // PRIORITY FIX: Reorder detection languages to prioritize English over Russian
+      // This helps Tesseract.js make better language detection decisions
+      const prioritizedLanguages = this.getPrioritizedDetectionLanguages(DETECTION_LANGUAGES);
+      
       // First attempt: Try full language set (works in development)
-      console.log('🌍 Attempting full language detection worker:', DETECTION_LANGUAGES);
-      worker = await this.createWorkerWithFallback(DETECTION_LANGUAGES, 30000);
-      actualLanguages = DETECTION_LANGUAGES;
+      console.log('🌍 Attempting full language detection worker with prioritized order:', prioritizedLanguages);
+      worker = await this.createWorkerWithFallback(prioritizedLanguages, 30000);
+      actualLanguages = prioritizedLanguages;
       console.log('✅ Full multi-language detection worker created successfully');
 
     } catch (fullLanguageError) {
