@@ -84,10 +84,72 @@ export const LanguageSettingsDropdown: React.FC<LanguageSettingsDropdownProps> =
 
   return createPortal(
     <div 
-      className={`fixed inset-0 z-[9999] pointer-events-auto ${className || ''}`} 
-      style={style}
-      onClick={onClose}
+      className={`fixed inset-0 z-[9999] ${className || ''}`} 
+      style={{
+        ...style,
+        pointerEvents: 'none' // Make the overlay non-interactive by default
+      }}
     >
+      {/* Clickable background areas that close dropdown - split to avoid segmented control */}
+      {currentRect && controlRef.current ? (
+        <>
+          {/* Top area - above segmented control */}
+          <div 
+            className="absolute pointer-events-auto"
+            style={{
+              left: 0,
+              top: 0,
+              right: 0,
+              height: `${currentRect.top}px`
+            }}
+            onClick={onClose}
+          />
+          
+          {/* Left area - left of segmented control */}
+          <div 
+            className="absolute pointer-events-auto"
+            style={{
+              left: 0,
+              top: `${currentRect.top}px`,
+              width: `${currentRect.left}px`,
+              height: `${currentRect.height}px`
+            }}
+            onClick={onClose}
+          />
+          
+          {/* Right area - right of segmented control */}
+          <div 
+            className="absolute pointer-events-auto"
+            style={{
+              left: `${currentRect.right}px`,
+              top: `${currentRect.top}px`,
+              right: 0,
+              height: `${currentRect.height}px`
+            }}
+            onClick={onClose}
+          />
+          
+          {/* Bottom area - below segmented control */}
+          <div 
+            className="absolute pointer-events-auto"
+            style={{
+              left: 0,
+              top: `${currentRect.bottom}px`,
+              right: 0,
+              bottom: 0
+            }}
+            onClick={onClose}
+          />
+        </>
+      ) : (
+        // Fallback - full screen overlay if no control rect
+        <div 
+          className="absolute inset-0 pointer-events-auto"
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Dropdown content */}
       <div 
         className="absolute pointer-events-auto"
         style={{

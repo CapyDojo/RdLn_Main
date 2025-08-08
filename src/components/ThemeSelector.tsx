@@ -12,6 +12,12 @@ interface DragState {
   dragOverIndex: number | null;
 }
 
+interface BumpState {
+  displacements: Map<number, number>; // card index -> displacement amount
+  insertionIndex: number | null; // where the insertion preview should appear
+  rippleCenter: number | null; // center point for ripple effects
+}
+
 // Theme-specific configurations with stronger translucency
 const getThemeConfigs = (isSelected: boolean) => ({
   'professional': {
@@ -120,36 +126,106 @@ const hexToRgb = (hex: string): string => {
   return `${r}, ${g}, ${b}`;
 };
 
-// Helper function to calculate simple "(" crescent positions
-const calculateCrescentPosition = (index: number, totalItems: number) => {
-  // Step 1: Start cascade closer to button now that hover conflicts are resolved
-  const baseLeftOffset = -10; // Start 10px left of button center for tighter positioning
-  const downwardStep = 50;     // Vertical spacing for cascade
-  const maxLeftwardStep = -15; // Maximum leftward drift at the beginning
+// Spring physics configuration optimized for Electron
+const PHYSICS_CONFIG = {
+  springTension: 120,
+  springFriction: 8,
+  rippleRadius: 40,
+  maxDisplacement: 25, // Reduced from 60 - more subtle
+  insertionSpacing: 45,
+  magneticThreshold: 15, // Reduced from 20
+  performanceMode: true, // Enable performance optimizations for Electron
+  maxFPS: 60 // Target frame rate
+};
 
-  // Basic vertical position
+// Helper function to calculate spring-based displacement
+const calculateBumpOffset = (
+  cardIndex: number,
+  dragOverIndex: number | null,
+  insertionIndex: number | null,
+  progress: number = 1
+): number => {
+  if (dragOverIndex === null && insertionIndex === null) return 0;
+
+  const targetIndex = insertionIndex ?? dragOverIndex;
+  if (targetIndex === null) return 0;
+
+  // Calculate displacement direction and magnitude
+  const distance = Math.abs(cardIndex - targetIndex);
+  if (distance > 3) return 0; // Only affect nearby cards
+  
+  const direction = cardIndex < targetIndex ? -1 : 1; // Cards above move up, below move down
+  
+  // Simpler linear falloff instead of exponential
+  const falloff = Math.max(0, 1 - distance * 0.4);
+  const baseDisplacement = PHYSICS_CONFIG.maxDisplacement * falloff;
+  
+  // Simplified easing - no overshoot
+  return direction * baseDisplacement * progress;
+};
+
+// Helper function to calculate ripple scaling effects
+const calculateRippleScale = (
+  cardIndex: number, 
+  rippleCenter: number | null, 
+  progress: number = 1
+): number => {
+  if (rippleCenter === null) return 1;
+  
+  const distance = Math.abs(cardIndex - rippleCenter);
+  const maxDistance = PHYSICS_CONFIG.rippleRadius / 50; // Convert to card units
+  
+  if (distance > maxDistance) return 1;
+  
+  // Subtle scaling ripple (5% max change)
+  const rippleIntensity = (1 - distance / maxDistance) * 0.05;
+  const wave = Math.sin(progress * Math.PI * 2 - distance * 0.5) * rippleIntensity;
+  
+  return 1 + wave;
+};
+
+// Helper function to calculate enhanced crescent positions with bump physics
+const calculateCrescentPosition = (
+  index: number, 
+  totalItems: number,
+  bumpState?: BumpState,
+  dragOverIndex?: number | null
+) => {
+  // Step 1: Base parabolic positioning (unchanged)
+  const baseLeftOffset = -10;
+  const downwardStep = 50;
+  const maxLeftwardStep = -15;
+
   let y = index * downwardStep;
 
-  // Step 2: Pure parabolic crescent - elegant mathematical symmetry (inverted)
-  const center = (totalItems - 1) / 2; // True center of cascade (4.5 for 10 items)
-  const distanceFromCenter = Math.abs(index - center); // Distance from center (0 to 4.5)
-  const maxDistance = center; // Maximum distance from center to edge
+  const center = (totalItems - 1) / 2;
+  const distanceFromCenter = Math.abs(index - center);
+  const maxDistance = center;
 
-  // Inverted parabola: edges closest to button, center deepest left
-  const parabolicValue = 1 - Math.pow(distanceFromCenter / maxDistance, 2); // 1 at center, 0 at edges
-  const maxLeftwardDrift = center * maxLeftwardStep; // Maximum drift at center
+  const parabolicValue = 1 - Math.pow(distanceFromCenter / maxDistance, 2);
+  const maxLeftwardDrift = center * maxLeftwardStep;
 
   let x = baseLeftOffset + (parabolicValue * maxLeftwardDrift);
 
-  // Step 3: Subtle scale variation for depth
   const distanceFromMid = Math.abs(index - (totalItems - 1) / 2);
   const scaleVariation = 1 - (distanceFromMid * 0.008);
 
+  // Step 2: Apply bump physics if active
+  let bumpOffset = 0;
+  let rippleScale = 1;
+
+  if (bumpState) {
+    bumpOffset = bumpState.displacements.get(index) || 0;
+    rippleScale = calculateRippleScale(index, bumpState.rippleCenter);
+  }
+
   return {
     x,
-    y,
-    scale: Math.max(0.94, scaleVariation),
-    depth: index
+    y: y + bumpOffset,
+    scale: Math.max(0.94, scaleVariation * rippleScale),
+    depth: index,
+    bumpOffset,
+    rippleScale
   };
 };
 
@@ -161,10 +237,16 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
     dragIndex: null,
     dragOverIndex: null
   });
+  const [bumpState, setBumpState] = useState<BumpState>({
+    displacements: new Map(),
+    insertionIndex: null,
+    rippleCenter: null
+  });
   const [selectedIndex, setSelectedIndex] = useState<number>(-1); // -1 means no keyboard selection
   const themesButtonRef = React.useRef<HTMLDivElement>(null);
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
   const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const physicsUpdateRef = React.useRef<NodeJS.Timeout | null>(null);
 
 
 
@@ -314,14 +396,76 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
     }
   }, [isHovered]);
 
-  // Cleanup timeout on unmount
+  // Cleanup timeouts on unmount
   React.useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
       }
+      if (physicsUpdateRef.current) {
+        clearTimeout(physicsUpdateRef.current);
+      }
     };
   }, []);
+
+  // Calculate bump physics displacements with performance throttling
+  const updateBumpPhysics = React.useCallback((dragOverIndex: number | null, dragIndex: number | null) => {
+    // Clear any pending physics update
+    if (physicsUpdateRef.current) {
+      clearTimeout(physicsUpdateRef.current);
+    }
+
+    // Throttle physics updates for 60fps performance
+    physicsUpdateRef.current = setTimeout(() => {
+      if (dragOverIndex === null || dragIndex === null) {
+        setBumpState({
+          displacements: new Map(),
+          insertionIndex: null,
+          rippleCenter: null
+        });
+        return;
+      }
+
+      const newDisplacements = new Map<number, number>();
+      
+      // Calculate proper insertion point: where the gap should appear
+      // If dragging from below to above, insert at dragOverIndex
+      // If dragging from above to below, insert at dragOverIndex + 1
+      let insertionIndex = dragOverIndex;
+      if (dragIndex !== null && dragIndex < dragOverIndex) {
+        insertionIndex = dragOverIndex; // Inserting at this position pushes others down
+      } else if (dragIndex !== null && dragIndex > dragOverIndex) {
+        insertionIndex = dragOverIndex; // Inserting here, others move up
+      }
+      
+      // Calculate displacements for all cards
+      availableThemes.forEach((_, index) => {
+        if (index === dragIndex) return; // Skip the dragged card
+        
+        const displacement = calculateBumpOffset(
+          index, 
+          dragOverIndex, 
+          insertionIndex,
+          1 // Full displacement for now - could animate this for smoother motion
+        );
+        
+        if (Math.abs(displacement) > 0.1) { // Only store significant displacements
+          newDisplacements.set(index, displacement);
+        }
+      });
+
+      setBumpState({
+        displacements: newDisplacements,
+        insertionIndex,
+        rippleCenter: dragOverIndex
+      });
+    }, PHYSICS_CONFIG.performanceMode ? 16 : 0); // ~60fps throttling when performance mode enabled
+  }, [availableThemes]);
+
+  // Update bump physics when drag state changes
+  React.useEffect(() => {
+    updateBumpPhysics(dragState.dragOverIndex, dragState.dragIndex);
+  }, [dragState.dragOverIndex, dragState.dragIndex, updateBumpPhysics]);
 
   const handleSelectTheme = (themeName: string, isDragEvent = false) => {
     // Only select theme if it's not a drag event
@@ -352,7 +496,20 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
     }
   };
 
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Reset magnetic attraction effects
+    const dragElement = e.currentTarget as HTMLElement;
+    dragElement.style.filter = '';
+  };
+
   const handleDragEnd = () => {
+    // Clear bump physics state
+    setBumpState({
+      displacements: new Map(),
+      insertionIndex: null,
+      rippleCenter: null
+    });
+
     setDragState({
       isDragging: false,
       dragIndex: null,
@@ -420,13 +577,41 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
           }}
         >
 
+
+          {/* Invisible drop zones for gaps created by bump physics */}
+          {dragState.isDragging && availableThemes.map((_, index) => {
+            const displacement = bumpState.displacements.get(index) || 0;
+            if (Math.abs(displacement) < 5) return null; // Only create drop zones for significantly displaced cards
+            
+            const basePosition = calculateCrescentPosition(index, availableThemes.length);
+            
+            return (
+              <div
+                key={`drop-zone-${index}`}
+                className="absolute pointer-events-auto"
+                style={{
+                  left: `${basePosition.x - 208}px`,
+                  top: `${basePosition.y}px`,
+                  width: '208px',
+                  height: '60px',
+                  zIndex: 500, // Below cards but above background
+                  // Debug: uncomment to see drop zones
+                  // background: 'rgba(255, 0, 0, 0.1)',
+                  // border: '1px solid red'
+                }}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => handleDrop(e, index)}
+              />
+            );
+          })}
+
           {availableThemes.map((theme, index) => {
             const isDragOver = dragState.dragOverIndex === index;
             const isDragging = dragState.dragIndex === index;
             const delay = index * 60; // Slightly longer staggered delay for arc effect
 
-            // Calculate gentle crescent position for this card
-            const cascadePosition = calculateCrescentPosition(index, availableThemes.length);
+            // Calculate enhanced crescent position with bump physics
+            const cascadePosition = calculateCrescentPosition(index, availableThemes.length, bumpState, dragState.dragOverIndex);
 
 
 
@@ -436,12 +621,13 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                 draggable={true}
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
                 onDragEnd={handleDragEnd}
                 onDrop={(e) => handleDrop(e, index)}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 className={`
-                    absolute transition-all duration-500 ease-out
+                    absolute will-change-transform
                     ${isDragOver ? 'scale-105' : ''}
                     ${isDragging ? 'opacity-50 scale-95' : ''}
                     ${selectedIndex === index ? 'ring-2 ring-blue-400 ring-offset-2' : ''}
@@ -454,22 +640,28 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                     : `${0 - 208}px`, // Right edge aligns with button center when collapsed
                   top: isHovered ? `${cascadePosition.y}px` : '0px', // Relative to button center
                   transform: isHovered
-                    ? `scale(${cascadePosition.scale}) rotateX(0deg)` // Scale for depth
-                    : 'scale(0.7) rotateX(-20deg)', // Collapsed at button center
+                    ? `translateY(0px) scale(${cascadePosition.scale})` // Clean transform
+                    : 'translateY(0px) scale(0.7) rotateX(-20deg)', // Collapsed at button center
                   transformOrigin: 'center center',
                   transitionDelay: isHovered
                     ? `${delay}ms`
                     : `${(availableThemes.length - index - 1) * 30}ms`,
-                  transitionDuration: '400ms',
-                  transitionTimingFunction: isHovered
+                  transitionDuration: dragState.isDragging
+                    ? '150ms' // Faster transitions for bump physics
+                    : '300ms', // Slightly faster overall
+                  transitionTimingFunction: dragState.isDragging
+                    ? 'ease-out' // Simple, smooth easing for bumps
+                    : isHovered
                     ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' // Bounce out to arc
-                    : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smooth collapse to center
-                  zIndex: availableThemes.length - index,
+                    : 'ease-in-out', // Simple collapse
+                  transitionProperty: 'transform, opacity, left, top',
+                  zIndex: dragState.isDragging && dragState.dragIndex === index
+                    ? 1000 // Dragged card always on top
+                    : availableThemes.length - index + (cascadePosition.bumpOffset !== 0 ? 10 : 0), // Bumped cards slightly higher
                 }}
               >
                 <button
                   onClick={() => handleSelectTheme(theme.name, dragState.isDragging)}
-                  onMouseEnter={() => setSelectedIndex(index)}
                   tabIndex={-1}
                   className="w-52 px-4 py-3 text-left rounded-lg flex items-center gap-3 group transition-all duration-300 border shadow-lg hover:shadow-xl"
                   style={{
@@ -481,6 +673,10 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                   }}
                   data-theme-card={theme.name}
                   onMouseEnter={(e) => {
+                    // Set keyboard selection index
+                    setSelectedIndex(index);
+                    
+                    // Apply hover effects for non-selected themes
                     if (currentTheme !== theme.name) {
                       const themeConfigs = getThemeConfigs(false);
                       const config = themeConfigs[theme.name as keyof typeof themeConfigs] || themeConfigs['professional'];

@@ -536,12 +536,14 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           {/* OCR Language Segmented Control */}
           <div className="flex items-center gap-2">
             <span className="text-base font-medium text-theme-neutral-700 hidden sm:inline">OCR Languages</span>
-            <div className="segmented-control" ref={segmentedControlRef} role="group" aria-label="OCR Language Detection Mode">
+            <div className="segmented-control relative z-[10001]" ref={segmentedControlRef} role="group" aria-label="OCR Language Detection Mode">
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event bubbling
                   setAutoDetect(true);
                   setShowLanguageSettings(false); // Always close dropdown when switching to Auto
                 }}
+
                 className={`segment ${autoDetect ? 'active' : ''}`}
                 aria-pressed={autoDetect}
                 aria-label="Automatic language detection"
