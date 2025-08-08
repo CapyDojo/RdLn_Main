@@ -116,6 +116,34 @@ export class OCRCacheManager {
   }
 
   /**
+   * Create worker using Tesseract.js CDN (for web deployments)
+   */
+  private static async createCDNWorker(
+    languages: OCRLanguage[],
+    timeout: number
+  ): Promise<Tesseract.Worker> {
+    try {
+      console.log('🔧 Creating CDN worker for optimal web performance');
+      const worker = await Promise.race([
+        createWorker(languages, 1, {
+          logger: this.createLogger()
+          // No langPath - will use CDN
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('CDN worker timeout')), timeout)
+        )
+      ]);
+
+      console.log('✅ CDN worker created successfully');
+      return worker;
+
+    } catch (cdnError) {
+      console.error('❌ CDN worker creation failed:', cdnError);
+      throw cdnError;
+    }
+  }
+
+  /**
    * PRODUCTION FIX: Create worker with enhanced Tauri-specific resource handling
    */
   private static async createWorkerWithFallback(
@@ -132,21 +160,30 @@ export class OCRCacheManager {
       return this.createTauriWorker(languages, timeout);
     }
 
-    // Web environment - use standard approach
+    // Web environment - detect if we should skip local assets
+    const isWebDeployment = typeof window !== 'undefined' && 
+                           window.location.protocol.startsWith('http') && 
+                           !window.location.hostname.includes('localhost') &&
+                           !window.location.hostname.includes('127.0.0.1');
+
+    if (isWebDeployment) {
+      console.log('🔧 Web deployment detected, using CDN directly for optimal performance');
+      return this.createCDNWorker(languages, timeout);
+    }
+
+    // Local development - try local assets first
     try {
       // Get environment-specific resource paths
       const resourcePaths = await this.getTauriResourcePaths();
-      console.log('🔧 Using resource paths:', resourcePaths);
+      console.log('🔧 Using resource paths for local development:', resourcePaths);
 
+      // Based on Tesseract.js docs, try the correct parameter format
       const workerOptions = {
         logger: this.createLogger(),
-        langPath: resourcePaths.langPath,
         workerPath: resourcePaths.workerPath,
         corePath: resourcePaths.corePath,
-        // Try setting TESSDATA_PREFIX explicitly
-        env: {
-          TESSDATA_PREFIX: resourcePaths.langPath
-        }
+        // The correct parameter might be 'langPath' with trailing slash
+        langPath: resourcePaths.langPath.endsWith('/') ? resourcePaths.langPath : resourcePaths.langPath + '/'
       };
 
       console.log('🔧 Attempting worker with optimized paths:', workerOptions);
@@ -159,6 +196,14 @@ export class OCRCacheManager {
         console.warn('⚠️ Asset accessibility test failed:', error);
       }
 
+      // Try setting global Tesseract configuration
+      if (typeof window !== 'undefined') {
+        (window as any).Tesseract = (window as any).Tesseract || {};
+        (window as any).Tesseract.langPath = resourcePaths.langPath + '/';
+        console.log('🔧 Set global Tesseract.langPath:', (window as any).Tesseract.langPath);
+      }
+
+      console.log('🔧 Final worker options:', workerOptions);
       const worker = await Promise.race([
         createWorker(languages, 1, workerOptions),
         new Promise<never>((_, reject) =>
@@ -220,24 +265,7 @@ export class OCRCacheManager {
 
       // Final attempt: CDN (only for web environment)
       if (!isTauri) {
-        try {
-          console.log('🔧 Final attempt: Using Tesseract.js CDN (web environment only)');
-          const worker = await Promise.race([
-            createWorker(languages, 1, {
-              logger: this.createLogger()
-              // No langPath - will use CDN
-            }),
-            new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('CDN worker timeout')), timeout)
-            )
-          ]);
-
-          console.log('✅ CDN worker created successfully');
-          return worker;
-
-        } catch (cdnError) {
-          console.error('❌ CDN fallback also failed:', cdnError);
-        }
+        return this.createCDNWorker(languages, timeout);
       } else {
         console.log('🚫 Skipping CDN fallback in Tauri environment (network restricted)');
       }
