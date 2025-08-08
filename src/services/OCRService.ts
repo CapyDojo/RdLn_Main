@@ -222,18 +222,21 @@ export class OCRService {
     const detectionLanguages: OCRLanguage[] = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
     console.log('🔄 DETECTION CACHE MISS: Creating new detection worker with full language support:', detectionLanguages);
     
-    // Configure paths for offline/Electron mode  
+    // Configure paths using centralized path resolution
     const detectionConfig: any = {
       logger: this.createLogger()
     };
     
-    // Use local assets if in Electron or offline mode
-    if (typeof window !== 'undefined' && (window.isElectron || window.TESSERACT_CONFIG)) {
-      const config = window.TESSERACT_CONFIG || {};
-      detectionConfig.langPath = config.langPath || './tessdata/';
-      detectionConfig.corePath = config.corePath || './tesseract/';
-      detectionConfig.workerPath = config.workerPath || './tesseract/worker.min.js';
-      console.log('🔧 Using local Tesseract assets for detection worker');
+    // Get environment-appropriate paths from OCRCacheManager
+    try {
+      const resourcePaths = await OCRCacheManager.getTauriResourcePaths();
+      detectionConfig.langPath = resourcePaths.langPath;
+      detectionConfig.corePath = resourcePaths.corePath;
+      detectionConfig.workerPath = resourcePaths.workerPath;
+      console.log('🔧 Using centralized resource paths for detection worker:', resourcePaths);
+    } catch (error) {
+      console.warn('⚠️ Failed to get resource paths, using fallback configuration:', error);
+      // Fallback to basic configuration without paths (let Tesseract.js use defaults)
     }
     
     const worker = await createWorker(detectionLanguages, 1, detectionConfig);

@@ -71,7 +71,7 @@ export class OCRCacheManager {
   /**
    * PRODUCTION FIX: Get the correct resource paths for current environment
    */
-  private static async getTauriResourcePaths(): Promise<{
+  public static async getTauriResourcePaths(): Promise<{
     langPath: string;
     workerPath: string;
     corePath: string;
