@@ -549,7 +549,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <h3 className="text-3xl font-semibold text-theme-primary-900">{title}</h3>
           <button
             onClick={toggleAutoFormat}
-            className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
+            className={`flex items-center justify-center w-12 h-12 rounded-lg border transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
               ? 'bg-theme-primary-600 dark:bg-theme-primary-500 border-transparent text-white hover:shadow-lg'
               : 'bg-theme-neutral-200/70 dark:bg-white/10 border-transparent dark:border-white/10 hover:border-theme-neutral-300/50 dark:hover:border-white/20 text-theme-neutral-800 dark:text-theme-neutral-100 hover:shadow-theme-neutral-200/50'}`}
             title={`Magically fix broken PDF paragraphs — ${isAutoFormatEnabled ? 'ON' : 'OFF'}`}
@@ -560,12 +560,19 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
             <span className="inline-flex items-center leading-none -mt-px">
               <span
                 className={`mr-0.5 select-none ${isAutoFormatEnabled ? '' : ''}`}
-                style={{ fontSize: '13px' }}
+                style={{ fontSize: '14px' }}
                 aria-hidden
               >
                 🪄
               </span>
-              <span className={`select-none ${isAutoFormatEnabled ? 'text-white' : 'text-theme-neutral-700 dark:text-theme-neutral-200'}`} style={{ fontSize: '15px', fontWeight: 600 }}>
+              <span
+                className={`select-none ${
+                  isAutoFormatEnabled
+                    ? 'text-theme-accent-100 dark:text-theme-accent-200'
+                    : 'text-theme-accent-700 dark:text-theme-accent-400'
+                }`}
+                style={{ fontSize: '18px', fontWeight: 800 }}
+              >
                 ¶
               </span>
             </span>
@@ -789,3 +796,5 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     </div>
   );
 };
+
+export default TextInputPanel;
