@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface FullScreenOverlayProps {
@@ -27,10 +27,34 @@ export const FullScreenOverlay: React.FC<FullScreenOverlayProps> = ({
   className = ''
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const [isExiting, setIsExiting] = useState(false);
+  const [shouldRender, setShouldRender] = useState(isVisible);
+
+  // Handle visibility changes and exit transitions
+  useEffect(() => {
+    if (isVisible) {
+      setShouldRender(true);
+      setIsExiting(false);
+    } else if (shouldRender) {
+      // Small delay to prevent flicker from competing animations
+      const exitTimer = setTimeout(() => {
+        setIsExiting(true);
+        // Remove from DOM after animation completes
+        const removeTimer = setTimeout(() => {
+          setShouldRender(false);
+          setIsExiting(false);
+        }, 250); // Match the exit animation duration
+        
+        return () => clearTimeout(removeTimer);
+      }, 16); // One frame delay to let any conflicting animations settle
+      
+      return () => clearTimeout(exitTimer);
+    }
+  }, [isVisible, shouldRender]);
 
   // Handle keyboard navigation
   useEffect(() => {
-    if (!isVisible) return;
+    if (!shouldRender) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -42,7 +66,7 @@ export const FullScreenOverlay: React.FC<FullScreenOverlayProps> = ({
 
     document.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => document.removeEventListener('keydown', handleKeyDown, { capture: true });
-  }, [isVisible, onClose]);
+  }, [shouldRender, onClose]);
 
   // Focus management and body scroll prevention
   useEffect(() => {
@@ -52,8 +76,8 @@ export const FullScreenOverlay: React.FC<FullScreenOverlayProps> = ({
       
       // Prevent body scroll when overlay is open
       document.body.style.overflow = 'hidden';
-    } else {
-      // Restore body scroll when overlay closes
+    } else if (!shouldRender) {
+      // Only restore body scroll after exit animation completes
       document.body.style.overflow = '';
     }
 
@@ -61,7 +85,7 @@ export const FullScreenOverlay: React.FC<FullScreenOverlayProps> = ({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isVisible]);
+  }, [isVisible, shouldRender]);
 
   // Handle click outside to close
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -70,12 +94,12 @@ export const FullScreenOverlay: React.FC<FullScreenOverlayProps> = ({
     }
   };
 
-  if (!isVisible) return null;
+  if (!shouldRender) return null;
 
   const overlayContent = (
     <div
       ref={overlayRef}
-      className={`results-overlay ${className}`}
+      className={`results-overlay ${className} ${isExiting ? 'exiting' : ''}`}
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"

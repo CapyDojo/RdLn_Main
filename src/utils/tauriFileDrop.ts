@@ -23,10 +23,10 @@ const initTauriApis = async () => {
         tauriListen = eventModule.listen;
         tauriReadFile = fsModule.readFile;
 
-        console.log('🔧 TAURI GLOBAL: APIs imported successfully');
+        // APIs imported successfully
         return true;
     } catch (error) {
-        console.log('🔧 TAURI GLOBAL: Running in web mode, APIs not available');
+        // Running in web mode, APIs not available
         return false;
     }
 };

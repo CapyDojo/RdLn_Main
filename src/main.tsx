@@ -17,6 +17,7 @@ import './index.css';
 import './styles/themes/themes.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { FontSizeProvider } from './contexts/FontSizeContext';
+import { isElectron } from './utils/runtime';
 // STEP 1: Import Background Language Loader (Safe, Modular)
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
 
@@ -136,35 +137,40 @@ createRoot(document.getElementById('root')!).render(
 
 // ELECTRON PERFORMANCE FIX: Disable OCR preloading to improve startup time
 // Only load OCR services when actually needed by user
-if (typeof window !== 'undefined' && !window.isElectron) {
+if (typeof window !== 'undefined' && !isElectron()) {
   // STEP 1b: Safe Background Language Loading (SSMR Implementation) - Web/Tauri only
-  // Initialize after a short delay to ensure app is fully loaded
-  setTimeout(async () => {
-    try {
-      if (process.env.NODE_ENV === 'development') {
-        // console.log('🚀 Initializing background language loading...');
+  // Only schedule if the loader feature is enabled
+  if (BackgroundLanguageLoader.isEnabled()) {
+    // Initialize after a short delay to ensure app is fully loaded
+    setTimeout(async () => {
+      try {
+        if (process.env.NODE_ENV === 'development') {
+          // console.log('🚀 Initializing background language loading...');
+        }
+        await BackgroundLanguageLoader.startBackgroundLoading();
+        if (process.env.NODE_ENV === 'development') {
+          // console.log('✅ Background language loading started successfully');
+        }
+      } catch (error) {
+        console.warn('⚠️ Background language loading failed (non-critical):', error);
+        // Graceful degradation - app continues to work normally
       }
-      await BackgroundLanguageLoader.startBackgroundLoading();
-      if (process.env.NODE_ENV === 'development') {
-        // console.log('✅ Background language loading started successfully');
-      }
-    } catch (error) {
-      console.warn('⚠️ Background language loading failed (non-critical):', error);
-      // Graceful degradation - app continues to work normally
-    }
-  }, 2000); // 2 second delay ensures app is ready
+    }, 2000); // 2 second delay ensures app is ready
+  }
 } else {
   console.log('🔧 Electron detected: Skipping OCR preloading for faster startup');
 }
 
 // STEP 1c: Safe Cleanup (Reversible) - only for non-Electron
 // Cleanup background loader on page unload
-if (typeof window !== 'undefined' && !window.isElectron) {
-  window.addEventListener('beforeunload', async () => {
-    try {
-      await BackgroundLanguageLoader.cleanup();
-    } catch (error) {
-      console.warn('Background loader cleanup error (non-critical):', error);
-    }
-  });
+if (typeof window !== 'undefined' && !isElectron()) {
+  if (BackgroundLanguageLoader.isEnabled()) {
+    window.addEventListener('beforeunload', async () => {
+      try {
+        await BackgroundLanguageLoader.cleanup();
+      } catch (error) {
+        console.warn('Background loader cleanup error (non-critical):', error);
+      }
+    });
+  }
 }

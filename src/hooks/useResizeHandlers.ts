@@ -126,6 +126,50 @@ export const useResizeHandlers = ({
   const outputDragStartY = useRef(0);
   const outputStartHeight = useRef(0);
   
+  // ==================== WRITE BATCHING (rAF) ====================
+  // Coalesce DOM writes to a single animation frame to avoid forced reflow/layout thrash
+  const pendingPanelHeightRef = useRef<number | null>(null);
+  const pendingOutputHeightRef = useRef<number | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+
+  const flushDOMWrites = useCallback(() => {
+    rafIdRef.current = null;
+
+    // Apply pending panel height, if any
+    if (pendingPanelHeightRef.current !== null) {
+      // Smart visibility detection: check which ref points to a visible element
+      let activeRef: HTMLDivElement | null = null;
+      if (desktopInputPanelsRef.current && desktopInputPanelsRef.current.offsetParent !== null) {
+        activeRef = desktopInputPanelsRef.current;
+      } else if (mobileInputPanelsRef.current && mobileInputPanelsRef.current.offsetParent !== null) {
+        activeRef = mobileInputPanelsRef.current;
+      }
+
+      if (activeRef) {
+        const innerContentElements = activeRef.querySelectorAll('.glass-panel-inner-content');
+        innerContentElements.forEach(element => {
+          (element as HTMLElement).style.height = `${pendingPanelHeightRef.current}px`;
+        });
+      }
+      pendingPanelHeightRef.current = null;
+    }
+
+    // Apply pending output height, if any
+    if (pendingOutputHeightRef.current !== null) {
+      const outputElement = document.querySelector('[data-output-panel] .glass-panel-inner-content');
+      if (outputElement) {
+        (outputElement as HTMLElement).style.height = `${pendingOutputHeightRef.current - UI_CONFIG.PANEL_HEIGHTS.HEADER_FOOTER_HEIGHT}px`;
+      }
+      pendingOutputHeightRef.current = null;
+    }
+  }, [desktopInputPanelsRef, mobileInputPanelsRef]);
+
+  const scheduleFlush = useCallback(() => {
+    if (rafIdRef.current == null) {
+      rafIdRef.current = requestAnimationFrame(flushDOMWrites);
+    }
+  }, [flushDOMWrites]);
+  
   // ==================== FALLBACK REACT STATE ====================
   
   const [panelHeight, setPanelHeight] = useState<number>(UI_CONFIG.PANEL_HEIGHTS.DEFAULT_INPUT_HEIGHT);
@@ -141,28 +185,10 @@ export const useResizeHandlers = ({
       setPanelHeight(height);
       return;
     }
-    
-    // Direct CSS manipulation of TextInputPanel inner content - no React re-render
-    // Smart visibility detection: check which ref points to a visible element
-    let activeRef = null;
-    
-    // Check desktop ref first
-    if (desktopInputPanelsRef.current && desktopInputPanelsRef.current.offsetParent !== null) {
-      activeRef = desktopInputPanelsRef.current;
-    }
-    // If desktop is hidden, check mobile ref
-    else if (mobileInputPanelsRef.current && mobileInputPanelsRef.current.offsetParent !== null) {
-      activeRef = mobileInputPanelsRef.current;
-    }
-    
-    if (activeRef) {
-      // Target the actual glass-panel-inner-content divs that have the height styling
-      const innerContentElements = activeRef.querySelectorAll('.glass-panel-inner-content');
-      innerContentElements.forEach(element => {
-        (element as HTMLElement).style.height = `${height}px`;
-      });
-    }
-  }, [USE_CSS_RESIZE]);
+    // Queue the write and let rAF flusher apply it once per frame
+    pendingPanelHeightRef.current = height;
+    scheduleFlush();
+  }, [USE_CSS_RESIZE, scheduleFlush]);
   
   const setOutputHeightCSS = useCallback((height: number) => {
     operationCount.current++;
@@ -172,13 +198,10 @@ export const useResizeHandlers = ({
       setOutputHeight(height);
       return;
     }
-    
-    // ELEGANT FIX: Use proper data-output-panel container selector
-    const outputElement = document.querySelector('[data-output-panel] .glass-panel-inner-content');
-    if (outputElement) {
-      (outputElement as HTMLElement).style.height = `${height - UI_CONFIG.PANEL_HEIGHTS.HEADER_FOOTER_HEIGHT}px`; // Account for header/footer
-    }
-  }, [USE_CSS_RESIZE]);
+    // Queue the write and let rAF flusher apply it once per frame
+    pendingOutputHeightRef.current = height;
+    scheduleFlush();
+  }, [USE_CSS_RESIZE, scheduleFlush]);
   
   // ==================== PANEL RESIZE HANDLERS ====================
   
@@ -308,17 +331,30 @@ export const useResizeHandlers = ({
       setPanelHeightCSS(400);
       setOutputHeightCSS(500);
       
-      // PRE-WARM: Immediate execution to avoid StrictMode double-mounting issues
+      // PRE-WARM: Use rAF to avoid sync write bursts that can trigger reflow
       if (!preWarmingCompleted.current) {
-        // Trigger immediate adjustments to warm up the CSS manipulation system
-        setPanelHeightCSS(401);
-        setPanelHeightCSS(400);
-        setOutputHeightCSS(501);
-        setOutputHeightCSS(500);
-        preWarmingCompleted.current = true;
+        requestAnimationFrame(() => {
+          setPanelHeightCSS(401);
+          setOutputHeightCSS(501);
+          requestAnimationFrame(() => {
+            setPanelHeightCSS(400);
+            setOutputHeightCSS(500);
+            preWarmingCompleted.current = true;
+          });
+        });
       }
     }
   }, [USE_CSS_RESIZE, setPanelHeightCSS, setOutputHeightCSS]);
+
+  // Cleanup any pending rAF on unmount to avoid stray writes
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current != null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+  }, []);
 
   // ==================== LAYOUT CHANGE HANDLER ====================
 

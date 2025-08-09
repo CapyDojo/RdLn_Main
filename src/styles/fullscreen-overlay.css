@@ -18,18 +18,24 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   
-  /* Smooth entrance animation */
-  animation: overlayFadeIn 0.4s ease-out;
+  /* Snappy entrance animation */
+  animation: overlayFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* Base transition for mode changes */
+  transition: background 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              backdrop-filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Content wrapper */
+/* Content wrapper - constrained to document-like proportions */
 .results-overlay-content {
-  max-width: 90vw;
+  max-width: min(90vw, 1200px); /* Wider document view for better content display */
   max-height: 100vh;
-  width: 90vw;
+  width: min(90vw, 1200px);
   height: 100vh;
   display: flex;
   flex-direction: column;
+  /* Snappy content entrance */
+  animation: contentSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Override the inner content height calculation for full screen mode */
@@ -61,11 +67,83 @@
   }
 }
 
-/* Enhanced glassmorphism mode */
+/* Content entrance animation */
+@keyframes contentSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Exit animations - reverse of entrance */
+@keyframes overlayFadeOut {
+  0% {
+    opacity: 1;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  100% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+}
+
+@keyframes contentSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-15px) scale(0.99);
+  }
+}
+
+/* Exit state classes - override everything */
+.results-overlay.exiting {
+  animation: overlayFadeOut 0.25s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards !important;
+  /* Override any conflicting animations and transitions during exit */
+  transition: none !important;
+}
+
+.results-overlay.exiting .results-overlay-content {
+  animation: contentSlideOut 0.2s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards !important;
+  /* Override any conflicting animations and transitions during exit */
+  transition: none !important;
+}
+
+/* Enhanced glassmorphism mode - reduced opacity for better readability */
 .results-overlay.glassmorphism-mode {
-  background: rgba(var(--theme-glass-panel-bg, 255, 255, 255), 0.1);
-  backdrop-filter: blur(20px) saturate(1.2);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  background: 
+    rgba(0, 0, 0, 0.25),
+    rgba(var(--theme-glass-panel-bg, 255, 255, 255), 0.05);
+  backdrop-filter: blur(35px) saturate(1.1);
+  -webkit-backdrop-filter: blur(35px) saturate(1.1);
+  /* Smooth glassmorphism transition */
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Reduce glass panel opacity in fullscreen glassmorphism mode */
+.results-overlay.glassmorphism-mode .glass-panel {
+  background: rgba(var(--glass-bg, 255, 255, 255), 0.08);
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  border: 1px solid rgba(var(--glass-border, 255, 255, 255), 0.15);
+  box-shadow: 0 4px 16px 0 rgba(var(--glass-shadow, 31, 38, 135), 0.08);
+  /* Smooth glass panel transition */
+  transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Reduce glass panel hover effects in fullscreen glassmorphism mode */
+.results-overlay.glassmorphism-mode .glass-panel:hover {
+  background: rgba(var(--glass-bg, 255, 255, 255), 0.12);
+  border-color: rgba(var(--glass-border, 255, 255, 255), 0.25);
+  box-shadow: 0 6px 20px 0 rgba(var(--glass-shadow, 31, 38, 135), 0.12);
 }
 
 /* Responsive design for smaller screens */
@@ -82,11 +160,47 @@
   }
 }
 
+/* Enhanced constraints for larger screens - maintain document proportions */
+@media (min-width: 1200px) {
+  .results-overlay-content {
+    max-width: 1200px; /* Full width for large screens while maintaining readability */
+    width: 1200px;
+  }
+}
+
 /* Ensure proper stacking above other elements */
 .results-overlay {
   z-index: 9999 !important;
 }
 
+
+/* Font Size Control - specific styling for overlay */
+.results-overlay .font-size-control {
+  min-width: 140px;
+}
+
+.results-overlay .font-size-control .segment {
+  padding: 6px 12px;
+  min-width: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.results-overlay .font-size-control .sliding-indicator.size-small {
+  width: 33.333%;
+  transform: translateX(0%);
+}
+
+.results-overlay .font-size-control .sliding-indicator.size-medium {
+  width: 33.333%;
+  transform: translateX(100%);
+}
+
+.results-overlay .font-size-control .sliding-indicator.size-large {
+  width: 33.333%;
+  transform: translateX(200%);
+}
 
 /* Glass/Flat background mode toggle - specific styling for overlay */
 .results-overlay .background-mode-toggle {

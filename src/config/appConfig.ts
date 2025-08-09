@@ -142,12 +142,12 @@ export const DEV_CONFIG = {
   },
 
   DEBUGGING: {
-    SCROLL_SYNC_DEBUG: IS_DEVELOPMENT,
-    RESIZE_DEBUG: IS_DEVELOPMENT,
-    COMPARISON_DEBUG: IS_DEVELOPMENT,
-    OCR_DEBUG: IS_DEVELOPMENT,
-    SHOW_PERFORMANCE_DEBUG: IS_DEVELOPMENT,
-    SEMANTIC_CHUNKING_DEBUG: IS_DEVELOPMENT,
+    SCROLL_SYNC_DEBUG: false, // Disabled to reduce console noise
+    RESIZE_DEBUG: false, // Disabled to reduce console noise
+    COMPARISON_DEBUG: false, // Disabled to reduce console noise
+    OCR_DEBUG: false, // Disabled to reduce console noise
+    SHOW_PERFORMANCE_DEBUG: false, // Disabled to reduce console noise
+    SEMANTIC_CHUNKING_DEBUG: false, // Disabled to reduce console noise
   }
 } as const;
 

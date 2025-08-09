@@ -45,7 +45,7 @@ export const BackgroundLoadingStatus: React.FC<BackgroundLoadingStatusProps> = (
       setIsVisible(hasActivity);
     };
 
-    BackgroundLanguageLoader.onStatusUpdate(handleStatusUpdate);
+    const unsubscribe = BackgroundLanguageLoader.onStatusUpdate(handleStatusUpdate);
 
     // Get initial status
     const initialStatus = BackgroundLanguageLoader.getLoadingStatus();
@@ -53,9 +53,15 @@ export const BackgroundLoadingStatus: React.FC<BackgroundLoadingStatusProps> = (
 
     // Auto-hide after all languages are loaded (with delay)
     const stats = BackgroundLanguageLoader.getStats();
+    let hideTimeout: number | undefined;
     if (stats.pending === 0 && stats.loading === 0) {
-      setTimeout(() => setIsVisible(false), 5000); // Hide after 5 seconds
+      hideTimeout = window.setTimeout(() => setIsVisible(false), 5000); // Hide after 5 seconds
     }
+
+    return () => {
+      if (hideTimeout) clearTimeout(hideTimeout);
+      try { unsubscribe?.(); } catch {}
+    };
   }, [enabled]);
 
   // ROLLBACK: Easy disable

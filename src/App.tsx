@@ -18,7 +18,6 @@ import { ComparisonInterface } from './components/ComparisonInterface';
 import { BetaTermsDialog } from './components/BetaTermsDialog';
 import { BetaAgreementDialog } from './components/BetaAgreementDialog';
 import { AboutDialog } from './components/AboutDialog';
-import { ThemeProvider } from './contexts/ThemeContext';
 import { useTheme } from './contexts/ThemeContext';
 import { LayoutProvider } from './contexts/LayoutContext';
 import { ExperimentalLayoutProvider, useExperimentalFeatures } from './contexts/ExperimentalLayoutContext';
@@ -31,6 +30,7 @@ import BoundaryFixTester from './components/BoundaryFixTester';
 import { SmartPasteTest } from './components/SmartPasteTest';
 import { OCRFeatureCard } from './components/OCRFeatureCard';
 import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
+import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
 import './styles/resize-overrides.css';
 
 interface AppContentProps {
@@ -127,7 +127,7 @@ function AppContent({
           await setupGlobalTauriFileDrop();
         }
       } catch (error) {
-        console.log('🔧 TAURI APP: Failed to setup global handler:', error);
+        console.log(' TAURI APP: Failed to setup global handler:', error);
       }
     };
 
@@ -142,7 +142,7 @@ function AppContent({
           (window as any).__TAURI_FILE_DROP_CLEANUP__ = null;
         }
       } catch (error) {
-        console.log('🔧 TAURI APP: Cleanup error:', error);
+        console.log(' TAURI APP: Cleanup error:', error);
       }
     };
   }, []);
@@ -170,8 +170,10 @@ function AppContent({
       {/* OCR Loading Card - Moved here from ComparisonInterface */}
       {showAdvancedOcrCard && <OCRFeatureCard visible={true} />}
 
-      {/* Background Loading Status - Moved here from ComparisonInterface */}
-      <BackgroundLoadingStatus enabled={true} compact={true} className="mb-4" />
+      {/* Background Loading Status - render only when feature is enabled */}
+      {BackgroundLanguageLoader.isEnabled() && (
+        <BackgroundLoadingStatus enabled={true} compact={true} className="mb-4" />
+      )}
 
       <div className="glass-panel border-t border-theme-neutral-200 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-4 text-center text-theme-neutral-600">
@@ -295,10 +297,9 @@ function App() {
   const isInProduction = process.env.NODE_ENV === 'production';
 
   return (
-    <ThemeProvider>
-      <LayoutProvider>
-        <ExperimentalLayoutProvider>
-          <div className="App">
+    <LayoutProvider>
+      <ExperimentalLayoutProvider>
+        <div className="App">
             {/* Global style override to fix background stitching issue */}
             <style>{`
               body {
@@ -339,7 +340,6 @@ function App() {
           </div>
         </ExperimentalLayoutProvider>
       </LayoutProvider>
-    </ThemeProvider>
   );
 }
 

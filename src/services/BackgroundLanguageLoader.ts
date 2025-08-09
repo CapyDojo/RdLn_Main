@@ -64,6 +64,9 @@ export class BackgroundLanguageLoader {
   // Idle detection
   private static lastUserActivity = Date.now();
   private static idleThresholdMs = 2000; // 2 seconds of inactivity
+  private static updateActivityHandler = () => {
+    this.lastUserActivity = Date.now();
+  };
 
   /**
    * ROLLBACK SWITCH: Disable the entire service
@@ -163,15 +166,18 @@ export class BackgroundLanguageLoader {
   /**
    * Get loaded worker for a language (if available)
    */
-  public static getLoadedWorker(language: OCRLanguage): null {
+  public static getLoadedWorker(_language: OCRLanguage): null {
     return null;
   }
 
   /**
    * Subscribe to status updates
    */
-  public static onStatusUpdate(callback: (status: Map<OCRLanguage, LanguageLoadingStatus>) => void): void {
+  public static onStatusUpdate(callback: (status: Map<OCRLanguage, LanguageLoadingStatus>) => void): () => void {
     this.statusCallbacks.push(callback);
+    return () => {
+      this.statusCallbacks = this.statusCallbacks.filter(cb => cb !== callback);
+    };
   }
 
   /**
@@ -288,14 +294,10 @@ export class BackgroundLanguageLoader {
   private static setupUserActivityMonitoring(): void {
     if (!this.config.respectIdleTime) return;
 
-    const updateActivity = () => {
-      this.lastUserActivity = Date.now();
-    };
-
     // Monitor various user activity events
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
     events.forEach(event => {
-      document.addEventListener(event, updateActivity, { passive: true });
+      document.addEventListener(event, this.updateActivityHandler, { passive: true } as AddEventListenerOptions);
     });
   }
 
@@ -303,13 +305,9 @@ export class BackgroundLanguageLoader {
    * Private: Cleanup user activity monitoring
    */
   private static cleanupUserActivityMonitoring(): void {
-    const updateActivity = () => {
-      this.lastUserActivity = Date.now();
-    };
-
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
     events.forEach(event => {
-      document.removeEventListener(event, updateActivity);
+      document.removeEventListener(event, this.updateActivityHandler as EventListener);
     });
   }
 

@@ -1,5 +1,269 @@
+## Version 0.5.12 - "Fullscreen Experience Excellence - Smooth Transitions & Perfect State Management"
+*Released: 2025-08-09*
+
+### 🎬 **Fullscreen Overlay Experience Enhancement**
+
+#### **Smooth Animation System Implementation**
+- **PROBLEM SOLVED**: Fullscreen overlay transitions were abrupt and jarring, lacking professional polish
+- **BREAKTHROUGH**: Comprehensive animation system with entrance, mode transitions, and smooth exit effects
+- **RESULT**: Professional-grade fullscreen experience with glass/flat mode transitions and zero visual flicker
+
+#### **Animation Architecture Excellence**
+- **Snappy Entry**: Fast 0.25s overlay appearance with smooth 0.3s content slide-in for responsive feel
+- **Smooth Mode Transitions**: 0.8s glass/flat toggle with coordinated background and panel effects
+- **Perfect Exit Animation**: Reverse transitions with `forwards` fill-mode preventing animation snap-back
+- **Flicker-Free Experience**: Frame-timing coordination and `transition: none` overrides during exit
+
+#### **State Management Perfection**
+- **Background Mode Persistence**: Glass/Flat toggle state maintained across fullscreen sessions
+- **Toggle Synchronization**: Real-time state sync between component and parent prevents toggle drift
+- **Exit Animation Timing**: Sophisticated state management for smooth DOM removal after animation completion
+- **Cross-Session Memory**: Fullscreen preferences preserved between normal and overlay modes
+
+### 🎯 **User Interface Design Refinements**
+
+#### **Fullscreen Layout Optimization**
+- **Document-Width Constraints**: 1200px maximum width for optimal reading experience
+- **Professional Header Layout**: Left (Font Size) | Center (Glass/Flat) | Right (Copy/Exit) alignment
+- **Title Hiding**: Removed "🎯 Compared Redline" in fullscreen for maximum content focus
+- **Clean Control Placement**: Essential controls only - font, background mode, copy, and exit functions
+
+#### **Enhanced Glassmorphism Experience**
+- **Reduced Distraction**: Stronger blur (35px) with darker overlay (25% opacity) for better readability
+- **Subtle Glass Effects**: 0.08 opacity glass panels with coordinated hover states
+- **Background Dimming**: Multi-layer overlay system with theme-aware backgrounds
+- **Reading-Focused Design**: Glass mode optimized for document consumption with minimal visual interference
+
+### ✨ **Technical Implementation Excellence**
+
+#### **Animation System Architecture**
+```css
+/* Entrance - Snappy and responsive */
+animation: overlayFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+/* Mode Transitions - Smooth and coordinated */
+transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+/* Exit - Flicker-free with forwards fill-mode */
+animation: overlayFadeOut 0.25s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+```
+
+#### **State Synchronization Pattern**
+```typescript
+// Props-based state with local sync
+const [backgroundMode, setBackgroundMode] = useState(externalBackgroundMode || 'theme');
+
+// Real-time external state tracking
+useEffect(() => {
+  if (externalBackgroundMode && externalBackgroundMode !== backgroundMode) {
+    setBackgroundMode(externalBackgroundMode);
+  }
+}, [externalBackgroundMode, backgroundMode]);
+```
+
+#### **Exit Animation Coordination**
+- **Timing Management**: 16ms frame delay prevents animation conflicts
+- **DOM Lifecycle**: `shouldRender` state controls component presence during exit sequence
+- **Animation Priority**: `!important` declarations ensure exit animations complete without interference
+- **Resource Cleanup**: Proper timer cleanup and body scroll restoration after animation completion
+
+### 🏗️ **Architecture & Performance**
+
+#### **Component State Architecture**
+- **External Prop Integration**: `backgroundMode` prop enables parent state coordination
+- **Local State Sync**: `useEffect` hooks maintain real-time synchronization
+- **Controlled Components**: Clean separation between state management and presentation
+- **Predictable Updates**: Clear data flow from parent state to component rendering
+
+#### **Performance Optimizations**
+- **CSS Transitions**: Hardware-accelerated transforms and opacity changes
+- **Minimal Reflows**: Transform-based animations avoid layout recalculation
+- **Efficient Timers**: Precise timing with proper cleanup prevents memory leaks
+- **Smart Rendering**: Components only rendered when needed with efficient show/hide logic
+
+### 🎨 **User Experience Achievements**
+
+#### **Professional Fullscreen Experience**
+- **Immediate Response**: Fast entry animations create snappy, desktop-app feel
+- **Smooth Mode Changes**: Glass/Flat transitions feel natural and coordinated
+- **Perfect State Memory**: User preferences maintained across fullscreen sessions
+- **Zero Visual Flicker**: Professional-quality exit animations with no visual artifacts
+
+#### **Reading-Optimized Interface**
+- **Document Focus**: Clean layout with maximum content visibility
+- **Distraction Reduction**: Glass mode optimized for document reading
+- **Accessible Controls**: Essential functions remain easily accessible
+- **Professional Polish**: Smooth, predictable interactions throughout fullscreen experience
+
+**Achievement**: Transformed the fullscreen overlay from a basic modal into a premium document viewing experience with professional-grade animations, perfect state management, and reading-optimized interface design.
+
+---
+
+## Version 0.5.11 - "ThemeSelector Drag-to-Reorder Excellence"
+*Released: 2025-08-09*
+
+### 🎨 **Theme Selector Complete Refactoring & Enhancement**
+
+#### **Modular Architecture Transformation**
+- **PROBLEM SOLVED**: ThemeSelector was a monolithic 739-line component with complex, hard-to-maintain drag-to-reorder functionality
+- **BREAKTHROUGH**: Complete refactoring into clean, modular architecture with 6 focused files and simplified physics
+- **RESULT**: Professional-grade drag-to-reorder experience with perfect visual feedback and intuitive interactions
+
+#### **Code Architecture Excellence**
+- **Modular Structure**: Split into focused modules - `hooks.ts`, `utils.ts`, `constants.ts`, `types.ts`, `themeConfigs.ts`, `index.ts`
+- **Separated Concerns**: Custom hooks for state management, pure utility functions, centralized configuration
+- **Eliminated Complexity**: Simplified from complex spring physics to simple "gap = landing zone" principle
+- **Maintainable Code**: Clear, readable implementation that's easy to understand and modify
+
+#### **Enhanced Drag-to-Reorder Experience**
+- **Perfect Visual Alignment**: Drop zone indicators match exactly where items can be dropped
+- **Smooth Physics**: Cards move apart by precise gap size to create clear insertion points
+- **Intelligent Timing**: Smart hover delays (300ms normal, 600ms post-drag) prevent premature cascade collapse
+- **Professional Polish**: Clean visual feedback without overwhelming interface elements
+
+### ✅ **User Experience Refinements**
+
+#### **Visual Polish Achievements**
+- **Eliminated Ghost Borders**: Removed conflicting CSS transitions that caused visual artifacts on hover
+- **Perfect Drop Zone Sizing**: Adjustable gap height and width for optimal targeting experience
+- **Clean Hover Effects**: Removed unwanted blue outlines while maintaining proper visual feedback
+- **Consistent Styling**: Unified approach to theme card appearance and interactions
+
+#### **Smart Interaction Design**
+- **Context-Aware Delays**: Longer cascade open time after drag operations for better workflow
+- **Precise Targeting**: Drop zones sized and positioned for easy, accurate theme reordering
+- **Visual Clarity**: Clear indication of where themes will be inserted during drag operations
+- **Forgiving Interface**: Large enough drop zones to accommodate natural mouse movements
+
+#### **Simplified Configuration**
+```typescript
+// Single setting controls everything
+gapSize: 25, // The gap between cards - visual, physical, landing zone unified
+previewOpacity: 0.3, // Clean, subtle visual feedback
+```
+
+### 🔧 **Technical Implementation Excellence**
+
+#### **Physics Simplification Success**
+- **Before**: Complex spring tension, friction, ripple effects, interpolation systems
+- **After**: Simple rule - cards move down by gap size to make space
+- **Result**: Predictable, reliable behavior that's easy to understand and debug
+
+#### **Clean State Management**
+- **Custom Hooks**: `useHoverState`, `useDragState`, `useBumpPhysics`, `useKeyboardNavigation`
+- **Pure Functions**: Utility functions with no side effects for easy testing
+- **Centralized Config**: All settings in one place for easy customization
+- **Type Safety**: Comprehensive TypeScript interfaces throughout
+
+#### **Performance Optimization**
+- **Reduced Bundle Size**: Eliminated redundant code and complex calculations
+- **Efficient Rendering**: Simplified DOM structure with minimal re-renders
+- **Memory Management**: Proper cleanup of timeouts and event listeners
+- **Smooth Animations**: 60fps performance with optimized transition timing
+
+### 🎯 **Development Process Excellence**
+
+#### **SSMR Methodology Success**
+- **Safe**: Modular refactoring with clear rollback points at each step
+- **Step-by-step**: Incremental improvements with testing at each phase
+- **Modular**: Clean separation of concerns for maintainability
+- **Reversible**: Clear architectural boundaries allow easy modifications
+
+#### **User-Centric Iteration**
+- **Feedback-Driven**: Responsive to user experience observations and requests
+- **Iterative Refinement**: Multiple rounds of fine-tuning for optimal feel
+- **Quality Focus**: Prioritized polish and professional feel over feature complexity
+- **Testing Integration**: Comprehensive test documentation for validation
+
+### 🚀 **User Experience Transformation**
+
+#### **Before Enhancement**
+- Monolithic, hard-to-maintain component with complex physics
+- Visual artifacts and alignment issues during drag operations
+- Inconsistent timing that caused premature cascade collapse
+- Overwhelming visual feedback that distracted from core functionality
+
+#### **After Enhancement**
+- Clean, modular architecture that's easy to understand and maintain
+- Perfect visual alignment between drop zones and actual landing areas
+- Smart timing that adapts to user workflow patterns
+- Professional, subtle visual feedback that enhances rather than distracts
+
+### 📁 **Files Modified**
+
+- **`src/components/ThemeSelector.tsx`** - Refactored main component with clean, focused logic
+- **`src/components/ThemeSelector/hooks.ts`** - Custom hooks for state management
+- **`src/components/ThemeSelector/utils.ts`** - Pure utility functions for calculations
+- **`src/components/ThemeSelector/constants.ts`** - Centralized configuration
+- **`src/components/ThemeSelector/types.ts`** - TypeScript interfaces
+- **`src/components/ThemeSelector/themeConfigs.ts`** - Theme visual configurations
+- **`src/components/ThemeSelector/index.ts`** - Clean module exports
+
+### 🏆 **Professional UI Component Achievement**
+
+**Achievement**: Transformed a complex, monolithic theme selector into a professional-grade, modular component with intuitive drag-to-reorder functionality that feels natural and responsive. The refactoring demonstrates how systematic simplification and user-focused iteration can create superior user experiences while improving code maintainability.
+
+**Technical Excellence**: The modular architecture serves as a model for complex UI component design, showing how to balance functionality, maintainability, and user experience through thoughtful separation of concerns and iterative refinement.
+
+**User Impact**: Theme customization and reordering now feels effortless and professional, matching the quality expectations of desktop-class applications while maintaining the flexibility and power users need for personalized workflows.
+
+---
+
+## Version 0.5.10 - "Background Loader Gating & Cleanup"
+*Released: 2025-08-09*
+
+### 🔒 Feature Gating, Memory Safety, and Runtime Hygiene
+
+#### Bug Fixes
+- BackgroundLanguageLoader: Added unsubscribe API so UI can remove status listeners
+  - Method: `onStatusUpdate(callback) => () => void` returns disposer for clean unsubscription
+  - Prevents accumulating callbacks and memory leaks when components unmount/remount
+- BackgroundLanguageLoader: Fixed user-activity event cleanup
+  - Introduced shared `updateActivityHandler` so `removeEventListener` reliably removes listeners
+  - Ensures no orphaned listeners during cleanup
+- BackgroundLoadingStatus: Properly unsubscribes and clears timeout on unmount
+  - Uses disposer from `BackgroundLanguageLoader.onStatusUpdate`
+  - Clears auto-hide `setTimeout` in effect cleanup to avoid leaks
+
+#### Refactoring / Infrastructure
+- ThemeProvider de-duplication
+  - Removed nested `ThemeProvider` from `App.tsx`; kept single root provider in `main.tsx`
+  - Prevents double renders and unnecessary context work
+- Centralized runtime detection helper
+  - New `utils/runtime.ts` with `getRuntime()`, `isElectron()`, `isTauri()`, `isWeb()`
+  - `main.tsx` now uses `isElectron()` instead of `(window as any).isElectron` casts
+- Gating preserved for background work and UI
+  - `main.tsx` schedules background loading only when `BackgroundLanguageLoader.isEnabled()` and not Electron
+  - `App.tsx` renders `BackgroundLoadingStatus` only when loader is enabled (from earlier gating work)
+
+#### SSMR (Safe, Step-by-step, Modular, Reversible)
+- Safe: Changes are additive/surgical; default-disabled behavior remains unchanged
+- Step-by-step: Subscription cleanup and runtime detection isolated per module
+- Modular: Runtime helpers isolated in `utils/`; UI cleanup scoped to component
+- Reversible: Easy rollback by removing unsubscribe usage or helper import
+
+### 📁 Files Modified
+- `src/services/BackgroundLanguageLoader.ts`
+  - Added `onStatusUpdate` disposer; unified `updateActivityHandler`; reliable add/removeEventListener
+- `src/components/BackgroundLoadingStatus.tsx`
+  - Subscribe with disposer; effect cleanup unsubscribes and clears hide timeout
+- `src/App.tsx`
+  - Removed duplicate `ThemeProvider` wrapper; relies on root provider only
+- `src/main.tsx`
+  - Replaced direct window checks with `isElectron()`; preserved gated background loading and cleanup
+- `src/utils/runtime.ts` (new)
+  - Centralized runtime helpers for Electron/Web/Tauri detection
+
+### 🧪 Testing Notes
+- With loader disabled (default):
+  - No subscriptions created; no background timers/listeners scheduled; status UI not rendered
+- With loader enabled (temporary for validation):
+  - Status updates flow; unsubscribes on component unmount; beforeunload cleanup works; no duplicate listeners
+
+---
+
 ## Version 0.5.9 - "OCR Netlify Deployment Success"
-*Released: August 9, 2025*
+*Released: 2025-08-09*
 
 ### 🚀 **Production OCR Deployment Achievement**
 
@@ -102,7 +366,7 @@ if (isWebDeployment) {
 ---
 
 ## Version 0.5.8 - "Composition Stats Visual Consistency Enhancement"
-*Released: August 8, 2025*
+*Released: 2025-08-08*
 
 ### 🎨 **Visual Consistency & User Experience Excellence**
 
@@ -163,7 +427,7 @@ if (isWebDeployment) {
 ---
 
 ## Version 0.5.7 - "Theme Cascade Layout Timing Fix"
-*Released: August 8, 2025*
+*Released: 2025-08-08*
 
 ### 🔧 **Layout Timing & Positioning Excellence**
 
@@ -230,7 +494,7 @@ const initializePosition = () => {
 ---
 
 ## Version 0.5.6 - "Elegant Crescent Theme Cascade"
-*Released: August 7, 2025*
+*Released: 2025-08-07*
 
 ### 🎨 **Theme Selector Cascade Architecture Excellence**
 
@@ -329,7 +593,7 @@ const curveBackAmount = pastMidpoint * 45; // Strong return curve
 ---
 
 ## Version 0.5.5 - "Modal Dialog Architecture & Email Enhancement"
-*Released: August 6, 2025*
+*Released: 2025-08-06*
 
 ### 🎯 **Modal Dialog System Redesign**
 
@@ -437,7 +701,7 @@ const getOverlayClasses = () => {
 ---
 
 ## Version 0.5.4 - "Multi-Format Rich Text Clipboard"
-*Released: August 6, 2025*
+*Released: 2025-08-06*
 
 ### 🎯 **Enhanced Rich Text Copy Implementation**
 
@@ -560,37 +824,10 @@ const getOverlayClasses = () => {
 ---
 
 ## Version 0.5.3 - "Cross-Platform Native Zoom Architecture"
-*Released: August 5, 2025*
+*Released: 2025-08-05*
 
 ### 🎯 **Revolutionary Cross-Platform Zoom Implementation**
 
-#### **Unified Zoom Service Achievement**
-- **PROBLEM SOLVED**: Dropdown positioning broken across all platforms when zoomed due to CSS zoom coordinate mismatch
-- **ROOT CAUSE**: CSS `document.body.style.zoom` caused `getBoundingClientRect()` to return unscaled coordinates while portals used scaled rendering
-- **BREAKTHROUGH**: Created platform-agnostic ZoomService using native methods for each platform
-- **RESULT**: Perfect positioning at any zoom level (0.25x to 3.0x) across Electron, Tauri, and Web
-
-#### **Platform-Specific Native Implementation**
-- **Electron**: Replaced CSS zoom with `webContents.setZoomFactor()` for coordinate consistency
-- **Tauri**: Integrated `webview.setZoom()` API for native webview scaling
-- **Web**: Implemented CSS `transform: scale()` (better than CSS zoom for `getBoundingClientRect()`)
-- **Unified API**: Single service interface across all platforms with automatic platform detection
-
-#### **Positioning Architecture Excellence**
-- **ThemeSelector**: Perfect waterfall animation positioning at any zoom level
-- **LanguageSettingsDropdown**: Seamless portal positioning without coordinate conversion
-- **No Manual Scaling**: Eliminated all manual zoom factor multiplication from components
-- **Clean Component Logic**: Simplified positioning calculations using native coordinates
-
-### ✅ **Technical Implementation Success**
-
-#### **Electron Native Zoom Infrastructure**
-- **IPC Integration**: Added `set-zoom-factor` and `get-zoom-factor` handlers in main process
-- **Dynamic Tracking**: Renderer process tracks zoom level via `electron-zoom-change` events
-- **Smooth Increments**: Fixed zoom step limitations - now supports full 0.25x to 3.0x range
-- **Menu Integration**: Native zoom menu commands use `webContents.setZoomFactor()`
-
-#### **ZoomService Architecture**
 - **File**: `src/services/ZoomService.ts` - unified cross-platform zoom management
 - **Hook**: `src/hooks/useZoom.ts` - replaces old `useZoomDetection` with modern API
 - **Type Safety**: Full TypeScript support with platform detection and error handling
@@ -1810,7 +2047,7 @@ This release represents a significant milestone in document comparison accuracy,
 
 ---
 
-## [0.2.6] - 2025-01-05
+## [0.2.6] - 2025-07-05
 ### Added
 - **SSMR Refactoring Program (Steps 1-7B):** Comprehensive component modularization to address "monster text" performance issues and improve mobile customization. Implemented Safe, Step-by-step, Modular, and Reversible (SSMR) methodology following DEVELOPMENT_GUIDELINES.md principles.
 

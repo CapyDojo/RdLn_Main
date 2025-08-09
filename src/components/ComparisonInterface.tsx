@@ -680,6 +680,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
                   hideHeader={false}
                   onToggleFullScreen={toggleFullScreen}
                   isFullScreen={true}
+                  backgroundMode={fullScreenBackgroundMode}
                   onBackgroundModeChange={(mode) => setFullScreenBackgroundMode(mode)}
                 />
               </div>

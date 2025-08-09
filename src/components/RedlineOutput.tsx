@@ -9,6 +9,7 @@ import { ResultsOverlayTrigger } from './experimental/ResultsOverlayTrigger';
 import { FullScreenButton } from './FullScreenButton';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { copyToClipboardMultiFormat, isMultiFormatClipboardSupported } from '../utils/clipboardUtils';
+import { FontSizeSelector } from './FontSizeSelector';
 
 interface RedlineOutputProps extends BaseComponentProps {
   changes: DiffChange[];
@@ -20,6 +21,7 @@ interface RedlineOutputProps extends BaseComponentProps {
   onShowOverlay?: () => void;
   isInOverlayMode?: boolean;
   hideHeader?: boolean;
+  backgroundMode?: 'theme' | 'glassmorphism';
   onBackgroundModeChange?: (mode: 'theme' | 'glassmorphism') => void;
   onToggleFullScreen?: () => void;
   isFullScreen?: boolean;
@@ -39,6 +41,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   onShowOverlay,
   isInOverlayMode = false,
   hideHeader = false,
+  backgroundMode: externalBackgroundMode,
   onBackgroundModeChange,
   onToggleFullScreen,
   isFullScreen = false,
@@ -56,8 +59,17 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   // Get experimental features for overlay trigger
   const { features } = useExperimentalFeatures();
 
-  // Background mode state (only used in overlay mode)
-  const [backgroundMode, setBackgroundMode] = React.useState<'theme' | 'glassmorphism'>('theme');
+  // Background mode state (only used in overlay mode) - sync with external state
+  const [backgroundMode, setBackgroundMode] = React.useState<'theme' | 'glassmorphism'>(
+    externalBackgroundMode || 'theme'
+  );
+
+  // Sync local state with external prop when it changes
+  React.useEffect(() => {
+    if (externalBackgroundMode && externalBackgroundMode !== backgroundMode) {
+      setBackgroundMode(externalBackgroundMode);
+    }
+  }, [externalBackgroundMode, backgroundMode]);
   
   // Copy success state for microinteraction
   const [copySuccess, setCopySuccess] = React.useState(false);
@@ -189,15 +201,24 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     >
       {/* Conditionally render header - hidden in overlay mode */}
       {!hideHeader && (
-        <div className="glass-panel-header-footer px-4 py-3 flex items-center justify-between relative">
+        <div className={`glass-panel-header-footer px-4 py-3 flex items-center relative ${isInOverlayMode ? 'justify-between' : 'justify-between'}`}>
           <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-theme-neutral-300 to-transparent"></div>
+          
+          {/* Left side content */}
           <div className="flex items-center gap-2">
-            <span className="text-5xl" role="img" aria-label="Output panel">🎯</span>
-            <h3 className="text-3xl font-semibold text-theme-primary-900">Compared Redline</h3>
+            {!isInOverlayMode ? (
+              <>
+                <span className="text-5xl" role="img" aria-label="Output panel">🎯</span>
+                <h3 className="text-3xl font-semibold text-theme-primary-900">Compared Redline</h3>
+              </>
+            ) : (
+              <FontSizeSelector />
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            {/* Background Mode Toggle - only in overlay mode */}
-            {isInOverlayMode && (
+
+          {/* Center content - Glass/Flat toggle in overlay mode */}
+          {isInOverlayMode && (
+            <div className="absolute left-1/2 transform -translate-x-1/2">
               <div className="relative segmented-control background-mode-toggle">
                 <button
                   onClick={() => {
@@ -219,15 +240,20 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                 </button>
                 <div className={`sliding-indicator ${backgroundMode === 'theme' ? 'to-left' : 'to-right'}`}></div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Results Overlay Trigger - Feature #8 */}
-            <ResultsOverlayTrigger
-              isVisible={features.resultsOverlay}
-              hasResults={changes && changes.length > 0}
-              onClick={onShowOverlay || (() => console.log('🎯 Results Overlay: Manual trigger (no handler)'))}
-              isInOverlayMode={isInOverlayMode}
-            />
+          {/* Right side content */}
+          <div className="flex items-center gap-2">
+            {/* Results Overlay Trigger - only in normal mode */}
+            {!isInOverlayMode && (
+              <ResultsOverlayTrigger
+                isVisible={features.resultsOverlay}
+                hasResults={changes && changes.length > 0}
+                onClick={onShowOverlay || (() => console.log('🎯 Results Overlay: Manual trigger (no handler)'))}
+                isInOverlayMode={isInOverlayMode}
+              />
+            )}
 
             {/* Copy Button */}
             <div className="relative segmented-control">
@@ -262,7 +288,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
               </button>
             </div>
 
-            {/* Full Screen Button - Separate from copy button */}
+            {/* Full Screen Button */}
             <div className="relative segmented-control">
               <FullScreenButton
                 isFullScreen={isFullScreen}
