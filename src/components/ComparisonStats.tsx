@@ -304,25 +304,24 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                 </div>
                 <div>
                   <h4 className="font-semibold text-green-800 text-lg">Additions</h4>
-                  <p className="text-xs text-green-600">Content added to document</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div className="bg-green-100 rounded-lg p-4">
                   <div className="text-2xl font-bold text-green-700">{stats.additions}</div>
-                  <div className="text-sm text-green-600">Blocks</div>
+                  <div className="text-sm" style={{ color: '#059669' }}>Blocks</div>
                 </div>
                 {stats.wordStats && (
                   <div className="bg-green-100 rounded-lg p-4">
                     <div className="text-2xl font-bold text-green-700">{stats.wordStats.addedWords.toLocaleString()}</div>
-                    <div className="text-sm text-green-600">Words</div>
+                    <div className="text-sm" style={{ color: '#059669' }}>Words</div>
                   </div>
                 )}
                 {stats.characterStats && (
                   <div className="bg-green-100 rounded-lg p-4">
                     <div className="text-2xl font-bold text-green-700">{stats.characterStats.addedCharacters.toLocaleString()}</div>
-                    <div className="text-sm text-green-600">Characters</div>
+                    <div className="text-sm" style={{ color: '#059669' }}>Characters</div>
                   </div>
                 )}
               </div>
@@ -336,25 +335,24 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                 </div>
                 <div>
                   <h4 className="font-semibold text-red-800 text-lg">Deletions</h4>
-                  <p className="text-xs text-red-600">Content removed from document</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div className="bg-red-100 rounded-lg p-4">
                   <div className="text-2xl font-bold text-red-700">{stats.deletions}</div>
-                  <div className="text-sm text-red-600">Blocks</div>
+                  <div className="text-sm" style={{ color: '#dc2626' }}>Blocks</div>
                 </div>
                 {stats.wordStats && (
                   <div className="bg-red-100 rounded-lg p-4">
                     <div className="text-2xl font-bold text-red-700">{stats.wordStats.deletedWords.toLocaleString()}</div>
-                    <div className="text-sm text-red-600">Words</div>
+                    <div className="text-sm" style={{ color: '#dc2626' }}>Words</div>
                   </div>
                 )}
                 {stats.characterStats && (
                   <div className="bg-red-100 rounded-lg p-4">
                     <div className="text-2xl font-bold text-red-700">{stats.characterStats.deletedCharacters.toLocaleString()}</div>
-                    <div className="text-sm text-red-600">Characters</div>
+                    <div className="text-sm" style={{ color: '#dc2626' }}>Characters</div>
                   </div>
                 )}
               </div>

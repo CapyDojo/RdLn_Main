@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bamboo Theme - Option B: Bamboo Stalk Pattern</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .bamboo-background-b {
+            background: 
+                /* Vertical bamboo stalks - repeating pattern */
+                repeating-linear-gradient(
+                    90deg,
+                    transparent 0%,
+                    rgba(45,80,22,0.3) 10%,
+                    rgba(113,155,81,0.4) 15%,
+                    rgba(45,80,22,0.3) 20%,
+                    transparent 25%,
+                    transparent 75%
+                ),
+                /* Diagonal left bamboo stalks */
+                repeating-linear-gradient(
+                    45deg,
+                    transparent 0%,
+                    rgba(123,160,95,0.2) 8%,
+                    rgba(183,203,165,0.3) 12%,
+                    rgba(123,160,95,0.2) 16%,
+                    transparent 20%,
+                    transparent 60%
+                ),
+                /* Diagonal right bamboo stalks */
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent 0%,
+                    rgba(146,183,113,0.25) 12%,
+                    rgba(113,155,81,0.35) 18%,
+                    rgba(146,183,113,0.25) 24%,
+                    transparent 30%,
+                    transparent 70%
+                ),
+                /* Bamboo nodes - horizontal elements */
+                repeating-linear-gradient(
+                    0deg,
+                    transparent 0%,
+                    transparent 80px,
+                    rgba(45,80,22,0.4) 85px,
+                    rgba(65,100,42,0.5) 90px,
+                    rgba(45,80,22,0.4) 95px,
+                    transparent 100px
+                ),
+                /* Base forest gradient */
+                linear-gradient(45deg, #2d5016 0%, rgb(146,183,113) 25%, rgb(113,155,81) 63%, rgb(183,203,165) 85%, #7ba05f 100%);
+            
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .content-overlay {
+            position: relative;
+            z-index: 10;
+            padding: 2rem;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .glass-panel {
+            background: rgba(113, 155, 81, 0.15);
+            border: 1px solid rgba(6, 95, 70, 0.3);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(4, 75, 56, 0.25);
+        }
+        
+        .header {
+            text-align: center;
+            color: #065f46;
+            margin-bottom: 1rem;
+        }
+        
+        .description {
+            color: #4a3728;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .feature-card {
+            background: rgba(183, 203, 165, 0.1);
+            border: 1px solid rgba(113, 155, 81, 0.2);
+            backdrop-filter: blur(8px);
+            border-radius: 8px;
+            padding: 1.5rem;
+            color: #065f46;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(6, 95, 70, 0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 6px;
+            backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+        
+        .back-link:hover {
+            background: rgba(6, 95, 70, 1);
+        }
+        
+        .effect-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(251, 191, 36, 0.9);
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+<body>
+    <div class="bamboo-background-b"></div>
+    
+    <a href="bamboo-mockups-index.html" class="back-link">← Back to Options</a>
+    
+    <div class="content-overlay">
+        <div class="glass-panel">
+            <h1 class="header">Option B: Bamboo Stalk Pattern</h1>
+            <p class="description">
+                This approach uses repeating linear gradients to create distinct bamboo stalk patterns. 
+                Vertical, diagonal, and horizontal elements combine to simulate actual bamboo forest structure 
+                with individual stalks and nodes clearly defined.
+            </p>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <h3>🎋 Distinct Stalks</h3>
+                    <p>Repeating patterns create individual bamboo stalk appearance</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🔗 Bamboo Nodes</h3>
+                    <p>Horizontal bands simulate characteristic bamboo joint segments</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>📐 Multiple Directions</h3>
+                    <p>Vertical, diagonal, and horizontal elements for realistic growth</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🌲 Forest Density</h3>
+                    <p>Overlapping patterns create natural forest depth</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="effect-indicator">
+        Criss-Cross Effect: Stalk Patterns
+    </div>
+</body>
+</html>

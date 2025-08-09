@@ -141,13 +141,12 @@ useEffect(() => {
       [feature]: !prev[feature]
     }));
     
-    // Track usage for analytics
-    console.log(`🧪 Experimental Feature Toggled: ${feature} = ${!features[feature]}`);
+    // Track usage for analytics (disabled to reduce console noise)
   };
 
   const resetAllFeatures = () => {
     setFeatures(defaultFeatures);
-    console.log('🧪 All experimental features reset to defaults');
+    // All experimental features reset to defaults
   };
 
   const enableTestGroup = (groupName: string) => {
@@ -157,9 +156,9 @@ useEffect(() => {
         ...defaultFeatures, // Start with all off
         ...group // Enable only the test group features
       }));
-      console.log(`🧪 Test group enabled: ${groupName}`, group);
+      // Test group enabled
     } else {
-      console.warn(`🧪 Unknown test group: ${groupName}`);
+      // Unknown test group
     }
   };
 

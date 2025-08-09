@@ -15,6 +15,7 @@
 
 import { OCRLanguage } from '../types/ocr-types';
 import { OCRService } from './OCRService'; // Import OCRService
+import { DEV_CONFIG } from '../config/appConfig';
 
 export interface LanguageLoadingStatus {
   language: OCRLanguage;
@@ -64,8 +65,8 @@ export class BackgroundLanguageLoader {
   // Idle detection
   private static lastUserActivity = Date.now();
   private static idleThresholdMs = 2000; // 2 seconds of inactivity
-  private static updateActivityHandler = () => {
-    this.lastUserActivity = Date.now();
+  private static readonly updateActivityHandler: EventListener = () => {
+    BackgroundLanguageLoader.lastUserActivity = Date.now();
   };
 
   /**
@@ -74,7 +75,7 @@ export class BackgroundLanguageLoader {
   public static disable(): void {
     this.config.enabled = false;
     this.stopBackgroundLoading();
-    console.log('🛑 Background Language Loader DISABLED');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🛑 Background Language Loader DISABLED');
   }
 
   /**
@@ -82,7 +83,7 @@ export class BackgroundLanguageLoader {
    */
   public static enable(): void {
     this.config.enabled = true;
-    console.log('✅ Background Language Loader ENABLED');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('✅ Background Language Loader ENABLED');
   }
 
   /**
@@ -97,12 +98,12 @@ export class BackgroundLanguageLoader {
    */
   public static async startBackgroundLoading(): Promise<void> {
     if (!this.config.enabled) {
-      console.log('⏸️ Background loading disabled, skipping');
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('⏸️ Background loading disabled, skipping');
       return;
     }
 
     if (this.isLoading) {
-      console.log('⏸️ Background loading already in progress');
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('⏸️ Background loading already in progress');
       return;
     }
 
@@ -133,7 +134,7 @@ export class BackgroundLanguageLoader {
    * Stop background loading (safe cleanup)
    */
   public static stopBackgroundLoading(): void {
-    console.log('🛑 Stopping background language loading...');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🛑 Stopping background language loading...');
     
     // Clear all timeouts
     this.loadingTimeouts.forEach(timeout => clearTimeout(timeout));
@@ -145,7 +146,7 @@ export class BackgroundLanguageLoader {
     // Clean up event listeners
     this.cleanupUserActivityMonitoring();
     
-    console.log('✅ Background loading stopped safely');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('✅ Background loading stopped safely');
   }
 
   /**
@@ -178,6 +179,13 @@ export class BackgroundLanguageLoader {
     return () => {
       this.statusCallbacks = this.statusCallbacks.filter(cb => cb !== callback);
     };
+  }
+
+  /**
+   * Explicitly remove a previously registered status update callback
+   */
+  public static offStatusUpdate(callback: (status: Map<OCRLanguage, LanguageLoadingStatus>) => void): void {
+    this.statusCallbacks = this.statusCallbacks.filter(cb => cb !== callback);
   }
 
   /**
@@ -222,7 +230,7 @@ export class BackgroundLanguageLoader {
       this.loadingTimeouts.push(timeout);
     }
     
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' && DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
       console.log(`📅 Scheduled ${this.config.loadingPriority.length} languages for background loading`);
     }
   }
@@ -232,13 +240,13 @@ export class BackgroundLanguageLoader {
    */
   private static async loadLanguageInBackground(language: OCRLanguage): Promise<void> {
     if (!this.config.enabled) {
-      console.log(`⏸️ Background loading disabled, skipping ${language}`);
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log(`⏸️ Background loading disabled, skipping ${language}`);
       return;
     }
 
     // Check if user is active (if configured to respect idle time)
     if (this.config.respectIdleTime && this.isUserActive()) {
-      console.log(`⏸️ User is active, postponing ${language} loading by 5 seconds`);
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log(`⏸️ User is active, postponing ${language} loading by 5 seconds`);
       const timeout = setTimeout(() => this.loadLanguageInBackground(language), 5000);
       this.loadingTimeouts.push(timeout);
       return;
@@ -250,7 +258,7 @@ export class BackgroundLanguageLoader {
     }
 
     try {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === 'development' && DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
         console.log(`🔄 Background loading language: ${language}`);
       }
       
@@ -267,7 +275,7 @@ export class BackgroundLanguageLoader {
       status.loadEndTime = Date.now();
       
       const loadTime = status.loadEndTime - (status.loadStartTime || 0);
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === 'development' && DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
         console.log(`✅ Background loaded ${language} in ${loadTime}ms`);
       }
       
@@ -336,13 +344,13 @@ export class BackgroundLanguageLoader {
    * Cleanup all resources (call on app shutdown)
    */
   public static async cleanup(): Promise<void> {
-    console.log('🧹 Cleaning up background language loader...');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🧹 Cleaning up background language loader...');
     
     this.stopBackgroundLoading();
     
     this.loadingStatus.clear();
     this.statusCallbacks = [];
     
-    console.log('✅ Background language loader cleanup complete');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('✅ Background language loader cleanup complete');
   }
 }

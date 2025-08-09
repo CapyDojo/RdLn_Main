@@ -141,7 +141,7 @@ html[data-theme="svinafellsjokull"] .glass-panel .opacity-60,
 html[data-theme="svinafellsjokull"] .glass-panel .opacity-70,
 html[data-theme="svinafellsjokull"] .glass-panel .text-gray-500,
 html[data-theme="svinafellsjokull"] .glass-panel .text-gray-600 {
-  color: #a5f3fc !important;
+  color: #a5f3fc;
 }
 
 /* OCR Language Detection - Detected language cards glassmorphic styling */

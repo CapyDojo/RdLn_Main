@@ -33,34 +33,31 @@ const initTauriApis = async () => {
 
 export const setupGlobalTauriFileDrop = async () => {
     if (isSetup) {
-        console.log('🔧 TAURI GLOBAL: Already setup, skipping');
+        // Already setup, skipping
         return;
     }
 
-    console.log('🔧 TAURI GLOBAL: Setting up global file drop handler');
+    // Setting up global file drop handler
 
     const isAvailable = await initTauriApis();
     if (!isAvailable || !tauriListen) {
-        console.log('🔧 TAURI GLOBAL: APIs not available');
+        // APIs not available
         return;
     }
 
     try {
         const unlisten = await tauriListen('tauri://drag-drop', async (event: any) => {
-            console.log('🔧 TAURI GLOBAL: File drop event received');
+            // File drop event received
 
             const files = event.payload.paths as string[];
             const position = event.payload.position;
-
-            console.log('🔧 TAURI GLOBAL: Files:', files.length);
-            console.log('🔧 TAURI GLOBAL: Position:', position);
 
             const imageFiles = files.filter((path: string) =>
                 /\.(png|jpg|jpeg|gif|bmp|webp|tiff)$/i.test(path)
             );
 
             if (imageFiles.length === 0) {
-                console.log('🔧 TAURI GLOBAL: No image files found');
+                // No image files found
                 return;
             }
 
@@ -70,7 +67,7 @@ export const setupGlobalTauriFileDrop = async () => {
 
             if (lastProcessedFile === currentFile &&
                 (currentTime - lastProcessedTime) < DEDUP_WINDOW_MS) {
-                console.log('🔧 TAURI GLOBAL: Duplicate file drop detected, ignoring');
+                // Duplicate file drop detected, ignoring
                 return;
             }
 
@@ -91,20 +88,19 @@ export const setupGlobalTauriFileDrop = async () => {
             }
 
             if (!targetPanel) {
-                console.log('🔧 TAURI GLOBAL: No target panel found for position', position);
+                // No target panel found for position
                 return;
             }
 
             const panelTitle = targetPanel.getAttribute('data-panel-title');
             const instanceId = targetPanel.getAttribute('data-instance-id');
-            console.log('🔧 TAURI GLOBAL: Target panel:', panelTitle, 'Instance:', instanceId);
 
             // Process the file for this specific panel instance
             await processFileForPanel(imageFiles[0], targetPanel, panelTitle || 'Unknown');
         });
 
         isSetup = true;
-        console.log('🔧 TAURI GLOBAL: Global file drop listener registered successfully');
+        // Global file drop listener registered successfully
 
         // Store cleanup function globally
         (window as any).__TAURI_FILE_DROP_CLEANUP__ = unlisten;
@@ -119,7 +115,7 @@ const processFileForPanel = async (imagePath: string, targetPanel: Element, pane
             throw new Error('Tauri FS API not available');
         }
 
-        console.log(`🔧 TAURI GLOBAL: Processing file for ${panelTitle}:`, imagePath);
+        // Processing file for panel
         const fileBytes = await tauriReadFile(imagePath);
 
         const blob = new Blob([fileBytes], {
@@ -135,7 +131,7 @@ const processFileForPanel = async (imagePath: string, targetPanel: Element, pane
         });
 
         targetPanel.dispatchEvent(customEvent);
-        console.log(`🔧 TAURI GLOBAL: File processed and event dispatched to ${panelTitle}`);
+        // File processed and event dispatched
 
     } catch (error) {
         console.error(`🔧 TAURI GLOBAL: Failed to process file for ${panelTitle}:`, error);
@@ -155,5 +151,5 @@ export const cleanupGlobalTauriFileDrop = () => {
         (window as any).__TAURI_FILE_DROP_CLEANUP__ = null;
     }
     isSetup = false;
-    console.log('🔧 TAURI GLOBAL: Global file drop cleaned up');
+    // Global file drop cleaned up
 };

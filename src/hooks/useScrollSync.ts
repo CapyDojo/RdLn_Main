@@ -1,4 +1,5 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
+import { DEV_CONFIG } from '../config/appConfig';
 import { BaseHookReturn } from '../types/components';
 
 interface UseScrollSyncConfig {
@@ -104,7 +105,9 @@ export const useScrollSync = ({
   }, [isScrollLocked]);
 
   const toggleScrollLock = useCallback(() => {
-    console.log('🔄 Toggle scroll lock');
+    if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+      console.log('🔄 Toggle scroll lock');
+    }
     setIsLayoutDetected(!isLayoutDetected);
   }, [isLayoutDetected]);
   
@@ -149,8 +152,8 @@ export const useScrollSync = ({
       // SSMR: Update layout detection status
       setIsLayoutDetected(!!input1Element && !!input2Element);
       
-      // Debug logging (safe - read-only operations)
-      console.log('🔄 SCROLL SYNC: Scroll elements detected via layout adaptation:', {
+      // Debug logging (guarded)
+      if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) console.log('🔄 SCROLL SYNC: Scroll elements detected via layout adaptation:', {
         input1: !!scrollRefs.current.input1,
         input2: !!scrollRefs.current.input2,
         output: !!scrollRefs.current.output,
@@ -188,7 +191,9 @@ export const useScrollSync = ({
     Object.values(scrollRefs.current).forEach(element => {
       if (element) {
         element.addEventListener('scroll', handleScroll, { passive: true });
-        console.log('🔗 SCROLL SYNC: Added scroll listener to:', element.tagName);
+        if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+          console.log('🔗 SCROLL SYNC: Added scroll listener to:', element.tagName);
+        }
       }
     });
     
@@ -196,7 +201,9 @@ export const useScrollSync = ({
       Object.values(scrollRefs.current).forEach(element => {
         if (element) {
           element.removeEventListener('scroll', handleScroll);
-          console.log('🔓 SCROLL SYNC: Removed scroll listener from:', element.tagName);
+          if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+            console.log('🔓 SCROLL SYNC: Removed scroll listener from:', element.tagName);
+          }
         }
       });
     };

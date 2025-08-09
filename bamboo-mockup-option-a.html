@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bamboo Theme - Option A: Layered Linear Gradients</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .bamboo-background-a {
+            background: 
+                /* Top diagonal layer - lightest bamboo stalks */
+                linear-gradient(45deg, rgba(183,203,165,0.15) 0%, transparent 30%, rgba(183,203,165,0.1) 60%, transparent 100%),
+                /* Opposite diagonal - medium bamboo stalks */
+                linear-gradient(-45deg, rgba(113,155,81,0.25) 10%, transparent 40%, rgba(146,183,113,0.2) 70%, transparent 100%),
+                /* Steeper angle - creates depth */
+                linear-gradient(135deg, rgba(45,80,22,0.2) 0%, transparent 25%, rgba(123,160,95,0.15) 50%, transparent 80%),
+                /* Counter angle - more crossing */
+                linear-gradient(-135deg, rgba(113,155,81,0.1) 20%, transparent 50%, rgba(183,203,165,0.25) 80%, transparent 100%),
+                /* Base gradient - foundation */
+                linear-gradient(45deg, #2d5016 0%, rgb(146,183,113) 25%, rgb(113,155,81) 63%, rgb(183,203,165) 85%, #7ba05f 100%);
+            
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .content-overlay {
+            position: relative;
+            z-index: 10;
+            padding: 2rem;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .glass-panel {
+            background: rgba(113, 155, 81, 0.15);
+            border: 1px solid rgba(6, 95, 70, 0.3);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(4, 75, 56, 0.25);
+        }
+        
+        .header {
+            text-align: center;
+            color: #065f46;
+            margin-bottom: 1rem;
+        }
+        
+        .description {
+            color: #4a3728;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .feature-card {
+            background: rgba(183, 203, 165, 0.1);
+            border: 1px solid rgba(113, 155, 81, 0.2);
+            backdrop-filter: blur(8px);
+            border-radius: 8px;
+            padding: 1.5rem;
+            color: #065f46;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(6, 95, 70, 0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 6px;
+            backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+        
+        .back-link:hover {
+            background: rgba(6, 95, 70, 1);
+        }
+        
+        .effect-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(251, 191, 36, 0.9);
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+<body>
+    <div class="bamboo-background-a"></div>
+    
+    <a href="bamboo-mockups-index.html" class="back-link">← Back to Options</a>
+    
+    <div class="content-overlay">
+        <div class="glass-panel">
+            <h1 class="header">Option A: Layered Linear Gradients</h1>
+            <p class="description">
+                This approach uses multiple semi-transparent linear gradients at different angles (45°, -45°, 135°, -135°) 
+                layered on top of each other. The gradients intersect to create natural crossing patterns reminiscent of 
+                bamboo stalks in a forest canopy.
+            </p>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <h3>✨ Layered Depth</h3>
+                    <p>5 gradient layers create natural depth and complexity</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🎋 Crossing Angles</h3>
+                    <p>45°, -45°, 135°, -135° angles simulate bamboo stalks</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🌿 Semi-Transparency</h3>
+                    <p>Gradients blend naturally where they intersect</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🎨 Color Harmony</h3>
+                    <p>Uses existing bamboo theme colors for consistency</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="effect-indicator">
+        Criss-Cross Effect: Layered Gradients
+    </div>
+</body>
+</html>

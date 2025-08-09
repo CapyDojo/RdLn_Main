@@ -30,22 +30,20 @@ export class OCRRouter {
   ): Promise<string> {
     
     const isTauri = this.isTauriEnvironment();
-    console.log('🔧 OCRRouter: Environment check - isTauri:', isTauri, 'window.__TAURI__:', typeof window !== 'undefined' ? !!(window as any).__TAURI__ : 'no window');
+    // Environment check completed
     
     if (isTauri) {
-      console.log('🔧 OCRRouter: Routing to Tauri native OCR backend');
+      // Routing to Tauri native OCR backend
       try {
         // Dynamically import TauriOCRProvider to avoid issues in web environment
-        console.log('🔧 OCRRouter: Attempting to import TauriOCRProvider...');
         const { TauriOCRProvider } = await import('./TauriOCRProvider');
-        console.log('✅ OCRRouter: TauriOCRProvider imported successfully');
         return TauriOCRProvider.extractTextFromImage(imageFile, options);
       } catch (error) {
         console.error('❌ OCRRouter: Failed to load TauriOCRProvider, falling back:', error);
         return fallbackFunction(imageFile, options);
       }
     } else {
-      console.log('🔧 OCRRouter: Routing to existing web/Electron OCR implementation');
+      // Routing to existing web/Electron OCR implementation
       return fallbackFunction(imageFile, options);
     }
   }
@@ -63,22 +61,20 @@ export class OCRRouter {
   ): Promise<any[]> {
     
     const isTauri = this.isTauriEnvironment();
-    console.log('🔧 OCRRouter: Language detection - isTauri:', isTauri);
+    // Language detection routing
     
     if (isTauri) {
-      console.log('🔧 OCRRouter: Routing language detection to Tauri backend');
+      // Routing language detection to Tauri backend
       try {
         // Dynamically import TauriOCRProvider to avoid issues in web environment
-        console.log('🔧 OCRRouter: Importing TauriOCRProvider for language detection...');
         const { TauriOCRProvider } = await import('./TauriOCRProvider');
-        console.log('✅ OCRRouter: TauriOCRProvider imported for language detection');
         return TauriOCRProvider.detectLanguage(imageFile);
       } catch (error) {
         console.error('❌ OCRRouter: Failed to load TauriOCRProvider for language detection, falling back:', error);
         return fallbackFunction(imageFile);
       }
     } else {
-      console.log('🔧 OCRRouter: Routing language detection to existing implementation');
+      // Routing language detection to existing implementation
       return fallbackFunction(imageFile);
     }
   }

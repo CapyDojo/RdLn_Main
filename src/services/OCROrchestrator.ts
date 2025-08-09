@@ -23,6 +23,7 @@ import { OCRTextCleanupService, TextProcessingOptions } from './OCRTextCleanupSe
 import { LanguageDetectionService } from './LanguageDetectionService';
 import { OCRCacheManager } from './OCRCacheManager';
 import { BackgroundLanguageLoader } from './BackgroundLanguageLoader';
+import { DEV_CONFIG } from '../config/appConfig';
 
 // Import error handling
 import { 
@@ -269,7 +270,7 @@ export class OCROrchestrator {
 
       const totalTime = performance.now() - startTime;
 
-      console.log(`✅ OCR orchestration completed in ${totalTime}ms (extraction: ${extractionTime}ms, processing: ${processingTime}ms)`);
+      // OCR orchestration completed
       
       // SSMR REVERSIBLE: Track comprehensive completion metrics
       this.performanceMonitor.recordMetric(
@@ -643,13 +644,13 @@ export class OCROrchestrator {
    * Start background services (if not already started)
    */
   public static async startBackgroundServices(): Promise<void> {
-    console.log('🚀 Starting OCR background services...');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🚀 Starting OCR background services...');
     
     if (BackgroundLanguageLoader.isEnabled()) {
       await BackgroundLanguageLoader.startBackgroundLoading();
-      console.log('✅ Background language loader started');
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('✅ Background language loader started');
     } else {
-      console.log('⏸️ Background language loader is disabled');
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('⏸️ Background language loader is disabled');
     }
   }
 
@@ -657,9 +658,9 @@ export class OCROrchestrator {
    * Stop background services safely
    */
   public static stopBackgroundServices(): void {
-    console.log('🛑 Stopping OCR background services...');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🛑 Stopping OCR background services...');
     BackgroundLanguageLoader.stopBackgroundLoading();
-    console.log('✅ Background services stopped');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('✅ Background services stopped');
   }
 
   /**
@@ -668,6 +669,6 @@ export class OCROrchestrator {
   public static cleanup(): void {
     this.stopBackgroundServices();
     this.performanceHistory = [];
-    console.log('🧹 OCR orchestrator cleaned up');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🧹 OCR orchestrator cleaned up');
   }
 }

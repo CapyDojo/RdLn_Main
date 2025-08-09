@@ -27,7 +27,8 @@
       "WebFetch(domain:www.draftable.com)",
       "WebFetch(domain:adamfard.com)",
       "Bash(taskkill:*)",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": []
   }

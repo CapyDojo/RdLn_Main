@@ -1,4 +1,5 @@
 import { MyersAlgorithm } from '../algorithms/MyersAlgorithm';
+import { DEV_CONFIG } from '../config/appConfig';
 
 // Test cases that previously had boundary fragment issues
 const TEST_CASES = [
@@ -26,12 +27,12 @@ const hasBoundaryFragments = (changes: any[]) => {
 
 // Run tests and log results
 export async function runBoundaryTests() {
-  console.log("=== BOUNDARY FRAGMENT FIX TEST ===");
+  if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log("=== BOUNDARY FRAGMENT FIX TEST ===");
   
   for (const test of TEST_CASES) {
-    console.log(`\nTest: ${test.description}`);
-    console.log(`Original: "${test.original}"`);
-    console.log(`Revised: "${test.revised}"`);
+    if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log(`\nTest: ${test.description}`);
+    if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log(`Original: "${test.original}"`);
+    if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log(`Revised: "${test.revised}"`);
     
     // Run the diff algorithm
     const result = await MyersAlgorithm.compare(test.original, test.revised);
@@ -39,17 +40,21 @@ export async function runBoundaryTests() {
     // Check for boundary fragments
     const foundBoundaryFragments = hasBoundaryFragments(result.changes);
     
-    console.log("\nDiff changes:");
-    result.changes.forEach((change, i) => {
-      console.log(`Change ${i+1}:`, JSON.stringify(change));
-    });
+    if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) {
+      console.log("\nDiff changes:");
+      result.changes.forEach((change, i) => {
+        console.log(`Change ${i+1}:`, JSON.stringify(change));
+      });
+    }
     
-    console.log("\nResult:", foundBoundaryFragments ? "❌ Has boundary fragments" : "✅ No boundary fragments");
-    console.log("-".repeat(50));
+    if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log("\nResult:", foundBoundaryFragments ? "❌ Has boundary fragments" : "✅ No boundary fragments");
+    if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log("-".repeat(50));
   }
   
-  console.log("\nTest completed!");
+  if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log("\nTest completed!");
 }
 
 // Auto-run the tests when this module is imported
-runBoundaryTests();
+if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) {
+  runBoundaryTests();
+}

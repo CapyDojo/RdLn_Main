@@ -61,6 +61,7 @@ export const BackgroundLoadingStatus: React.FC<BackgroundLoadingStatusProps> = (
     return () => {
       if (hideTimeout) clearTimeout(hideTimeout);
       try { unsubscribe?.(); } catch {}
+      try { BackgroundLanguageLoader.offStatusUpdate(handleStatusUpdate); } catch {}
     };
   }, [enabled]);
 

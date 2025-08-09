@@ -16,7 +16,7 @@ export class TauriOCRProvider {
     options: OCROptions = {}
   ): Promise<string> {
     try {
-      console.log('🔧 TauriOCRProvider: Starting OCR extraction');
+      // Starting OCR extraction
 
       // Convert image to base64 for passing to Rust backend
       const imageData = await this.fileToBase64(imageFile);
@@ -39,13 +39,13 @@ export class TauriOCRProvider {
       } else if (options.languages && options.languages.length > 0) {
         // Use first specified language
         language = options.languages[0];
-        console.log('🔧 TauriOCRProvider: Using specified language:', language);
+        // Using specified language
       }
 
       // Use primary language if specified
       if (options.primaryLanguage) {
         language = options.primaryLanguage;
-        console.log('🔧 TauriOCRProvider: Using primary language:', language);
+        // Using primary language
       }
 
       console.log('🚀 TauriOCRProvider: Calling Tauri backend for OCR');
@@ -110,7 +110,7 @@ export class TauriOCRProvider {
    */
   public static async getAvailableLanguages(): Promise<OCRLanguage[]> {
     try {
-      console.log('🔧 TauriOCRProvider: Getting available languages');
+      // Getting available languages
 
       // Dynamically import Tauri API
       const { invoke } = await import('@tauri-apps/api/core');

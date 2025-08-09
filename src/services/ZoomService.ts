@@ -1,3 +1,4 @@
+import { DEV_CONFIG } from '../config/appConfig';
 /**
  * Unified Zoom Service - Cross-platform zoom management
  * 
@@ -35,7 +36,9 @@ class ZoomServiceImpl implements ZoomServiceInterface {
     this.setupPlatformListeners();
     this.initialized = true;
 
-    console.log(`🔍 ZoomService initialized for platform: ${this.getPlatform()}`);
+    if (DEV_CONFIG.DEBUGGING.SHOW_PERFORMANCE_DEBUG) {
+      console.log(`🔍 ZoomService initialized for platform: ${this.getPlatform()}`);
+    }
   }
 
   private detectInitialZoom(): void {
@@ -47,7 +50,9 @@ class ZoomServiceImpl implements ZoomServiceInterface {
         const bodyZoom = document.body.style.zoom;
         if (bodyZoom && bodyZoom !== '1' && bodyZoom !== '') {
           this.currentZoom = parseFloat(bodyZoom) || 1.0;
-          console.log(`🔍 Detected existing CSS zoom: ${this.currentZoom} (will migrate to native)`);
+          if (DEV_CONFIG.DEBUGGING.SHOW_PERFORMANCE_DEBUG) {
+            console.log(`🔍 Detected existing CSS zoom: ${this.currentZoom} (will migrate to native)`);
+          }
         }
         break;
         
@@ -95,7 +100,9 @@ class ZoomServiceImpl implements ZoomServiceInterface {
     }
 
     const platform = this.getPlatform();
-    console.log(`🔍 Setting zoom to ${factor} on ${platform}`);
+    if (DEV_CONFIG.DEBUGGING.SHOW_PERFORMANCE_DEBUG) {
+      console.log(`🔍 Setting zoom to ${factor} on ${platform}`);
+    }
 
     try {
       switch (platform) {
@@ -126,7 +133,10 @@ class ZoomServiceImpl implements ZoomServiceInterface {
       await window.electronAPI.setZoomFactor(factor);
     } else {
       // Fallback: Use webContents executeJavaScript (for migration period)
-      console.warn('⚠️ electronAPI.setZoomFactor not available, using fallback');
+      if (DEV_CONFIG.DEBUGGING.SHOW_PERFORMANCE_DEBUG) {
+        console.warn('⚠️ electronAPI.setZoomFactor not available, using fallback');
+      }
+
       // This should trigger the existing zoom mechanism in main.cjs
       document.dispatchEvent(new CustomEvent('request-zoom-change', { 
         detail: { zoomLevel: factor } 

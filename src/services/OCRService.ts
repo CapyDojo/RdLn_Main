@@ -17,6 +17,7 @@ import { LanguageDetectionService } from '../services/LanguageDetectionService';
 import { OCRCacheManager } from '../services/OCRCacheManager';
 // TAURI INTEGRATION: Import OCR router for Tauri-specific OCR handling
 import { OCRRouter } from './OCRRouter';
+import { DEV_CONFIG } from '../config/appConfig';
 
 // Note: Re-exports removed to avoid module resolution conflicts
 
@@ -311,9 +312,7 @@ export class OCRService {
         
         const result = await OCROrchestrator.extractText(imageFile, orchestrationOptions);
         
-        console.log('✨ Enhanced OCR completed with orchestrator');
-        console.log(`📊 Performance: extraction=${result.extractionTime.toFixed(1)}ms, processing=${result.processingTime.toFixed(1)}ms, total=${result.totalTime.toFixed(1)}ms`);
-        console.log(`🔧 Applied processors: ${result.appliedProcessors.join(', ')}`);
+        // Enhanced OCR completed with orchestrator
         
         return result.text;
       } catch (error) {
@@ -1207,12 +1206,12 @@ export class OCRService {
     // PHASE 3.3: Also cleanup orchestrator resources
     try {
       OCROrchestrator.cleanup();
-      console.log('🧹 Orchestrator resources cleaned up');
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🧹 Orchestrator resources cleaned up');
     } catch (error) {
       console.warn('⚠️ Failed to cleanup orchestrator:', error);
     }
     
-    console.log('🧹 All OCR workers terminated and caches cleared');
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🧹 All OCR workers terminated and caches cleared');
   }
 
   /**

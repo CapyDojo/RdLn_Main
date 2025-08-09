@@ -7,6 +7,7 @@ import { LanguageSettingsDropdown } from './LanguageSettingsDropdown';
 import { useLayout } from '../contexts/LayoutContext';
 import { BaseComponentProps } from '../types/components';
 import { useComponentPerformance } from '../utils/performanceUtils.tsx';
+import { DEV_CONFIG } from '../config/appConfig';
 import { formatPastedText, formatRtfHtmlPaste } from '../utils/paragraphFormatting';
 import { analyzePasteContext, getFormattingLevel, PasteContext, FormatLevel } from '../utils/pastePDFdetection';
 import { useFontSize } from '../contexts/FontSizeContext';
@@ -145,16 +146,20 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   // Shared OCR processing function for both HTML5 and Tauri file drops
   const processImageWithOCR = useCallback(async (imageFile: File) => {
     const callStack = new Error().stack;
-    console.log(`🔍 GHOST DEBUG: processImageWithOCR called for ${instanceId.current}`);
-    console.log(`🔍 GHOST DEBUG: File: ${imageFile.name}, Current value length: ${value.length}`);
-    console.log(`🔍 GHOST DEBUG: Call stack:`, callStack?.split('\n').slice(0, 5).join('\n'));
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+      console.log(`🔍 GHOST DEBUG: processImageWithOCR called for ${instanceId.current}`);
+      console.log(`🔍 GHOST DEBUG: File: ${imageFile.name}, Current value length: ${value.length}`);
+      console.log(`🔍 GHOST DEBUG: Call stack:`, callStack?.split('\n').slice(0, 5).join('\n'));
+    }
 
     try {
       const extractedText = await performanceTracker.trackOperation('ocr_extraction', async () => {
         return await extractTextFromImage(imageFile);
       });
 
-      console.log(`🔍 GHOST DEBUG: OCR extracted ${extractedText.length} chars, adding to ${value.length} existing chars`);
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+        console.log(`🔍 GHOST DEBUG: OCR extracted ${extractedText.length} chars, adding to ${value.length} existing chars`);
+      }
       onChange(value + (value ? '\n\n' : '') + extractedText);
 
       performanceTracker.trackMetric('ocr_result', {
@@ -163,7 +168,9 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         instanceId: instanceId.current
       });
     } catch (error: any) {
-      console.error(`🔍 GHOST DEBUG: OCR failed for ${instanceId.current}:`, error);
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+        console.error(`🔍 GHOST DEBUG: OCR failed for ${instanceId.current}:`, error);
+      }
 
       // PRODUCTION FIX: Provide user-friendly error message
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -206,37 +213,51 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
-      console.log(`🔍 GHOST DEBUG: Component ${instanceId.current} unmounting`);
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+        console.log(`🔍 GHOST DEBUG: Component ${instanceId.current} unmounting`);
+      }
     };
   }, []);
 
   // Tauri file drop - local event listeners with ghost OCR debugging
   useEffect(() => {
     const currentInstanceId = instanceId.current;
-    console.log(`🔍 GHOST DEBUG: Setting up listeners for ${currentInstanceId} - FINAL ATTEMPT`);
+    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+      console.log(`🔍 GHOST DEBUG: Setting up listeners for ${currentInstanceId} - FINAL ATTEMPT`);
+    }
 
     // Set up local event listeners for this panel
     const handleFileProcessed = async (event: CustomEvent) => {
       const { file, panelTitle } = event.detail;
-      console.log(`🔍 GHOST DEBUG: Event triggered for ${currentInstanceId}, file: ${file.name}`);
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+        console.log(`🔍 GHOST DEBUG: Event triggered for ${currentInstanceId}, file: ${file.name}`);
+      }
 
       // Check if component is still mounted
       if (!isMountedRef.current) {
-        console.log(`🔍 GHOST DEBUG: Component ${currentInstanceId} unmounted, ignoring OCR`);
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+          console.log(`🔍 GHOST DEBUG: Component ${currentInstanceId} unmounted, ignoring OCR`);
+        }
         return;
       }
 
       try {
-        console.log(`🔍 GHOST DEBUG: Starting OCR for ${currentInstanceId}`);
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+          console.log(`🔍 GHOST DEBUG: Starting OCR for ${currentInstanceId}`);
+        }
         await processImageWithOCRRef.current(file);
 
         // Double-check if still mounted after async operation
         if (!isMountedRef.current) {
-          console.log(`🔍 GHOST DEBUG: Component ${currentInstanceId} unmounted during OCR, ignoring result`);
+          if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+            console.log(`🔍 GHOST DEBUG: Component ${currentInstanceId} unmounted during OCR, ignoring result`);
+          }
           return;
         }
 
-        console.log(`🔍 GHOST DEBUG: OCR completed for ${currentInstanceId}`);
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+          console.log(`🔍 GHOST DEBUG: OCR completed for ${currentInstanceId}`);
+        }
 
         performanceTracker.trackMetric('tauri_file_drop_success', {
           filePath: file.name,
@@ -245,7 +266,9 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           instanceId: currentInstanceId
         });
       } catch (error) {
-        console.error(`🔍 GHOST DEBUG: OCR failed for ${currentInstanceId}:`, error);
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+          console.error(`🔍 GHOST DEBUG: OCR failed for ${currentInstanceId}:`, error);
+        }
         performanceTracker.trackMetric('tauri_drop_error', {
           error: String(error),
           panelTitle: title,
@@ -256,7 +279,9 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
     const handleFileError = (event: CustomEvent) => {
       const { error, panelTitle } = event.detail;
-      console.error(`🔍 GHOST DEBUG: File error for ${currentInstanceId}:`, error);
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+        console.error(`🔍 GHOST DEBUG: File error for ${currentInstanceId}:`, error);
+      }
       performanceTracker.trackMetric('tauri_drop_error', {
         error,
         panelTitle: title,
@@ -267,17 +292,23 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     // Add event listeners to this panel's div using unique instance ID
     const panelDiv = document.querySelector(`[data-instance-id="${currentInstanceId}"]`);
     if (panelDiv) {
-      console.log(`🔍 GHOST DEBUG: Adding listeners to DOM element for ${currentInstanceId}`);
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+        console.log(`🔍 GHOST DEBUG: Adding listeners to DOM element for ${currentInstanceId}`);
+      }
       panelDiv.addEventListener('tauri-file-processed', handleFileProcessed as EventListener);
       panelDiv.addEventListener('tauri-file-error', handleFileError as EventListener);
 
       return () => {
-        console.log(`🔍 GHOST DEBUG: Cleaning up listeners for ${currentInstanceId}`);
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+          console.log(`🔍 GHOST DEBUG: Cleaning up listeners for ${currentInstanceId}`);
+        }
         panelDiv.removeEventListener('tauri-file-processed', handleFileProcessed as EventListener);
         panelDiv.removeEventListener('tauri-file-error', handleFileError as EventListener);
       };
     } else {
-      console.warn(`🔍 GHOST DEBUG: No DOM element found for ${currentInstanceId}`);
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+        console.warn(`🔍 GHOST DEBUG: No DOM element found for ${currentInstanceId}`);
+      }
     }
   }, [title]); // ONLY title dependency - nothing else!
 
@@ -611,7 +642,9 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           value={value}
           onChange={(e) => {
             const newValue = e.target.value;
-            console.log(`🔍 GHOST DEBUG: Manual text change in ${instanceId.current}: ${value.length} → ${newValue.length}`);
+            if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+              console.log(`🔍 GHOST DEBUG: Manual text change in ${instanceId.current}: ${value.length} → ${newValue.length}`);
+            }
             if (onChange.length > 1) {
               (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, false);
             } else {

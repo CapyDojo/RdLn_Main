@@ -36,7 +36,7 @@ export class OCRCacheManager {
   private static async detectTauriEnvironment(): Promise<boolean> {
     // CRITICAL: Check for Electron first - it also uses file:// protocol
     if (typeof window !== 'undefined' && (window as any).isElectron) {
-      console.log('🔧 Electron environment detected, not Tauri');
+      // Electron environment detected, not Tauri
       return false;
     }
 
@@ -55,15 +55,7 @@ export class OCRCacheManager {
     ];
 
     const isTauri = checks.some(check => check);
-    console.log('🔧 Enhanced Tauri detection:', {
-      isElectron: (window as any).isElectron,
-      globalObject: checks[0],
-      protocol: checks[1],
-      userAgent: checks[2],
-      internals: checks[3],
-      fileProtocol: checks[4],
-      finalResult: isTauri
-    });
+    // Enhanced Tauri detection completed
 
     return isTauri;
   }

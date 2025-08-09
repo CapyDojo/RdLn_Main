@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect, startTransition, useState } from 'react';
 import { startDragOperation, endDragOperation, calculateResizeHeight } from '../utils/mouseHandlers';
-import { UI_CONFIG, FEATURE_FLAGS } from '../config/appConfig';
+import { UI_CONFIG, FEATURE_FLAGS, DEV_CONFIG } from '../config/appConfig';
 import { BaseHookReturn } from '../types/components';
 import { PerformanceTimestamp } from '../types/enhancedTypes';
 
@@ -365,10 +365,14 @@ export const useResizeHandlers = ({
     if (typeof isMobile !== 'boolean') return;
 
     if (isMobile) {
-      console.log(`[useResizeHandlers] Layout Change: Mobile. Applying default panel height: 300px`);
+      if (DEV_CONFIG.DEBUGGING.RESIZE_DEBUG) {
+        console.log(`[useResizeHandlers] Layout Change: Mobile. Applying default panel height: 300px`);
+      }
       setPanelHeightCSS(300); // Mobile default height
     } else {
-      console.log(`[useResizeHandlers] Layout Change: Desktop. Applying default panel height: 400px`);
+      if (DEV_CONFIG.DEBUGGING.RESIZE_DEBUG) {
+        console.log(`[useResizeHandlers] Layout Change: Desktop. Applying default panel height: 400px`);
+      }
       setPanelHeightCSS(400); // Desktop default height
     }
   }, [isMobile, setPanelHeightCSS]);

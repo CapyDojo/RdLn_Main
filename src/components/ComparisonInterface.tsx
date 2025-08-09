@@ -11,6 +11,7 @@
  */
 
 import React, { useEffect, useState, useRef } from 'react';
+import { DEV_CONFIG } from '../config/appConfig';
 import { AlertCircle, GripHorizontal } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
 import { TextInputPanel } from './TextInputPanel';
@@ -175,7 +176,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
   // Test element detection when scroll lock state changes (safe testing)
   // TIMING FIX: Also update when result changes so scroll lock works if already on before output
   useEffect(() => {
-    console.log('🔧 SCROLL LOCK DEBUG: useEffect triggered - updating refs. Triggers:', {
+    if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) console.log('🔧 SCROLL LOCK DEBUG: useEffect triggered - updating refs. Triggers:', {
       isScrollLocked,
       hasResult: !!result,
       resultChanges: result?.changes?.length || 0
