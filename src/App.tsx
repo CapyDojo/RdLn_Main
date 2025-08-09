@@ -10,7 +10,7 @@
  * For licensing information, see LICENSE file.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Languages } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatusBar } from './components/StatusBar';
@@ -67,6 +67,11 @@ function AppContent({
   // Beta terms dialog state
   const [showBetaTermsDialog, setShowBetaTermsDialog] = useState(false);
 
+  // Demo controls state
+  const [isProcessingDemo, setIsProcessingDemo] = useState(false);
+  const [hasContent, setHasContent] = useState(false);
+  const comparisonInterfaceRef = React.useRef<any>(null);
+
   // Check beta agreement acceptance on mount
   useEffect(() => {
     const checkBetaAgreement = () => {
@@ -109,6 +114,20 @@ function AppContent({
     }
   };
 
+  // Sample data loading handler for demo controls
+  const handleLoadSample = (originalText: string, revisedText: string, autoRun: boolean = false) => {
+    // Pass the sample data to ComparisonInterface via a callback mechanism
+    if (comparisonInterfaceRef.current && comparisonInterfaceRef.current.loadSampleData) {
+      setIsProcessingDemo(autoRun);
+      comparisonInterfaceRef.current.loadSampleData(originalText, revisedText, autoRun);
+      setHasContent(true);
+      
+      if (autoRun) {
+        // Processing state will be managed by ComparisonInterface
+        setTimeout(() => setIsProcessingDemo(false), 1000);
+      }
+    }
+  };
 
   // Cleanup OCR worker on app unmount
   useEffect(() => {
@@ -152,10 +171,17 @@ function AppContent({
 
   return (
     <div className="min-h-screen flex flex-col">
-      {!shouldHideHeader && <Header />}
+      {!shouldHideHeader && (
+        <Header 
+          onLoadSample={handleLoadSample}
+          isProcessing={isProcessingDemo}
+          hasContent={hasContent}
+        />
+      )}
       {!shouldHideHeader && <StatusBar />}
       <main className={`flex-1 overflow-y-auto ${shouldHideHeader ? "pt-0" : "pt-56"}`}>
         <ComparisonInterface
+          ref={comparisonInterfaceRef}
           showAdvancedOcrCard={showAdvancedOcrCard}
           showPerformanceDemoCard={showPerformanceDemoCard}
           showExtremeTestSuite={showExtremeTestSuite}
@@ -164,6 +190,7 @@ function AppContent({
           onToggleExtremeTestSuite={onToggleExtremeTestSuite}
           onOverlayShow={handleOverlayShow}
           onOverlayHide={handleOverlayHide}
+          onContentChange={(hasText) => setHasContent(hasText)}
         />
       </main>
 

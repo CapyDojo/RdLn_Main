@@ -1,6 +1,7 @@
 import React from 'react';
-import { Play, RotateCcw, ArrowLeftRight, Zap, ZapOff, Lock } from 'lucide-react';
+import { Play, RotateCcw, ArrowLeftRight, Zap, ZapOff, Lock, Undo } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
+import { CustomTooltip } from './CustomTooltip';
 
 interface MobileControlsPanelProps extends BaseComponentProps {
   /** Whether Quick Compare is enabled */
@@ -23,6 +24,12 @@ interface MobileControlsPanelProps extends BaseComponentProps {
   onToggleScrollLock: () => void;
   /** Callback for reset comparison */
   onResetComparison: () => void;
+  /** Whether undo is available */
+  canUndo?: boolean;
+  /** Callback for undo action */
+  onUndo?: () => void;
+  /** Content length for smart clear warnings */
+  contentLength?: number;
 }
 
 /**
@@ -42,6 +49,9 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
   onSwapContent,
   onToggleScrollLock,
   onResetComparison,
+  canUndo = false,
+  onUndo,
+  contentLength = 0,
   style,
   className
 }) => {
@@ -52,79 +62,120 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
         <div className="inline-flex flex-wrap justify-center items-center gap-3 mt-4">
           {/* Compare Button - Only show when live compare is disabled */}
           {!quickCompareEnabled && (
-            <button
-              data-compare-button
-              onClick={onCompare}
-              disabled={isProcessing || !originalText.trim() || !revisedText.trim()}
-              className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-theme-primary-600 text-white rounded-lg hover:bg-theme-primary-700 disabled:bg-theme-neutral-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
-              title={isProcessing ? 'Processing...' : 'Click / Ctrl+Enter to compare'}
+            <CustomTooltip 
+              content={isProcessing ? 'Processing comparison...' : 'Compare documents'}
+              shortcut="Alt+Enter"
             >
-              <Play className="w-4 h-4" />
-              <span>{isProcessing ? 'Processing...' : 'Compare'}</span>
-            </button>
+              <button
+                data-compare-button
+                onClick={onCompare}
+                disabled={isProcessing || !originalText.trim() || !revisedText.trim()}
+                className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-theme-primary-600 text-white rounded-lg hover:bg-theme-primary-700 disabled:bg-theme-neutral-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+              >
+                <Play className="w-4 h-4" />
+                <span>{isProcessing ? 'Processing...' : 'Compare'}</span>
+              </button>
+            </CustomTooltip>
           )}
           
           {/* Live Compare Toggle */}
-          <button
-            data-live-compare-toggle
-            onClick={onToggleQuickCompare}
-            className={`enhanced-button flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 shadow-lg relative overflow-visible ${
-              quickCompareEnabled 
-                ? 'bg-theme-accent-500 text-white hover:bg-theme-accent-600' 
-                : 'bg-theme-neutral-300 text-theme-neutral-700 hover:bg-theme-neutral-400'
-            }`}
-            title={quickCompareEnabled ? 'Live Compare is activated' : 'Click to enable Live Compare'}
+          <CustomTooltip 
+            content={quickCompareEnabled ? 'Live mode' : 'Manual mode'}
+            shortcut="Alt+L"
           >
-            {quickCompareEnabled ? <Zap className="w-4 h-4" /> : <ZapOff className="w-4 h-4" />}
-            <span>Live</span>
-            {quickCompareEnabled && (
-              <div className="absolute -top-2 -right-2 w-4 h-4 bg-orange-400 rounded-full animate-pulse z-20 border-2 border-white shadow-lg"></div>
-            )}
-          </button>
+            <button
+              data-live-compare-toggle
+              onClick={onToggleQuickCompare}
+              className={`enhanced-button flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 shadow-lg relative overflow-visible ${
+                quickCompareEnabled 
+                  ? 'bg-theme-accent-500 text-white hover:bg-theme-accent-600' 
+                  : 'bg-theme-neutral-300 text-theme-neutral-700 hover:bg-theme-neutral-400'
+              }`}
+            >
+              {quickCompareEnabled ? <Zap className="w-4 h-4" /> : <ZapOff className="w-4 h-4" />}
+              <span>Live</span>
+              {quickCompareEnabled && (
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-orange-400 rounded-full animate-pulse z-20 border-2 border-white shadow-lg"></div>
+              )}
+            </button>
+          </CustomTooltip>
           
           {/* Swap Content Button */}
-          <button
-            data-swap-content-button-mobile
-            onClick={onSwapContent}
-            disabled={isProcessing || (!originalText.trim() && !revisedText.trim())}
-            className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-theme-secondary-500 text-white rounded-lg hover:bg-theme-secondary-600 disabled:bg-theme-neutral-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
-            title="Swap original and revised content"
+          <CustomTooltip 
+            content="Swap panels"
+            shortcut="Alt+W"
           >
-            <ArrowLeftRight className="w-4 h-4" />
-            <span>Swap</span>
-          </button>
+            <button
+              data-swap-content-button-mobile
+              onClick={onSwapContent}
+              disabled={isProcessing || (!originalText.trim() && !revisedText.trim())}
+              className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-theme-secondary-500 text-white rounded-lg hover:bg-theme-secondary-600 disabled:bg-theme-neutral-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+            >
+              <ArrowLeftRight className="w-4 h-4" />
+              <span>Swap</span>
+            </button>
+          </CustomTooltip>
           
           {/* Scroll Lock Button */}
-          <button
-            data-scroll-lock-toggle
-            onClick={onToggleScrollLock}
-            className={`enhanced-button flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 shadow-lg relative overflow-visible ${
-              isScrollLocked 
-                ? 'bg-theme-primary-500 text-white hover:bg-theme-primary-600' 
-                : 'bg-theme-neutral-300 text-theme-neutral-700 hover:bg-theme-neutral-400'
-            }`}
-            title={isScrollLocked ? "Unlock scroll synchronization" : "Lock scroll synchronization"}
+          <CustomTooltip 
+            content={isScrollLocked ? 'Scroll locked' : 'Scroll free'}
+            shortcut="Alt+D"
           >
-            <Lock className={`w-4 h-4 transition-all duration-300 ${isScrollLocked ? '' : 'opacity-60'}`} />
-            <span>Scroll</span>
-            {isScrollLocked && (
-              <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-400 rounded-full animate-pulse z-20 border-2 border-white shadow-lg"></div>
-            )}
-          </button>
+            <button
+              data-scroll-lock-toggle
+              onClick={onToggleScrollLock}
+              className={`enhanced-button flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 shadow-lg relative overflow-visible ${
+                isScrollLocked 
+                  ? 'bg-theme-primary-500 text-white hover:bg-theme-primary-600' 
+                  : 'bg-theme-neutral-300 text-theme-neutral-700 hover:bg-theme-neutral-400'
+              }`}
+            >
+              <Lock className={`w-4 h-4 transition-all duration-300 ${isScrollLocked ? '' : 'opacity-60'}`} />
+              <span>Scroll</span>
+              {isScrollLocked && (
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-400 rounded-full animate-pulse z-20 border-2 border-white shadow-lg"></div>
+              )}
+            </button>
+          </CustomTooltip>
         </div>
       </div>
       
-      {/* Mobile Reset Button - Separated to prevent accidental clearing */}
+      {/* Undo Button - Show when undo is available */}
+      {canUndo && onUndo && (
+        <div className="lg:hidden flex justify-center mt-4">
+          <CustomTooltip 
+            content="Undo last action"
+            shortcut="Alt+Z"
+          >
+            <button
+              data-undo-button
+              onClick={onUndo}
+              className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-theme-primary-400 text-white rounded-lg hover:bg-theme-primary-500 transition-all duration-200 shadow-lg border-2 border-theme-primary-200"
+            >
+              <Undo className="w-4 h-4" />
+              <span>Undo</span>
+            </button>
+          </CustomTooltip>
+        </div>
+      )}
+      
+      {/* Enhanced Mobile Clear Button - Larger touch target, better visual prominence */}
       <div className="lg:hidden flex justify-center mt-6">
-        <button
-          data-reset-button
-          onClick={onResetComparison}
-          className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 shadow-lg border-2 border-red-300"
-          title="⚠️ New Comparison - This will clear all content and reset the comparison"
+        <CustomTooltip 
+          content={contentLength > 1000 
+            ? `Clear all content (${Math.floor(contentLength/1000)}k chars) - Undo available` 
+            : 'Clear all content and reset comparison - Undo available'}
+          shortcut="Alt+Del"
         >
-          <RotateCcw className="w-4 h-4" />
-          <span>⚠️ New Comparison</span>
-        </button>
+          <button
+            data-reset-button
+            onClick={onResetComparison}
+            className="enhanced-button flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 shadow-lg border-3 border-red-300 hover:border-red-200 active:scale-95 min-h-12"
+          >
+            <RotateCcw className="w-5 h-5" />
+            <span className="font-semibold">⚠️ Clear All</span>
+          </button>
+        </CustomTooltip>
       </div>
     </div>
   );

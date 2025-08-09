@@ -74,7 +74,7 @@ export const lothlorienTheme: ThemeConfig = {
         textBody: '#d1fae5',           // Bright mint for comfortable reading
         textHeader: '#004915',         // Deep forest green for headers
         textSecondary: '#a7f3d0',      // Balanced secondary text
-        textInteractive: '#0ea5e9',    // Blue accent for links/buttons
+        textInteractive: '#15803d',    // Deep forest green for links/buttons
         textSuccess: '#4ade80',        // Bright green for success states
 
         // Glass panel colors with enhanced contrast

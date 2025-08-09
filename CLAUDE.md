@@ -115,13 +115,16 @@ src/styles/
 ## Design System & Documentation
 
 ### Design Documentation
-RdLn includes a comprehensive design system located in `docs/design/`:
-- **DesignMethodologyFramework.md**: ECI (Explore-Compare-Implement) methodology for design projects
-- **DesignPatternLibrary.md**: Reusable patterns, gradient systems, and technical implementations  
-- **BambooThemeLifeStory.md**: Complete case study of theme evolution from simple to spectacular
-- **README.md**: Overview and quick start guide for design documentation
+RdLn includes a comprehensive design system in `docs/design/` with organized folders:
 
-**For Design Work**: Always reference the design documentation before starting theme or UI work. Follow the ECI methodology and use established patterns from the pattern library.
+**📁 Core Documentation**:
+- `docs/design/methodology/` - ECI (Explore-Compare-Implement) methodology and systematic design processes
+- `docs/design/patterns/` - Reusable patterns, gradient systems, glassmorphism standards, and technical implementations
+- `docs/design/case-studies/` - Complete project case studies including the bamboo theme transformation
+- `docs/design/templates/` - Ready-to-use templates for theme development, component design, and case studies
+- `docs/design/README.md` - Navigation hub and quick start guide
+
+**For Design Work**: Always start with `docs/design/README.md` for guidance. Use appropriate templates from `templates/` folder, follow ECI methodology from `methodology/`, and reference established patterns from `patterns/`. Document significant projects as case studies.
 
 ## Development Guidelines
 

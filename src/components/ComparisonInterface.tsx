@@ -10,10 +10,11 @@
  * For licensing information, see LICENSE file.
  */
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { DEV_CONFIG } from '../config/appConfig';
 import { AlertCircle } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
+import { useUndoHistory } from '../hooks/useUndoHistory';
 import { RedlineOutput } from './RedlineOutput';
 import { ProcessingDisplay } from './ProcessingDisplay';
 import { OutputLayout } from './OutputLayout';
@@ -54,9 +55,14 @@ interface ComparisonInterfaceProps extends BaseComponentProps {
   onToggleExtremeTestSuite?: () => void;
   onOverlayShow?: () => void;
   onOverlayHide?: () => void;
+  onContentChange?: (hasContent: boolean) => void;
 }
 
-export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
+export interface ComparisonInterfaceRef {
+  loadSampleData: (originalText: string, revisedText: string, autoRun?: boolean) => void;
+}
+
+export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, ComparisonInterfaceProps>(({
   showAdvancedOcrCard = true,
   showPerformanceDemoCard = true,
   showExtremeTestSuite = false,
@@ -65,10 +71,11 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
   onToggleExtremeTestSuite,
   onOverlayShow,
   onOverlayHide,
+  onContentChange,
   style,
   className,
   ...props
-}) => {
+}, ref) => {
   // Performance monitoring setup
   const performanceTracker = useComponentPerformance(props, 'ComparisonInterface', {
     category: 'comparison',
@@ -96,12 +103,36 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
     systemProtectionEnabled,
     toggleSystemProtection
   } = useComparison();
+
+  // Undo system integration
+  const { canUndo, undo, saveState } = useUndoHistory();
   
   
 
   const redlineOutputRef = useRef<HTMLDivElement>(null);
 
+  // Expose methods to parent component via ref
+  useImperativeHandle(ref, () => ({
+    loadSampleData: (originalText: string, revisedText: string, autoRun: boolean = false) => {
+      setOriginalText(originalText);
+      setRevisedText(revisedText);
+      
+      if (autoRun) {
+        // Use setTimeout to ensure text is set before comparison
+        setTimeout(() => {
+          compareDocuments();
+        }, 100);
+      }
+    }
+  }), [setOriginalText, setRevisedText, compareDocuments]);
 
+  // Track content changes and notify parent
+  useEffect(() => {
+    const hasContent = originalText.trim().length > 0 || revisedText.trim().length > 0;
+    if (onContentChange) {
+      onContentChange(hasContent);
+    }
+  }, [originalText, revisedText, onContentChange]);
   
   // SSMR Step 1: Scroll lock state (Safe - no functionality yet)
   const [isScrollLocked, setIsScrollLocked] = useState(false);
@@ -246,6 +277,48 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
     }
   );
 
+  // Performance-aware handlers - Define BEFORE useEffect that references them
+  const handleSwapContent = usePerformanceAwareHandler(() => {
+    const tempOriginal = originalText;
+    setOriginalText(revisedText);
+    setRevisedText(tempOriginal);
+    
+    // Track swap metrics
+    performanceTracker.trackMetric('content_swap', {
+      originalLength: originalText.length,
+      revisedLength: revisedText.length
+    });
+  }, 'swap_content', performanceTracker);
+
+  // Consistent reset handler for both button and keyboard shortcut - with undo support
+  const handleResetComparison = usePerformanceAwareHandler(() => {
+    // Save current state for undo before clearing
+    saveState({
+      originalText,
+      revisedText,
+      hasResult: !!result,
+      action: 'Clear All'
+    });
+    
+    resetComparison();
+    
+    // Track reset metrics
+    performanceTracker.trackMetric('comparison_reset', {
+      hadContent: !!(originalText.trim() || revisedText.trim()),
+      hadResults: !!result
+    });
+  }, 'reset_comparison', performanceTracker);
+
+  // Undo handler
+  const handleUndo = usePerformanceAwareHandler(() => {
+    const previousState = undo();
+    if (previousState) {
+      setOriginalText(previousState.originalText);
+      setRevisedText(previousState.revisedText);
+      // Note: results are not restored, user needs to re-compare
+    }
+  }, 'undo_action', performanceTracker);
+
   // Keyboard shortcuts and global cancellation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -264,19 +337,49 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
           return;
         }
       
-      // Ctrl+Enter comparison shortcut
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      // Alt+Enter comparison shortcut
+      if (e.altKey && e.key === 'Enter') {
         e.preventDefault();
         compareDocuments();
+      }
+      
+      // Alt+L toggle live compare
+      if (e.altKey && e.key === 'l') {
+        e.preventDefault();
+        toggleQuickCompare();
+      }
+      
+      // Alt+W swap content
+      if (e.altKey && e.key === 'w') {
+        e.preventDefault();
+        handleSwapContent();
+      }
+      
+      // Alt+D toggle scroll lock
+      if (e.altKey && e.key === 'd') {
+        e.preventDefault();
+        setIsScrollLocked(!isScrollLocked);
+      }
+      
+      // Alt+Delete clear/reset (no confirmation - lightning-fast UX)
+      if (e.altKey && e.key === 'Delete') {
+        e.preventDefault();
+        handleResetComparison();
+      }
+      
+      // Alt+Z undo last action
+      if (e.altKey && e.key === 'z') {
+        e.preventDefault();
+        if (canUndo) {
+          handleUndo();
+        }
       }
     };
 
     // Use capture phase for ESC to ensure it works regardless of focus
     window.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
-  }, [compareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible]);
-
-  // Performance-aware handlers
+  }, [compareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible, toggleQuickCompare, handleSwapContent, isScrollLocked, setIsScrollLocked, handleResetComparison, canUndo, handleUndo]);
 
   const handleLoadTest = usePerformanceAwareHandler(async (originalText: string, revisedText: string) => {
     // Track load test operation
@@ -316,18 +419,6 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
   }, 'load_test', performanceTracker);
   
   // SSMR STEP 5: Mouse handlers now provided by useResizeHandlers hook
-
-  const handleSwapContent = usePerformanceAwareHandler(() => {
-    const tempOriginal = originalText;
-    setOriginalText(revisedText);
-    setRevisedText(tempOriginal);
-    
-    // Track swap metrics
-    performanceTracker.trackMetric('content_swap', {
-      originalLength: originalText.length,
-      revisedLength: revisedText.length
-    });
-  }, 'swap_content', performanceTracker);
 
   // Auto-scroll to output panel when it appears (Feature #2)
   useEffect(() => {
@@ -532,7 +623,10 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
             setIsScrollLocked(!isScrollLocked);
           }}
           onToggleSystemProtection={toggleSystemProtection}
-          onResetComparison={resetComparison}
+          onResetComparison={handleResetComparison}
+          canUndo={canUndo}
+          onUndo={handleUndo}
+          contentLength={originalText.length + revisedText.length}
         />
 
         {/* Mobile Controls - Enhanced with all operation buttons */}
@@ -546,7 +640,10 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
           onToggleScrollLock={() => setIsScrollLocked(!isScrollLocked)}
-          onResetComparison={resetComparison}
+          onResetComparison={handleResetComparison}
+          canUndo={canUndo}
+          onUndo={handleUndo}
+          contentLength={originalText.length + revisedText.length}
         />
       </div>
 
@@ -689,4 +786,4 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
 
     </div>
   );
-};
+});

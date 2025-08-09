@@ -7,42 +7,55 @@ This directory contains the complete design documentation for RdLn, capturing me
 
 ### **Core Documents**
 
-#### **📋 [DesignMethodologyFramework.md](DesignMethodologyFramework.md)**
+#### **📋 [Design Methodology Framework](methodology/DesignMethodologyFramework.md)**
 *The systematic approach to design excellence*
 - **ECI Methodology**: Explore-Compare-Implement process
 - **Quality assurance checklists**
 - **Reusable templates for design projects**
 - **Success metrics and evaluation criteria**
 
-#### **🎨 [DesignPatternLibrary.md](DesignPatternLibrary.md)**  
+#### **🎨 [Design Pattern Library](patterns/DesignPatternLibrary.md)**  
 *Reusable design patterns and technical implementations*
 - **Gradient systems and organic patterns**
 - **Glassmorphism implementation standards**
 - **Color harmony and semantic mapping**
 - **Responsive design patterns**
 
-#### **🎋 [BambooThemeLifeStory.md](BambooThemeLifeStory.md)**
+#### **🎋 [Bamboo Theme Life Story](case-studies/BambooThemeLifeStory.md)**
 *Complete case study of the bamboo theme transformation*
 - **Design evolution from simple to spectacular**
 - **Technical implementation details**
 - **Collaborative design process documentation**
 - **Lessons learned and future applications**
 
+#### **📝 [Design Templates](templates/)**
+*Ready-to-use templates for systematic design work*
+- **[Theme Exploration Template](templates/ThemeExplorationTemplate.md)**: Complete framework for theme development
+- **[Component Design Template](templates/ComponentDesignTemplate.md)**: Systematic UI component development
+- **[Case Study Template](templates/CaseStudyTemplate.md)**: Document significant design projects
+
 ---
 
 ## 🎯 **Quick Start Guide**
 
 ### **For New Theme Development**
-1. **Start with methodology**: Review [DesignMethodologyFramework.md](DesignMethodologyFramework.md)
-2. **Follow ECI process**: Explore → Compare → Implement
-3. **Use proven patterns**: Reference [DesignPatternLibrary.md](DesignPatternLibrary.md)
-4. **Document thoroughly**: Follow the bamboo theme example
+1. **Start with methodology**: Review [Design Methodology Framework](methodology/DesignMethodologyFramework.md)
+2. **Use template**: Copy [Theme Exploration Template](templates/ThemeExplorationTemplate.md)
+3. **Follow ECI process**: Explore → Compare → Implement
+4. **Use proven patterns**: Reference [Design Pattern Library](patterns/DesignPatternLibrary.md)
+5. **Document thoroughly**: Follow the [bamboo theme example](case-studies/BambooThemeLifeStory.md)
+
+### **For Component Development**
+1. **Start with template**: Copy [Component Design Template](templates/ComponentDesignTemplate.md)
+2. **Follow ECI process**: Systematic exploration and comparison
+3. **Use established patterns**: Reference existing component patterns
+4. **Document results**: Create case study if significant
 
 ### **For Design System Updates**  
 1. **Extract patterns**: Identify reusable elements from successful implementations
-2. **Add to library**: Update [DesignPatternLibrary.md](DesignPatternLibrary.md) with new patterns
+2. **Add to library**: Update [Design Pattern Library](patterns/DesignPatternLibrary.md) with new patterns
 3. **Version control**: Track pattern evolution and deprecation
-4. **Share learnings**: Create case studies like [BambooThemeLifeStory.md](BambooThemeLifeStory.md)
+4. **Share learnings**: Create case studies using [Case Study Template](templates/CaseStudyTemplate.md)
 
 ### **For Design Reviews**
 1. **Methodology compliance**: Verify ECI process was followed
@@ -152,18 +165,19 @@ For every design project:
 
 ### **For Design Questions**
 - Review relevant documentation first
-- Check pattern library for existing solutions
-- Follow methodology framework for new challenges
+- Check [pattern library](patterns/DesignPatternLibrary.md) for existing solutions
+- Follow [methodology framework](methodology/DesignMethodologyFramework.md) for new challenges
+- Use appropriate [templates](templates/) for systematic work
 - Document decisions and outcomes for future reference
 
 ### **For Process Questions**
-- Consult [DesignMethodologyFramework.md](DesignMethodologyFramework.md)
-- Review successful case studies like the bamboo theme
+- Consult [Design Methodology Framework](methodology/DesignMethodologyFramework.md)
+- Review successful case studies like the [bamboo theme](case-studies/BambooThemeLifeStory.md)
 - Use provided templates and checklists
 - Contribute improvements back to the documentation
 
 ### **For Technical Implementation**
-- Reference [DesignPatternLibrary.md](DesignPatternLibrary.md)
+- Reference [Design Pattern Library](patterns/DesignPatternLibrary.md)
 - Check browser compatibility notes
 - Follow established code organization standards
 - Test against performance and quality metrics
