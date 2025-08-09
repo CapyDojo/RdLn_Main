@@ -155,18 +155,19 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
           🛡️
         </button> */}
         
-        {/* Undo Button - Show when undo is available */}
+        {/* Prominent Undo Button - Show when undo is available */}
         {canUndo && onUndo && (
           <CustomTooltip 
-            content="Undo last action"
-            shortcut="Alt+Z"
+            content="Undo last clear action"
+            shortcut="Ctrl+Z"
           >
             <button
               data-undo-button
               onClick={onUndo}
-              className="enhanced-button flex items-center justify-center w-12 h-12 bg-theme-primary-400 text-white rounded-full hover:bg-theme-primary-500 transition-all duration-200 shadow-lg hover:shadow-xl border-2 border-theme-primary-200"
+              className="enhanced-button flex items-center justify-center w-14 h-14 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-all duration-200 shadow-lg hover:shadow-xl border-2 border-orange-300 animate-pulse hover:animate-none relative"
             >
-              <Undo className="w-5 h-5" />
+              <Undo className="w-6 h-6" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-300 rounded-full animate-ping"></div>
             </button>
           </CustomTooltip>
         )}

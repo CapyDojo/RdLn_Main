@@ -111,20 +111,23 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   const redlineOutputRef = useRef<HTMLDivElement>(null);
 
+  // Define scoped sample loader so it can be passed as a prop and exposed via ref
+  const loadSampleData = (originalText: string, revisedText: string, autoRun: boolean = false) => {
+    setOriginalText(originalText);
+    setRevisedText(revisedText);
+    
+    if (autoRun) {
+      // Use setTimeout to ensure text is set before comparison
+      setTimeout(() => {
+        compareDocuments();
+      }, 100);
+    }
+  };
+
   // Expose methods to parent component via ref
   useImperativeHandle(ref, () => ({
-    loadSampleData: (originalText: string, revisedText: string, autoRun: boolean = false) => {
-      setOriginalText(originalText);
-      setRevisedText(revisedText);
-      
-      if (autoRun) {
-        // Use setTimeout to ensure text is set before comparison
-        setTimeout(() => {
-          compareDocuments();
-        }, 100);
-      }
-    }
-  }), [setOriginalText, setRevisedText, compareDocuments]);
+    loadSampleData
+  }), [loadSampleData]);
 
   // Track content changes and notify parent
   useEffect(() => {
@@ -293,12 +296,12 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   // Consistent reset handler for both button and keyboard shortcut - with undo support
   const handleResetComparison = usePerformanceAwareHandler(() => {
     // Save current state for undo before clearing
-    saveState({
+    saveState(
       originalText,
       revisedText,
-      hasResult: !!result,
-      action: 'Clear All'
-    });
+      !!result,
+      'Clear All'
+    );
     
     resetComparison();
     
@@ -313,8 +316,12 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   const handleUndo = usePerformanceAwareHandler(() => {
     const previousState = undo();
     if (previousState) {
-      setOriginalText(previousState.originalText);
-      setRevisedText(previousState.revisedText);
+      // Ensure we're passing strings (safety check)
+      const originalTextValue = String(previousState.originalText || '');
+      const revisedTextValue = String(previousState.revisedText || '');
+      
+      setOriginalText(originalTextValue);
+      setRevisedText(revisedTextValue);
       // Note: results are not restored, user needs to re-compare
     }
   }, 'undo_action', performanceTracker);
@@ -367,18 +374,49 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         handleResetComparison();
       }
       
-      // Alt+Z undo last action
-      if (e.altKey && e.key === 'z') {
-        e.preventDefault();
+      // Ctrl+Z undo last action (universal undo shortcut)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        const target = e.target as HTMLElement;
+        const isTextarea = target?.tagName === 'TEXTAREA';
+        const isInput = target?.tagName === 'INPUT';
+        
+        console.log('🔄 CTRL+Z DEBUG: Keydown detected', {
+          target: target?.tagName,
+          canUndo,
+          activeElement: document.activeElement?.tagName,
+          isTextarea,
+          isInput,
+          hasSelection: isTextarea || isInput ? (target as HTMLInputElement).selectionStart !== (target as HTMLInputElement).selectionEnd : false
+        });
+        
+        // If we have undo states available, always use our undo (override browser)
         if (canUndo) {
+          console.log('🔄 CTRL+Z DEBUG: Using our undo system');
+          e.preventDefault();
+          e.stopImmediatePropagation();
           handleUndo();
+        } else if (isTextarea || isInput) {
+          // Let browser handle textarea/input undo if no app-level undo available
+          console.log('🔄 CTRL+Z DEBUG: Allowing browser undo for text field');
+        } else {
+          // Prevent default if not in a text field and no undo available
+          e.preventDefault();
+          console.log('🔄 CTRL+Z DEBUG: Prevented - no undo available');
         }
       }
     };
 
-    // Use capture phase for ESC to ensure it works regardless of focus
-    window.addEventListener('keydown', handleKeyDown, { capture: true });
-    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+    // Use capture phase with additional options to ensure Ctrl+Z works regardless of focus
+    const eventOptions = { capture: true, passive: false };
+    window.addEventListener('keydown', handleKeyDown, eventOptions);
+    
+    // Also add to document for extra coverage
+    document.addEventListener('keydown', handleKeyDown, eventOptions);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, eventOptions);
+      document.removeEventListener('keydown', handleKeyDown, eventOptions);
+    };
   }, [compareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible, toggleQuickCompare, handleSwapContent, isScrollLocked, setIsScrollLocked, handleResetComparison, canUndo, handleUndo]);
 
   const handleLoadTest = usePerformanceAwareHandler(async (originalText: string, revisedText: string) => {
@@ -570,7 +608,6 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         visible={showPerformanceDemoCard}
         onLoadTest={handleLoadTest}
       />
-
 
       {/* Mobile Tab Interface - Experimental Feature #6 */}
       <MobileTabInterface

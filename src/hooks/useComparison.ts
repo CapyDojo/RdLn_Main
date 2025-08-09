@@ -410,7 +410,7 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
         // TODO: Restore auto-hide after testing
         // Using functional update to access current chunking state
         setChunkingProgress(prev => {
-          console.log('🔧 Post-comparison chunking state update:', prev);
+          // Post-comparison chunking state update
           if (prev.enabled) {
             // Comment out auto-hide for testing
             // setTimeout(() => {
@@ -628,11 +628,11 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
 
   // Simplified auto-compare trigger - handles all real-time updates when enabled
   const triggerAutoCompare = useCallback((originalText: string, revisedText: string, isPasteAction = false) => {
-    console.log('🔍 triggerAutoCompare called:', { quickCompareEnabled, originalLength: originalText.length, revisedLength: revisedText.length });
+    // triggerAutoCompare called
     
     // Don't trigger auto-compare if manual operation is in progress
     if (manualOperationRef.current) {
-      console.log('⚠️ Auto-compare blocked by manual operation');
+      // Auto-compare blocked by manual operation
       return;
     }
     
@@ -653,7 +653,7 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
       autoCompareTimeoutRef.current = setTimeout(() => {
         // Double-check that manual operation isn't in progress when timeout fires
         if (manualOperationRef.current) {
-          console.log('⚠️ Auto-compare timeout blocked by manual operation');
+          // Auto-compare timeout blocked by manual operation
           return;
         }
         
@@ -690,28 +690,19 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
       console.warn('Performance tracking failed:', error);
     }
     
-    console.log('📝 setOriginalText called:', { textLength: text.length, isPasteAction, quickCompareEnabled });
-    console.log('📝 setOriginalText - text preview:', text.substring(0, 100));
+    // setOriginalText called
     setState(prev => {
-      console.log('📝 setOriginalText - prev state:', {
-        prevOriginalLength: prev.originalText.length,
-        prevRevisedLength: prev.revisedText.length
-      });
       const newState = { ...prev, originalText: text, error: null };
-      console.log('📝 setOriginalText - new state:', {
-        newOriginalLength: newState.originalText.length,
-        newRevisedLength: newState.revisedText.length
-      });
       
       // Trigger auto-compare for ALL changes when enabled (typing, pasting, OCR)
       if (quickCompareEnabled) {
-        console.log('⚡ Auto-compare enabled, triggering...');
+        // Auto-compare enabled, triggering
         // Use setTimeout to ensure state is updated first
         setTimeout(() => {
           triggerAutoCompare(text, newState.revisedText || prev.revisedText, isPasteAction);
         }, 0);
       } else {
-        console.log('❌ Auto-compare disabled');
+        // Auto-compare disabled
       }
       
       return newState;
@@ -732,28 +723,19 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
       console.warn('Performance tracking failed:', error);
     }
     
-    console.log('📝 setRevisedText called:', { textLength: text.length, isPasteAction, quickCompareEnabled });
-    console.log('📝 setRevisedText - text preview:', text.substring(0, 100));
+    // setRevisedText called
     setState(prev => {
-      console.log('📝 setRevisedText - prev state:', {
-        prevOriginalLength: prev.originalText.length,
-        prevRevisedLength: prev.revisedText.length
-      });
       const newState = { ...prev, revisedText: text, error: null };
-      console.log('📝 setRevisedText - new state:', {
-        newOriginalLength: newState.originalText.length,
-        newRevisedLength: newState.revisedText.length
-      });
       
       // Trigger auto-compare for ALL changes when enabled (typing, pasting, OCR)
       if (quickCompareEnabled) {
-        console.log('⚡ Auto-compare enabled, triggering...');
+        // Auto-compare enabled, triggering
         // Use setTimeout to ensure state is updated first
         setTimeout(() => {
           triggerAutoCompare(newState.originalText || prev.originalText, text, isPasteAction);
         }, 0);
       } else {
-        console.log('❌ Auto-compare disabled');
+        // Auto-compare disabled
       }
       
       return newState;
@@ -792,7 +774,7 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
     
     // 🚀 INSTANT DOPAMINE HIT: If enabling live compare and both panels have content, run comparison immediately
     if (newValue && state.originalText.trim() && state.revisedText.trim()) {
-      console.log('⚡ Live compare enabled with content - triggering instant comparison for snappy UX!');
+      // Live compare enabled with content - triggering instant comparison
       // Use setTimeout to ensure state updates are complete first
       setTimeout(() => {
         compareDocuments(true, false); // Auto-compare, don't preserve focus since it's a toggle action
@@ -805,7 +787,7 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
     const newValue = !systemProtectionEnabled;
     setSystemProtectionEnabled(newValue);
     localStorage.setItem('rdln-system-protection-enabled', newValue.toString());
-    console.log(`🛡️ System protection ${newValue ? 'enabled' : 'disabled'} - ${newValue ? 'Safe mode' : 'Stress testing mode'}`);
+    // System protection setting updated
   }, [systemProtectionEnabled]);
   
 

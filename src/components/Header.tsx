@@ -1,25 +1,11 @@
 import React from 'react';
 import { ThemeSelector } from './ThemeSelector';
 import { FontSizeSelector } from './FontSizeSelector';
-import { BetaDemoControlsPanel } from './BetaDemoControlsPanel';
 import { BaseComponentProps } from '../types/components';
 
-interface HeaderProps extends BaseComponentProps {
-  /** Whether demo controls should be shown */
-  showDemoControls?: boolean;
-  /** Callback when sample data should be loaded */
-  onLoadSample?: (originalText: string, revisedText: string, autoRun?: boolean) => void;
-  /** Whether the app is currently processing */
-  isProcessing?: boolean;
-  /** Whether inputs have content */
-  hasContent?: boolean;
-}
+interface HeaderProps extends BaseComponentProps {}
 
 export const Header: React.FC<HeaderProps> = ({ 
-  showDemoControls = true,
-  onLoadSample,
-  isProcessing = false,
-  hasContent = false,
   style, 
   className 
 }) => {
@@ -29,13 +15,6 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative flex items-center">
           {/* Left Controls */}
           <div className="absolute left-0 flex items-center gap-3">
-            {showDemoControls && onLoadSample && (
-              <BetaDemoControlsPanel
-                onLoadSample={onLoadSample}
-                isProcessing={isProcessing}
-                hasContent={hasContent}
-              />
-            )}
             <FontSizeSelector />
           </div>
 

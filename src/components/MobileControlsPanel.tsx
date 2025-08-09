@@ -140,20 +140,21 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
         </div>
       </div>
       
-      {/* Undo Button - Show when undo is available */}
+      {/* Prominent Undo Button - Show when undo is available */}
       {canUndo && onUndo && (
         <div className="lg:hidden flex justify-center mt-4">
           <CustomTooltip 
-            content="Undo last action"
-            shortcut="Alt+Z"
+            content="Undo last clear action"
+            shortcut="Ctrl+Z"
           >
             <button
               data-undo-button
               onClick={onUndo}
-              className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-theme-primary-400 text-white rounded-lg hover:bg-theme-primary-500 transition-all duration-200 shadow-lg border-2 border-theme-primary-200"
+              className="enhanced-button flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all duration-200 shadow-lg border-2 border-orange-300 animate-pulse hover:animate-none relative min-h-12"
             >
-              <Undo className="w-4 h-4" />
-              <span>Undo</span>
+              <Undo className="w-5 h-5" />
+              <span className="font-semibold">⚡ UNDO</span>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-300 rounded-full animate-ping"></div>
             </button>
           </CustomTooltip>
         </div>

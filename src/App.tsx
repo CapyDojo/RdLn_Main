@@ -29,6 +29,7 @@ import BoundaryFragmentTest from './pages/BoundaryFragmentTest';
 import BoundaryFixTester from './components/BoundaryFixTester';
 import { SmartPasteTest } from './components/SmartPasteTest';
 import { OCRFeatureCard } from './components/OCRFeatureCard';
+import { DemoBentoCard } from './components/DemoBentoCard';
 import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
 import './styles/resize-overrides.css';
@@ -58,6 +59,9 @@ function AppContent({
   // State for overlay visibility (only used when results overlay feature is enabled)
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
 
+  // Track whether inputs currently have any content (used by onContentChange)
+  const [hasContent, setHasContent] = useState(false);
+
   // Beta agreement state
   const [showBetaAgreement, setShowBetaAgreement] = useState(false);
 
@@ -67,9 +71,6 @@ function AppContent({
   // Beta terms dialog state
   const [showBetaTermsDialog, setShowBetaTermsDialog] = useState(false);
 
-  // Demo controls state
-  const [isProcessingDemo, setIsProcessingDemo] = useState(false);
-  const [hasContent, setHasContent] = useState(false);
   const comparisonInterfaceRef = React.useRef<any>(null);
 
   // Check beta agreement acceptance on mount
@@ -114,20 +115,7 @@ function AppContent({
     }
   };
 
-  // Sample data loading handler for demo controls
-  const handleLoadSample = (originalText: string, revisedText: string, autoRun: boolean = false) => {
-    // Pass the sample data to ComparisonInterface via a callback mechanism
-    if (comparisonInterfaceRef.current && comparisonInterfaceRef.current.loadSampleData) {
-      setIsProcessingDemo(autoRun);
-      comparisonInterfaceRef.current.loadSampleData(originalText, revisedText, autoRun);
-      setHasContent(true);
-      
-      if (autoRun) {
-        // Processing state will be managed by ComparisonInterface
-        setTimeout(() => setIsProcessingDemo(false), 1000);
-      }
-    }
-  };
+  // Sample data loading handler for demo controls - now handled by DemoBentoCard in ComparisonInterface
 
   // Cleanup OCR worker on app unmount
   useEffect(() => {
@@ -172,11 +160,26 @@ function AppContent({
   return (
     <div className="min-h-screen flex flex-col">
       {!shouldHideHeader && (
-        <Header 
-          onLoadSample={handleLoadSample}
-          isProcessing={isProcessingDemo}
-          hasContent={hasContent}
-        />
+        <div className="flex items-start gap-4 p-4">
+          {/* Demo Controls Card - Left Side */}
+          <div className="flex-shrink-0">
+            <DemoBentoCard
+              visible={true}
+              onLoadSample={(originalText, revisedText, autoRun) => {
+                if (comparisonInterfaceRef.current && comparisonInterfaceRef.current.loadSampleData) {
+                  comparisonInterfaceRef.current.loadSampleData(originalText, revisedText, autoRun);
+                }
+              }}
+              isProcessing={false}
+              hasContent={hasContent}
+            />
+          </div>
+          
+          {/* Header - Center */}
+          <div className="flex-1">
+            <Header />
+          </div>
+        </div>
       )}
       {!shouldHideHeader && <StatusBar />}
       <main className={`flex-1 overflow-y-auto ${shouldHideHeader ? "pt-0" : "pt-56"}`}>

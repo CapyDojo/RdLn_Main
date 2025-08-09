@@ -1,6 +1,5 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { FileText, Image, AlertCircle, Loader, ChevronDown, Languages } from 'lucide-react';
-import { Sparkles } from '../icons';
 import { useOCR } from '../hooks/useOCR';
 import { OCRLanguage } from '../types/ocr-types';
 import { LanguageSettingsDropdown } from './LanguageSettingsDropdown';
@@ -346,6 +345,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   }, [fontSize]);
 
 
+
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const items = Array.from(e.clipboardData.items);
     const imageItem = items.find(item => item.type.startsWith('image/'));
@@ -387,6 +387,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       }
 
       console.log(`[Paste] Source: ${pasteContext.detectedSource}, Format level: ${formatLevel}`);
+
 
       const textarea = textareaRef.current;
       if (textarea) {
@@ -548,13 +549,28 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <h3 className="text-3xl font-semibold text-theme-primary-900">{title}</h3>
           <button
             onClick={toggleAutoFormat}
-            className={`flex items-center justify-center p-3 rounded-lg backdrop-blur-sm border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] ${isAutoFormatEnabled
-              ? 'bg-theme-primary-500 border-transparent text-white hover:shadow-lg'
-              : 'bg-theme-neutral-200/70 border-transparent hover:border-theme-neutral-300/50 text-theme-neutral-800 hover:shadow-theme-neutral-200/50'}`}
-            title={`Auto-format paragraphs on paste: ${isAutoFormatEnabled ? 'ON' : 'OFF'}`}
+            className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
+              ? 'bg-theme-primary-600 dark:bg-theme-primary-500 border-transparent text-white hover:shadow-lg'
+              : 'bg-theme-neutral-200/70 dark:bg-white/10 border-transparent dark:border-white/10 hover:border-theme-neutral-300/50 dark:hover:border-white/20 text-theme-neutral-800 dark:text-theme-neutral-100 hover:shadow-theme-neutral-200/50'}`}
+            title={`Magically fix broken PDF paragraphs — ${isAutoFormatEnabled ? 'ON' : 'OFF'}`}
+            aria-pressed={isAutoFormatEnabled}
+            aria-label={`Auto paragraph formatting ${isAutoFormatEnabled ? 'on' : 'off'}`}
           >
-            <Sparkles className={`w-5 h-5 transition-all duration-300 ${isAutoFormatEnabled ? 'text-white' : 'text-theme-neutral-500'}`} />
+            {/* Emoji wand + text pilcrow (inline, compact) */}
+            <span className="inline-flex items-center leading-none -mt-px">
+              <span
+                className={`mr-0.5 select-none ${isAutoFormatEnabled ? '' : ''}`}
+                style={{ fontSize: '13px' }}
+                aria-hidden
+              >
+                🪄
+              </span>
+              <span className={`select-none ${isAutoFormatEnabled ? 'text-white' : 'text-theme-neutral-700 dark:text-theme-neutral-200'}`} style={{ fontSize: '15px', fontWeight: 600 }}>
+                ¶
+              </span>
+            </span>
           </button>
+
 
           {isProcessing && (
             <div className="flex items-center gap-2">

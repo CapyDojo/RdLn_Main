@@ -122,6 +122,14 @@ export const useUndoHistory = (options: UndoHistoryOptions = {}): UndoHistoryRet
     hasResult: boolean, 
     action: string
   ) => {
+    console.log('🔄 UNDO DEBUG: saveState called', {
+      action,
+      originalTextLength: originalText?.length || 0,
+      revisedTextLength: revisedText?.length || 0,
+      currentIndex,
+      historyLength: history.length
+    });
+
     const newState: UndoState = {
       id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
@@ -131,6 +139,7 @@ export const useUndoHistory = (options: UndoHistoryOptions = {}): UndoHistoryRet
       action
     };
 
+    // Update both history and index atomically
     setHistory(prev => {
       // Remove any states after current index (if we're in the middle of history)
       const newHistory = prev.slice(0, currentIndex + 1);
@@ -141,24 +150,48 @@ export const useUndoHistory = (options: UndoHistoryOptions = {}): UndoHistoryRet
       // Limit history size
       const limitedHistory = newHistory.slice(-maxHistorySize);
       
+      // Update index to point to the newly added state
+      const newIndex = limitedHistory.length - 1;
+      setCurrentIndex(newIndex);
+      
+      console.log('🔄 UNDO DEBUG: State saved', {
+        newHistoryLength: limitedHistory.length,
+        newIndex,
+        action: newState.action
+      });
+      
       return limitedHistory;
-    });
-
-    setCurrentIndex(prev => {
-      const newHistory = history.slice(0, prev + 1);
-      newHistory.push(newState);
-      const limitedHistory = newHistory.slice(-maxHistorySize);
-      return limitedHistory.length - 1;
     });
   }, [currentIndex, maxHistorySize, history]);
 
   // Undo to previous state
   const undo = useCallback((): UndoState | null => {
-    if (currentIndex <= 0) return null;
+    console.log('🔄 UNDO DEBUG: undo called', {
+      currentIndex,
+      historyLength: history.length,
+      canUndo: history.length > 0
+    });
 
+    if (history.length === 0 || currentIndex < 0) {
+      console.log('🔄 UNDO DEBUG: Cannot undo - no saved states');
+      return null;
+    }
+
+    // Return the current state (which is the saved state we want to restore)
+    const stateToReturn = history[currentIndex];
+    
+    console.log('🔄 UNDO DEBUG: Undoing to state', {
+      currentIndex,
+      action: stateToReturn?.action,
+      originalTextLength: stateToReturn?.originalText?.length || 0,
+      revisedTextLength: stateToReturn?.revisedText?.length || 0
+    });
+
+    // Move to previous state in history (or -1 if this was the only state)
     const newIndex = currentIndex - 1;
     setCurrentIndex(newIndex);
-    return history[newIndex] || null;
+    
+    return stateToReturn || null;
   }, [currentIndex, history]);
 
   // Redo to next state
@@ -193,7 +226,7 @@ export const useUndoHistory = (options: UndoHistoryOptions = {}): UndoHistoryRet
   }, [currentIndex, history]);
 
   // Computed state
-  const canUndo = currentIndex > 0;
+  const canUndo = history.length > 0 && currentIndex >= 0; // Can undo if we have any saved states
   const canRedo = currentIndex < history.length - 1;
   const currentState = currentIndex >= 0 ? history[currentIndex] : null;
   const historySize = history.length;

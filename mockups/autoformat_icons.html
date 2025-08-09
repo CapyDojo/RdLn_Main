@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auto‑format Icon Mockups</title>
+  <style>
+    :root{
+      --bg: #f6f7f9;
+      --card: #ffffffcc;
+      --text: #111827;
+      --subtext: #4b5563;
+      --neutral-btn: rgba(17,24,39,0.06);
+      --neutral-text: #374151;
+      --border: rgba(17,24,39,0.08);
+      --primary: #2563eb; /* primary-600 */
+      --primary-strong: #1d4ed8; /* primary-700 */
+      --on-primary: #ffffff;
+      --badge-bg: rgba(255,255,255,.75);
+      --badge-border: rgba(255,255,255,.5);
+    }
+    .dark{
+      --bg: #0f1116;
+      --card: rgba(255,255,255,0.06);
+      --text: #e5e7eb;
+      --subtext: #cbd5e1;
+      --neutral-btn: rgba(255,255,255,0.08);
+      --neutral-text: #e5e7eb;
+      --border: rgba(255,255,255,0.12);
+      --primary: #3b82f6; /* a bit lighter in dark */
+      --primary-strong: #60a5fa;
+      --on-primary: #0b1020;
+      --badge-bg: rgba(255,255,255,.08);
+      --badge-border: rgba(255,255,255,.22);
+    }
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    h1{font-size:24px;margin:0 0 16px}
+    .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:16px}
+    .card{background:var(--card);backdrop-filter:saturate(120%) blur(6px);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+    .label{font-weight:600;color:var(--subtext);margin-bottom:10px}
+
+    /* Square button */
+    .square{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:12px;border-radius:10px;border:1px solid transparent;background:var(--neutral-btn);color:var(--neutral-text);box-shadow:0 1px 2px rgba(0,0,0,.06);transition:transform .15s ease, box-shadow .15s ease, background .2s ease}
+    .square:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,0,0,.12)}
+    .square[data-on="true"]{background:var(--primary);color:var(--on-primary)}
+    .square .icon{font-size:18px;line-height:1}
+    .square .icon.pilcrow{color:inherit}
+    .square[data-on="false"] .icon.pilcrow{color:#374151}
+    .dark .square[data-on="false"] .icon.pilcrow{color:#e5e7eb}
+
+    /* Tiny toggle chip for mock */
+    .chip{margin-left:10px;padding:4px 8px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+
+    /* Badge */
+    .badge{position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--badge-bg);border:1px solid var(--badge-border)}
+    .badge .sparkle{font-size:12px}
+
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .hint{color:var(--subtext)}
+    .hat{position:absolute;left:2px;bottom:-2px}
+    .corner{position:absolute;top:-2px;right:-2px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="toolbar">
+      <h1 style="flex:1">Auto‑format Icon Mockups</h1>
+      <button id="themeToggle" class="chip" title="Toggle light/dark">Toggle Theme</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="label">A · Pilcrow + Sparkles</div>
+        <div class="row">
+          <button class="square" data-on="true" title="Magically fix broken PDF paragraphs — ON">
+            <span class="icon pilcrow">¶</span>
+            <span class="corner" aria-hidden>✨</span>
+          </button>
+          <button class="chip" data-bind="#a">ON</button>
+        </div>
+        <div class="hint" style="margin-top:8px">Reads as “paragraphs + magic” with corner sparkles.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">B · Wand + Pilcrow</div>
+        <div class="row">
+          <button class="square" data-on="true" title="Magically fix broken PDF paragraphs — ON">
+            <span class="icon" style="font-size:16px;margin-right:6px">🪄</span>
+            <span class="icon pilcrow">¶</span>
+          </button>
+          <button class="chip" data-bind="#b">ON</button>
+        </div>
+        <div class="hint" style="margin-top:8px">Action metaphor: wand tapping the pilcrow.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">C · Magic Hat + Pilcrow</div>
+        <div class="row">
+          <button class="square" data-on="true" title="Magically fix broken PDF paragraphs — ON">
+            <span class="icon pilcrow">¶</span>
+            <span class="hat" aria-hidden>🎩</span>
+            <span class="corner" aria-hidden>✧</span>
+          </button>
+          <button class="chip" data-bind="#c">ON</button>
+        </div>
+        <div class="hint" style="margin-top:8px">Playful; tiny star appears when ON.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">D · Pilcrow + Sparkle Badge (clean)</div>
+        <div class="row">
+          <button class="square" data-on="true" title="Magically fix broken PDF paragraphs — ON">
+            <span class="icon pilcrow">¶</span>
+            <span class="badge" aria-hidden><span class="sparkle">✦</span></span>
+          </button>
+          <button class="chip" data-bind="#d">ON</button>
+        </div>
+        <div class="hint" style="margin-top:8px">Cleanest: tiny sparkle badge while keeping ¶ dominant.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const body = document.body;
+    const themeBtn = document.getElementById('themeToggle');
+    themeBtn.addEventListener('click', () => body.classList.toggle('dark'));
+
+    // wire ON/OFF chips
+    document.querySelectorAll('.card').forEach((card, idx) => {
+      const square = card.querySelector('.square');
+      const chip = card.querySelector('.chip[data-bind]');
+      chip.addEventListener('click', () => {
+        const on = square.getAttribute('data-on') === 'true';
+        square.setAttribute('data-on', String(!on));
+        chip.textContent = !on ? 'ON' : 'OFF';
+        const base = 'Magically fix broken PDF paragraphs — ';
+        square.title = base + (!on ? 'ON' : 'OFF');
+      });
+    });
+  </script>
+</body>
+</html>
