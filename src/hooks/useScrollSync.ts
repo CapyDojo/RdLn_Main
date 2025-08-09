@@ -104,12 +104,13 @@ export const useScrollSync = ({
     });
   }, [isScrollLocked]);
 
+  // Deprecated: Lock state is controlled by parent via isScrollLocked prop
   const toggleScrollLock = useCallback(() => {
     if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
-      console.log('🔄 Toggle scroll lock');
+      console.log('🔄 toggleScrollLock is controlled by parent (no-op)');
     }
-    setIsLayoutDetected(!isLayoutDetected);
-  }, [isLayoutDetected]);
+    // Intentionally no-op to avoid mutating unrelated state
+  }, []);
   
   // ==================== ELEMENT DETECTION ====================
   

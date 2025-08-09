@@ -8,8 +8,19 @@ import { ThemeConfig } from '../../types/theme';
 export const bambooTheme: ThemeConfig = {
   name: 'bamboo',
   displayName: 'Chengdu 晨',
-  description: 'Serene bamboo green theme with glassmorphic effects',
-  background: 'linear-gradient(45deg, #2d5016 0%,rgb(146, 183, 113) 25%,rgb(113, 155, 81) 63%,rgb(183, 203, 165) 85%, #7ba05f 100%)',
+  description: 'Serene bamboo forest theme with organic criss-cross gradients and glassmorphic effects',
+  background: `
+    radial-gradient(ellipse 900px 450px at 15% 25%, rgba(183,203,165,0.2) 0%, transparent 35%),
+    radial-gradient(ellipse 700px 650px at 85% 75%, rgba(113,155,81,0.18) 0%, transparent 45%),
+    repeating-linear-gradient(83deg, transparent 0%, rgba(45,80,22,0.25) 10%, rgba(113,155,81,0.3) 15%, rgba(45,80,22,0.25) 20%, transparent 25%, transparent 75%),
+    repeating-linear-gradient(67deg, transparent 0%, rgba(123,160,95,0.15) 8%, rgba(183,203,165,0.2) 12%, rgba(123,160,95,0.15) 16%, transparent 20%, transparent 60%),
+    linear-gradient(72deg, rgba(45,80,22,0.15) 0%, transparent 25%, rgba(146,183,113,0.12) 45%, transparent 65%, rgba(123,160,95,0.2) 85%, transparent 100%),
+    repeating-linear-gradient(-23deg, transparent 0%, rgba(146,183,113,0.18) 12%, rgba(113,155,81,0.25) 18%, rgba(146,183,113,0.18) 24%, transparent 30%, transparent 70%),
+    linear-gradient(-38deg, transparent 0%, rgba(183,203,165,0.15) 18%, transparent 38%, rgba(113,155,81,0.18) 58%, transparent 78%, rgba(146,183,113,0.12) 92%, transparent 100%),
+    repeating-linear-gradient(107deg, transparent 0%, rgba(183,203,165,0.12) 6%, rgba(146,183,113,0.15) 10%, rgba(183,203,165,0.12) 14%, transparent 18%, transparent 65%),
+    linear-gradient(-118deg, transparent 0%, rgba(183,203,165,0.18) 28%, transparent 48%, rgba(146,183,113,0.15) 68%, transparent 88%),
+    linear-gradient(45deg, #2d5016 0%, rgb(146,183,113) 25%, rgb(113,155,81) 63%, rgb(183,203,165) 85%, #7ba05f 100%)
+  `.replace(/\s+/g, ' ').trim(),
   colors: {
     // Green primary palette - main nature colors
     primary: {

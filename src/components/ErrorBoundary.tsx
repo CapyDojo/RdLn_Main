@@ -11,7 +11,7 @@
 
 import React, { Component, ReactNode } from 'react';
 import { ErrorFactory, ErrorManager, ErrorCategory, AppError } from '../utils/errorHandling';
-import { BaseComponentProps } from '../utils/types/baseTypes';
+import { BaseComponentProps } from '../types/components';
 
 interface ErrorBoundaryProps extends BaseComponentProps {
   children: ReactNode;
@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(_error: Error): ErrorBoundaryState {
     // This method is called when an error is thrown in a child component
     return { hasError: true, error: null }; // We'll set the error in componentDidCatch
   }

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bamboo Theme - Option E: Organic Flow + Stalks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .bamboo-background-e {
+            background: 
+                /* Organic curve - natural bamboo bend (from Option C) */
+                radial-gradient(ellipse 900px 450px at 15% 25%, 
+                    rgba(183,203,165,0.2) 0%, 
+                    transparent 35%),
+                /* Crossing organic curve (from Option C) */
+                radial-gradient(ellipse 700px 650px at 85% 75%, 
+                    rgba(113,155,81,0.18) 0%, 
+                    transparent 45%),
+                /* Nearly vertical bamboo stalks - organic lean (from Option D) */
+                repeating-linear-gradient(
+                    83deg,
+                    transparent 0%,
+                    rgba(45,80,22,0.25) 10%,
+                    rgba(113,155,81,0.3) 15%,
+                    rgba(45,80,22,0.25) 20%,
+                    transparent 25%,
+                    transparent 75%
+                ),
+                /* Natural diagonal left - organic bamboo lean (from Option D) */
+                repeating-linear-gradient(
+                    67deg,
+                    transparent 0%,
+                    rgba(123,160,95,0.15) 8%,
+                    rgba(183,203,165,0.2) 12%,
+                    rgba(123,160,95,0.15) 16%,
+                    transparent 20%,
+                    transparent 60%
+                ),
+                /* Flowing diagonal with easing (from Option C) */
+                linear-gradient(72deg, 
+                    rgba(45,80,22,0.15) 0%, 
+                    transparent 25%, 
+                    rgba(146,183,113,0.12) 45%, 
+                    transparent 65%, 
+                    rgba(123,160,95,0.2) 85%, 
+                    transparent 100%),
+                /* Natural diagonal right - gentle crossing (from Option D) */
+                repeating-linear-gradient(
+                    -23deg,
+                    transparent 0%,
+                    rgba(146,183,113,0.18) 12%,
+                    rgba(113,155,81,0.25) 18%,
+                    rgba(146,183,113,0.18) 24%,
+                    transparent 30%,
+                    transparent 70%
+                ),
+                /* Counter-flowing diagonal with organic easing (from Option C) */
+                linear-gradient(-38deg, 
+                    transparent 0%, 
+                    rgba(183,203,165,0.15) 18%, 
+                    transparent 38%, 
+                    rgba(113,155,81,0.18) 58%, 
+                    transparent 78%, 
+                    rgba(146,183,113,0.12) 92%, 
+                    transparent 100%),
+                /* Subtle angled stalks - natural bamboo growth (from Option D) */
+                repeating-linear-gradient(
+                    107deg,
+                    transparent 0%,
+                    rgba(183,203,165,0.12) 6%,
+                    rgba(146,183,113,0.15) 10%,
+                    rgba(183,203,165,0.12) 14%,
+                    transparent 18%,
+                    transparent 65%
+                ),
+                /* Gentle crossing at steep organic angle (from Option C + D blend) */
+                linear-gradient(-118deg, 
+                    transparent 0%, 
+                    rgba(183,203,165,0.18) 28%, 
+                    transparent 48%, 
+                    rgba(146,183,113,0.15) 68%, 
+                    transparent 88%),
+                /* Base gradient foundation */
+                linear-gradient(45deg, #2d5016 0%, rgb(146,183,113) 25%, rgb(113,155,81) 63%, rgb(183,203,165) 85%, #7ba05f 100%);
+            
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .content-overlay {
+            position: relative;
+            z-index: 10;
+            padding: 2rem;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .glass-panel {
+            background: rgba(113, 155, 81, 0.15);
+            border: 1px solid rgba(6, 95, 70, 0.3);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(4, 75, 56, 0.25);
+        }
+        
+        .header {
+            text-align: center;
+            color: #065f46;
+            margin-bottom: 1rem;
+        }
+        
+        .description {
+            color: #4a3728;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .feature-card {
+            background: rgba(183, 203, 165, 0.1);
+            border: 1px solid rgba(113, 155, 81, 0.2);
+            backdrop-filter: blur(8px);
+            border-radius: 8px;
+            padding: 1.5rem;
+            color: #065f46;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(6, 95, 70, 0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 6px;
+            backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+        
+        .back-link:hover {
+            background: rgba(6, 95, 70, 1);
+        }
+        
+        .effect-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(251, 191, 36, 0.9);
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            backdrop-filter: blur(16px);
+        }
+        
+        .combination-info {
+            background: rgba(113, 155, 81, 0.08);
+            border: 1px solid rgba(6, 95, 70, 0.15);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #4a3728;
+        }
+        
+        .combo-highlight {
+            background: rgba(251, 191, 36, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="bamboo-background-e"></div>
+    
+    <a href="bamboo-mockups-index.html" class="back-link">← Back to Options</a>
+    
+    <div class="content-overlay">
+        <div class="glass-panel">
+            <h1 class="header">Option E: Organic Flow + Stalks</h1>
+            <p class="description">
+                The best of both worlds: combines Option C's organic radial gradients and flowing curves 
+                with Option D's realistic bamboo stalk patterns using natural angles. Creates a rich, 
+                layered bamboo forest with both structural authenticity and natural flow.
+            </p>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <h3>🌊 Organic Curves</h3>
+                    <p>Radial gradients create natural bamboo bend and canopy effects</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🎋 Realistic Stalks</h3>
+                    <p>Natural angles (83°, 67°, -23°, 107°) for authentic stalk patterns</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>✨ Layered Depth</h3>
+                    <p>10+ gradient layers create complex forest canopy depth</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🌿 Maximum Realism</h3>
+                    <p>Combines structural authenticity with organic natural flow</p>
+                </div>
+            </div>
+            
+            <div class="combination-info">
+                <strong>Combination Elements:</strong><br>
+                <span class="combo-highlight">From Option C:</span> Radial gradients, organic curves, flowing transitions<br>
+                <span class="combo-highlight">From Option D:</span> Natural stalk angles (83°, 67°, -23°, 107°), repeating patterns<br>
+                <span class="combo-highlight">Enhanced:</span> Reduced opacity for better layering, optimized blend modes
+            </div>
+        </div>
+    </div>
+    
+    <div class="effect-indicator">
+        Criss-Cross Effect: Flow + Stalks
+    </div>
+</body>
+</html>

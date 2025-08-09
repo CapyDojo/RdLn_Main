@@ -63,7 +63,7 @@ export class OCRService {
     for (const key of expiredKeys) {
       const cached = this.workers.get(key);
       if (cached) {
-        console.log(`🧹 Cleaning up expired OCR worker: ${key}`);
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log(`🧹 Cleaning up expired OCR worker: ${key}`);
         await cached.worker.terminate();
         this.workers.delete(key);
       }
@@ -71,7 +71,7 @@ export class OCRService {
 
     // Cleanup detection worker if expired
     if (this.detectionWorker && now - this.detectionWorker.lastUsed > this.CACHE_EXPIRY_MS) {
-      console.log('🧹 Cleaning up expired detection worker');
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🧹 Cleaning up expired detection worker');
       await this.detectionWorker.worker.terminate();
       this.detectionWorker = null;
     }
@@ -83,7 +83,7 @@ export class OCRService {
       
       const toRemove = sortedEntries.slice(0, this.workers.size - this.MAX_CACHED_WORKERS);
       for (const [key, cached] of toRemove) {
-        console.log(`🧹 Removing LRU OCR worker: ${key}`);
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log(`🧹 Removing LRU OCR worker: ${key}`);
         await cached.worker.terminate();
         this.workers.delete(key);
       }
@@ -105,7 +105,7 @@ export class OCRService {
     // Remove expired entries
     for (const key of expiredKeys) {
       this.languageCache.delete(key);
-      console.log(`🧹 Cleaned up expired language detection cache entry`);
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log(`🧹 Cleaned up expired language detection cache entry`);
     }
 
     // If cache is too large, remove least recently used (by hitCount and timestamp)
@@ -122,7 +122,7 @@ export class OCRService {
       const toRemove = sortedEntries.slice(0, this.languageCache.size - this.MAX_LANGUAGE_CACHE_ENTRIES);
       for (const [key] of toRemove) {
         this.languageCache.delete(key);
-        console.log(`🧹 Removed LRU language detection cache entry`);
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log(`🧹 Removed LRU language detection cache entry`);
       }
     }
   }

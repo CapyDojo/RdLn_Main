@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bamboo Theme - Option B: Bamboo Stalk Pattern</title>
+    <title>Bamboo Theme - Option D: Organic Stalk Pattern</title>
     <style>
         * {
             margin: 0;
@@ -17,11 +17,11 @@
             overflow: hidden;
         }
         
-        .bamboo-background-b {
+        .bamboo-background-d {
             background: 
-                /* Vertical bamboo stalks - repeating pattern */
+                /* Nearly vertical bamboo stalks - slight natural lean */
                 repeating-linear-gradient(
-                    90deg,
+                    83deg,
                     transparent 0%,
                     rgba(45,80,22,0.3) 10%,
                     rgba(113,155,81,0.4) 15%,
@@ -29,9 +29,9 @@
                     transparent 25%,
                     transparent 75%
                 ),
-                /* Diagonal left bamboo stalks */
+                /* Natural diagonal left - organic bamboo lean */
                 repeating-linear-gradient(
-                    45deg,
+                    67deg,
                     transparent 0%,
                     rgba(123,160,95,0.2) 8%,
                     rgba(183,203,165,0.3) 12%,
@@ -39,15 +39,35 @@
                     transparent 20%,
                     transparent 60%
                 ),
-                /* Diagonal right bamboo stalks */
+                /* Natural diagonal right - gentle crossing angle */
                 repeating-linear-gradient(
-                    -45deg,
+                    -23deg,
                     transparent 0%,
                     rgba(146,183,113,0.25) 12%,
                     rgba(113,155,81,0.35) 18%,
                     rgba(146,183,113,0.25) 24%,
                     transparent 30%,
                     transparent 70%
+                ),
+                /* Subtle angled stalks - natural bamboo growth */
+                repeating-linear-gradient(
+                    107deg,
+                    transparent 0%,
+                    rgba(183,203,165,0.15) 6%,
+                    rgba(146,183,113,0.2) 10%,
+                    rgba(183,203,165,0.15) 14%,
+                    transparent 18%,
+                    transparent 65%
+                ),
+                /* Gentle crossing angle - natural forest pattern */
+                repeating-linear-gradient(
+                    -57deg,
+                    transparent 0%,
+                    rgba(113,155,81,0.2) 14%,
+                    rgba(123,160,95,0.25) 20%,
+                    rgba(113,155,81,0.2) 26%,
+                    transparent 32%,
+                    transparent 78%
                 ),
                 /* Base forest gradient */
                 linear-gradient(45deg, #2d5016 0%, rgb(146,183,113) 25%, rgb(113,155,81) 63%, rgb(183,203,165) 85%, #7ba05f 100%);
@@ -134,48 +154,67 @@
             font-weight: bold;
             backdrop-filter: blur(16px);
         }
+        
+        .angle-info {
+            background: rgba(113, 155, 81, 0.08);
+            border: 1px solid rgba(6, 95, 70, 0.15);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #4a3728;
+        }
     </style>
 </head>
 <body>
-    <div class="bamboo-background-b"></div>
+    <div class="bamboo-background-d"></div>
     
     <a href="bamboo-mockups-index.html" class="back-link">← Back to Options</a>
     
     <div class="content-overlay">
         <div class="glass-panel">
-            <h1 class="header">Option B: Bamboo Stalk Pattern</h1>
+            <h1 class="header">Option D: Organic Stalk Pattern</h1>
             <p class="description">
-                This approach uses repeating linear gradients to create distinct bamboo stalk patterns. 
-                Vertical and diagonal elements combine to simulate actual bamboo forest structure 
-                with individual stalks clearly defined.
+                Based on Option B but with natural, organic angles that mimic how bamboo actually grows. 
+                Uses angles like 83°, 67°, -23°, 107°, -57° instead of geometric 45° patterns to create 
+                a more realistic bamboo forest with natural lean and crossing patterns.
             </p>
             
             <div class="features">
                 <div class="feature-card">
-                    <h3>🎋 Distinct Stalks</h3>
-                    <p>Repeating patterns create individual bamboo stalk appearance</p>
+                    <h3>🌿 Natural Angles</h3>
+                    <p>83°, 67°, -23°, 107°, -57° mimic organic bamboo growth</p>
                 </div>
                 
                 <div class="feature-card">
-                    <h3>🎯 Clean Stalks</h3>
-                    <p>Smooth stalk patterns without horizontal interruptions</p>
+                    <h3>🎋 Realistic Stalks</h3>
+                    <p>Subtle lean and natural crossing patterns like real bamboo</p>
                 </div>
                 
                 <div class="feature-card">
-                    <h3>📐 Multiple Directions</h3>
-                    <p>Vertical and diagonal elements for natural growth patterns</p>
+                    <h3>🌲 Forest Authenticity</h3>
+                    <p>Less geometric, more organic forest appearance</p>
                 </div>
                 
                 <div class="feature-card">
-                    <h3>🌲 Forest Density</h3>
-                    <p>Overlapping patterns create natural forest depth</p>
+                    <h3>✨ Varied Density</h3>
+                    <p>Different stalk widths and spacing for natural variety</p>
                 </div>
+            </div>
+            
+            <div class="angle-info">
+                <strong>Organic Angles Used:</strong><br>
+                • 83° - Nearly vertical with slight natural lean<br>
+                • 67° - Natural diagonal bamboo growth<br>
+                • -23° - Gentle crossing angle<br>
+                • 107° - Subtle angled stalks<br>
+                • -57° - Natural forest crossing pattern
             </div>
         </div>
     </div>
     
     <div class="effect-indicator">
-        Criss-Cross Effect: Stalk Patterns
+        Criss-Cross Effect: Organic Stalks
     </div>
 </body>
 </html>

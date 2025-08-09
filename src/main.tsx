@@ -20,6 +20,7 @@ import { FontSizeProvider } from './contexts/FontSizeContext';
 import { isElectron } from './utils/runtime';
 // STEP 1: Import Background Language Loader (Safe, Modular)
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
+import { DEV_CONFIG } from './config/appConfig';
 
 // Update document title to include Beta
 document.title = 'RdLn™ Beta - Professional Text Comparison Redlining with OCR';
@@ -94,29 +95,56 @@ if (currentDate > BETA_EXPIRY_DATE && !isDeveloperMode) {
   throw new Error('Beta version expired');
 }
 
-// Development console control - set to false for quiet development
-const ENABLE_DEV_LOGS = true; // Toggle this for clean development console
+// Development console control - derive from central debug flags
+const ENABLE_DEV_LOGS = Object.values(DEV_CONFIG.DEBUGGING).some(Boolean);
 
 if (process.env.NODE_ENV === 'development' && !ENABLE_DEV_LOGS) {
   // Suppress all development noise for a clean console
   const originalLog = console.log;
   const originalWarn = console.warn;
+  const originalInfo = console.info;
+  const originalDebug = console.debug;
+  const isSuppressed = (msg?: any) => {
+    const s = typeof msg === 'string' ? msg : '';
+    return (
+      s.includes('Download the React DevTools') ||
+      s.includes('orchestration:')
+    );
+  };
   
   console.log = (...args) => {
     // Only show critical app logs
-    if (args[0]?.includes?.('🚀') || args[0]?.includes?.('❌') || args[0]?.includes?.('🧹')) {
-      originalLog.apply(console, args);
+    if (args[0]?.includes?.('🚀') || args[0]?.includes?.('❌')) {
+      return originalLog.apply(console, args);
     }
+    if (isSuppressed(args[0])) return;
   };
   
   console.warn = (...args) => {
     // Suppress Tesseract warnings and other noise
     if (args[0]?.includes?.('Parameter not found:') || 
         args[0]?.includes?.('Download the React DevTools') ||
-        args[0]?.includes?.('🎯 CSS OUTPUT RESIZE')) {
+        args[0]?.includes?.('🎯 CSS OUTPUT RESIZE') ||
+        args[0]?.includes?.('orchestration:')) {
       return;
     }
     originalWarn.apply(console, args);
+  };
+
+  console.info = (...args) => {
+    if (isSuppressed(args[0])) return;
+    // Keep info quiet by default unless critical markers
+    if (args[0]?.includes?.('🚀') || args[0]?.includes?.('❌')) {
+      return originalInfo.apply(console, args);
+    }
+  };
+
+  console.debug = (...args) => {
+    if (isSuppressed(args[0])) return;
+    // Fully suppress debug unless specifically critical
+    if (args[0]?.includes?.('🚀') || args[0]?.includes?.('❌')) {
+      return originalDebug.apply(console, args);
+    }
   };
 }
 

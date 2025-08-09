@@ -112,6 +112,17 @@ src/styles/
 └── experimental-features.css # Feature-flagged styles
 ```
 
+## Design System & Documentation
+
+### Design Documentation
+RdLn includes a comprehensive design system located in `docs/design/`:
+- **DesignMethodologyFramework.md**: ECI (Explore-Compare-Implement) methodology for design projects
+- **DesignPatternLibrary.md**: Reusable patterns, gradient systems, and technical implementations  
+- **BambooThemeLifeStory.md**: Complete case study of theme evolution from simple to spectacular
+- **README.md**: Overview and quick start guide for design documentation
+
+**For Design Work**: Always reference the design documentation before starting theme or UI work. Follow the ECI methodology and use established patterns from the pattern library.
+
 ## Development Guidelines
 
 ### SSMR Methodology

@@ -12,24 +12,25 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { DEV_CONFIG } from '../config/appConfig';
-import { AlertCircle, GripHorizontal } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
-import { TextInputPanel } from './TextInputPanel';
 import { RedlineOutput } from './RedlineOutput';
 import { ProcessingDisplay } from './ProcessingDisplay';
 import { OutputLayout } from './OutputLayout';
-import { ComparisonStats } from './ComparisonStats';
 import { PerformanceDemoCard } from './PerformanceDemoCard';
-import { DesktopControlsPanel } from './DesktopControlsPanel';
-import { MobileControlsPanel } from './MobileControlsPanel';
-import { DesktopInputLayout } from './DesktopInputLayout';
-import { MobileInputLayout } from './MobileInputLayout';
-import { ExtremeTestSuite } from '../testing/ExtremeTestSuite';
+
 // Resize and scroll handlers
 import { useResizeHandlers } from '../hooks/useResizeHandlers';
 import { useScrollSync } from '../hooks/useScrollSync';
 // Performance monitoring
 import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/performanceUtils.tsx';
+
+import { DesktopControlsPanel } from './DesktopControlsPanel';
+import { MobileControlsPanel } from './MobileControlsPanel';
+import { DesktopInputLayout } from './DesktopInputLayout';
+import { MobileInputLayout } from './MobileInputLayout';
+import { ExtremeTestSuite } from '../testing/ExtremeTestSuite';
+
 // Experimental features
 import { useExperimentalFeatures, useExperimentalCSSClasses } from '../contexts/ExperimentalLayoutContext';
 import { FloatingJumpButton } from './experimental/FloatingJumpButton';
@@ -37,8 +38,8 @@ import { MobileTabInterface } from './experimental/MobileTabInterface';
 import { StickyResultsPanel } from './experimental/StickyResultsPanel';
 import { ResultsOverlay } from './experimental/ResultsOverlay';
 import { FullScreenOverlay } from './FullScreenOverlay';
-import { FullScreenButton } from './FullScreenButton';
 import { useJumpToResults } from '../hooks/useJumpToResults';
+
 import { useMobileTabInterface } from '../hooks/useMobileTabInterface';
 import { useResultsOverlay } from '../hooks/useResultsOverlay';
 
@@ -163,11 +164,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
   }, [isProcessing, performanceTracker]);
   
   // SSMR STEP 6: Extracted scroll sync logic into custom hook
-  const {
-    scrollRefs,
-    updateScrollRefs,
-    syncScroll
-  } = useScrollSync({
+  const { updateScrollRefs } = useScrollSync({
     isScrollLocked,
     outputRef: redlineOutputRef
   });
@@ -352,7 +349,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
               inline: 'nearest'
             });
             
-            console.log('🎯 Auto-scrolled to output section (processing started) - Feature #2');
+            if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎯 Auto-scrolled to output section (processing started) - Feature #2');
           }
         }, 100);
       }
@@ -368,7 +365,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
         if (outputPanel) {
           // Add spotlight animation class
           outputPanel.classList.add('results-appearing');
-          console.log('✨ Results spotlight activated (Feature #1) - 3s persist + 3s fade');
+          if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('✨ Results spotlight activated (Feature #1) - 3s persist + 3s fade');
           
           // Remove animation class after 6 seconds (3s persist + 3s fade)
           setTimeout(() => {
@@ -392,30 +389,30 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
       // Wait for DOM to update, then trigger position swap animation
       setTimeout(() => {
         // DIAGNOSTIC: Check current classes and DOM structure
-        console.log('🔧 FEATURE #9 DIAGNOSTIC: Activating animation');
-        console.log('🔧 Current container classes:', container.className);
-        console.log('🔧 Input section exists:', !!container.querySelector('.input-section'));
-        console.log('🔧 Output section exists:', !!container.querySelector('.output-section'));
-        console.log('🔧 Has experimental-results-first class:', container.classList.contains('experimental-results-first'));
+        if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 FEATURE #9 DIAGNOSTIC: Activating animation');
+        if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 Current container classes:', container.className);
+        if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 Input section exists:', !!container.querySelector('.input-section'));
+        if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 Output section exists:', !!container.querySelector('.output-section'));
+        if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 Has experimental-results-first class:', container.classList.contains('experimental-results-first'));
         
         // Ensure we have the base experimental class
         if (!container.classList.contains('experimental-results-first')) {
-          console.warn('🔧 FEATURE #9 WARNING: Missing experimental-results-first class, animation may not work properly');
+          if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.warn('🔧 FEATURE #9 WARNING: Missing experimental-results-first class, animation may not work properly');
         }
         
         // Add results-active class to trigger CSS animations
         container.classList.add('results-active');
-        console.log('🔄 Results First Animation activated (Feature #9) - Seamless position swap');
-        console.log('🔧 Container classes after adding results-active:', container.className);
+        if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔄 Results First Animation activated (Feature #9) - Seamless position swap');
+        if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 Container classes after adding results-active:', container.className);
         
         // Verify the animation elements exist
         const inputSection = container.querySelector('.input-section');
         const outputSection = container.querySelector('.output-section');
         
         if (inputSection && outputSection) {
-          console.log('✅ FEATURE #9: Animation elements found, transition should be smooth');
+          if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('✅ FEATURE #9: Animation elements found, transition should be smooth');
         } else {
-          console.error('❌ FEATURE #9: Missing animation elements', {
+          if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.error('❌ FEATURE #9: Missing animation elements', {
             inputSection: !!inputSection,
             outputSection: !!outputSection
           });
@@ -427,9 +424,9 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
         container.classList.remove('results-active');
         
         if (!features.resultsFirstAnimation && result) {
-          console.log('🔧 FEATURE #9: Removed results-active class (feature disabled)');
+          if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 FEATURE #9: Removed results-active class (feature disabled)');
         } else if (!result) {
-          console.log('🔧 FEATURE #9: Removed results-active class (no results)');
+          if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 FEATURE #9: Removed results-active class (no results)');
         }
       }
     }
@@ -444,7 +441,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
         if (outputPanel) {
           // Add transition animation class
           outputPanel.classList.add('results-overlay-transition');
-          console.log('🎭 Refined Results First Animation activated (Feature #10) - 2s overlay then animate to top');
+          if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎭 Refined Results First Animation activated (Feature #10) - 2s overlay then animate to top');
           
           // Remove animation class after 3 seconds (animation duration)
           setTimeout(() => {
@@ -531,7 +528,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
           onToggleScrollLock={() => {
-            console.log('🔧 SCROLL LOCK DEBUG: Button clicked, toggling from', isScrollLocked, 'to', !isScrollLocked);
+            if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) console.log('🔧 SCROLL LOCK DEBUG: Button clicked, toggling from', isScrollLocked, 'to', !isScrollLocked);
             setIsScrollLocked(!isScrollLocked);
           }}
           onToggleSystemProtection={toggleSystemProtection}
@@ -579,8 +576,8 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
               <StickyResultsPanel
                 isVisible={true}
                 hasResults={!!result}
-                onTogglePin={(isPinned) => console.log('🧪 Sticky Results Panel: Pin toggled', isPinned)}
-                onToggleMinimize={(isMinimized) => console.log('🧪 Sticky Results Panel: Minimize toggled', isMinimized)}
+                onTogglePin={(isPinned) => { if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🧪 Sticky Results Panel: Pin toggled', isPinned); }}
+                onToggleMinimize={(isMinimized) => { if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🧪 Sticky Results Panel: Minimize toggled', isMinimized); }}
               >
                 <OutputLayout
                   changes={result.changes}
@@ -652,7 +649,7 @@ export const ComparisonInterface: React.FC<ComparisonInterfaceProps> = ({
                   overlayElement.classList.remove('glassmorphism-mode');
                 }
               }
-              console.log('🎯 Background mode changed:', mode);
+              if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎯 Background mode changed:', mode);
             }}
           />
         </ResultsOverlay>

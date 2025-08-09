@@ -3,28 +3,28 @@
 
 /* Theme-scoped CSS Variables - Following Kyoto Minimalist Pattern */
 html[data-theme="svinafellsjokull"] {
-  /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
-  --theme-glass-bg: 34, 87, 122;
-  --theme-glass-border: 52, 125, 146;
-  --theme-glass-hover-border: 6, 182, 212;
-  --theme-glass-hover-shadow: 8, 145, 178;
+  /* Glass panel colors (RGB values for rgba() usage) - Darker and greener tones */
+  --theme-glass-bg: 20, 60, 80;
+  --theme-glass-border: 30, 90, 100;
+  --theme-glass-hover-border: 5, 150, 150;
+  --theme-glass-hover-shadow: 6, 120, 130;
 
   /* Variables expected by glassmorphism.css - Essential only */
-  --theme-glass-panel-hover-rgb: 67, 159, 181;
-  --theme-glass-panel-hover-border-rgb: 6, 182, 212;
-  --theme-glass-panel-hover-shadow-rgb: 8, 145, 178;
+  --theme-glass-panel-hover-rgb: 45, 120, 130;
+  --theme-glass-panel-hover-border-rgb: 5, 150, 150;
+  --theme-glass-panel-hover-shadow-rgb: 6, 120, 130;
 
-  /* Text hierarchy colors - Improved contrast for legibility */
-  --theme-text-body: #ffffff;
-  --theme-text-header: #ffffff;
-  --theme-text-secondary: #e0f2fe;
-  --theme-text-interactive: #bae6fd;
+  /* Text hierarchy colors - Adjusted for darker greener theme */
+  --theme-text-body: #f0fdfa;
+  --theme-text-header: #f0fdfa;
+  --theme-text-secondary: #ccfbf1;
+  --theme-text-interactive: #99f6e4;
   --theme-text-success: #5eead4;
-  --theme-text-primary: #ffffff;
+  --theme-text-primary: #f0fdfa;
 
-  /* Additional theme-specific colors - Minimal like Kyoto */
-  --theme-segmented-control-bg: 6, 182, 212;
-  --theme-segmented-control-border: 6, 182, 212;
+  /* Additional theme-specific colors - Darker greener tones */
+  --theme-segmented-control-bg: 5, 150, 150;
+  --theme-segmented-control-border: 5, 150, 150;
 }
 
 /* Simple theme glass panel styling - works with theme-conditional base */
@@ -96,17 +96,17 @@ html[data-theme="svinafellsjokull"] .glass-panel.force-hover {
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Text selection styling - coastal aqua theme */
+/* Text selection styling - darker teal theme */
 html[data-theme="svinafellsjokull"] ::selection {
-  background-color: rgba(6, 182, 212, 0.25);
-  /* Coastal aqua background */
-  color: #a5f3fc;
-  /* Light cyan text for contrast - theme-text-body */
+  background-color: rgba(5, 150, 150, 0.25);
+  /* Darker teal background */
+  color: #99f6e4;
+  /* Light teal text for contrast */
 }
 
 html[data-theme="svinafellsjokull"] ::-moz-selection {
-  background-color: rgba(6, 182, 212, 0.25);
-  color: #a5f3fc;
+  background-color: rgba(5, 150, 150, 0.25);
+  color: #99f6e4;
 }
 
 /* Segmented controls */
@@ -124,15 +124,15 @@ html[data-theme="svinafellsjokull"] .segmented-control .active * {
   color: #ffffff !important;
 }
 
-/* Inactive segment text - icy blue for subtle appearance */
+/* Inactive segment text - icy teal for subtle appearance */
 html[data-theme="svinafellsjokull"] .segment,
 html[data-theme="svinafellsjokull"] .segment *,
 html[data-theme="svinafellsjokull"] .segmented-control button,
 html[data-theme="svinafellsjokull"] .segmented-control button * {
-  color: #a5f3fc !important;
+  color: #99f6e4 !important;
 }
 
-/* Footer card text - icy blue for consistency */
+/* Footer card text - icy teal for consistency */
 html[data-theme="svinafellsjokull"] .glass-panel span,
 html[data-theme="svinafellsjokull"] .glass-panel .text-sm,
 html[data-theme="svinafellsjokull"] .glass-panel .text-xs,
@@ -141,7 +141,7 @@ html[data-theme="svinafellsjokull"] .glass-panel .opacity-60,
 html[data-theme="svinafellsjokull"] .glass-panel .opacity-70,
 html[data-theme="svinafellsjokull"] .glass-panel .text-gray-500,
 html[data-theme="svinafellsjokull"] .glass-panel .text-gray-600 {
-  color: #a5f3fc;
+  color: #99f6e4;
 }
 
 /* OCR Language Detection - Detected language cards glassmorphic styling */
