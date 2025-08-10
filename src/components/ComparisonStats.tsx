@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Minus, FileText, ChevronDown, ChevronUp, Type, Hash, AlertTriangle, CheckCircle, Info, TrendingUp, HelpCircle } from 'lucide-react';
+import { CustomTooltip } from './CustomTooltip';
 import { BaseComponentProps } from '../types/components';
 import { ComparisonStats as ComparisonStatsType } from '../types';
 
@@ -379,21 +380,24 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                   </span>
                 </div>
                 <div className="flex rounded-full overflow-hidden h-3 bg-gray-200 shadow-inner mb-2">
-                  <div 
-                    className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500" 
-                    style={{ width: `${additionPercent}%` }}
-                    title={`${additionPercent.toFixed(1)}% additions`}
-                  ></div>
-                  <div 
-                    className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-500" 
-                    style={{ width: `${deletionPercent}%` }}
-                    title={`${deletionPercent.toFixed(1)}% deletions`}
-                  ></div>
-                  <div 
-                    className="bg-gradient-to-r from-gray-300 to-gray-400" 
-                    style={{ width: `${100 - additionPercent - deletionPercent}%` }}
-                    title={`${(100 - additionPercent - deletionPercent).toFixed(1)}% unchanged`}
-                  ></div>
+                  <CustomTooltip content={`${additionPercent.toFixed(1)}% additions`}>
+                    <div 
+                      className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500" 
+                      style={{ width: `${additionPercent}%` }}
+                    ></div>
+                  </CustomTooltip>
+                  <CustomTooltip content={`${deletionPercent.toFixed(1)}% deletions`}>
+                    <div 
+                      className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-500" 
+                      style={{ width: `${deletionPercent}%` }}
+                    ></div>
+                  </CustomTooltip>
+                  <CustomTooltip content={`${(100 - additionPercent - deletionPercent).toFixed(1)}% unchanged`}>
+                    <div 
+                      className="bg-gradient-to-r from-gray-300 to-gray-400" 
+                      style={{ width: `${100 - additionPercent - deletionPercent}%` }}
+                    ></div>
+                  </CustomTooltip>
                 </div>
                 <div className="relative text-xs text-theme-neutral-600" style={{ height: '16px' }}>
                   {stats.additions > 0 && (

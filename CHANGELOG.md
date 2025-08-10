@@ -1,3 +1,74 @@
+## Version 0.5.14 - "RdLn Memory System + Simplified Undo"
+*Released: 2025-01-11*
+
+### 🧠 **RdLn Memory System - Complete Session Management**
+
+#### **Revolutionary Session Management**
+- **BREAKTHROUGH**: Comprehensive document comparison session management with zero backend requirements
+- **100% Client-Side**: Complete privacy and confidentiality - documents never leave the user's device
+- **Smart Auto-Save**: Completed comparisons automatically saved to RdLn Memory (50+ character threshold)
+- **Intelligent Naming**: Auto-generates meaningful session names from document content
+
+#### **Sophisticated UI Integration**
+- **Glassmorphism Dropdown**: Beautiful glass panel effects matching the existing theme system
+- **Responsive Design**: Seamless integration across desktop and mobile layouts
+- **Archive Button**: Elegant session management button with visual session count indicators
+- **Context-Aware States**: Button appearance changes based on content availability and session count
+
+#### **Advanced Features**
+```typescript
+// Core session management capabilities
+- Session Loading: One-click restore of any saved comparison
+- Batch Management: Delete individual sessions or clear all with confirmation
+- Export/Import: JSON file export/import with date stamps and validation
+- Smart Storage: localStorage with quota management and graceful degradation
+- Performance Tracking: All operations monitored and logged
+```
+
+#### **User Experience Excellence**
+- **Keyboard Shortcut**: `Alt+M` for quick session save
+- **Visual Indicators**: Loading states, save-ready indicators, session count badges
+- **Smart Tooltips**: Context-aware descriptions with keyboard shortcuts
+- **No Button Space Issues**: Integrates elegantly into existing control flow
+
+#### **Technical Implementation**
+- **`useRdLnMemory` Hook**: Advanced session management with localStorage persistence
+- **`RdLnMemoryButton`**: Sophisticated button component with dropdown toggle
+- **`RdLnMemoryDropdown`**: Glassmorphism-styled session browser with management tools
+- **Auto-Integration**: Automatic session saving on comparison completion
+
+### 🔧 **Simplified Undo System - Focused Protection**
+
+#### **Streamlined Approach**
+- **PROBLEM SOLVED**: Complex undo/redo system was confusing and "weird and random"
+- **NEW FOCUS**: Simple protection against accidental clear actions only
+- **Single Purpose**: Undo button appears only after clear actions, disappears after use
+
+#### **Clean Implementation**
+- **One-Time Protection**: Save state only before clear operations
+- **Smart Auto-Clear**: Undo state automatically cleared when user types new content
+- **No Redo Complexity**: Removed Ctrl+Y and all redo functionality for simplicity
+- **Clear UI**: "Undo last clear" messaging with Ctrl+Z shortcut
+
+#### **User Experience**
+```
+Flow: Enter content → Clear (undo available) → Ctrl+Z (content restored) → Type new content (undo cleared)
+```
+
+### 🎯 **Integration Excellence**
+- **SSMR Methodology**: Safe, Step-by-step, Modular, Reversible development approach
+- **Theme Consistency**: All new components follow existing glassmorphism and theme patterns  
+- **Performance First**: Memory-efficient session management with smart limits
+- **Mobile Optimized**: Compact layouts and touch-friendly interactions
+
+### 📊 **Technical Specifications**
+- **Storage**: Browser localStorage with ~5-10MB capacity
+- **Session Limit**: 50 sessions (configurable) with oldest-first cleanup
+- **Data Format**: JSON with session metadata and validation
+- **Error Handling**: Graceful degradation for storage quota and corrupt data
+
+---
+
 ## Version 0.5.13 - "Bamboo Forest Awakening - Organic Criss-Cross Gradients"
 *Released: 2025-08-09*
 

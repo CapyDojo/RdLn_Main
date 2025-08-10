@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { CustomTooltip } from './CustomTooltip';
 import { BaseComponentProps } from '../types/components';
 import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/performanceUtils.tsx';
 
@@ -99,12 +100,12 @@ export const ProcessingDisplay: React.FC<ProcessingDisplayProps> = ({
             </div>
             {/* Cancel Button - Moved from control bar */}
             <div className="flex justify-center mt-4">
-              <button
-                data-cancel-button
-                onClick={onCancel}
-                disabled={isCancelling}
-                className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-700 disabled:cursor-not-allowed transition-all duration-200 shadow-lg animate-pulse"
-                title={isCancelling ? "Cancelling comparison..." : "Cancel the current comparison operation (or press ESC)"}
+              <CustomTooltip content={isCancelling ? "Cancelling comparison..." : "Cancel the current comparison operation (or press ESC)"}>
+                <button
+                  data-cancel-button
+                  onClick={onCancel}
+                  disabled={isCancelling}
+                  className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-700 disabled:cursor-not-allowed transition-all duration-200 shadow-lg animate-pulse"
               >
                 {isCancelling ? (
                   <>
@@ -117,7 +118,8 @@ export const ProcessingDisplay: React.FC<ProcessingDisplayProps> = ({
                     <span className="hidden sm:inline">Cancel</span>
                   </>
                 )}
-              </button>
+                </button>
+              </CustomTooltip>
             </div>
           </div>
         ) : (
@@ -127,12 +129,12 @@ export const ProcessingDisplay: React.FC<ProcessingDisplayProps> = ({
               <span className="text-lg font-medium">Starting comparison...</span>
             </div>
             {/* Cancel Button - Also available during initial processing */}
-            <button
-              data-cancel-button
-              onClick={onCancel}
-              disabled={isCancelling}
-              className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-700 disabled:cursor-not-allowed transition-all duration-200 shadow-lg animate-pulse"
-              title={isCancelling ? "Cancelling comparison..." : "Cancel the current comparison operation (or press ESC)"}
+            <CustomTooltip content={isCancelling ? "Cancelling comparison..." : "Cancel the current comparison operation (or press ESC)"}>
+              <button
+                data-cancel-button
+                onClick={onCancel}
+                disabled={isCancelling}
+                className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-700 disabled:cursor-not-allowed transition-all duration-200 shadow-lg animate-pulse"
             >
               {isCancelling ? (
                 <>
@@ -145,7 +147,8 @@ export const ProcessingDisplay: React.FC<ProcessingDisplayProps> = ({
                   <span className="hidden sm:inline">Cancel</span>
                 </>
               )}
-            </button>
+              </button>
+            </CustomTooltip>
           </div>
         )}
       </div>

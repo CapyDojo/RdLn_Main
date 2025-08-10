@@ -15,6 +15,7 @@ import { DEV_CONFIG } from '../config/appConfig';
 import { AlertCircle } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
 import { useUndoHistory } from '../hooks/useUndoHistory';
+import { useRdLnMemory } from '../hooks/useRdLnMemory';
 import { RedlineOutput } from './RedlineOutput';
 import { ProcessingDisplay } from './ProcessingDisplay';
 import { OutputLayout } from './OutputLayout';
@@ -28,6 +29,7 @@ import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/pe
 
 import { DesktopControlsPanel } from './DesktopControlsPanel';
 import { MobileControlsPanel } from './MobileControlsPanel';
+import { RdLnMemoryButton } from './RdLnMemoryButton';
 import { DesktopInputLayout } from './DesktopInputLayout';
 import { MobileInputLayout } from './MobileInputLayout';
 import { ExtremeTestSuite } from '../testing/ExtremeTestSuite';
@@ -107,6 +109,19 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   // Simple clear undo protection
   const { canUndo, saveClearState, undoClear, clearUndoState } = useUndoHistory();
   
+  // RdLn Memory system for session management
+  const { 
+    sessions,
+    hasSessions, 
+    isLoading: isLoadingMemory,
+    saveSession,
+    loadSession,
+    deleteSession,
+    clearAllSessions,
+    exportSessions,
+    importSessions
+  } = useRdLnMemory();
+  
   
 
   const redlineOutputRef = useRef<HTMLDivElement>(null);
@@ -182,8 +197,15 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         },
         chunkingEnabled: chunkingProgress.enabled
       });
+      
+      // Auto-save completed comparisons to RdLn Memory (if content is substantial)
+      const totalContent = (originalText?.length || 0) + (revisedText?.length || 0);
+      if (totalContent > 50) { // Only save if there's meaningful content
+        saveSession(originalText, revisedText, true); // true = has result
+        console.log('🎯 Auto-saved comparison to RdLn Memory');
+      }
     }
-  }, [result, isProcessing, chunkingProgress.enabled, performanceTracker]);
+  }, [result, isProcessing, chunkingProgress.enabled, performanceTracker, originalText, revisedText, saveSession]);
   
   // Track memory usage periodically during processing
   useEffect(() => {
@@ -325,6 +347,56 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     }
   }, 'undo_clear', performanceTracker);
 
+  // RdLn Memory handlers
+  const handleSaveSession = usePerformanceAwareHandler(() => {
+    const sessionId = saveSession(originalText, revisedText, !!result);
+    console.log('💾 Session saved to RdLn Memory:', sessionId);
+  }, 'save_session', performanceTracker);
+
+  const handleLoadSession = usePerformanceAwareHandler((sessionId: string) => {
+    const session = loadSession(sessionId);
+    if (session) {
+      setOriginalText(session.originalText);
+      setRevisedText(session.revisedText);
+      // Clear any existing results since we're loading new content
+      resetComparison();
+      console.log('📖 Session loaded from RdLn Memory:', session.sessionName);
+    }
+  }, 'load_session', performanceTracker);
+
+  const handleDeleteSession = usePerformanceAwareHandler((sessionId: string) => {
+    deleteSession(sessionId);
+    console.log('🗑️ Session deleted from RdLn Memory:', sessionId);
+  }, 'delete_session', performanceTracker);
+
+  const handleClearAllSessions = usePerformanceAwareHandler(() => {
+    clearAllSessions();
+    console.log('🧹 All sessions cleared from RdLn Memory');
+  }, 'clear_all_sessions', performanceTracker);
+
+  const handleExportSessions = usePerformanceAwareHandler(() => {
+    const jsonData = exportSessions();
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `rdln-memory-sessions-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    console.log('📤 Sessions exported from RdLn Memory');
+  }, 'export_sessions', performanceTracker);
+
+  const handleImportSessions = usePerformanceAwareHandler((jsonData: string) => {
+    const success = importSessions(jsonData);
+    if (success) {
+      console.log('📥 Sessions imported to RdLn Memory');
+    } else {
+      console.error('❌ Failed to import sessions');
+    }
+  }, 'import_sessions', performanceTracker);
+
 
   // Keyboard shortcuts and global cancellation
   useEffect(() => {
@@ -394,6 +466,16 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           e.preventDefault();
         }
       }
+      
+      // Alt+M RdLn Memory quick save
+      if (e.altKey && e.key === 'm') {
+        e.preventDefault();
+        const totalContent = (originalText?.length || 0) + (revisedText?.length || 0);
+        if (totalContent > 0) {
+          handleSaveSession();
+          console.log('💾 Quick save to RdLn Memory via Alt+M');
+        }
+      }
     };
 
     // Use capture phase with additional options to ensure Ctrl+Z works regardless of focus
@@ -407,7 +489,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       window.removeEventListener('keydown', handleKeyDown, eventOptions);
       document.removeEventListener('keydown', handleKeyDown, eventOptions);
     };
-  }, [compareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible, toggleQuickCompare, handleSwapContent, isScrollLocked, setIsScrollLocked, handleResetComparison, canUndo, handleUndo]);
+  }, [compareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible, toggleQuickCompare, handleSwapContent, isScrollLocked, setIsScrollLocked, handleResetComparison, canUndo, handleUndo, originalText, revisedText, handleSaveSession]);
 
   const handleLoadTest = usePerformanceAwareHandler(async (originalText: string, revisedText: string) => {
     // Track load test operation
@@ -654,6 +736,16 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           canUndo={canUndo}
           onUndo={handleUndo}
           contentLength={originalText.length + revisedText.length}
+          // RdLn Memory props
+          hasSessions={hasSessions}
+          sessionCount={sessions.length}
+          isLoadingMemory={isLoadingMemory}
+          onSaveSession={handleSaveSession}
+          onLoadSession={handleLoadSession}
+          onDeleteSession={handleDeleteSession}
+          onClearAll={handleClearAllSessions}
+          onExport={handleExportSessions}
+          onImport={handleImportSessions}
         />
 
         {/* Mobile Controls - Enhanced with all operation buttons */}
@@ -671,6 +763,16 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           canUndo={canUndo}
           onUndo={handleUndo}
           contentLength={originalText.length + revisedText.length}
+          // RdLn Memory props
+          hasSessions={hasSessions}
+          sessionCount={sessions.length}
+          isLoadingMemory={isLoadingMemory}
+          onSaveSession={handleSaveSession}
+          onLoadSession={handleLoadSession}
+          onDeleteSession={handleDeleteSession}
+          onClearAll={handleClearAllSessions}
+          onExport={handleExportSessions}
+          onImport={handleImportSessions}
         />
       </div>
 

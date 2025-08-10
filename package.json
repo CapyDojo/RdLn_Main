@@ -46,6 +46,9 @@
     "setup:electron": "node scripts/setup-electron.js"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.0.0",
+    "@fortawesome/free-solid-svg-icons": "^7.0.0",
+    "@fortawesome/react-fontawesome": "^0.2.3",
     "@popperjs/core": "^2.11.8",
     "@tauri-apps/plugin-fs": "^2.4.1",
     "lucide-react": "^0.344.0",

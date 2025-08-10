@@ -1,0 +1,13 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wand handle -->
+  <path d="M3 21L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Star at tip -->
+  <path d="M21 3L19 1L21 3L23 1L21 3Z" fill="currentColor"/>
+  <path d="M21 3L19 5L21 3L23 5L21 3Z" fill="currentColor"/>
+  
+  <!-- Sparkles -->
+  <circle cx="18" cy="6" r="1" fill="currentColor"/>
+  <circle cx="16" cy="8" r="0.5" fill="currentColor"/>
+  <circle cx="14" cy="10" r="0.5" fill="currentColor"/>
+</svg>

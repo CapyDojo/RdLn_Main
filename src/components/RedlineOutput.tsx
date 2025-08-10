@@ -7,6 +7,7 @@ import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/pe
 import { useExperimentalFeatures } from '../contexts/ExperimentalLayoutContext';
 import { ResultsOverlayTrigger } from './experimental/ResultsOverlayTrigger';
 import { FullScreenButton } from './FullScreenButton';
+import { CustomTooltip } from './CustomTooltip';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { copyToClipboardMultiFormat, isMultiFormatClipboardSupported } from '../utils/clipboardUtils';
 import { FontSizeSelector } from './FontSizeSelector';
@@ -257,15 +258,17 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
             {/* Copy Button */}
             <div className="relative segmented-control">
-              <button
-                onClick={copyToClipboard}
-                className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
-                  copySuccess ? 'bg-green-100 border-green-300' : ''
-                }`}
-                title={isMultiFormatClipboardSupported()
+              <CustomTooltip
+                content={isMultiFormatClipboardSupported()
                   ? "Copy redlined document with formatting (HTML + plain text)"
                   : "Copy redlined document as plain text"
                 }
+              >
+                <button
+                  onClick={copyToClipboard}
+                  className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
+                    copySuccess ? 'bg-green-100 border-green-300' : ''
+                  }`}
                 style={{
                   width: '48px',
                   height: '48px',
@@ -285,7 +288,8 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                     {copySuccess ? 'Copied!' : 'Copy'}
                   </span>
                 </div>
-              </button>
+                </button>
+              </CustomTooltip>
             </div>
 
             {/* Full Screen Button */}

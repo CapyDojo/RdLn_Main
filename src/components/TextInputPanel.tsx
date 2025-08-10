@@ -1,8 +1,11 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { FileText, Image, AlertCircle, Loader, ChevronDown, Languages } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMagicWandSparkles } from '@fortawesome/free-solid-svg-icons';
 import { useOCR } from '../hooks/useOCR';
 import { OCRLanguage } from '../types/ocr-types';
 import { LanguageSettingsDropdown } from './LanguageSettingsDropdown';
+import { CustomTooltip } from './CustomTooltip';
 import { useLayout } from '../contexts/LayoutContext';
 import { BaseComponentProps } from '../types/components';
 import { useComponentPerformance } from '../utils/performanceUtils.tsx';
@@ -549,17 +552,30 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           )}
           <h3 className="text-3xl font-semibold text-theme-primary-900">{title}</h3>
           <div className="relative">
-            <button
-              onClick={toggleAutoFormat}
-              className={`flex items-center justify-center w-16 h-12 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
-                ? 'bg-theme-primary-700 border-transparent hover:shadow-lg hover:shadow-theme-accent-200/30 shadow-theme-accent-200/20'
-                : 'bg-theme-neutral-900/20 dark:bg-theme-neutral-100/5 border-theme-neutral-600/50 dark:border-theme-neutral-400/40 hover:border-theme-neutral-500/70 dark:hover:border-theme-neutral-300/60 hover:bg-theme-neutral-800/25 dark:hover:bg-theme-neutral-100/10'}`}
-              title={`Magically fix broken PDF paragraphs — ${isAutoFormatEnabled ? 'ON' : 'OFF'}`}
-              aria-pressed={isAutoFormatEnabled}
-              aria-label={`Auto paragraph formatting ${isAutoFormatEnabled ? 'on' : 'off'}`}
+            <CustomTooltip 
+              content={`Magically fix broken PDF paragraphs — ${isAutoFormatEnabled ? 'ON' : 'OFF'}`}
             >
-              {/* Clean pilcrow with better contrast */}
+              <button
+                onClick={toggleAutoFormat}
+                className={`flex items-center justify-center w-16 h-12 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
+                  ? 'bg-theme-primary-700 border-transparent hover:shadow-lg hover:shadow-theme-accent-200/30 shadow-theme-accent-200/20'
+                  : 'bg-theme-neutral-900/20 dark:bg-theme-neutral-100/5 border-theme-neutral-600/50 dark:border-theme-neutral-400/40 hover:border-theme-neutral-500/70 dark:hover:border-theme-neutral-300/60 hover:bg-theme-neutral-800/25 dark:hover:bg-theme-neutral-100/10'}`}
+                aria-pressed={isAutoFormatEnabled}
+                aria-label={`Auto paragraph formatting ${isAutoFormatEnabled ? 'on' : 'off'}`}
+              >
+              {/* Stylized wand + pilcrow with better contrast */}
               <span className="inline-flex items-center leading-none">
+                <FontAwesomeIcon 
+                  icon={faMagicWandSparkles}
+                  className="mr-0.5 select-none"
+                  style={{ 
+                    fontSize: '14px',
+                    color: 'var(--autoformat-pilcrow-on)',
+                    opacity: isAutoFormatEnabled ? 1 : 0.3,
+                    transition: 'opacity 300ms ease'
+                  }}
+                  aria-hidden="true"
+                />
                 <span
                   className={`select-none transition-all duration-300 transform ${isAutoFormatEnabled 
                     ? 'scale-110 text-pilcrow-on' 
@@ -573,7 +589,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                   ¶
                 </span>
               </span>
-            </button>
+              </button>
+            </CustomTooltip>
             {isAutoFormatEnabled && (
               <span 
                 className="absolute w-2 h-2 rounded-full animate-pulse"
@@ -600,43 +617,46 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-base font-medium text-theme-neutral-700 hidden sm:inline">OCR Languages</span>
             <div className="segmented-control relative z-[10001]" ref={segmentedControlRef} role="group" aria-label="OCR Language Detection Mode">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent event bubbling
-                  setAutoDetect(true);
-                  setShowLanguageSettings(false); // Always close dropdown when switching to Auto
-                }}
+              <CustomTooltip content="Automatically detect document language">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent event bubbling
+                    setAutoDetect(true);
+                    setShowLanguageSettings(false); // Always close dropdown when switching to Auto
+                  }}
 
-                className={`segment ${autoDetect ? 'active' : ''}`}
-                aria-pressed={autoDetect}
-                aria-label="Automatic language detection"
-                title="Automatically detect document language"
+                  className={`segment ${autoDetect ? 'active' : ''}`}
+                  aria-pressed={autoDetect}
+                  aria-label="Automatic language detection"
+                >
+                  🤖 Auto
+                </button>
+              </CustomTooltip>
+              <CustomTooltip 
+                content={`Manually select OCR languages${!autoDetect && selectedLanguages.length > 0 ? ` - ${selectedLanguages.length} languages selected` : ''}`}
               >
-                🤖 Auto
-              </button>
-              <button
-                onClick={() => {
-                  if (!autoDetect) {
-                    // Already in manual mode, just toggle dropdown
-                    setShowLanguageSettings(!showLanguageSettings);
-                  } else {
-                    // Switching from auto to manual, open dropdown
-                    setAutoDetect(false);
-                    setShowLanguageSettings(true);
-                  }
+                <button
+                  onClick={() => {
+                    if (!autoDetect) {
+                      // Already in manual mode, just toggle dropdown
+                      setShowLanguageSettings(!showLanguageSettings);
+                    } else {
+                      // Switching from auto to manual, open dropdown
+                      setAutoDetect(false);
+                      setShowLanguageSettings(true);
+                    }
 
-                  // Update control position for dropdown
-                  if (segmentedControlRef.current) {
-                    const rect = segmentedControlRef.current.getBoundingClientRect();
-                    setControlRect(rect);
-                  }
-                }}
-                className={`segment flex items-center gap-1 ${!autoDetect ? 'active' : ''}`}
-                aria-pressed={!autoDetect}
-                aria-expanded={!autoDetect && showLanguageSettings}
-                aria-label={`Manual language selection${!autoDetect && selectedLanguages.length > 0 ? ` (${selectedLanguages.length} selected)` : ''}`}
-                title={`Manually select OCR languages${!autoDetect && selectedLanguages.length > 0 ? ` - ${selectedLanguages.length} languages selected` : ''}`}
-              >
+                    // Update control position for dropdown
+                    if (segmentedControlRef.current) {
+                      const rect = segmentedControlRef.current.getBoundingClientRect();
+                      setControlRect(rect);
+                    }
+                  }}
+                  className={`segment flex items-center gap-1 ${!autoDetect ? 'active' : ''}`}
+                  aria-pressed={!autoDetect}
+                  aria-expanded={!autoDetect && showLanguageSettings}
+                  aria-label={`Manual language selection${!autoDetect && selectedLanguages.length > 0 ? ` (${selectedLanguages.length} selected)` : ''}`}
+                >
                 ☰
                 {!autoDetect && selectedLanguages.length > 0 && (
                   <span className="text-xs bg-theme-primary-100 text-theme-primary-800 px-1.5 py-0.5 rounded-full ml-1">
@@ -648,7 +668,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                     }`}
                   aria-hidden="true"
                 />
-              </button>
+                </button>
+              </CustomTooltip>
               <div className={`sliding-indicator ${autoDetect ? 'to-left' : 'to-right'}`} aria-hidden="true"></div>
             </div>
 

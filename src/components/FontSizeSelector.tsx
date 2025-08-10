@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { CustomTooltip } from './CustomTooltip';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { BaseComponentProps } from '../types/components';
 
@@ -63,22 +64,22 @@ export const FontSizeSelector: React.FC<BaseComponentProps> = ({ style, classNam
           const isActive = fontSize === option.size;
           
           return (
-            <button
-              key={option.size}
-              onClick={() => handleSelectFontSize(option.size)}
-              onKeyDown={(e) => handleKeyDown(e, option.size)}
-              className={`segment ${isActive ? 'active' : ''}`}
-              aria-pressed={isActive}
-              aria-label={`${option.label} - ${option.displaySize}`}
-              title={`Set text size to ${option.label} (${option.displaySize})`}
-            >
+            <CustomTooltip key={option.size} content={`Set text size to ${option.label} (${option.displaySize})`}>
+              <button
+                onClick={() => handleSelectFontSize(option.size)}
+                onKeyDown={(e) => handleKeyDown(e, option.size)}
+                className={`segment ${isActive ? 'active' : ''}`}
+                aria-pressed={isActive}
+                aria-label={`${option.label} - ${option.displaySize}`}
+              >
               <span 
                 className="font-bold leading-none font-serif libertinus-math-text"
                 style={{ fontSize: option.displaySize }}
               >
                 Aa
               </span>
-            </button>
+              </button>
+            </CustomTooltip>
           );
         })}
         
