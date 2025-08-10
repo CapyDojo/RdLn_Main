@@ -22,6 +22,18 @@ html[data-theme="aurora-borealis"] {
   --theme-text-success: #b8e994;
   --theme-text-primary: #64ffda;
 
+  /* Accent color palette - Light green accent colors */
+  --theme-accent-50: #f1f8e9;
+  --theme-accent-100: #dcedc8;
+  --theme-accent-200: #c5e1a5;
+  --theme-accent-300: #aed581;
+  --theme-accent-400: #9ccc65;
+  --theme-accent-500: #b8e994;
+  --theme-accent-600: #7cb342;
+  --theme-accent-700: #689f38;
+  --theme-accent-800: #558b2f;
+  --theme-accent-900: #33691e;
+
   /* Button color variables - Required by glassmorphism.css */
   --button-primary-bg: #38ada9;
   --button-primary-border: #26c6da;

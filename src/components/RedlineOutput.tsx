@@ -408,14 +408,14 @@ const generateHTMLString = (changes: DiffChange[]) => {
 
     switch (change.type) {
       case 'added':
-        html += `<span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(change.content || '')}</span>`;
+        html += `<span style="background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px;">${escape(change.content || '')}</span>`;
         break;
       case 'removed':
-        html += `<span class="bg-theme-accent-100 text-theme-accent-800 border border-theme-accent-300 line-through decoration-2 decoration-theme-accent-600">${escape(change.content || '')}</span>`;
+        html += `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(change.content || '')}</span>`;
         break;
       case 'changed':
         // Render as a single cohesive substitution instead of two separate spans
-        html += `<span class="bg-theme-accent-100 text-theme-accent-800 border border-theme-accent-300 line-through decoration-2 decoration-theme-accent-600">${escape(change.originalContent || '')}</span><span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(change.revisedContent || '')}</span>`;
+        html += `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(change.originalContent || '')}</span><span style="background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px;">${escape(change.revisedContent || '')}</span>`;
         break;
       default:
         html += `<span>${escape(change.content || '')}</span>`;
@@ -478,16 +478,16 @@ const renderChangeGroup = (group: DiffChange[], type: string) => {
     const combinedOriginal = group.map(change => change.originalContent || '').join('');
     const combinedRevised = group.map(change => change.revisedContent || '').join('');
 
-    return `<span class="bg-theme-accent-100 text-theme-accent-800 border border-theme-accent-300 line-through decoration-2 decoration-theme-accent-600">${escape(combinedOriginal)}</span>` +
-      `<span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(combinedRevised)}</span>`;
+    return `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(combinedOriginal)}</span>` +
+      `<span style="background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px;">${escape(combinedRevised)}</span>`;
   } else {
     // For added/removed, combine content
     const combinedContent = group.map(change => change.content || '').join('');
-    const className = type === 'added'
-      ? 'bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600'
-      : 'bg-theme-accent-100 text-theme-accent-800 border border-theme-accent-300 line-through decoration-2 decoration-theme-accent-600';
+    const styleAttr = type === 'added'
+      ? 'background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px;'
+      : 'background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;';
 
-    return `<span class="${className}">${escape(combinedContent)}</span>`;
+    return `<span style="${styleAttr}">${escape(combinedContent)}</span>`;
   }
 };
 
@@ -497,12 +497,12 @@ const renderSingleChange = (change: DiffChange) => {
 
   switch (change.type) {
     case 'added':
-      return `<span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(change.content || '')}</span>`;
+      return `<span style="background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px;">${escape(change.content || '')}</span>`;
     case 'removed':
-      return `<span class="bg-theme-accent-100 text-theme-accent-800 border border-theme-accent-300 line-through decoration-2 decoration-theme-accent-600">${escape(change.content || '')}</span>`;
+      return `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(change.content || '')}</span>`;
     case 'changed':
-      return `<span class="bg-theme-accent-100 text-theme-accent-800 border border-theme-accent-300 line-through decoration-2 decoration-theme-accent-600">${escape(change.originalContent || '')}</span>` +
-        `<span class="bg-theme-secondary-100 text-theme-secondary-800 border border-theme-secondary-300 underline decoration-2 decoration-theme-secondary-600">${escape(change.revisedContent || '')}</span>`;
+      return `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(change.originalContent || '')}</span>` +
+        `<span style="background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px;">${escape(change.revisedContent || '')}</span>`;
     default:
       return `<span>${escape(change.content || '')}</span>`;
   }

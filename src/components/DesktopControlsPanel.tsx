@@ -158,7 +158,7 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
         {/* Prominent Undo Button - Show when undo is available */}
         {canUndo && onUndo && (
           <CustomTooltip 
-            content="Undo last clear action"
+            content="Undo last clear"
             shortcut="Ctrl+Z"
           >
             <button

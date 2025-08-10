@@ -29,7 +29,6 @@ import BoundaryFragmentTest from './pages/BoundaryFragmentTest';
 import BoundaryFixTester from './components/BoundaryFixTester';
 import { SmartPasteTest } from './components/SmartPasteTest';
 import { OCRFeatureCard } from './components/OCRFeatureCard';
-import { DemoBentoCard } from './components/DemoBentoCard';
 import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
 import './styles/resize-overrides.css';
@@ -161,27 +160,22 @@ function AppContent({
     <div className="min-h-screen flex flex-col">
       {!shouldHideHeader && (
         <div className="flex items-start gap-4 p-4">
-          {/* Demo Controls Card - Left Side */}
-          <div className="flex-shrink-0">
-            <DemoBentoCard
-              visible={true}
-              onLoadSample={(originalText, revisedText, autoRun) => {
-                if (comparisonInterfaceRef.current && comparisonInterfaceRef.current.loadSampleData) {
-                  comparisonInterfaceRef.current.loadSampleData(originalText, revisedText, autoRun);
-                }
-              }}
-              isProcessing={false}
-              hasContent={hasContent}
-            />
-          </div>
-          
           {/* Header - Center */}
           <div className="flex-1">
             <Header />
           </div>
         </div>
       )}
-      {!shouldHideHeader && <StatusBar />}
+      {!shouldHideHeader && (
+        <StatusBar 
+          onLoadSample={(originalText, revisedText, autoRun) => {
+            if (comparisonInterfaceRef.current && comparisonInterfaceRef.current.loadSampleData) {
+              comparisonInterfaceRef.current.loadSampleData(originalText, revisedText, autoRun);
+            }
+          }}
+          isProcessing={false}
+        />
+      )}
       <main className={`flex-1 overflow-y-auto ${shouldHideHeader ? "pt-0" : "pt-56"}`}>
         <ComparisonInterface
           ref={comparisonInterfaceRef}

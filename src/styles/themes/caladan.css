@@ -3,6 +3,7 @@
 
 /* Theme-scoped CSS Variables - Following Kyoto Minimalist Pattern */
 html[data-theme="caladan"] {
+
   /* Glass panel colors (RGB values for rgba() usage) - Core only like Kyoto */
   --theme-glass-bg: 26, 53, 96;
   --theme-glass-border: 74, 106, 191;
@@ -21,6 +22,21 @@ html[data-theme="caladan"] {
   --theme-text-interactive: #38bdf8;
   --theme-text-success: #86efac;
   --theme-text-primary: #0ea5e9;
+  /* Auto Format pilcrow color swap for Caladan: ON uses placeholder/secondary, OFF uses header */
+  --autoformat-pilcrow-on: var(--theme-text-placeholder, var(--theme-text-secondary));
+  --autoformat-pilcrow-off: var(--theme-text-header);
+
+  /* Accent color variables - purple gradient */
+  --theme-accent-50: #f5f3ff;
+  --theme-accent-100: #ede9fe;
+  --theme-accent-200: #ddd6fe;
+  --theme-accent-300: #c4b5fd;
+  --theme-accent-400: #a78bfa;
+  --theme-accent-500: #8b5cf6;
+  --theme-accent-600: #7c3aed;
+  --theme-accent-700: #6d28d9;
+  --theme-accent-800: #5b21b6;
+  --theme-accent-900: #4c1d95;
 
   /* Additional theme-specific colors - Minimal like Kyoto */
   --theme-segmented-control-bg: 14, 165, 233;

@@ -144,7 +144,7 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
       {canUndo && onUndo && (
         <div className="lg:hidden flex justify-center mt-4">
           <CustomTooltip 
-            content="Undo last clear action"
+            content="Undo last clear"
             shortcut="Ctrl+Z"
           >
             <button
@@ -153,7 +153,7 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
               className="enhanced-button flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all duration-200 shadow-lg border-2 border-orange-300 animate-pulse hover:animate-none relative min-h-12"
             >
               <Undo className="w-5 h-5" />
-              <span className="font-semibold">⚡ UNDO</span>
+              <span className="font-semibold">⚡ UNDO CLEAR</span>
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-300 rounded-full animate-ping"></div>
             </button>
           </CustomTooltip>

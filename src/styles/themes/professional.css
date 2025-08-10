@@ -22,6 +22,18 @@ html[data-theme="professional"] {
   --theme-text-success: #1d4ed8;
   --theme-text-primary: #0f172a;
 
+  /* Accent color palette - Orange accents for Professional theme */
+  --theme-accent-50: #fff7ed;
+  --theme-accent-100: #ffedd5;
+  --theme-accent-200: #fed7aa;
+  --theme-accent-300: #fdba74;
+  --theme-accent-400: #fb923c;
+  --theme-accent-500: #ff6b35;
+  --theme-accent-600: #ea580c;
+  --theme-accent-700: #c2410c;
+  --theme-accent-800: #9a3412;
+  --theme-accent-900: #7c2d12;
+
   /* Additional theme-specific colors - Minimal like Kyoto */
   --theme-segmented-control-bg: 59, 130, 246;
   --theme-segmented-control-border: 59, 130, 246;

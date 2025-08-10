@@ -22,6 +22,18 @@ html[data-theme="svinafellsjokull"] {
   --theme-text-success: #5eead4;
   --theme-text-primary: #f0fdfa;
 
+  /* Accent color variables - light blue gradient */
+  --theme-accent-50: #f0f9ff;
+  --theme-accent-100: #e0f2fe;
+  --theme-accent-200: #bae6fd;
+  --theme-accent-300: #7dd3fc;
+  --theme-accent-400: #38bdf8;
+  --theme-accent-500: #0ea5e9;
+  --theme-accent-600: #0284c7;
+  --theme-accent-700: #0369a1;
+  --theme-accent-800: #075985;
+  --theme-accent-900: #0c4a6e;
+
   /* Additional theme-specific colors - Darker greener tones */
   --theme-segmented-control-bg: 5, 150, 150;
   --theme-segmented-control-border: 5, 150, 150;

@@ -23,9 +23,36 @@ html[data-theme="new-york"] {
   --theme-text-success: #4dd0e1;
   --theme-text-primary: #ffffff;
 
+  /* Secondary color palette - Warm orange palette for Manhattan theme */
+  --theme-secondary-50: #fff3e0;
+  --theme-secondary-100: #ffe0b2;
+  --theme-secondary-200: #ffcc80;
+  --theme-secondary-300: #ffb74d;
+  --theme-secondary-400: #ffa726;
+  --theme-secondary-500: #ff9800;
+  --theme-secondary-600: #fb8c00;
+  --theme-secondary-700: #f57c00;
+  --theme-secondary-800: #ef6c00;
+  --theme-secondary-900: #e65100;
+
+  /* Accent color palette - Electric cyan accents for Manhattan theme */
+  --theme-accent-50: #e0f7fa;
+  --theme-accent-100: #b2ebf2;
+  --theme-accent-200: #80deea;
+  --theme-accent-300: #4dd0e1;
+  --theme-accent-400: #26c6da;
+  --theme-accent-500: #00bcd4;
+  --theme-accent-600: #00acc1;
+  --theme-accent-700: #0097a7;
+  --theme-accent-800: #00838f;
+  --theme-accent-900: #006064;
+
   /* Additional theme-specific colors - Minimal like Kyoto */
   --theme-segmented-control-bg: 193, 63, 23;
   --theme-segmented-control-border: 193, 63, 23;
+
+  /* Auto Format pilcrow colors - Manhattan specific styling */
+  --autoformat-pilcrow-on: var(--theme-secondary-900);
 }
 
 /* Simple theme glass panel styling - works with theme-conditional base */
@@ -213,4 +240,9 @@ html[data-theme="new-york"] .text-theme-secondary-700 {
 
 html[data-theme="new-york"] .text-theme-secondary-600 {
   color: var(--theme-text-interactive);
+}
+
+/* Manhattan-specific pilcrow button styling */
+html[data-theme="new-york"] button[aria-pressed="true"].bg-theme-primary-700 {
+  background-color: var(--theme-accent-900) !important;
 }

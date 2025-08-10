@@ -21,6 +21,18 @@ html[data-theme="kyoto"] {
   --theme-text-success: #bbf7d0;
   --theme-text-primary: #ee8f1c;
 
+  /* Accent color palette - Warm Earth Tones (bamboo and gold) */
+  --theme-accent-50: #fefdf8;
+  --theme-accent-100: #fefbf3;
+  --theme-accent-200: #fef7e6;
+  --theme-accent-300: #fdefd3;
+  --theme-accent-400: #fce4a6;
+  --theme-accent-500: #f5d563;
+  --theme-accent-600: #eab308;
+  --theme-accent-700: #ca8a04;
+  --theme-accent-800: #a16207;
+  --theme-accent-900: #713f12;
+
   /* Additional theme-specific colors */
   --theme-segmented-control-bg: 255, 255, 255;
   --theme-segmented-control-border: 255, 255, 255;

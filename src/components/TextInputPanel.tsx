@@ -61,11 +61,12 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isAutoFormatEnabled, setIsAutoFormatEnabled] = useState(true);
+  // Pilcrow now styled purely via theme classes (no runtime reads)
   const { fontSize } = useFontSize();
 
-  const toggleAutoFormat = () => {
-    setIsAutoFormatEnabled(prev => !prev);
-  };
+  const toggleAutoFormat = () => setIsAutoFormatEnabled(prev => !prev);
+
+  // Removed color sync effect – colors now come from CSS variables via classes
 
   const segmentedControlRef = useRef<HTMLDivElement>(null);
   const [showLanguageSettings, setShowLanguageSettings] = useState(false);
@@ -547,36 +548,44 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
             <FileText className="w-5 h-5 text-theme-primary-900" />
           )}
           <h3 className="text-3xl font-semibold text-theme-primary-900">{title}</h3>
-          <button
-            onClick={toggleAutoFormat}
-            className={`flex items-center justify-center w-12 h-12 rounded-lg border transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
-              ? 'bg-theme-primary-600 dark:bg-theme-primary-500 border-transparent text-white hover:shadow-lg'
-              : 'bg-theme-neutral-200/70 dark:bg-white/10 border-transparent dark:border-white/10 hover:border-theme-neutral-300/50 dark:hover:border-white/20 text-theme-neutral-800 dark:text-theme-neutral-100 hover:shadow-theme-neutral-200/50'}`}
-            title={`Magically fix broken PDF paragraphs — ${isAutoFormatEnabled ? 'ON' : 'OFF'}`}
-            aria-pressed={isAutoFormatEnabled}
-            aria-label={`Auto paragraph formatting ${isAutoFormatEnabled ? 'on' : 'off'}`}
-          >
-            {/* Emoji wand + text pilcrow (inline, compact) */}
-            <span className="inline-flex items-center leading-none -mt-px">
-              <span
-                className={`mr-0.5 select-none ${isAutoFormatEnabled ? '' : ''}`}
-                style={{ fontSize: '14px' }}
-                aria-hidden
-              >
-                🪄
+          <div className="relative">
+            <button
+              onClick={toggleAutoFormat}
+              className={`flex items-center justify-center w-16 h-12 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
+                ? 'bg-theme-primary-700 border-transparent hover:shadow-lg hover:shadow-theme-accent-200/30 shadow-theme-accent-200/20'
+                : 'bg-theme-neutral-900/20 dark:bg-theme-neutral-100/5 border-theme-neutral-600/50 dark:border-theme-neutral-400/40 hover:border-theme-neutral-500/70 dark:hover:border-theme-neutral-300/60 hover:bg-theme-neutral-800/25 dark:hover:bg-theme-neutral-100/10'}`}
+              title={`Magically fix broken PDF paragraphs — ${isAutoFormatEnabled ? 'ON' : 'OFF'}`}
+              aria-pressed={isAutoFormatEnabled}
+              aria-label={`Auto paragraph formatting ${isAutoFormatEnabled ? 'on' : 'off'}`}
+            >
+              {/* Clean pilcrow with better contrast */}
+              <span className="inline-flex items-center leading-none">
+                <span
+                  className={`select-none transition-all duration-300 transform ${isAutoFormatEnabled 
+                    ? 'scale-110 text-pilcrow-on' 
+                    : 'scale-90 opacity-30 text-pilcrow-off'}`}
+                  style={{
+                    fontSize: '26px',
+                    fontWeight: 900,
+                    lineHeight: 1
+                  }}
+                >
+                  ¶
+                </span>
               </span>
-              <span
-                className={`select-none ${
-                  isAutoFormatEnabled
-                    ? 'text-theme-accent-100 dark:text-theme-accent-200'
-                    : 'text-theme-accent-700 dark:text-theme-accent-400'
-                }`}
-                style={{ fontSize: '18px', fontWeight: 800 }}
-              >
-                ¶
-              </span>
-            </span>
-          </button>
+            </button>
+            {isAutoFormatEnabled && (
+              <span 
+                className="absolute w-2 h-2 rounded-full animate-pulse"
+                style={{ 
+                  backgroundColor: 'var(--autoformat-pilcrow-on)',
+                  top: '2px',
+                  right: '2px'
+                }}
+                aria-hidden="true"
+              />
+            )}
+          </div>
 
 
           {isProcessing && (

@@ -21,6 +21,20 @@ html[data-theme="bamboo"] {
   --theme-text-interactive: #065f46;
   --theme-text-success: #bbf7d0;
   --theme-text-primary: #065f46;
+  /* Placeholder tone used for inputs and inactive glyphs */
+  --theme-text-placeholder: rgba(107, 78, 61, 0.8);
+
+  /* Accent color palette - Gold accent palette (highlight colors) */
+  --theme-accent-50: #fffbeb;
+  --theme-accent-100: #fef3c7;
+  --theme-accent-200: #fde68a;
+  --theme-accent-300: #fcd34d;
+  --theme-accent-400: #fbbf24;
+  --theme-accent-500: #f59e0b;
+  --theme-accent-600: #d97706;
+  --theme-accent-700: #b45309;
+  --theme-accent-800: #92400e;
+  --theme-accent-900: #78350f;
 
   /* Additional theme-specific colors - Minimal like Kyoto */
   --theme-segmented-control-bg: 6, 95, 70;

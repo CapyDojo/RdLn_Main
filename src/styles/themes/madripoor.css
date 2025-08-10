@@ -18,6 +18,18 @@ html[data-theme="madripoor"] {
   --theme-text-secondary: #b0b0d0;
   --theme-text-interactive: #00ffff;
   --theme-text-primary: #ffcc00;
+
+  /* Accent color variables - inverted purple gradient for dark theme */
+  --theme-accent-50: #4c1d95;
+  --theme-accent-100: #5b21b6;
+  --theme-accent-200: #6d28d9;
+  --theme-accent-300: #7c3aed;
+  --theme-accent-400: #8b5cf6;
+  --theme-accent-500: #a78bfa;
+  --theme-accent-600: #c4b5fd;
+  --theme-accent-700: #ddd6fe;
+  --theme-accent-800: #ede9fe;
+  --theme-accent-900: #f5f3ff;
 }
 
 /* Neon glass panel styling */

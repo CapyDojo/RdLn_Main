@@ -104,8 +104,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     toggleSystemProtection
   } = useComparison();
 
-  // Undo system integration
-  const { canUndo, undo, saveState } = useUndoHistory();
+  // Simple clear undo protection
+  const { canUndo, saveClearState, undoClear, clearUndoState } = useUndoHistory();
   
   
 
@@ -135,7 +135,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     if (onContentChange) {
       onContentChange(hasContent);
     }
-  }, [originalText, revisedText, onContentChange]);
+    
+    // Clear undo state when user starts typing new content
+    // (Prevents accidentally restoring old cleared content when user has moved on)
+    if (hasContent && canUndo) {
+      clearUndoState();
+    }
+  }, [originalText, revisedText, onContentChange, canUndo, clearUndoState]);
   
   // SSMR Step 1: Scroll lock state (Safe - no functionality yet)
   const [isScrollLocked, setIsScrollLocked] = useState(false);
@@ -293,15 +299,12 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     });
   }, 'swap_content', performanceTracker);
 
-  // Consistent reset handler for both button and keyboard shortcut - with undo support
+  // Clear content with undo protection
   const handleResetComparison = usePerformanceAwareHandler(() => {
-    // Save current state for undo before clearing
-    saveState(
-      originalText,
-      revisedText,
-      !!result,
-      'Clear All'
-    );
+    // Only save state if there's actually content to save
+    if (originalText.trim() || revisedText.trim()) {
+      saveClearState(originalText, revisedText);
+    }
     
     resetComparison();
     
@@ -312,19 +315,16 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     });
   }, 'reset_comparison', performanceTracker);
 
-  // Undo handler
+  // Undo clear action
   const handleUndo = usePerformanceAwareHandler(() => {
-    const previousState = undo();
-    if (previousState) {
-      // Ensure we're passing strings (safety check)
-      const originalTextValue = String(previousState.originalText || '');
-      const revisedTextValue = String(previousState.revisedText || '');
-      
-      setOriginalText(originalTextValue);
-      setRevisedText(revisedTextValue);
-      // Note: results are not restored, user needs to re-compare
+    const clearedState = undoClear();
+    if (clearedState) {
+      setOriginalText(clearedState.originalText);
+      setRevisedText(clearedState.revisedText);
+      // Results are not restored - user needs to re-compare if needed
     }
-  }, 'undo_action', performanceTracker);
+  }, 'undo_clear', performanceTracker);
+
 
   // Keyboard shortcuts and global cancellation
   useEffect(() => {
@@ -374,34 +374,24 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         handleResetComparison();
       }
       
-      // Ctrl+Z undo last action (universal undo shortcut)
+      
+      // Ctrl+Z undo clear (simple protection against accidental clears)
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         const target = e.target as HTMLElement;
         const isTextarea = target?.tagName === 'TEXTAREA';
         const isInput = target?.tagName === 'INPUT';
         
-        console.log('🔄 CTRL+Z DEBUG: Keydown detected', {
-          target: target?.tagName,
-          canUndo,
-          activeElement: document.activeElement?.tagName,
-          isTextarea,
-          isInput,
-          hasSelection: isTextarea || isInput ? (target as HTMLInputElement).selectionStart !== (target as HTMLInputElement).selectionEnd : false
-        });
-        
-        // If we have undo states available, always use our undo (override browser)
+        // If we have a cleared state to restore, use our undo
         if (canUndo) {
-          console.log('🔄 CTRL+Z DEBUG: Using our undo system');
           e.preventDefault();
           e.stopImmediatePropagation();
           handleUndo();
         } else if (isTextarea || isInput) {
           // Let browser handle textarea/input undo if no app-level undo available
-          console.log('🔄 CTRL+Z DEBUG: Allowing browser undo for text field');
+          // (This allows normal text editing undo within the textareas)
         } else {
           // Prevent default if not in a text field and no undo available
           e.preventDefault();
-          console.log('🔄 CTRL+Z DEBUG: Prevented - no undo available');
         }
       }
     };

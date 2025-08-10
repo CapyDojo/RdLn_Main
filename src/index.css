@@ -1,4 +1,3 @@
-@import './styles/unified-redline-mvp.css';
 @import './styles/experimental-features.css';
 @import './styles/fullscreen-overlay.css';
 @tailwind base;
@@ -222,6 +221,26 @@ button.enhanced-button.text-white,
 }
 
 /* Theme utility classes - handled by individual theme CSS files */
+/* Placeholder text semantic default (themes can override) */
+:root, html[data-theme] {
+  --theme-text-placeholder: var(--theme-text-secondary);
+  /* Auto Format Pilcrow semantic vars (themes can override or swap) */
+  --autoformat-pilcrow-on: var(--theme-accent-600);
+  --autoformat-pilcrow-off: var(--theme-text-placeholder);
+}
+
+/* Semantic placeholder text class */
+.text-placeholder {
+  color: var(--theme-text-placeholder) !important;
+}
+
+/* Auto Format Pilcrow semantic classes */
+.text-pilcrow-on {
+  color: var(--autoformat-pilcrow-on) !important;
+}
+.text-pilcrow-off {
+  color: var(--autoformat-pilcrow-off) !important;
+}
 
 /* Universal dark text enforcement for light buttons */
 .enhanced-button:not(.text-white):not([class*="bg-theme-primary-"]):not([class*="bg-theme-accent-"]):not([class*="bg-theme-neutral-6"]),
@@ -236,7 +255,7 @@ button.enhanced-button.text-white,
 .glass-panel textarea,
 .glass-panel input,
 .glass-panel p,
-.glass-panel span:not(.text-header):not(.text-secondary) {
+.glass-panel span:not(.text-header):not(.text-secondary):not(.text-placeholder):not(.text-pilcrow-on):not(.text-pilcrow-off):not([style*="color"]) {
   color: var(--text-on-glass) !important;
   font-weight: 500 !important;
 }

@@ -47,9 +47,11 @@
       "command": "npx",
       "args": [
         "@modelcontextprotocol/server-filesystem@latest",
-        "--allowed-directory",
         "."
       ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
       "disabled": false,
       "autoApprove": []
     },

@@ -1,5 +1,8 @@
 import React from 'react';
+import { PlayCircle } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
+import { CustomTooltip } from './CustomTooltip';
+import { getRecommendedSample } from '../utils/sampleData';
 
 // Beta countdown component
 const BetaBadge: React.FC = () => {
@@ -23,10 +26,28 @@ const BetaBadge: React.FC = () => {
   );
 };
 
-export const StatusBar: React.FC<BaseComponentProps> = ({ style, className }) => {
+interface StatusBarProps extends BaseComponentProps {
+  /** Callback when sample data should be loaded */
+  onLoadSample?: (originalText: string, revisedText: string, autoRun?: boolean) => void;
+  /** Whether the app is currently processing */
+  isProcessing?: boolean;
+}
+
+export const StatusBar: React.FC<StatusBarProps> = ({ 
+  onLoadSample, 
+  isProcessing = false, 
+  style, 
+  className 
+}) => {
+  const handleQuickDemo = () => {
+    if (onLoadSample) {
+      const sample = getRecommendedSample();
+      onLoadSample(sample.originalText, sample.revisedText, true); // Auto-run comparison
+    }
+  };
   return (
     <div 
-      className={`status-bar ${className || ''}`} 
+      className={`status-bar overflow-visible ${className || ''}`} 
       style={{
         position: 'fixed',
         top: '8.3rem', // Position further below the header 
@@ -41,9 +62,24 @@ export const StatusBar: React.FC<BaseComponentProps> = ({ style, className }) =>
         ...style
       }}
     >
-      <div className="glass-panel rounded-lg px-4 py-2 transition-all duration-300">
-        <div className="flex items-center justify-center">
+      <div className="glass-panel rounded-lg px-4 py-2 transition-all duration-300 overflow-visible">
+        <div className="flex items-center justify-center gap-4 overflow-visible">
           <BetaBadge />
+          {onLoadSample && (
+            <CustomTooltip content="Try RdLn instantly!">
+              <button
+                onClick={handleQuickDemo}
+                disabled={isProcessing}
+                className="enhanced-button flex items-center gap-2 px-3 py-1.5 bg-theme-primary-600 hover:bg-theme-primary-700 text-white rounded-md text-xs font-medium transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <PlayCircle className="w-3.5 h-3.5" />
+                <span>Quick Demo</span>
+                {isProcessing && (
+                  <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin" />
+                )}
+              </button>
+            </CustomTooltip>
+          )}
         </div>
       </div>
     </div>
