@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { CustomTooltip } from './CustomTooltip';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { BaseComponentProps } from '../types/components';
@@ -13,15 +13,17 @@ interface FontSizeOption {
 }
 
 const fontSizeOptions: FontSizeOption[] = [
-  { size: 'small', label: 'Small Text', displaySize: '16px', shortLabel: 'S' },
-  { size: 'medium', label: 'Medium Text', displaySize: '23px', shortLabel: 'M' },
-  { size: 'large', label: 'Large Text', displaySize: '30px', shortLabel: 'L' },
+  { size: 'small', label: 'Small', displaySize: '16px', shortLabel: 'S' },
+  { size: 'medium', label: 'Medium', displaySize: '23px', shortLabel: 'M' },
+  { size: 'large', label: 'Large', displaySize: '30px', shortLabel: 'L' },
 ];
 
 
 export const FontSizeSelector: React.FC<BaseComponentProps> = ({ style, className }) => {
   const { fontSize, setFontSize } = useFontSize();
   const segmentedControlRef = useRef<HTMLDivElement>(null);
+  const [segmentTx, setSegmentTx] = useState<number[]>([]);
+  const [squareSize, setSquareSize] = useState<number>(0);
 
   const handleSelectFontSize = (size: FontSize) => {
     setFontSize(size);
@@ -52,6 +54,53 @@ export const FontSizeSelector: React.FC<BaseComponentProps> = ({ style, classNam
     }
   };
 
+  // Measure button widths and offsets so the sliding indicator matches the actual text width
+  useEffect(() => {
+    const el = segmentedControlRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const buttons = Array.from(el.querySelectorAll<HTMLButtonElement>('button.segment'));
+      if (buttons.length === 0) return;
+      const containerRect = el.getBoundingClientRect();
+      const padLeft = parseFloat(getComputedStyle(el).paddingLeft || '0');
+      const centers: number[] = [];
+      const txs: number[] = [];
+      let maxSpanW = 0;
+      let btnH = 0;
+      buttons.forEach((btn) => {
+        const btnRect = btn.getBoundingClientRect();
+        const span = btn.querySelector('span');
+        const spanRect = span ? span.getBoundingClientRect() : btnRect;
+        const centerAbs = spanRect.left + spanRect.width / 2;
+        const centerRel = (centerAbs - containerRect.left - padLeft); // relative to content-left
+        centers.push(centerRel);
+        maxSpanW = Math.max(maxSpanW, spanRect.width);
+        btnH = btnRect.height; // all equal
+      });
+      // Choose square size: nearly full button height with a small 4px vertical inset
+      const rec = Math.round(Math.min(btnH - 4, Math.max(maxSpanW + 12, 32)));
+      const evenRec = rec % 2 === 0 ? rec : rec + 1;
+      centers.forEach((c) => {
+        txs.push(c - evenRec / 2);
+      });
+      setSquareSize(evenRec);
+      setSegmentTx(txs);
+    };
+
+    measure();
+
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [segmentedControlRef]);
+
+  const currentIndex = fontSizeOptions.findIndex(opt => opt.size === fontSize);
+
   return (
     <div className={`${className || ''}`} style={style}>
       <div 
@@ -60,11 +109,11 @@ export const FontSizeSelector: React.FC<BaseComponentProps> = ({ style, classNam
         role="group" 
         aria-label="Text Size Selection"
       >
-        {fontSizeOptions.map((option, index) => {
+        {fontSizeOptions.map((option) => {
           const isActive = fontSize === option.size;
           
           return (
-            <CustomTooltip key={option.size} content={`Set text size to ${option.label} (${option.displaySize})`}>
+            <CustomTooltip key={option.size} content={`Set text size to ${option.label}`}>
               <button
                 onClick={() => handleSelectFontSize(option.size)}
                 onKeyDown={(e) => handleKeyDown(e, option.size)}
@@ -83,11 +132,23 @@ export const FontSizeSelector: React.FC<BaseComponentProps> = ({ style, classNam
           );
         })}
         
-        {/* Sliding indicator */}
-        <div 
-          className={`sliding-indicator size-${fontSize}`} 
-          aria-hidden="true"
-        />
+        {/* Sliding indicator: fixed square, centered under each 'Aa' */}
+        {(() => {
+          const tx = (segmentTx[currentIndex] ?? 0) - 2 + 1; // base left: 2px in CSS, +1px visual centering fudge
+          const size = squareSize || 42; // slightly larger fallback to better fill height
+          return (
+            <div
+              className={`sliding-indicator`}
+              aria-hidden="true"
+              style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                top: '50%',
+                transform: `translate(${tx}px, -50%)`
+              }}
+            />
+          );
+        })()}
       </div>
     </div>
   );

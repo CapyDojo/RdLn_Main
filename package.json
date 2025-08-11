@@ -1,7 +1,7 @@
 {
   "name": "rdln",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.5.15",
   "type": "module",
   "description": "RdLn™ - Professional document comparison tool with OCR capabilities",
   "author": "RdLn Team",

@@ -27,6 +27,12 @@ interface RedlineOutputProps extends BaseComponentProps {
   onBackgroundModeChange?: (mode: 'theme' | 'glassmorphism') => void;
   onToggleFullScreen?: () => void;
   isFullScreen?: boolean;
+  // Optional metadata to improve export filenames
+  documentTitle?: string;
+  originalTitle?: string;
+  revisedTitle?: string;
+  originalText?: string;
+  revisedText?: string;
 }
 
 // SSMR: Use centralized configuration for consistent chunk rendering
@@ -82,6 +88,68 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
   // Font size context
   const { fontSize } = useFontSize();
+
+  // --- Smart DOCX filename helpers ---
+  const sanitizeFilename = (name: string) =>
+    name
+      .replace(/[<>:"/\\|?*]+/g, ' ') // illegal filename chars
+      .replace(/\s+/g, ' ') // collapse whitespace
+      .trim()
+      .slice(0, 120); // keep it reasonable
+
+  const firstLineFrom = (text?: string): string | undefined => {
+    if (!text) return undefined;
+    // remove basic HTML tags if any and split into lines
+    const plain = text.replace(/<[^>]+>/g, ' ').replace(/\r\n/g, '\n');
+    const firstNonEmpty = plain
+      .split('\n')
+      .map(s => s.trim())
+      .find(s => s.length > 0);
+    return firstNonEmpty;
+  };
+
+  const timestamp = () => {
+    const d = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const mi = pad(d.getMinutes());
+    return `${yyyy}${mm}${dd}_${hh}${mi}`;
+  };
+
+  const suggestDocxName = () => {
+    // Prefer explicit document title
+    const docTitle = props.documentTitle && sanitizeFilename(props.documentTitle);
+    // Titles from props if provided
+    const origTitle = props.originalTitle || firstLineFrom(props.originalText);
+    const revTitle = props.revisedTitle || firstLineFrom(props.revisedText);
+
+    const ts = timestamp();
+
+    if (docTitle && docTitle.length > 0) {
+      return `${docTitle} - RdLn - ${ts}.docx`;
+    }
+
+    if (origTitle && revTitle) {
+      const a = sanitizeFilename(origTitle);
+      const b = sanitizeFilename(revTitle);
+      if (a && b) return `${a} → ${b} - RdLn - ${ts}.docx`;
+    }
+
+    if (origTitle) {
+      const a = sanitizeFilename(origTitle);
+      if (a) return `${a} - RdLn - ${ts}.docx`;
+    }
+
+    if (revTitle) {
+      const b = sanitizeFilename(revTitle);
+      if (b) return `${b} - RdLn - ${ts}.docx`;
+    }
+
+    return `RdLn_${ts}.docx`;
+  };
 
 
   // Handle background mode toggle
@@ -211,18 +279,22 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
       const mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       const blob = new Blob([bytes], { type: mime });
+      const filename = suggestDocxName();
 
       // Quick validity check: DOCX (ZIP) should start with 'PK' (0x50, 0x4B)
       if (!(bytes && bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {
         console.error('Generated file is not a ZIP (PK) header. Size:', bytes?.byteLength);
       }
 
-      // Prefer the File System Access API when available (Chromium, works on localhost)
+      // Prefer browser download UI (anchor + download) for consistent user feedback.
+      // Keep native File System Access picker available behind a flag if needed later.
       const w = window as any;
-      if (w && typeof w.showSaveFilePicker === 'function') {
+      const useNativePicker = FEATURE_FLAGS.ENABLE_NATIVE_SAVE_PICKER;
+
+      if (useNativePicker && w && typeof w.showSaveFilePicker === 'function') {
         try {
           const handle = await w.showSaveFilePicker({
-            suggestedName: 'redline.docx',
+            suggestedName: filename,
             types: [{
               description: 'Word Document (.docx)',
               accept: { [mime]: ['.docx'] },
@@ -231,12 +303,17 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
           const stream = await handle.createWritable();
           await stream.write(blob);
           await stream.close();
-        } catch (pickerErr) {
-          // If user cancels or API fails, fall back to anchor method
+        } catch (pickerErr: any) {
+          // If user cancels (AbortError), do nothing.
+          const name = pickerErr?.name || pickerErr?.constructor?.name;
+          if (name === 'AbortError') {
+            return; // user cancelled save dialog
+          }
+          // For other failures, fall back to anchor method
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.setAttribute('href', url);
-          a.setAttribute('download', 'redline.docx');
+          a.setAttribute('download', filename);
           a.style.display = 'none';
           document.body.appendChild(a);
           a.click();
@@ -246,11 +323,11 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
           }, 1000);
         }
       } else {
-        // Fallback: Blob URL + download attribute
+        // Blob URL + download attribute triggers browser's download UI
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.setAttribute('href', url);
-        a.setAttribute('download', 'redline.docx');
+        a.setAttribute('download', filename);
         a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
@@ -287,7 +364,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             {!isInOverlayMode ? (
               <>
                 <span className="text-5xl" role="img" aria-label="Output panel">🎯</span>
-                <h3 className="text-3xl font-semibold text-theme-primary-900">Compared Redline</h3>
+                <h3 className="text-3xl font-semibold text-theme-primary-900">Compared RdLn</h3>
               </>
             ) : (
               <FontSizeSelector />
@@ -337,8 +414,8 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             <div className="relative segmented-control">
               <CustomTooltip
                 content={isMultiFormatClipboardSupported()
-                  ? "Copy redlined document with formatting (HTML + plain text)"
-                  : "Copy redlined document as plain text"
+                  ? "Copy RdLn with formatting (HTML + plain text)"
+                  : "Copy RdLn as plain text"
                 }
               >
                 <button
@@ -371,7 +448,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
             {/* Download DOCX Button */}
             <div className="relative segmented-control">
-              <CustomTooltip content="Download .docx with Track Changes">
+              <CustomTooltip content="Export RdLn as native Word .DOCX with Track Changes">
                 <button
                   onClick={exportDocx}
                   disabled={exportingDocx || !changes || changes.length === 0}

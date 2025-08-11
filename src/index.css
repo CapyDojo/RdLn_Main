@@ -557,15 +557,16 @@ h3 {
 /* Container - Font size selector segmented control */
 .segmented-control.font-size-control {
   height: 50px;
-  min-width: 160px;
+  min-width: initial;
+  padding: 2px; /* breathing space for indicator edges */
 }
 
 /* Segments - Individual font size option buttons */
 .segmented-control.font-size-control .segment {
-  flex: 1;
+  flex: 1 0 auto;
   min-width: 0;
-  padding: 2px 10px;
-  height: 46px;
+  padding: 0 8px;
+  height: 46px; /* matches previous control height for consistency */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -583,12 +584,12 @@ h3 {
   /* Small: slight downward adjustment */
 }
 
-.segmented-control.font-size-control .segment span[style*="22px"] {
+.segmented-control.font-size-control .segment span[style*="23px"] {
   transform: translateY(-1px);
   /* Medium: slight downward adjustment */
 }
 
-.segmented-control.font-size-control .segment span[style*="27px"] {
+.segmented-control.font-size-control .segment span[style*="30px"] {
   transform: translateY(-0.6px);
   /* Large: baseline reference */
 }
@@ -600,12 +601,12 @@ h3 {
 }
 
 .segmented-control .sliding-indicator.size-medium {
-  width: 32%;
-  transform: translateX(99%);
+  width: 33.333%;
+  transform: translateX(100%);
 }
 
 .segmented-control .sliding-indicator.size-large {
-  width: 32.632%;
+  width: 33.333%;
   transform: translateX(200%);
 }
 

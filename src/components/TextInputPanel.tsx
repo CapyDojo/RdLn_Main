@@ -1,7 +1,5 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { FileText, Image, AlertCircle, Loader, ChevronDown, Languages } from 'lucide-react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagicWandSparkles } from '@fortawesome/free-solid-svg-icons';
 import { useOCR } from '../hooks/useOCR';
 import { OCRLanguage } from '../types/ocr-types';
 import { LanguageSettingsDropdown } from './LanguageSettingsDropdown';
@@ -11,29 +9,10 @@ import { BaseComponentProps } from '../types/components';
 import { useComponentPerformance } from '../utils/performanceUtils.tsx';
 import { DEV_CONFIG } from '../config/appConfig';
 import { formatPastedText, formatRtfHtmlPaste } from '../utils/paragraphFormatting';
-import { analyzePasteContext, getFormattingLevel, PasteContext, FormatLevel } from '../utils/pastePDFdetection';
+import { analyzePasteContext, getFormattingLevel } from '../utils/pastePDFdetection';
 import { useFontSize } from '../contexts/FontSizeContext';
 
-// Tauri v2 file drop support using proper imports
-let tauriListen: any = null;
-let tauriReadFile: any = null;
-
-// Dynamically import Tauri APIs to avoid build errors in web mode
-const initTauriApis = async () => {
-  try {
-    const eventModule = await import('@tauri-apps/api/event');
-    const fsModule = await import('@tauri-apps/plugin-fs');
-
-    tauriListen = eventModule.listen;
-    tauriReadFile = fsModule.readFile;
-
-    console.log('🔧 TAURI DEBUG: Event and FS APIs imported successfully');
-    return true;
-  } catch (error) {
-    console.log('🔧 TAURI DEBUG: Running in web mode, Tauri APIs not available');
-    return false;
-  }
-};
+// Tauri-specific helpers removed (unused)
 
 interface TextInputPanelProps extends BaseComponentProps {
   title: string;
@@ -553,24 +532,25 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <h3 className="text-3xl font-semibold text-theme-primary-900">{title}</h3>
           <div className="relative">
             <CustomTooltip 
-              content={`Magically fix broken PDF paragraphs — ${isAutoFormatEnabled ? 'ON' : 'OFF'}`}
+              content="Auto-fix broken paragraphs"
+              status={isAutoFormatEnabled ? 'ON' : 'OFF'}
             >
               <button
                 onClick={toggleAutoFormat}
-                className={`flex items-center justify-center w-16 h-12 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
+                className={`flex items-center justify-center w-14 h-12 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
                   ? 'bg-theme-primary-700 border-transparent hover:shadow-lg hover:shadow-theme-accent-200/30 shadow-theme-accent-200/20'
                   : 'bg-theme-neutral-900/20 dark:bg-theme-neutral-100/5 border-theme-neutral-600/50 dark:border-theme-neutral-400/40 hover:border-theme-neutral-500/70 dark:hover:border-theme-neutral-300/60 hover:bg-theme-neutral-800/25 dark:hover:bg-theme-neutral-100/10'}`}
                 aria-pressed={isAutoFormatEnabled}
                 aria-label={`Auto paragraph formatting ${isAutoFormatEnabled ? 'on' : 'off'}`}
               >
-              {/* Stylized wand + pilcrow with better contrast */}
+              {/* Stylized sparkles + pilcrow with better contrast */}
               <span className="inline-flex items-center leading-none">
                 <span
-                  className="mr-0.5 select-none"
-                  style={{ fontSize: '16px' }}
+                  className="mr-0 select-none"
+                  style={{ fontSize: '14px', marginLeft: '-2px' }}
                   aria-hidden="true"
                 >
-                  🪄
+                  ✨
                 </span>
                 <span
                   className={`select-none transition-all duration-300 transform ${isAutoFormatEnabled 
@@ -579,7 +559,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                   style={{
                     fontSize: '26px',
                     fontWeight: 900,
-                    lineHeight: 1
+                    lineHeight: 1,
+                    marginRight: '2px'
                   }}
                 >
                   ¶
@@ -610,8 +591,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         </div>
         <div className="flex items-center gap-2">
           {/* OCR Language Segmented Control */}
-          <div className="flex items-center gap-2">
-            <span className="text-base font-medium text-theme-neutral-700 hidden sm:inline">OCR Languages</span>
+          <div className="flex flex-col items-center gap-0">
+            <span className="text-sm font-medium text-theme-neutral-700 hidden sm:block mb-1 text-center">OCR Languages</span>
             <div className="segmented-control relative z-[10001]" ref={segmentedControlRef} role="group" aria-label="OCR Language Detection Mode">
               <CustomTooltip content="Automatically detect document language">
                 <button
@@ -629,7 +610,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                 </button>
               </CustomTooltip>
               <CustomTooltip 
-                content={`Manually select OCR languages${!autoDetect && selectedLanguages.length > 0 ? ` - ${selectedLanguages.length} languages selected` : ''}`}
+                content={`Manually select OCR languages${!autoDetect && selectedLanguages.length > 0 ? ` - ${selectedLanguages.length} ${selectedLanguages.length === 1 ? 'language' : 'languages'} selected` : ''}`}
               >
                 <button
                   onClick={() => {

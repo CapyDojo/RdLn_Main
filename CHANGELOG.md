@@ -1,3 +1,37 @@
+## Version 0.5.15 - "HTML Diff → DOCX Track Changes"
+*Released: 2025-08-11*
+
+### ✨ Feature: True Track Changes DOCX Export
+- Exports HTML diff to DOCX with real Track Changes that open cleanly in Word.
+- Uses proper WordprocessingML: `<w:ins>`, `<w:del>`, `<w:delText>`.
+
+### 🔧 Implementation
+- New module: `src/lib/docxExport.ts`
+  - Tokenizes diff spans (equal/ins/del), fixes newline paragraph splitting, builds `word/document.xml`.
+  - Packages minimal DOCX parts via `jszip` + `xmlbuilder2`.
+  - Ensures required parts and rels:
+    - `[Content_Types].xml`
+    - `_rels/.rels` (relative targets, no leading slash)
+    - `docProps/core.xml`, `docProps/app.xml`
+    - `word/document.xml`, `word/styles.xml`
+    - `word/settings.xml` (includes `<w:trackRevisions/>`)
+    - `word/_rels/document.xml.rels`
+- UI: `src/components/RedlineOutput.tsx`
+  - Adds “Download .docx” next to Copy with matching styling.
+  - Save via File System Access API when available; falls back to Blob + anchor download.
+  - Success feedback and PK ZIP header sanity check.
+
+### ✅ Testing & Validation
+- Vitest: asserts presence of `<w:ins>`, `<w:delText>`, multi-paragraph output.
+- Manual: DOCX opens in Word without repair prompts; file size reasonable (>6 KB).
+
+### 📌 Notes / Next
+- Wire author/date dynamically; consider Electron native save dialog.
+- Add regression tests over DOCX parts/relationships.
+- Dynamic filename generation (title/timestamp).
+
+---
+
 ## Version 0.5.14 - "RdLn Memory System + Simplified Undo"
 *Released: 2025-01-11*
 

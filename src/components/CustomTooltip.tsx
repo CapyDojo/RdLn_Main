@@ -19,6 +19,8 @@ interface CustomTooltipProps extends BaseComponentProps {
   content: string;
   /** Optional keyboard shortcut to display */
   shortcut?: string;
+  /** Optional inline status badge (like ON/OFF) */
+  status?: string;
   /** Tooltip placement relative to trigger */
   placement?: 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' | 'auto';
   /** Delay before showing tooltip in milliseconds */
@@ -38,6 +40,7 @@ interface CustomTooltipProps extends BaseComponentProps {
 export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   content,
   shortcut,
+  status,
   placement = 'bottom-right',
   delay = 200,
   disabled = false,
@@ -236,6 +239,11 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
       <div className="glass-panel px-3 py-1.5 rounded-lg text-xs font-medium bg-theme-neutral-50/95 text-theme-primary-800 shadow-xl backdrop-blur-md border border-theme-neutral-200/50 max-w-80 min-w-32 shadow-theme-primary-900/20">
         <div className="flex items-center gap-2 whitespace-nowrap">
           <span className="leading-tight">{content}</span>
+          {status && (
+            <kbd className="px-1.5 py-0.5 bg-theme-accent-100/80 border border-theme-accent-200/60 rounded text-theme-accent-800 font-mono text-xs shrink-0">
+              {status}
+            </kbd>
+          )}
           {shortcut && (
             <kbd className="px-1.5 py-0.5 bg-theme-accent-100/80 border border-theme-accent-200/60 rounded text-theme-accent-800 font-mono text-xs shrink-0">
               {shortcut}

@@ -173,6 +173,9 @@ export const FEATURE_FLAGS = {
   
   // Semantic Chunking Features
   ENABLE_SEMANTIC_CHUNKING: true, // ENABLED to fix contiguous chunk rendering
+  
+  // File export
+  ENABLE_NATIVE_SAVE_PICKER: false, // when true, use showSaveFilePicker; when false, use browser downloads UI
 } as const;
 
 /**
