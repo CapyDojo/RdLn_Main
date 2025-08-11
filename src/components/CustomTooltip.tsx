@@ -10,7 +10,7 @@
  * For licensing information, see LICENSE file.
  */
 
-import React, { useState, useRef, useEffect, ReactNode } from 'react';
+import React, { useState, useRef, useEffect, useCallback, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { BaseComponentProps } from '../types/components';
 
@@ -53,47 +53,64 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
-  // Calculate absolute position for tooltip portal
+  // Calculate absolute position for tooltip portal with improved scroll/zoom handling
   const calculateTooltipPosition = (placementType: 'top' | 'bottom' | 'left' | 'right' | 'bottom-right') => {
     if (!triggerRef.current) return { top: 0, left: 0 };
     
     const rect = triggerRef.current.getBoundingClientRect();
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+    
+    // Better scroll position detection that works with zoom
+    const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+    const scrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
+    
+    // Calculate element position relative to viewport for smart positioning
+    const centerX = rect.left + rect.width / 2;
+    const relativeX = centerX / viewport.width;
     
     switch (placementType) {
       case 'top':
         return {
-          top: rect.top + scrollY - 8, // 8px above
-          left: rect.left + scrollX + rect.width / 2 // Center horizontally
+          top: rect.top + scrollY - 4, // Closer: 4px above
+          left: rect.right + scrollX + 4 // Tucked: align to right edge + 4px
         };
+        
       case 'bottom':
         return {
-          top: rect.bottom + scrollY + 8, // 8px below
-          left: rect.left + scrollX + rect.width / 2 // Center horizontally
+          top: rect.bottom + scrollY + 4, // Closer: 4px below
+          left: rect.right + scrollX + 4 // Tucked: align to right edge + 4px
         };
+        
       case 'left':
         return {
-          top: rect.top + scrollY + rect.height / 2, // Center vertically
-          left: rect.left + scrollX - 8 // 8px to the left
+          top: rect.bottom + scrollY + 4, // Align to bottom edge + 4px
+          left: rect.left + scrollX - 4 // Closer: 4px to the left
         };
+        
       case 'right':
         return {
-          top: rect.top + scrollY + rect.height / 2, // Center vertically
-          left: rect.right + scrollX + 8 // 8px to the right
+          top: rect.bottom + scrollY + 4, // Align to bottom edge + 4px
+          left: rect.right + scrollX + 4 // Closer: 4px to the right
         };
+        
       case 'bottom-right':
       default:
         return {
-          top: rect.top + scrollY - 4, // Slightly above (-4px)
-          left: rect.right + scrollX + 12 // 12px to the right
+          top: rect.bottom + scrollY + 4, // 4px below (45-degree angle)
+          left: rect.right + scrollX + 4 // 4px to the right (tucked closer)
         };
     }
   };
 
-  // Calculate optimal placement based on viewport position
+  // Calculate optimal placement based on viewport position and screen location
   const calculatePlacement = (): 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' => {
-    if (!triggerRef.current || placement !== 'auto') {
+    if (!triggerRef.current) return 'bottom-right';
+    
+    // If user specified a placement, use it unless it's auto
+    if (placement !== 'auto') {
       return placement as 'top' | 'bottom' | 'left' | 'right' | 'bottom-right';
     }
 
@@ -103,28 +120,52 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
       height: window.innerHeight
     };
 
+    // Calculate element position relative to viewport (0-1 scale)
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const relativeX = centerX / viewport.width;
+    const relativeY = centerY / viewport.height;
+
     // Check available space in each direction
     const spaceTop = rect.top;
     const spaceBottom = viewport.height - rect.bottom;
     const spaceLeft = rect.left;
     const spaceRight = viewport.width - rect.right;
 
-    // Prefer diagonal bottom-right positioning (modern app standard)
-    if (spaceBottom > 60 && spaceRight > 200) return 'bottom-right';
+    // Simplified positioning: default to close diagonal bottom-right for most cases
+    // Only use other positions if there's insufficient space
     
-    // Fallback to traditional placements
-    if (spaceTop > 100) return 'top';
-    if (spaceBottom > 100) return 'bottom';
-    if (spaceRight > 200) return 'right';
-    if (spaceLeft > 200) return 'left';
+    // Check if we have enough space for the compact diagonal positioning
+    const minSpaceNeeded = 80; // Reduced from 200px since we're positioning closer
+    
+    // Try bottom-right diagonal first (works for most screen positions)
+    if (spaceBottom > 40 && spaceRight > 40) {
+      return 'bottom-right';
+    }
+    
+    // Fallback based on available space
+    if (spaceTop > minSpaceNeeded) return 'top';
+    if (spaceLeft > minSpaceNeeded) return 'left'; 
+    if (spaceRight > minSpaceNeeded) return 'right';
+    if (spaceBottom > minSpaceNeeded) return 'bottom';
 
-    // Final fallback to direction with most space
+    // Fallback to direction with most space
     const maxSpace = Math.max(spaceTop, spaceBottom, spaceLeft, spaceRight);
     if (maxSpace === spaceTop) return 'top';
     if (maxSpace === spaceBottom) return 'bottom';
     if (maxSpace === spaceRight) return 'right';
     return 'left';
   };
+
+  // Update tooltip position (for scroll/zoom events)
+  const updateTooltipPosition = useCallback(() => {
+    if (!isVisible) return;
+    
+    const placementType = calculatePlacement();
+    const position = calculateTooltipPosition(placementType);
+    setActualPlacement(placementType);
+    setTooltipPosition(position);
+  }, [isVisible]); // Dependencies will be handled by the functions themselves
 
   const showTooltip = () => {
     if (disabled || !content.trim()) return;
@@ -145,6 +186,25 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
     setIsVisible(false);
   };
 
+  // Handle scroll/zoom/resize events to maintain proper positioning
+  useEffect(() => {
+    const handleScrollOrResize = () => {
+      updateTooltipPosition();
+    };
+
+    // Add event listeners when tooltip is visible
+    if (isVisible) {
+      window.addEventListener('scroll', handleScrollOrResize, { passive: true });
+      window.addEventListener('resize', handleScrollOrResize, { passive: true });
+      // Also listen for zoom changes (resize event covers most zoom cases)
+      
+      return () => {
+        window.removeEventListener('scroll', handleScrollOrResize);
+        window.removeEventListener('resize', handleScrollOrResize);
+      };
+    }
+  }, [isVisible, updateTooltipPosition]);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -154,23 +214,9 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
     };
   }, []);
 
-  // Position classes for fixed positioning portal
+  // Position classes for fixed positioning portal - no transforms needed for precise positioning
   const getPositionClasses = () => {
-    const baseClasses = 'fixed z-[9999] pointer-events-none';
-    
-    switch (actualPlacement) {
-      case 'top':
-        return `${baseClasses} transform -translate-x-1/2 -translate-y-full`;
-      case 'bottom':
-        return `${baseClasses} transform -translate-x-1/2`;
-      case 'left':
-        return `${baseClasses} transform -translate-x-full -translate-y-1/2`;
-      case 'right':
-        return `${baseClasses} transform -translate-y-1/2`;
-      case 'bottom-right':
-      default:
-        return baseClasses; // No transform needed, position is already calculated
-    }
+    return 'fixed z-[9999] pointer-events-none'; // Simple fixed positioning, no transforms
   };
 
   // Modern design - no arrow needed, clean shadow-based design

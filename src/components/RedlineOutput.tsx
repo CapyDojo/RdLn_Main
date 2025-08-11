@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Sparkles, Image, Check } from 'lucide-react';
+import { Copy, Check, Download } from 'lucide-react';
 import { DiffChange } from '../types';
 import { BaseComponentProps } from '../types/components';
 import { UI_CONFIG, FEATURE_FLAGS, DEV_CONFIG } from '../config/appConfig';
@@ -11,6 +11,7 @@ import { CustomTooltip } from './CustomTooltip';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { copyToClipboardMultiFormat, isMultiFormatClipboardSupported } from '../utils/clipboardUtils';
 import { FontSizeSelector } from './FontSizeSelector';
+import { exportHtmlDiffToDocx } from '../lib/docxExport';
 
 interface RedlineOutputProps extends BaseComponentProps {
   changes: DiffChange[];
@@ -74,6 +75,10 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   
   // Copy success state for microinteraction
   const [copySuccess, setCopySuccess] = React.useState(false);
+
+  // DOCX export state
+  const [exportingDocx, setExportingDocx] = React.useState(false);
+  const [exportSuccess, setExportSuccess] = React.useState(false);
 
   // Font size context
   const { fontSize } = useFontSize();
@@ -194,6 +199,78 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     }
   }, 'copy_to_clipboard', performanceTracker);
 
+  const exportDocx = usePerformanceAwareHandler(async () => {
+    if (!changes || !Array.isArray(changes) || changes.length === 0) return;
+    try {
+      setExportingDocx(true);
+      // Combine chunk HTML into a single container div to match our exporter expectations
+      const combinedHtml = `\n<div style="font-family: serif; line-height: 1.6; white-space: pre-wrap;">${
+        (chunks || []).map(c => c.html).join('')
+      }</div>`;
+      const bytes = await exportHtmlDiffToDocx(combinedHtml, { author: 'RdLn' });
+
+      const mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      const blob = new Blob([bytes], { type: mime });
+
+      // Quick validity check: DOCX (ZIP) should start with 'PK' (0x50, 0x4B)
+      if (!(bytes && bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {
+        console.error('Generated file is not a ZIP (PK) header. Size:', bytes?.byteLength);
+      }
+
+      // Prefer the File System Access API when available (Chromium, works on localhost)
+      const w = window as any;
+      if (w && typeof w.showSaveFilePicker === 'function') {
+        try {
+          const handle = await w.showSaveFilePicker({
+            suggestedName: 'redline.docx',
+            types: [{
+              description: 'Word Document (.docx)',
+              accept: { [mime]: ['.docx'] },
+            }],
+          });
+          const stream = await handle.createWritable();
+          await stream.write(blob);
+          await stream.close();
+        } catch (pickerErr) {
+          // If user cancels or API fails, fall back to anchor method
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.setAttribute('href', url);
+          a.setAttribute('download', 'redline.docx');
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            a.remove();
+            URL.revokeObjectURL(url);
+          }, 1000);
+        }
+      } else {
+        // Fallback: Blob URL + download attribute
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'redline.docx');
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          a.remove();
+          URL.revokeObjectURL(url);
+        }, 1000);
+      }
+
+      setExportSuccess(true);
+      setTimeout(() => setExportSuccess(false), 1500);
+      performanceTracker.trackMetric('docx_export_success', { bytes: bytes.byteLength });
+    } catch (err) {
+      console.error('DOCX export failed:', err);
+      performanceTracker.trackMetric('docx_export_failure', { error: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setExportingDocx(false);
+    }
+  }, 'export_docx', performanceTracker);
+
   return (
     <div
       className={`glass-panel glass-content-panel overflow-hidden shadow-lg transition-all duration-300 ${className || ''}`}
@@ -288,6 +365,38 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                     {copySuccess ? 'Copied!' : 'Copy'}
                   </span>
                 </div>
+                </button>
+              </CustomTooltip>
+            </div>
+
+            {/* Download DOCX Button */}
+            <div className="relative segmented-control">
+              <CustomTooltip content="Download .docx with Track Changes">
+                <button
+                  onClick={exportDocx}
+                  disabled={exportingDocx || !changes || changes.length === 0}
+                  className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
+                    exportSuccess ? 'bg-green-100 border-green-300' : ''
+                  } ${exportingDocx ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    aspectRatio: '1/1',
+                    transform: exportSuccess ? 'scale(1.05)' : 'scale(1)',
+                  }}
+                >
+                  <div className="flex flex-col items-center justify-center">
+                    {exportSuccess ? (
+                      <Check className={`w-6 h-6 text-green-600 transition-all duration-300`} aria-hidden="true" />
+                    ) : (
+                      <Download className="w-6 h-6 transition-all duration-300" aria-hidden="true" />
+                    )}
+                    <span className={`text-xs mt-0.5 hidden sm:block transition-all duration-300 ${
+                      exportSuccess ? 'text-green-600' : ''
+                    }`}>
+                      {exportSuccess ? 'Saved!' : 'DOCX'}
+                    </span>
+                  </div>
                 </button>
               </CustomTooltip>
             </div>

@@ -9,7 +9,7 @@ export const classicLightTheme: ThemeConfig = {
   name: 'classic-light',
   displayName: 'Classic Light',
   description: 'A clean, professional light theme with blue and orange accents.',
-  background: 'rgba(216, 219, 219, 0.3)',
+  background: 'rgba(227, 227, 227, 0.3)',
   colors: {
     // Light blue primary palette - for highlights and interactive elements
     primary: {

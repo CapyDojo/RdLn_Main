@@ -1,5 +1,6 @@
 import React from 'react';
 import { Maximize2, Minimize2 } from 'lucide-react';
+import { CustomTooltip } from './CustomTooltip';
 
 interface FullScreenButtonProps {
   isFullScreen: boolean;
@@ -23,7 +24,8 @@ export const FullScreenButton: React.FC<FullScreenButtonProps> = ({
   if (!hasResults) return null;
 
   return (
-    <button
+    <CustomTooltip content={isFullScreen ? "Return to normal view" : "Open results in full-screen"}>
+      <button
       onClick={onToggle}
       className={`
         flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment
@@ -34,7 +36,6 @@ export const FullScreenButton: React.FC<FullScreenButtonProps> = ({
         height: '48px',
         aspectRatio: '1/1',
       }}
-      title={isFullScreen ? "Return to normal view" : "Open results in full-screen"}
       aria-label={isFullScreen ? "Return to normal view" : "Open results in full-screen"}
     >
       <div className="flex flex-col items-center justify-center">
@@ -47,7 +48,8 @@ export const FullScreenButton: React.FC<FullScreenButtonProps> = ({
           {isFullScreen ? 'Exit' : 'Full'}
         </span>
       </div>
-    </button>
+      </button>
+    </CustomTooltip>
   );
 };
 
@@ -63,7 +65,8 @@ export const FullScreenButtonCompact: React.FC<FullScreenButtonProps> = ({
   if (!hasResults) return null;
 
   return (
-    <button
+    <CustomTooltip content={isFullScreen ? "Return to normal view" : "Open results in full-screen"}>
+      <button
       onClick={onToggle}
       className={`
         flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment
@@ -74,7 +77,6 @@ export const FullScreenButtonCompact: React.FC<FullScreenButtonProps> = ({
         height: '48px',
         aspectRatio: '1/1',
       }}
-      title={isFullScreen ? "Return to normal view" : "Open results in full-screen"}
       aria-label={isFullScreen ? "Return to normal view" : "Open results in full-screen"}
     >
       <div className="flex flex-col items-center justify-center">
@@ -87,6 +89,7 @@ export const FullScreenButtonCompact: React.FC<FullScreenButtonProps> = ({
           {isFullScreen ? 'Exit' : 'Full'}
         </span>
       </div>
-    </button>
+      </button>
+    </CustomTooltip>
   );
 };

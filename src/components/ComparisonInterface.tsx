@@ -134,7 +134,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     if (autoRun) {
       // Use setTimeout to ensure text is set before comparison
       setTimeout(() => {
-        compareDocuments();
+        handleCompareDocuments();
       }, 100);
     }
   };
@@ -197,15 +197,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         },
         chunkingEnabled: chunkingProgress.enabled
       });
-      
-      // Auto-save completed comparisons to RdLn Memory (if content is substantial)
-      const totalContent = (originalText?.length || 0) + (revisedText?.length || 0);
-      if (totalContent > 50) { // Only save if there's meaningful content
-        saveSession(originalText, revisedText, true); // true = has result
-        console.log('🎯 Auto-saved comparison to RdLn Memory');
-      }
     }
-  }, [result, isProcessing, chunkingProgress.enabled, performanceTracker, originalText, revisedText, saveSession]);
+  }, [result, isProcessing, chunkingProgress.enabled, performanceTracker]);
   
   // Track memory usage periodically during processing
   useEffect(() => {
@@ -353,14 +346,37 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     console.log('💾 Session saved to RdLn Memory:', sessionId);
   }, 'save_session', performanceTracker);
 
+  // Wrapped comparison function with auto-save
+  const handleCompareDocuments = usePerformanceAwareHandler(async (autoRunOnly?: boolean, manualOperation?: boolean, overrideOriginal?: string, overrideRevised?: string) => {
+    // Run the comparison
+    await compareDocuments(autoRunOnly, manualOperation, overrideOriginal, overrideRevised);
+    
+    // Auto-save completed comparisons after the comparison completes
+    // Use setTimeout to ensure the state has updated
+    setTimeout(() => {
+      const currentOriginal = overrideOriginal || originalText;
+      const currentRevised = overrideRevised || revisedText;
+      const totalContent = (currentOriginal?.length || 0) + (currentRevised?.length || 0);
+      
+      if (totalContent > 50) { // Only save if there's meaningful content
+        saveSession(currentOriginal, currentRevised, true); // true = has result
+        console.log('🎯 Auto-saved comparison to RdLn Memory');
+      }
+    }, 100);
+  }, 'compare_with_autosave', performanceTracker);
+
   const handleLoadSession = usePerformanceAwareHandler((sessionId: string) => {
     const session = loadSession(sessionId);
     if (session) {
+      // Load the session content into the input fields
       setOriginalText(session.originalText);
       setRevisedText(session.revisedText);
-      // Clear any existing results since we're loading new content
-      resetComparison();
+      
+      // Don't call resetComparison since it clears the inputs we just set
+      // The user can run a new comparison if they want to see results
+      
       console.log('📖 Session loaded from RdLn Memory:', session.sessionName);
+      console.log(`📝 Loaded ${session.originalText.length} + ${session.revisedText.length} characters`);
     }
   }, 'load_session', performanceTracker);
 
@@ -419,7 +435,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       // Alt+Enter comparison shortcut
       if (e.altKey && e.key === 'Enter') {
         e.preventDefault();
-        compareDocuments();
+        handleCompareDocuments();
       }
       
       // Alt+L toggle live compare
@@ -489,7 +505,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       window.removeEventListener('keydown', handleKeyDown, eventOptions);
       document.removeEventListener('keydown', handleKeyDown, eventOptions);
     };
-  }, [compareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible, toggleQuickCompare, handleSwapContent, isScrollLocked, setIsScrollLocked, handleResetComparison, canUndo, handleUndo, originalText, revisedText, handleSaveSession]);
+  }, [handleCompareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible, toggleQuickCompare, handleSwapContent, isScrollLocked, setIsScrollLocked, handleResetComparison, canUndo, handleUndo, originalText, revisedText, handleSaveSession]);
 
   const handleLoadTest = usePerformanceAwareHandler(async (originalText: string, revisedText: string) => {
     // Track load test operation
@@ -512,7 +528,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           // Auto-compare if enabled - use manual operation flag to ensure cancellation works
           if (quickCompareEnabled) {
             setTimeout(() => {
-              compareDocuments(false, true, originalText, revisedText);
+              handleCompareDocuments(false, true, originalText, revisedText);
             }, 200);
           }
           resolve(undefined);
@@ -724,7 +740,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           isProcessing={isProcessing}
           originalText={originalText}
           revisedText={revisedText}
-          onCompare={() => compareDocuments()}
+          onCompare={() => handleCompareDocuments()}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
           onToggleScrollLock={() => {
@@ -755,7 +771,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           isProcessing={isProcessing}
           originalText={originalText}
           revisedText={revisedText}
-          onCompare={() => compareDocuments()}
+          onCompare={() => handleCompareDocuments()}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
           onToggleScrollLock={() => setIsScrollLocked(!isScrollLocked)}

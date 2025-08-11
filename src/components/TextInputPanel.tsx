@@ -103,7 +103,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <br />
           <br />
           <br />
-          <span className="text-6xl block" role="img" aria-label="Document">🤖</span>
+          <span className="text-6xl block" role="img" aria-label="Document">⛶</span>
           <br />
           <p className="text-lg mt-2 font-sans"><i>Paste (Ctrl+V)<br></br>your screenshot for OCR</i></p>
         </div>
@@ -115,7 +115,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         <br />
         <br />
         <br />
-        <span className="text-6xl mb-3 block" role="img" aria-label="Document">📑</span>
+        <span className="text-6xl mb-3 block" role="img" aria-label="Document">⛶</span>
         <br></br>
         <p className="text-lg font-sans"><i>
           PASTE (Ctrl+V) your screenshot</i>
@@ -565,17 +565,13 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
               >
               {/* Stylized wand + pilcrow with better contrast */}
               <span className="inline-flex items-center leading-none">
-                <FontAwesomeIcon 
-                  icon={faMagicWandSparkles}
+                <span
                   className="mr-0.5 select-none"
-                  style={{ 
-                    fontSize: '14px',
-                    color: 'var(--autoformat-pilcrow-on)',
-                    opacity: isAutoFormatEnabled ? 1 : 0.3,
-                    transition: 'opacity 300ms ease'
-                  }}
+                  style={{ fontSize: '16px' }}
                   aria-hidden="true"
-                />
+                >
+                  🪄
+                </span>
                 <span
                   className={`select-none transition-all duration-300 transform ${isAutoFormatEnabled 
                     ? 'scale-110 text-pilcrow-on' 
