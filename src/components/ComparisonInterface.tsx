@@ -29,7 +29,8 @@ import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/pe
 
 import { DesktopControlsPanel } from './DesktopControlsPanel';
 import { MobileControlsPanel } from './MobileControlsPanel';
-import { RdLnMemoryButton } from './RdLnMemoryButton';
+import { RdLnMemoryEdgeTab } from './RdLnMemoryEdgeTab';
+import { RdLnMemorySidePanel } from './RdLnMemorySidePanel';
 import { DesktopInputLayout } from './DesktopInputLayout';
 import { MobileInputLayout } from './MobileInputLayout';
 import { ExtremeTestSuite } from '../testing/ExtremeTestSuite';
@@ -160,6 +161,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   
   // SSMR Step 1: Scroll lock state (Safe - no functionality yet)
   const [isScrollLocked, setIsScrollLocked] = useState(false);
+  
+  // RdLn Memory side panel state
+  const [isMemoryPanelOpen, setIsMemoryPanelOpen] = useState(false);
   
   // Full screen overlay state
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -752,16 +756,6 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           canUndo={canUndo}
           onUndo={handleUndo}
           contentLength={originalText.length + revisedText.length}
-          // RdLn Memory props
-          hasSessions={hasSessions}
-          sessionCount={sessions.length}
-          isLoadingMemory={isLoadingMemory}
-          onSaveSession={handleSaveSession}
-          onLoadSession={handleLoadSession}
-          onDeleteSession={handleDeleteSession}
-          onClearAll={handleClearAllSessions}
-          onExport={handleExportSessions}
-          onImport={handleImportSessions}
         />
 
         {/* Mobile Controls - Enhanced with all operation buttons */}
@@ -779,16 +773,6 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           canUndo={canUndo}
           onUndo={handleUndo}
           contentLength={originalText.length + revisedText.length}
-          // RdLn Memory props
-          hasSessions={hasSessions}
-          sessionCount={sessions.length}
-          isLoadingMemory={isLoadingMemory}
-          onSaveSession={handleSaveSession}
-          onLoadSession={handleLoadSession}
-          onDeleteSession={handleDeleteSession}
-          onClearAll={handleClearAllSessions}
-          onExport={handleExportSessions}
-          onImport={handleImportSessions}
         />
       </div>
 
@@ -928,6 +912,29 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           </div>
         )}
       </FullScreenOverlay>
+
+      {/* RdLn Memory Edge Tab - Fixed position at right edge */}
+      <RdLnMemoryEdgeTab
+        sessionCount={sessions.length}
+        isOpen={isMemoryPanelOpen}
+        onClick={() => setIsMemoryPanelOpen(!isMemoryPanelOpen)}
+        isLoading={isLoadingMemory}
+      />
+
+      {/* RdLn Memory Side Panel - Slides out from right edge */}
+      <RdLnMemorySidePanel
+        isOpen={isMemoryPanelOpen}
+        onClose={() => setIsMemoryPanelOpen(false)}
+        hasSessions={hasSessions}
+        sessionCount={sessions.length}
+        onSaveSession={handleSaveSession}
+        onLoadSession={handleLoadSession}
+        onDeleteSession={handleDeleteSession}
+        onClearAll={handleClearAllSessions}
+        onExport={handleExportSessions}
+        onImport={handleImportSessions}
+        contentLength={originalText.length + revisedText.length}
+      />
 
     </div>
   );

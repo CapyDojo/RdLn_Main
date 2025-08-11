@@ -28,7 +28,8 @@
       "WebFetch(domain:adamfard.com)",
       "Bash(taskkill:*)",
       "Bash(cmd /c:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

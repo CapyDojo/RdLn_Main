@@ -537,7 +537,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
             >
               <button
                 onClick={toggleAutoFormat}
-                className={`flex items-center justify-center w-14 h-12 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
+                className={`flex items-center justify-center w-16 h-14 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
                   ? 'bg-theme-primary-700 border-transparent hover:shadow-lg hover:shadow-theme-accent-200/30 shadow-theme-accent-200/20'
                   : 'bg-theme-neutral-900/20 dark:bg-theme-neutral-100/5 border-theme-neutral-600/50 dark:border-theme-neutral-400/40 hover:border-theme-neutral-500/70 dark:hover:border-theme-neutral-300/60 hover:bg-theme-neutral-800/25 dark:hover:bg-theme-neutral-100/10'}`}
                 aria-pressed={isAutoFormatEnabled}
@@ -557,7 +557,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                     ? 'scale-110 text-pilcrow-on' 
                     : 'scale-90 opacity-30 text-pilcrow-off'}`}
                   style={{
-                    fontSize: '26px',
+                    fontSize: '30px',
                     fontWeight: 900,
                     lineHeight: 1,
                     marginRight: '2px'

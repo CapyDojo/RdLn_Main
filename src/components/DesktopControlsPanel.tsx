@@ -2,7 +2,6 @@ import React from 'react';
 import { Play, RotateCcw, ArrowLeftRight, Zap, ZapOff, Lock, Undo } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
 import { CustomTooltip } from './CustomTooltip';
-import { RdLnMemoryButton } from './RdLnMemoryButton';
 
 interface DesktopControlsPanelProps extends BaseComponentProps {
   /** Whether Quick Compare is enabled */
@@ -35,24 +34,6 @@ interface DesktopControlsPanelProps extends BaseComponentProps {
   onUndo?: () => void;
   /** Content length for smart clear warnings */
   contentLength?: number;
-  /** RdLn Memory - Whether there are saved sessions available */
-  hasSessions?: boolean;
-  /** RdLn Memory - Number of saved sessions */
-  sessionCount?: number;
-  /** RdLn Memory - Whether currently loading sessions */
-  isLoadingMemory?: boolean;
-  /** RdLn Memory - Callback when save current session is requested */
-  onSaveSession?: () => void;
-  /** RdLn Memory - Callback when a session should be loaded */
-  onLoadSession?: (sessionId: string) => void;
-  /** RdLn Memory - Callback when a session should be deleted */
-  onDeleteSession?: (sessionId: string) => void;
-  /** RdLn Memory - Callback when all sessions should be cleared */
-  onClearAll?: () => void;
-  /** RdLn Memory - Callback when export is requested */
-  onExport?: () => void;
-  /** RdLn Memory - Callback when import is requested */
-  onImport?: (jsonData: string) => void;
 }
 
 /**
@@ -77,16 +58,6 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
   canUndo = false,
   onUndo,
   contentLength = 0,
-  // RdLn Memory props
-  hasSessions = false,
-  sessionCount = 0,
-  isLoadingMemory = false,
-  onSaveSession,
-  onLoadSession,
-  onDeleteSession,
-  onClearAll,
-  onExport,
-  onImport,
   style,
   className
 }) => {
@@ -200,21 +171,6 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
             </button>
           </CustomTooltip>
         )}
-        
-        {/* RdLn Memory Button - Session management */}
-        <RdLnMemoryButton
-          hasSessions={hasSessions}
-          sessionCount={sessionCount}
-          isLoading={isLoadingMemory}
-          onSaveSession={onSaveSession}
-          onLoadSession={onLoadSession}
-          onDeleteSession={onDeleteSession}
-          onClearAll={onClearAll}
-          onExport={onExport}
-          onImport={onImport}
-          contentLength={contentLength}
-          size="medium"
-        />
         
         {/* Spacer to separate dangerous action */}
         <div className="h-4"></div>
