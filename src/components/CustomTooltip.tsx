@@ -69,8 +69,8 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
     switch (placementType) {
       case 'top':
         return {
-          top: rect.top + scrollY - 2, // Even closer: 2px above
-          left: rect.right + scrollX + 2 // Tucked: align to right edge + 2px
+          top: rect.top + scrollY - 30, // Above the element with space for tooltip height
+          left: rect.left + scrollX - 207 // Just to the left of the element
         };
         
       case 'bottom':

@@ -531,7 +531,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           )}
           <h3 className="text-3xl font-semibold text-theme-primary-900">{title}</h3>
           <div className="relative">
-            <CustomTooltip 
+            <CustomTooltip
               content="Auto-fix broken paragraphs"
               status={isAutoFormatEnabled ? 'ON' : 'OFF'}
             >
@@ -543,35 +543,35 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                 aria-pressed={isAutoFormatEnabled}
                 aria-label={`Auto paragraph formatting ${isAutoFormatEnabled ? 'on' : 'off'}`}
               >
-              {/* Stylized sparkles + pilcrow with better contrast */}
-              <span className="inline-flex items-center leading-none">
-                <span
-                  className="mr-0 select-none"
-                  style={{ fontSize: '14px', marginLeft: '-2px' }}
-                  aria-hidden="true"
-                >
-                  ✨
+                {/* Stylized sparkles + pilcrow with better contrast */}
+                <span className="inline-flex items-center leading-none">
+                  <span
+                    className="mr-0 select-none"
+                    style={{ fontSize: '14px', marginLeft: '-2px' }}
+                    aria-hidden="true"
+                  >
+                    ✨
+                  </span>
+                  <span
+                    className={`select-none transition-all duration-300 transform ${isAutoFormatEnabled
+                      ? 'scale-110 text-pilcrow-on'
+                      : 'scale-90 opacity-30 text-pilcrow-off'}`}
+                    style={{
+                      fontSize: '28px',
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      marginRight: '2px'
+                    }}
+                  >
+                    ¶
+                  </span>
                 </span>
-                <span
-                  className={`select-none transition-all duration-300 transform ${isAutoFormatEnabled 
-                    ? 'scale-110 text-pilcrow-on' 
-                    : 'scale-90 opacity-30 text-pilcrow-off'}`}
-                  style={{
-                    fontSize: '30px',
-                    fontWeight: 900,
-                    lineHeight: 1,
-                    marginRight: '2px'
-                  }}
-                >
-                  ¶
-                </span>
-              </span>
               </button>
             </CustomTooltip>
             {isAutoFormatEnabled && (
-              <span 
+              <span
                 className="absolute w-2 h-2 rounded-full animate-pulse"
-                style={{ 
+                style={{
                   backgroundColor: 'var(--autoformat-pilcrow-on)',
                   top: '2px',
                   right: '2px'
@@ -609,7 +609,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                   🤖 Auto
                 </button>
               </CustomTooltip>
-              <CustomTooltip 
+              <CustomTooltip
                 content={`Manually select OCR languages${!autoDetect && selectedLanguages.length > 0 ? ` - ${selectedLanguages.length} ${selectedLanguages.length === 1 ? 'language' : 'languages'} selected` : ''}`}
               >
                 <button
@@ -634,17 +634,17 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                   aria-expanded={!autoDetect && showLanguageSettings}
                   aria-label={`Manual language selection${!autoDetect && selectedLanguages.length > 0 ? ` (${selectedLanguages.length} selected)` : ''}`}
                 >
-                ☰
-                {!autoDetect && selectedLanguages.length > 0 && (
-                  <span className="text-xs bg-theme-primary-100 text-theme-primary-800 px-1.5 py-0.5 rounded-full ml-1">
-                    {getSelectedLanguagesDisplay()}
-                  </span>
-                )}
-                <ChevronDown
-                  className={`w-3 h-3 transition-transform duration-200 ${showLanguageSettings ? 'rotate-180' : ''
-                    }`}
-                  aria-hidden="true"
-                />
+                  ☰
+                  {!autoDetect && selectedLanguages.length > 0 && (
+                    <span className="text-xs bg-theme-primary-100 text-theme-primary-800 px-1.5 py-0.5 rounded-full ml-1">
+                      {getSelectedLanguagesDisplay()}
+                    </span>
+                  )}
+                  <ChevronDown
+                    className={`w-3 h-3 transition-transform duration-200 ${showLanguageSettings ? 'rotate-180' : ''
+                      }`}
+                    aria-hidden="true"
+                  />
                 </button>
               </CustomTooltip>
               <div className={`sliding-indicator ${autoDetect ? 'to-left' : 'to-right'}`} aria-hidden="true"></div>

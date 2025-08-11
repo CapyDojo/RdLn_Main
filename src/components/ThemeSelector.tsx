@@ -71,6 +71,25 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
     });
   }, [zoomLevel]);
 
+  // Handle Alt+P keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.altKey && event.key.toLowerCase() === 'p') {
+        event.preventDefault();
+        if (isHovered) {
+          handleMouseLeave(); // Close the theme selector if open
+        } else {
+          handleMouseEnter(); // Open the theme selector if closed
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleMouseEnter, handleMouseLeave, isHovered]);
+
   // Reset card styles when theme changes to prevent stuck hover states
   useEffect(() => {
     const themeCardButtons = document.querySelectorAll('button[data-theme-card]');
@@ -128,7 +147,7 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
       <CustomTooltip
         content="Hover to see themes"
         shortcut="Alt+P"
-        placement="bottom-right"
+        placement="top"
         delay={200}
       >
         <button
@@ -237,15 +256,22 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
                 <button
                   onClick={() => handleSelectTheme(theme.name, dragState.isDragging)}
                   tabIndex={-1}
-                  className="w-52 px-4 py-3 text-left rounded-lg flex items-center gap-3 group border shadow-lg"
+                  className={`w-52 px-4 py-3 text-left rounded-lg flex items-center gap-3 group border shadow-lg ${
+                    selectedIndex === index ? 'ring-2 ring-blue-400 ring-opacity-75' : ''
+                  }`}
                   style={{
                     ...getThemeButtonStyle(theme, currentTheme === theme.name),
                     // Add depth shadow that increases with cascade depth
                     boxShadow: isHovered
                       ? `0 ${6 + cascadePosition.depth * 2}px ${12 + cascadePosition.depth * 3}px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1)`
                       : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                    // Ensure no conflicting transitions
-                    transition: 'none' // Let our hover effects handle transitions
+                    // Keyboard selection highlight - only when not being mouse hovered
+                    ...(selectedIndex === index && {
+                      outline: '2px solid rgba(59, 130, 246, 0.8)',
+                      outlineOffset: '2px',
+                    }),
+                    // Let hover effects handle transitions
+                    transition: 'none'
                   }}
                   data-theme-card={theme.name}
                   onMouseEnter={(e) => {
