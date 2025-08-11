@@ -77,33 +77,33 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
     switch (placementType) {
       case 'top':
         return {
-          top: rect.top + scrollY - 4, // Closer: 4px above
-          left: rect.right + scrollX + 4 // Tucked: align to right edge + 4px
+          top: rect.top + scrollY - 2, // Even closer: 2px above
+          left: rect.right + scrollX + 2 // Tucked: align to right edge + 2px
         };
         
       case 'bottom':
         return {
-          top: rect.bottom + scrollY + 4, // Closer: 4px below
-          left: rect.right + scrollX + 4 // Tucked: align to right edge + 4px
+          top: rect.bottom + scrollY + 2, // Even closer: 2px below
+          left: rect.right + scrollX + 2 // Tucked: align to right edge + 2px
         };
         
       case 'left':
         return {
-          top: rect.bottom + scrollY + 4, // Align to bottom edge + 4px
-          left: rect.left + scrollX - 4 // Closer: 4px to the left
+          top: rect.bottom + scrollY + 2, // Align to bottom edge + 2px
+          left: rect.left + scrollX - 2 // Even closer: 2px to the left
         };
         
       case 'right':
         return {
-          top: rect.bottom + scrollY + 4, // Align to bottom edge + 4px
-          left: rect.right + scrollX + 4 // Closer: 4px to the right
+          top: rect.bottom + scrollY + 2, // Align to bottom edge + 2px
+          left: rect.right + scrollX + 2 // Even closer: 2px to the right
         };
         
       case 'bottom-right':
       default:
         return {
-          top: rect.bottom + scrollY + 4, // 4px below (45-degree angle)
-          left: rect.right + scrollX + 4 // 4px to the right (tucked closer)
+          top: rect.bottom + scrollY + 2, // Even closer: 2px below
+          left: rect.right + scrollX + 2 // Even closer: 2px to the right
         };
     }
   };

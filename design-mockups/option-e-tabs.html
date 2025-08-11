@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="bamboo">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option E: Tab-Based Interface - RdLn Interface</title>
+    <style>
+        /* Import RdLn Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* RdLn Theme Variables - Bamboo Theme */
+        :root {
+            --glass-subtle: 0.05;
+            --glass-panel: 0.12;
+            --glass-focus: 0.20;
+            --glass-strong: 0.35;
+            --glass-bg: 255, 255, 255;
+            --glass-border: 255, 255, 255;
+            --glass-shadow: 31, 38, 135;
+            --glass-blur: 10px;
+            --glass-saturate: 1.3;
+        }
+
+        html[data-theme="bamboo"] {
+            --theme-glass-bg: 113, 155, 81;
+            --theme-glass-border: 6, 95, 70;
+            --theme-glass-hover-border: 6, 95, 70;
+            --theme-glass-hover-shadow: 4, 75, 56;
+            --theme-text-body: #4a3728;
+            --theme-text-header: #065f46;
+            --theme-text-secondary: #6b4e3d;
+            --theme-text-interactive: #065f46;
+            --theme-accent-500: #f59e0b;
+            --theme-accent-600: #d97706;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--theme-text-body);
+        }
+
+        /* RdLn Glassmorphism Base */
+        .glass-panel {
+            background: rgba(var(--theme-glass-bg), var(--glass-panel));
+            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+            box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 12px;
+        }
+
+        .glass-panel:hover {
+            background: rgba(var(--theme-glass-bg), var(--glass-focus));
+            border-color: rgba(var(--theme-glass-border), var(--glass-strong));
+            box-shadow: 0 12px 40px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+        }
+
+        /* Layout Container */
+        .layout-current {
+            min-height: 100vh;
+        }
+
+        .comparison-interface-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .floating-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .floating-header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .floating-header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+
+        /* OPTION E: TAB-BASED INTERFACE */
+        .tab-container {
+            background: rgba(var(--theme-glass-bg), var(--glass-panel));
+            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+            box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .tab-header {
+            display: flex;
+            background: rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(var(--theme-glass-border), 0.3);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1.25rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--theme-text-secondary);
+            background: transparent;
+            border: none;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .tab.active {
+            background: rgba(var(--theme-glass-bg), var(--glass-focus));
+            color: var(--theme-text-header);
+            box-shadow: inset 0 -3px 0 #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab:not(.active):hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--theme-text-interactive);
+        }
+
+        .tab-icon {
+            font-size: 1.3rem;
+        }
+
+        .tab-badge {
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: bold;
+            min-width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+        }
+
+        .tab-content {
+            min-height: 70vh;
+            position: relative;
+        }
+
+        /* Compare Tab Content */
+        .comparison-content {
+            padding: 2rem;
+            display: block;
+        }
+
+        .comparison-content.hidden {
+            display: none;
+        }
+
+        /* Input Grid */
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-panel {
+            position: relative;
+        }
+
+        .glass-panel-inner-content {
+            padding: 1.5rem;
+            min-height: 300px;
+            overflow-y: auto;
+        }
+
+        .glass-input-field {
+            width: 100%;
+            min-height: 250px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--theme-text-body);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .glass-input-field::placeholder {
+            color: var(--theme-text-secondary);
+            opacity: 0.7;
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .control-button {
+            background: rgba(var(--theme-glass-bg), var(--glass-panel));
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+            border-radius: 50px;
+            padding: 12px 20px;
+            color: var(--theme-text-interactive);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .control-button:hover {
+            background: rgba(var(--theme-glass-bg), var(--glass-focus));
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .control-button.primary {
+            background: var(--theme-accent-500);
+            color: white;
+            border-color: var(--theme-accent-600);
+        }
+
+        .control-button.primary:hover {
+            background: var(--theme-accent-600);
+        }
+
+        /* Output Panel */
+        .output-panel {
+            margin-top: 2rem;
+        }
+
+        .redline-output {
+            min-height: 200px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            color: var(--theme-text-body);
+        }
+
+        /* Sessions Tab Content */
+        .sessions-content {
+            padding: 2rem;
+            display: none;
+        }
+
+        .sessions-content.active {
+            display: block;
+        }
+
+        .sessions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(var(--theme-glass-border), 0.3);
+        }
+
+        .sessions-header h2 {
+            color: var(--theme-text-header);
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sessions-stats {
+            color: var(--theme-text-secondary);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .sessions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .session-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(var(--theme-glass-border), 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .session-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(var(--theme-glass-border), 0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .session-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .session-card-name {
+            font-weight: 700;
+            color: var(--theme-text-header);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            line-height: 1.3;
+        }
+
+        .session-card-preview {
+            color: var(--theme-text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.4;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .session-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--theme-text-secondary);
+            opacity: 0.8;
+        }
+
+        .session-card-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .session-card:hover .session-card-actions {
+            opacity: 1;
+        }
+
+        .session-action-btn {
+            background: rgba(var(--theme-glass-bg), 0.8);
+            border: 1px solid rgba(var(--theme-glass-border), 0.3);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .session-action-btn:hover {
+            background: rgba(var(--theme-glass-bg), 1);
+            transform: scale(1.1);
+        }
+
+        .session-action-btn.delete {
+            color: #dc2626;
+        }
+
+        .session-action-btn.delete:hover {
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        /* Sessions Tab Actions */
+        .sessions-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .session-global-action {
+            background: rgba(var(--theme-glass-bg), 0.3);
+            border: 1px solid rgba(var(--theme-glass-border), 0.3);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            color: var(--theme-text-interactive);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .session-global-action:hover {
+            background: rgba(var(--theme-glass-bg), 0.5);
+            border-color: rgba(var(--theme-glass-border), 0.5);
+            transform: translateY(-2px);
+        }
+
+        .session-global-action.danger {
+            color: #dc2626;
+            border-color: rgba(220, 38, 38, 0.3);
+        }
+
+        .session-global-action.danger:hover {
+            background: rgba(220, 38, 38, 0.1);
+            border-color: rgba(220, 38, 38, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .tab {
+                padding: 1rem;
+                font-size: 1rem;
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+            
+            .tab-badge {
+                position: static;
+                margin-left: 0.5rem;
+                min-width: 20px;
+                height: 20px;
+                font-size: 0.7rem;
+            }
+            
+            .sessions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-panel {
+                gap: 0.5rem;
+            }
+            
+            .control-button {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout-current">
+        <div class="comparison-interface-container">
+            <!-- Header -->
+            <div class="floating-header">
+                <h1>📑 RdLn Memory - Tab Interface</h1>
+                <p>Professional document comparison with dedicated session management tab</p>
+            </div>
+
+            <!-- OPTION E: TAB-BASED INTERFACE -->
+            <div class="tab-container">
+                <div class="tab-header">
+                    <button class="tab active" id="compareTab" onclick="switchTab('compare')">
+                        <span class="tab-icon">⚖️</span>
+                        <span>Compare Documents</span>
+                    </button>
+                    <button class="tab" id="sessionsTab" onclick="switchTab('sessions')">
+                        <span class="tab-icon">🗂️</span>
+                        <span>Sessions</span>
+                        <span class="tab-badge">5</span>
+                    </button>
+                </div>
+
+                <div class="tab-content">
+                    <!-- Compare Tab Content -->
+                    <div class="comparison-content" id="comparisonContent">
+                        <!-- Input Panels -->
+                        <div class="input-grid">
+                            <div class="input-panel glass-panel" data-input-panel>
+                                <div class="glass-panel-inner-content">
+                                    <h3 style="color: var(--theme-text-header); margin-bottom: 1rem; font-weight: 600;">Original Document</h3>
+                                    <textarea class="glass-input-field" placeholder="Enter your original document text here...">TERMS AND CONDITIONS
+
+1. ACCEPTANCE OF TERMS
+By accessing and using this service, you accept and agree to be bound by the terms and provision of this agreement.
+
+2. USE LICENSE
+Permission is granted to temporarily download one copy of the materials on our website for personal, non-commercial transitory viewing only.
+
+3. DISCLAIMER
+The materials on our website are provided on an 'as is' basis. We make no warranties, expressed or implied.</textarea>
+                                </div>
+                            </div>
+
+                            <div class="input-panel glass-panel" data-input-panel>
+                                <div class="glass-panel-inner-content">
+                                    <h3 style="color: var(--theme-text-header); margin-bottom: 1rem; font-weight: 600;">Revised Document</h3>
+                                    <textarea class="glass-input-field" placeholder="Enter your revised document text here...">TERMS AND CONDITIONS
+
+1. ACCEPTANCE OF TERMS
+By accessing and using this service, you accept and agree to be bound by the terms and provisions of this agreement.
+
+2. USE LICENSE
+Permission is granted to temporarily download one copy of the materials on our website for personal, non-commercial transitory viewing only. This license shall automatically terminate if you violate any of these restrictions.
+
+3. DISCLAIMER
+The materials on our website are provided on an 'as is' basis. We make no warranties, expressed or implied, and hereby disclaim all other warranties.</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Controls Panel -->
+                        <div class="controls-panel">
+                            <button class="control-button primary">
+                                ▶️ Compare Documents
+                            </button>
+                            <button class="control-button">
+                                ⚡ Quick Compare: ON
+                            </button>
+                            <button class="control-button">
+                                ⇄ Swap Content
+                            </button>
+                            <button class="control-button">
+                                🔒 Scroll Lock
+                            </button>
+                            <button class="control-button">
+                                🗑️ Clear
+                            </button>
+                        </div>
+
+                        <!-- Output Panel -->
+                        <div class="output-panel glass-panel" data-output-panel>
+                            <div class="glass-panel-inner-content">
+                                <h3 style="color: var(--theme-text-header); margin-bottom: 1rem; font-weight: 600;">Document Comparison Results</h3>
+                                <div class="redline-output">
+                                    <div style="margin-bottom: 1rem;">
+                                        <strong>Changes detected:</strong> 3 modifications found
+                                    </div>
+                                    
+                                    <div style="background: rgba(255,0,0,0.1); padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0;">
+                                        <strong>Line 2:</strong> "provisions" → "provision" <span style="color: #dc2626;">[REMOVED: s]</span>
+                                    </div>
+                                    
+                                    <div style="background: rgba(0,255,0,0.1); padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0;">
+                                        <strong>Line 5:</strong> Added: "This license shall automatically terminate if you violate any of these restrictions." <span style="color: #16a34a;">[ADDED]</span>
+                                    </div>
+                                    
+                                    <div style="background: rgba(0,255,0,0.1); padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0;">
+                                        <strong>Line 8:</strong> Added: "and hereby disclaim all other warranties" <span style="color: #16a34a;">[ADDED]</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sessions Tab Content -->
+                    <div class="sessions-content" id="sessionsContent">
+                        <div class="sessions-header">
+                            <h2>📚 RdLn Memory Sessions</h2>
+                            <div class="sessions-stats">5 saved sessions • 12.2k total characters</div>
+                        </div>
+
+                        <div class="sessions-actions">
+                            <button class="session-global-action" onclick="saveCurrentSession()">
+                                💾 Save Current Session
+                            </button>
+                            <button class="session-global-action" onclick="exportSessions()">
+                                📤 Export All Sessions
+                            </button>
+                            <button class="session-global-action" onclick="importSessions()">
+                                📥 Import Sessions
+                            </button>
+                            <button class="session-global-action danger" onclick="clearAllSessions()">
+                                🗑️ Clear All Sessions
+                            </button>
+                        </div>
+
+                        <div class="sessions-grid">
+                            <div class="session-card" onclick="loadSession('session1')">
+                                <div class="session-card-actions">
+                                    <button class="session-action-btn delete" onclick="deleteSession(event, 'session1')" title="Delete">🗑️</button>
+                                </div>
+                                <div class="session-card-name">Contract vs Amendment #1</div>
+                                <div class="session-card-preview">TERMS AND CONDITIONS
+
+1. ACCEPTANCE OF TERMS
+By accessing and using this service, you accept and agree to be bound by the terms and provision of this agreement...</div>
+                                <div class="session-card-meta">
+                                    <span>2.1k characters</span>
+                                    <span>2 hours ago</span>
+                                </div>
+                            </div>
+
+                            <div class="session-card" onclick="loadSession('session2')">
+                                <div class="session-card-actions">
+                                    <button class="session-action-btn delete" onclick="deleteSession(event, 'session2')" title="Delete">🗑️</button>
+                                </div>
+                                <div class="session-card-name">Legal Brief Comparison</div>
+                                <div class="session-card-preview">WHEREAS the plaintiff seeks damages for breach of contract, and WHEREAS the defendant disputes the validity of said contract, the parties agree to submit to mediation...</div>
+                                <div class="session-card-meta">
+                                    <span>5.7k characters</span>
+                                    <span>Yesterday</span>
+                                </div>
+                            </div>
+
+                            <div class="session-card" onclick="loadSession('session3')">
+                                <div class="session-card-actions">
+                                    <button class="session-action-btn delete" onclick="deleteSession(event, 'session3')" title="Delete">🗑️</button>
+                                </div>
+                                <div class="session-card-name">Policy Document Review</div>
+                                <div class="session-card-preview">Company Policy 2024
+
+1. EMPLOYEE CONDUCT
+All employees must adhere to professional standards and ethical guidelines as outlined in this document...</div>
+                                <div class="session-card-meta">
+                                    <span>3.4k characters</span>
+                                    <span>3 days ago</span>
+                                </div>
+                            </div>
+
+                            <div class="session-card" onclick="loadSession('session4')">
+                                <div class="session-card-actions">
+                                    <button class="session-action-btn delete" onclick="deleteSession(event, 'session4')" title="Delete">🗑️</button>
+                                </div>
+                                <div class="session-card-name">NDA Template Update</div>
+                                <div class="session-card-preview">NON-DISCLOSURE AGREEMENT
+
+This Non-Disclosure Agreement ("Agreement") is entered into on [DATE] between [COMPANY] and [RECIPIENT]...</div>
+                                <div class="session-card-meta">
+                                    <span>1.8k characters</span>
+                                    <span>1 week ago</span>
+                                </div>
+                            </div>
+
+                            <div class="session-card" onclick="loadSession('session5')">
+                                <div class="session-card-actions">
+                                    <button class="session-action-btn delete" onclick="deleteSession(event, 'session5')" title="Delete">🗑️</button>
+                                </div>
+                                <div class="session-card-name">Service Agreement Draft</div>
+                                <div class="session-card-preview">This Service Agreement ("Agreement") is entered into between Provider and Client for the provision of professional services as detailed herein...</div>
+                                <div class="session-card-meta">
+                                    <span>4.2k characters</span>
+                                    <span>2 weeks ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Update tab buttons
+            const compareTab = document.getElementById('compareTab');
+            const sessionsTab = document.getElementById('sessionsTab');
+            
+            // Update content
+            const comparisonContent = document.getElementById('comparisonContent');
+            const sessionsContent = document.getElementById('sessionsContent');
+            
+            if (tabName === 'compare') {
+                compareTab.classList.add('active');
+                sessionsTab.classList.remove('active');
+                comparisonContent.style.display = 'block';
+                sessionsContent.style.display = 'none';
+            } else if (tabName === 'sessions') {
+                sessionsTab.classList.add('active');
+                compareTab.classList.remove('active');
+                sessionsContent.style.display = 'block';
+                comparisonContent.style.display = 'none';
+            }
+        }
+
+        function loadSession(sessionId) {
+            alert(`Loading session: ${sessionId}`);
+            // Switch back to compare tab after loading
+            switchTab('compare');
+        }
+
+        function deleteSession(event, sessionId) {
+            event.stopPropagation(); // Prevent card click
+            if (confirm('Are you sure you want to delete this session?')) {
+                alert(`Deleted session: ${sessionId}`);
+                // Remove the card from the UI
+                event.target.closest('.session-card').remove();
+            }
+        }
+
+        function saveCurrentSession() {
+            alert('Saving current session to RdLn Memory...');
+        }
+
+        function exportSessions() {
+            alert('Exporting all sessions as JSON...');
+        }
+
+        function importSessions() {
+            alert('Import sessions functionality...');
+        }
+
+        function clearAllSessions() {
+            if (confirm('Are you sure you want to clear all saved sessions? This cannot be undone.')) {
+                alert('All sessions cleared from RdLn Memory');
+                // Clear all session cards
+                document.querySelector('.sessions-grid').innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--theme-text-secondary); opacity: 0.7;"><div style="font-size: 3rem; margin-bottom: 1rem;">📭</div><div style="font-size: 1.2rem; font-weight: 600;">No sessions saved</div><div>Start comparing documents to create your first session</div></div>';
+            }
+        }
+    </script>
+</body>
+</html>
