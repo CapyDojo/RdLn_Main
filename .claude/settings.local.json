@@ -29,7 +29,9 @@
       "Bash(taskkill:*)",
       "Bash(cmd /c:*)",
       "Bash(taskkill:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

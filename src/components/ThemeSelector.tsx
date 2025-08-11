@@ -7,6 +7,7 @@ import { useZoomLevel } from '../hooks/useZoom';
 import { useHoverState, useDragState, useBumpPhysics, useKeyboardNavigation } from './ThemeSelector/hooks';
 import { getThemeButtonStyle, calculateCrescentPosition, applyHoverEffects, restoreDefaultStyles } from './ThemeSelector/utils';
 import { LAYOUT_CONFIG, ANIMATION_CONFIG, PHYSICS_CONFIG } from './ThemeSelector/constants';
+import { CustomTooltip } from './CustomTooltip';
 
 // Component now uses modular architecture with separated concerns
 
@@ -124,29 +125,34 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
       style={style}
     >
       {/* Main Themes Button - Rounded Square */}
-      <button
-        className="flex items-center justify-center rounded-lg transition-all duration-200 shrink-0 relative group segment"
-        title="Hover to see themes (or press arrow keys when open)"
-        aria-label="Theme selector - hover to view available themes, use arrow keys to navigate"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onFocus={handleMouseEnter}
-        onBlur={handleMouseLeave}
-        tabIndex={0}
-        style={{
-          width: `${LAYOUT_CONFIG.buttonSize}px`,
-          height: `${LAYOUT_CONFIG.buttonSize}px`,
-          aspectRatio: '1/1'
-        }}
+      <CustomTooltip
+        content="Hover to see themes (or press arrow keys when open)"
+        placement="bottom-right"
+        delay={200}
       >
-        <div className="flex flex-col items-center justify-center">
-          <Palette className="w-6 h-6" aria-hidden="true" />
-          <ChevronDown
-            className={`w-2.5 h-2.5 transition-transform duration-300 ${isHovered ? 'rotate-180' : ''} mt-0.5`}
-            aria-hidden="true"
-          />
-        </div>
-      </button>
+        <button
+          className="flex items-center justify-center rounded-lg transition-all duration-200 shrink-0 relative group segment"
+          aria-label="Theme selector - hover to view available themes, use arrow keys to navigate"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onFocus={handleMouseEnter}
+          onBlur={handleMouseLeave}
+          tabIndex={0}
+          style={{
+            width: `${LAYOUT_CONFIG.buttonSize}px`,
+            height: `${LAYOUT_CONFIG.buttonSize}px`,
+            aspectRatio: '1/1'
+          }}
+        >
+          <div className="flex flex-col items-center justify-center">
+            <Palette className="w-6 h-6" aria-hidden="true" />
+            <ChevronDown
+              className={`w-2.5 h-2.5 transition-transform duration-300 ${isHovered ? 'rotate-180' : ''} mt-0.5`}
+              aria-hidden="true"
+            />
+          </div>
+        </button>
+      </CustomTooltip>
 
       {/* Cascading Theme Cards - Rendered via Portal */}
       {buttonRect && createPortal(
