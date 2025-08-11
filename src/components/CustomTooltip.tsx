@@ -61,18 +61,10 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
     if (!triggerRef.current) return { top: 0, left: 0 };
     
     const rect = triggerRef.current.getBoundingClientRect();
-    const viewport = {
-      width: window.innerWidth,
-      height: window.innerHeight
-    };
     
     // Better scroll position detection that works with zoom
     const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
     const scrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
-    
-    // Calculate element position relative to viewport for smart positioning
-    const centerX = rect.left + rect.width / 2;
-    const relativeX = centerX / viewport.width;
     
     switch (placementType) {
       case 'top':
@@ -122,12 +114,6 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
       width: window.innerWidth,
       height: window.innerHeight
     };
-
-    // Calculate element position relative to viewport (0-1 scale)
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const relativeX = centerX / viewport.width;
-    const relativeY = centerY / viewport.height;
 
     // Check available space in each direction
     const spaceTop = rect.top;
@@ -219,7 +205,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
 
   // Position classes for fixed positioning portal - no transforms needed for precise positioning
   const getPositionClasses = () => {
-    return 'fixed z-[9999] pointer-events-none'; // Simple fixed positioning, no transforms
+    return 'fixed z-[2147483647] pointer-events-none'; // Maximum z-index to ensure tooltips appear above browser UI
   };
 
   // Modern design - no arrow needed, clean shadow-based design
@@ -237,7 +223,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
     >
       {/* Modern tooltip without arrow - clean shadow design */}
       <div className="glass-panel px-3 py-1.5 rounded-lg text-xs font-medium bg-theme-neutral-50/95 text-theme-primary-800 shadow-xl backdrop-blur-md border border-theme-neutral-200/50 max-w-80 min-w-32 shadow-theme-primary-900/20">
-        <div className="flex items-center gap-2 whitespace-nowrap">
+        <div className="flex items-center gap-2">
           <span className="leading-tight">{content}</span>
           {status && (
             <kbd className="px-1.5 py-0.5 bg-theme-accent-100/80 border border-theme-accent-200/60 rounded text-theme-accent-800 font-mono text-xs shrink-0">

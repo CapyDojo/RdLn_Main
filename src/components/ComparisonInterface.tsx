@@ -29,7 +29,8 @@ import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/pe
 
 import { DesktopControlsPanel } from './DesktopControlsPanel';
 import { MobileControlsPanel } from './MobileControlsPanel';
-import { RdLnMemoryFilingCabinet } from './RdLnMemoryFilingCabinet';
+import { RdLnMemoryEdgeTab } from './RdLnMemoryEdgeTab';
+import { RdLnMemorySidePanel } from './RdLnMemorySidePanel';
 import { DesktopInputLayout } from './DesktopInputLayout';
 import { MobileInputLayout } from './MobileInputLayout';
 import { ExtremeTestSuite } from '../testing/ExtremeTestSuite';
@@ -912,13 +913,20 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         )}
       </FullScreenOverlay>
 
-      {/* RdLn Memory Filing Cabinet - Unified sliding component */}
-      <RdLnMemoryFilingCabinet
+      {/* RdLn Memory Edge Tab - Fixed position at right edge */}
+      <RdLnMemoryEdgeTab
+        sessionCount={sessions.length}
         isOpen={isMemoryPanelOpen}
-        onToggle={() => setIsMemoryPanelOpen(!isMemoryPanelOpen)}
+        onClick={() => setIsMemoryPanelOpen(!isMemoryPanelOpen)}
+        isLoading={isLoadingMemory}
+      />
+
+      {/* RdLn Memory Side Panel - Slides out from right edge */}
+      <RdLnMemorySidePanel
+        isOpen={isMemoryPanelOpen}
+        onClose={() => setIsMemoryPanelOpen(false)}
         hasSessions={hasSessions}
         sessionCount={sessions.length}
-        isLoading={isLoadingMemory}
         onSaveSession={handleSaveSession}
         onLoadSession={handleLoadSession}
         onDeleteSession={handleDeleteSession}

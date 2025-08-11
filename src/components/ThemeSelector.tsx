@@ -126,7 +126,8 @@ export const ThemeSelector: React.FC<BaseComponentProps> = ({ style, className }
     >
       {/* Main Themes Button - Rounded Square */}
       <CustomTooltip
-        content="Hover to see themes (or press arrow keys when open)"
+        content="Hover to see themes"
+        shortcut="Alt+P"
         placement="bottom-right"
         delay={200}
       >
