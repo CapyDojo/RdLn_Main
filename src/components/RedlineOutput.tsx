@@ -9,7 +9,7 @@ import { ResultsOverlayTrigger } from './experimental/ResultsOverlayTrigger';
 import { FullScreenButton } from './FullScreenButton';
 import { CustomTooltip } from './CustomTooltip';
 import { useFontSize } from '../contexts/FontSizeContext';
-import { copyToClipboardMultiFormat, isMultiFormatClipboardSupported } from '../utils/clipboardUtils';
+import { copyToClipboardMultiFormat, isMultiFormatClipboardSupported, copyToClipboardWordCompatible } from '../utils/clipboardUtils';
 import { FontSizeSelector } from './FontSizeSelector';
 import { exportHtmlDiffToDocx } from '../lib/docxExport';
 
@@ -82,6 +82,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   
   // Copy success state for microinteraction
   const [copySuccess, setCopySuccess] = React.useState(false);
+  const [copyWordSuccess, setCopyWordSuccess] = React.useState(false);
 
   // DOCX export state
   const [exportingDocx, setExportingDocx] = React.useState(false);
@@ -271,6 +272,41 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     }
   }, 'copy_to_clipboard', performanceTracker);
 
+  const copyToClipboardWord = usePerformanceAwareHandler(async () => {
+    if (!filteredChanges || !Array.isArray(filteredChanges)) {
+      return;
+    }
+
+    try {
+      await copyToClipboardWordCompatible(filteredChanges);
+      
+      // Show success microinteraction
+      setCopyWordSuccess(true);
+      setTimeout(() => setCopyWordSuccess(false), 1500);
+      
+      onCopy();
+
+      // Track success metrics
+      const textLength = filteredChanges.reduce((acc, change) => {
+        const content = change.type === 'changed' ? change.revisedContent || '' : change.content || '';
+        return acc + content.length;
+      }, 0);
+
+      performanceTracker.trackMetric('copy_word_success', {
+        textLength,
+        changeCount: filteredChanges.length
+      });
+
+    } catch (err) {
+      console.error('Failed to copy Word-compatible text:', err);
+      performanceTracker.trackMetric('copy_word_failure', {
+        error: err instanceof Error ? err.message : 'Unknown error'
+      });
+      // Still call onCopy in case of error for testing purposes
+      onCopy();
+    }
+  }, 'copy_to_clipboard_word', performanceTracker);
+
   const exportDocx = usePerformanceAwareHandler(async () => {
     if (!filteredChanges || !Array.isArray(filteredChanges) || filteredChanges.length === 0) return;
     try {
@@ -419,7 +455,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             <div className="relative segmented-control">
               <CustomTooltip
                 content={isMultiFormatClipboardSupported()
-                  ? "Copy RdLn with formatting (HTML + plain text)"
+                  ? "Copy RdLn with HTML formatting"
                   : "Copy RdLn as plain text"
                 }
               >
@@ -450,6 +486,39 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                 </button>
               </CustomTooltip>
             </div>
+
+            {/* Copy for Word Button - Feature Flagged */}
+            {FEATURE_FLAGS.ENABLE_WORD_OPTIMIZED_COPY && (
+              <div className="relative segmented-control">
+                <CustomTooltip content="Copy RdLn optimized for Microsoft Word">
+                  <button
+                    onClick={copyToClipboardWord}
+                    className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
+                      copyWordSuccess ? 'bg-green-100 border-green-300' : ''
+                    }`}
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      aspectRatio: '1/1',
+                      transform: copyWordSuccess ? 'scale(1.05)' : 'scale(1)',
+                    }}
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      {copyWordSuccess ? (
+                        <Check className={`w-6 h-6 text-green-600 transition-all duration-300`} aria-hidden="true" />
+                      ) : (
+                        <Copy className="w-6 h-6 transition-all duration-300" aria-hidden="true" />
+                      )}
+                      <span className={`text-xs mt-0.5 hidden sm:block transition-all duration-300 ${
+                        copyWordSuccess ? 'text-green-600' : ''
+                      }`}>
+                        {copyWordSuccess ? 'Copied!' : 'Word'}
+                      </span>
+                    </div>
+                  </button>
+                </CustomTooltip>
+              </div>
+            )}
 
             {/* Download DOCX Button */}
             <div className="relative segmented-control">

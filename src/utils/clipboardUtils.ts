@@ -137,3 +137,88 @@ export const copyToClipboardMultiFormat = async (changes: DiffChange[]): Promise
 export const isMultiFormatClipboardSupported = (): boolean => {
   return !!(navigator.clipboard && window.ClipboardItem);
 };
+
+/**
+ * Word-compatible inline styles using solid colors instead of gradients
+ * and removing unsupported CSS properties
+ */
+const getWordCompatibleStyles = (changeType: string): string => {
+  switch (changeType) {
+    case 'added':
+      return 'background-color: #f0fdf4; color: #14532d; border: 2px solid #16a34a; text-decoration: underline; font-weight: 500; padding: 1.8px 4.5px; margin: 1.5px 1.5px;';
+    case 'removed':
+      return 'background-color: #fef7f7; color: #991b1b; border: 2px solid #dc2626; text-decoration: line-through; font-weight: 500; padding: 1.8px 4.5px; margin: 1.5px 1.5px;';
+    case 'changed-original':
+      return 'background-color: #fef7f7; color: #991b1b; border: 2px solid #dc2626; text-decoration: line-through; font-weight: 500; padding: 1.8px 4.5px; margin: 1.5px 1.5px;';
+    case 'changed-revised':
+      return 'background-color: #f0fdf4; color: #14532d; border: 2px solid #16a34a; text-decoration: underline; font-weight: 500; padding: 1.8px 4.5px; margin: 1.5px 1.5px;';
+    default:
+      return '';
+  }
+};
+
+/**
+ * Generates Word-compatible HTML with simplified styling
+ */
+export const generateWordCompatibleHTML = (changes: DiffChange[]): string => {
+  if (!changes || !Array.isArray(changes)) {
+    return '';
+  }
+
+  let html = '<div style="font-family: serif; line-height: 1.5; white-space: pre-wrap;">';
+  
+  changes.forEach(change => {
+    switch (change.type) {
+      case 'added':
+        html += `<span style="${getWordCompatibleStyles('added')}">${escapeHtml(change.content || '')}</span>`;
+        break;
+      case 'removed':
+        html += `<span style="${getWordCompatibleStyles('removed')}">${escapeHtml(change.content || '')}</span>`;
+        break;
+      case 'changed':
+        // Render as cohesive substitution with both original and revised content
+        html += `<span style="${getWordCompatibleStyles('changed-original')}">${escapeHtml(change.originalContent || '')}</span>`;
+        html += `<span style="${getWordCompatibleStyles('changed-revised')}">${escapeHtml(change.revisedContent || '')}</span>`;
+        break;
+      default:
+        html += `<span>${escapeHtml(change.content || '')}</span>`;
+        break;
+    }
+  });
+  
+  html += '</div>';
+  return html;
+};
+
+/**
+ * Copies content to clipboard using Word-compatible HTML formatting
+ */
+export const copyToClipboardWordCompatible = async (changes: DiffChange[]): Promise<void> => {
+  const htmlContent = generateWordCompatibleHTML(changes);
+  const plainTextContent = generateClipboardPlainText(changes);
+
+  try {
+    // Check if modern Clipboard API with multiple formats is supported
+    if (navigator.clipboard && window.ClipboardItem) {
+      const clipboardItem = new ClipboardItem({
+        'text/html': new Blob([htmlContent], { type: 'text/html' }),
+        'text/plain': new Blob([plainTextContent], { type: 'text/plain' })
+      });
+      
+      await navigator.clipboard.write([clipboardItem]);
+      return;
+    }
+    
+    // Fallback to plain text only
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(plainTextContent);
+      return;
+    }
+    
+    // Final fallback for test environments
+    throw new Error('Clipboard API not supported');
+  } catch (err) {
+    console.error('Word-compatible clipboard copy failed:', err);
+    throw err;
+  }
+};

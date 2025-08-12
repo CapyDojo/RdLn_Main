@@ -58,7 +58,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
     <div className={`lg:hidden ${className || ''}`} style={style}>
       <div ref={panelResizeHandlers.mobileInputPanelsRef}>
         {/* Original Panel */}
-        <div data-input-panel data-panel-id="original" className="mb-0 mobile-top-panel mobile-scroll-container">
+        <div data-input-panel data-panel-id="original" className="mb-0 mobile-top-panel">
           <TextInputPanel
             title="Original&nbsp;"
             value={originalText}
@@ -122,7 +122,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
         </div>
         
         {/* Revised Panel */}
-        <div data-input-panel data-panel-id="revised" className="mt-0 mobile-bottom-panel mobile-scroll-container">
+        <div data-input-panel data-panel-id="revised" className="mt-0 mobile-bottom-panel">
           <TextInputPanel
             title="Revised&nbsp;"
             value={revisedText}
