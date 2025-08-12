@@ -78,6 +78,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       setBackgroundMode(externalBackgroundMode);
     }
   }, [externalBackgroundMode, backgroundMode]);
+
   
   // Copy success state for microinteraction
   const [copySuccess, setCopySuccess] = React.useState(false);
@@ -88,6 +89,9 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
   // Font size context
   const { fontSize } = useFontSize();
+
+  // Always render changes directly in clean mode
+  const filteredChanges = changes;
 
   // --- Smart DOCX filename helpers ---
   const sanitizeFilename = (name: string) =>
@@ -166,48 +170,48 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     const startTime = performance.now();
 
     // Handle undefined or null changes
-    if (!changes || !Array.isArray(changes)) {
+    if (!filteredChanges || !Array.isArray(filteredChanges)) {
       return [];
     }
 
     // Track input metrics
-    performanceTracker.trackMetric('changes_count', changes.length);
+    performanceTracker.trackMetric('changes_count', filteredChanges.length);
 
     // Boundary fragments are handled in the Myers algorithm implementation
 
     // Check if chunked rendering is enabled
     if (!FEATURE_FLAGS.ENABLE_CHUNKED_RENDERING) {
       if (DEV_CONFIG.DEBUGGING.SEMANTIC_CHUNKING_DEBUG) {
-        performanceTracker.trackMetric('rendering_without_chunking', { count: changes.length });
+        performanceTracker.trackMetric('rendering_without_chunking', { count: filteredChanges.length });
       }
       // Return single chunk with all changes
       const result = [{
         id: 'single-chunk',
-        changes: changes,
-        html: generateHTMLString(changes),
+        changes: filteredChanges,
+        html: generateHTMLString(filteredChanges),
       }];
 
       const renderingTime = performance.now() - startTime;
       performanceTracker.trackMetric('rendering_performance', {
         duration: renderingTime,
         chunkCount: 1,
-        totalChanges: changes.length
+        totalChanges: filteredChanges.length
       });
 
       return result;
     }
 
     if (DEV_CONFIG.DEBUGGING.SEMANTIC_CHUNKING_DEBUG) {
-      performanceTracker.trackMetric('memoizing_changes', { count: changes.length, chunkSize: CHUNK_SIZE });
+      performanceTracker.trackMetric('memoizing_changes', { count: filteredChanges.length, chunkSize: CHUNK_SIZE });
     }
     const chunkedChanges = [];
     let i = 0;
-    while (i < changes.length) {
+    while (i < filteredChanges.length) {
       const chunkEnd = FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
-        ? findSemanticChunkBoundary(changes, i, CHUNK_SIZE)
-        : Math.min(i + CHUNK_SIZE, changes.length);
+        ? findSemanticChunkBoundary(filteredChanges, i, CHUNK_SIZE)
+        : Math.min(i + CHUNK_SIZE, filteredChanges.length);
 
-      chunkedChanges.push(changes.slice(i, chunkEnd));
+      chunkedChanges.push(filteredChanges.slice(i, chunkEnd));
       i = chunkEnd;
     }
 
@@ -224,19 +228,19 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     performanceTracker.trackMetric('chunking_performance', {
       duration: chunkingTime,
       chunkCount: result.length,
-      avgChunkSize: changes.length / result.length
+      avgChunkSize: filteredChanges.length / result.length
     });
 
     return result;
-  }, [changes, performanceTracker]);
+  }, [filteredChanges, performanceTracker]);
 
   const copyToClipboard = usePerformanceAwareHandler(async () => {
-    if (!changes || !Array.isArray(changes)) {
+    if (!filteredChanges || !Array.isArray(filteredChanges)) {
       return;
     }
 
     try {
-      await copyToClipboardMultiFormat(changes);
+      await copyToClipboardMultiFormat(filteredChanges);
       
       // Show success microinteraction
       setCopySuccess(true);
@@ -245,7 +249,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       onCopy();
 
       // Track success metrics
-      const textLength = changes.reduce((acc, change) => {
+      const textLength = filteredChanges.reduce((acc, change) => {
         const content = change.type === 'changed' ? change.revisedContent || '' : change.content || '';
         return acc + content.length;
       }, 0);
@@ -253,7 +257,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       performanceTracker.trackMetric('copy_success', {
         textLength,
         multiFormat: isMultiFormatClipboardSupported(),
-        changeCount: changes.length
+        changeCount: filteredChanges.length
       });
 
     } catch (err) {
@@ -268,7 +272,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   }, 'copy_to_clipboard', performanceTracker);
 
   const exportDocx = usePerformanceAwareHandler(async () => {
-    if (!changes || !Array.isArray(changes) || changes.length === 0) return;
+    if (!filteredChanges || !Array.isArray(filteredChanges) || filteredChanges.length === 0) return;
     try {
       setExportingDocx(true);
       // Combine chunk HTML into a single container div to match our exporter expectations
@@ -400,11 +404,12 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
           {/* Right side content */}
           <div className="flex items-center gap-2">
+
             {/* Results Overlay Trigger - only in normal mode */}
             {!isInOverlayMode && (
               <ResultsOverlayTrigger
                 isVisible={features.resultsOverlay}
-                hasResults={changes && changes.length > 0}
+                hasResults={filteredChanges && filteredChanges.length > 0}
                 onClick={onShowOverlay || (() => console.log('🎯 Results Overlay: Manual trigger (no handler)'))}
                 isInOverlayMode={isInOverlayMode}
               />
@@ -451,7 +456,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
               <CustomTooltip content="Export RdLn as native Word .DOCX with Track Changes">
                 <button
                   onClick={exportDocx}
-                  disabled={exportingDocx || !changes || changes.length === 0}
+                  disabled={exportingDocx || !filteredChanges || filteredChanges.length === 0}
                   className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
                     exportSuccess ? 'bg-green-100 border-green-300' : ''
                   } ${exportingDocx ? 'opacity-70 cursor-not-allowed' : ''}`}
@@ -483,7 +488,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
               <FullScreenButton
                 isFullScreen={isFullScreen}
                 onToggle={onToggleFullScreen || (() => {})}
-                hasResults={changes && changes.length > 0}
+                hasResults={filteredChanges && filteredChanges.length > 0}
               />
             </div>
           </div>
@@ -590,7 +595,7 @@ const Chunk: React.FC<{ html: string, estimatedHeight: number, root: Element | n
   );
 };
 
-// Helper function to generate static HTML from changes
+// Helper function to generate static HTML from changes in clean mode
 const generateHTMLString = (changes: DiffChange[]) => {
   let html = '';
   changes.forEach(change => {
@@ -604,8 +609,18 @@ const generateHTMLString = (changes: DiffChange[]) => {
         html += `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(change.content || '')}</span>`;
         break;
       case 'changed':
-        // Render as a single cohesive substitution instead of two separate spans
-        html += `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(change.originalContent || '')}</span><span style="background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px;">${escape(change.revisedContent || '')}</span>`;
+        // Special case: if both original and revised are pure whitespace, render cleanly
+        const originalContent = change.originalContent || '';
+        const revisedContent = change.revisedContent || '';
+        const isPureWhitespaceSubstitution = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
+        
+        if (isPureWhitespaceSubstitution) {
+          // Clean mode: render whitespace substitutions without highlighting
+          html += `<span>${escape(revisedContent)}</span>`;
+        } else {
+          // For regular substitutions: show full highlighting
+          html += `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(originalContent)}</span><span style="background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px;">${escape(revisedContent)}</span>`;
+        }
         break;
       default:
         html += `<span>${escape(change.content || '')}</span>`;
@@ -691,8 +706,19 @@ const renderSingleChange = (change: DiffChange) => {
     case 'removed':
       return `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(change.content || '')}</span>`;
     case 'changed':
-      return `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(change.originalContent || '')}</span>` +
-        `<span style="background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px;">${escape(change.revisedContent || '')}</span>`;
+      // Apply clean whitespace logic consistently across both rendering paths
+      const originalContent = change.originalContent || '';
+      const revisedContent = change.revisedContent || '';
+      const isPureWhitespaceSubstitution = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
+      
+      if (isPureWhitespaceSubstitution) {
+        // Clean mode: render whitespace substitutions without highlighting
+        return `<span>${escape(revisedContent)}</span>`;
+      } else {
+        // For regular substitutions: show full highlighting
+        return `<span style="background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px;">${escape(originalContent)}</span>` +
+          `<span style="background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px;">${escape(revisedContent)}</span>`;
+      }
     default:
       return `<span>${escape(change.content || '')}</span>`;
   }

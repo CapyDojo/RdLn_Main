@@ -9,6 +9,13 @@ html[data-theme="professional"] {
   --theme-glass-hover-border: 59, 130, 246;
   --theme-glass-hover-shadow: 30, 64, 175;
 
+  /* Unified filing cabinet glassmorphism variables */
+  --glass-bg: 255, 255, 255;
+  --glass-border: 191, 219, 254;
+  --glass-shadow: 30, 64, 175;
+  --glass-blur: 16px;
+  --glass-saturate: 1.3;
+
   /* Variables expected by glassmorphism.css - Essential only */
   --theme-glass-panel-hover-rgb: 248, 250, 252;
   --theme-glass-panel-hover-border-rgb: 59, 130, 246;

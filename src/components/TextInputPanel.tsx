@@ -532,7 +532,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <h3 className="text-3xl font-semibold text-theme-primary-900">{title}</h3>
           <div className="relative">
             <CustomTooltip
-              content="Auto-fix broken paragraphs"
+              content={`Enable when pasting broken PDF text. \n\n RdLn will fix it for you!\n`}
               status={isAutoFormatEnabled ? 'ON' : 'OFF'}
             >
               <button
@@ -594,7 +594,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <div className="flex flex-col items-center gap-0">
             <span className="text-sm font-medium text-theme-neutral-700 hidden sm:block mb-1 text-center">OCR Languages</span>
             <div className="segmented-control relative z-[10001]" ref={segmentedControlRef} role="group" aria-label="OCR Language Detection Mode">
-              <CustomTooltip content="Automatically detect document language">
+              <CustomTooltip content="Automatically detect document language" placement="left">
                 <button
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent event bubbling
@@ -611,6 +611,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
               </CustomTooltip>
               <CustomTooltip
                 content={`Manually select OCR languages${!autoDetect && selectedLanguages.length > 0 ? ` - ${selectedLanguages.length} ${selectedLanguages.length === 1 ? 'language' : 'languages'} selected` : ''}`}
+                placement="left"
               >
                 <button
                   onClick={() => {

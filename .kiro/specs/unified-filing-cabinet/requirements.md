@@ -15,6 +15,9 @@ The RdLn Memory Filing Cabinet consists of two React components (RdLnMemoryEdgeT
 1. WHEN both components are rendered THEN there SHALL be no visible border line or separation between the tab and panel
 2. WHEN the components are connected THEN they SHALL appear as a single glassmorphism surface with unified background effects
 3. WHEN viewing the interface THEN the tab and panel SHALL visually appear as an integrated tabbed folder, not two separate rectangles
+4. WHEN the panel is open THEN the interface SHALL create an L-shaped manila folder appearance with the tab as an integrated extension of the panel
+5. WHEN connection points exist THEN borders SHALL be eliminated at these points to create seamless visual continuity
+6. WHEN both components are visible THEN they SHALL share identical backdrop-filter and glassmorphism properties for surface unity
 
 ### Requirement 2
 
@@ -25,6 +28,9 @@ The RdLn Memory Filing Cabinet consists of two React components (RdLnMemoryEdgeT
 1. WHEN hovering over either component THEN both components SHALL coordinate their hover states to maintain visual unity
 2. WHEN one component transforms on hover THEN the other component SHALL complement the transformation to preserve the unified appearance
 3. WHEN hover effects are applied THEN they SHALL enhance the single filing cabinet illusion rather than breaking it
+4. WHEN hovering over the tab THEN the panel SHALL receive hover state coordination through isPanelHovered prop
+5. WHEN hovering over the panel THEN the tab SHALL receive hover state coordination through isTabHovered prop
+6. WHEN individual hover transforms conflict with unity THEN they SHALL be replaced with coordinated effects that maintain connection
 
 ### Requirement 3
 

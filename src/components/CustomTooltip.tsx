@@ -80,9 +80,18 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
         };
         
       case 'left':
+        // For precise alignment: tooltip's top-right corner touches element's bottom-left corner
+        // Dynamic width based on content length
+        let tooltipWidth = 285; // Default for "Auto" tooltip
+        
+        // Adjust width based on content for better alignment
+        if (content.includes('Manually select')) {
+          tooltipWidth = 220; // Narrower offset for Manual tooltip
+        }
+        
         return {
-          top: rect.bottom + scrollY + 2, // Align to bottom edge + 2px
-          left: rect.left + scrollX - 2 // Even closer: 2px to the left
+          top: rect.bottom + scrollY, // Align tooltip top with element bottom
+          left: rect.left + scrollX - tooltipWidth // Position tooltip so its right edge touches element's left edge
         };
         
       case 'right':
@@ -222,9 +231,9 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
       aria-hidden="true"
     >
       {/* Modern tooltip without arrow - clean shadow design */}
-      <div className="glass-panel px-3 py-1.5 rounded-lg text-xs font-medium bg-theme-neutral-50/95 text-theme-primary-800 shadow-xl backdrop-blur-md border border-theme-neutral-200/50 max-w-80 min-w-32 shadow-theme-primary-900/20">
-        <div className="flex items-center gap-2">
-          <span className="leading-tight">{content}</span>
+      <div className="glass-panel px-3 py-1.5 rounded-lg text-xs font-medium bg-theme-neutral-50/95 text-theme-primary-800 shadow-xl backdrop-blur-md border border-theme-neutral-200/50 max-w-64 min-w-32 shadow-theme-primary-900/20">
+        <div className="flex items-start gap-2">
+          <span className="leading-tight whitespace-pre-line">{content}</span>
           {status && (
             <kbd className="px-1.5 py-0.5 bg-theme-accent-100/80 border border-theme-accent-200/60 rounded text-theme-accent-800 font-mono text-xs shrink-0">
               {status}

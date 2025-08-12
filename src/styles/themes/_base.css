@@ -6,6 +6,13 @@
   --glass-panel: 0.18;
   --glass-focus: 0.30;
   --glass-strong: 0.45;
+
+  /* Default unified filing cabinet glassmorphism variables */
+  --glass-bg: 255, 255, 255;
+  --glass-border: 255, 255, 255;
+  --glass-shadow: 31, 38, 135;
+  --glass-blur: 10px;
+  --glass-saturate: 1.3;
 }
 
 /* Minimal structural defaults - themes always override */

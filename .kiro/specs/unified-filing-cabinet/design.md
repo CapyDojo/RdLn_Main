@@ -127,6 +127,44 @@ interface RdLnMemorySidePanelProps extends BaseComponentProps {
   border-bottom-left-radius: 0;
   border-left: none;
 }
+
+/* Critical: L-shaped Manila Folder Implementation */
+.filing-cabinet-unified {
+  display: flex;
+  align-items: stretch;
+  /* Create the L-shaped filing cabinet appearance */
+}
+
+.filing-cabinet-unified .filing-cabinet-tab {
+  /* Tab appears as integrated extension of panel */
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+  /* Ensure perfect height alignment */
+  align-self: flex-start;
+}
+
+.filing-cabinet-unified .filing-cabinet-panel {
+  /* Panel forms the main body of the L-shape */
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none;
+  /* Create seamless connection */
+  margin-left: -1px;
+}
+
+/* Visual bridge for perfect connection */
+.filing-cabinet-unified::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 48px; /* Tab width */
+  width: 2px;
+  height: 100%;
+  background: rgba(var(--theme-glassPanelBg-rgb), var(--glass-panel));
+  backdrop-filter: blur(12px);
+  z-index: 10;
+}
 ```
 
 ### Hover State Coordination
@@ -140,6 +178,28 @@ interface RdLnMemorySidePanelProps extends BaseComponentProps {
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Cross-component hover coordination */
+.filing-cabinet-tab.panel-hovered,
+.filing-cabinet-panel.tab-hovered {
+  background: rgba(var(--theme-glassPanelHover-rgb), var(--glass-focus));
+  border-color: rgba(var(--theme-glassPanelHoverBorder-rgb), 0.3);
+  transform: translateY(-1px);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Remove conflicting individual hover effects */
+.filing-cabinet-tab:hover {
+  /* Remove individual scale transform that breaks unity */
+  transform: translateY(-1px) !important;
+}
+
+.filing-cabinet-panel:hover {
+  /* Ensure consistent hover behavior */
+  transform: translateY(-1px) !important;
 }
 ```
 

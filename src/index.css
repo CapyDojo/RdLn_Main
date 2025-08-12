@@ -1,5 +1,6 @@
 @import './styles/experimental-features.css';
 @import './styles/fullscreen-overlay.css';
+@import './styles/glassmorphism.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

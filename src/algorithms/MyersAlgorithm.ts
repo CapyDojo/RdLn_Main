@@ -12,7 +12,8 @@ export class MyersAlgorithm {
   private static readonly FEATURE_FLAGS = {
     USE_OPTIMIZED_BOUNDARIES: true,    // Step 1: Regex-free boundary detection
     USE_PROGRESSIVE_SECTIONS: true,    // Step 2: Progressive section streaming  
-    USE_CANCELLATION: true             // Step 3: Cancellation capability
+    USE_CANCELLATION: true,            // Step 3: Cancellation capability
+    FILTER_WHITESPACE_NOISE: false     // Step 4: Disabled - not the right approach
   };
 
   // SSMR: Progressive section configuration
@@ -357,7 +358,19 @@ export class MyersAlgorithm {
           if (DEBUG_MODE) {
             debugLog('📦 Changes after precise processing:', processedChanges);
           }
-          return processedChanges;
+          
+          // Apply whitespace noise filtering if enabled
+          const finalChanges = this.FEATURE_FLAGS.FILTER_WHITESPACE_NOISE 
+            ? this.filterWhitespaceNoise(processedChanges)
+            : processedChanges;
+          if (DEBUG_MODE && this.FEATURE_FLAGS.FILTER_WHITESPACE_NOISE) {
+            const filtered = processedChanges.length - finalChanges.length;
+            if (filtered > 0) {
+              debugLog(`🧹 Whitespace noise filtering: removed ${filtered} noise changes`);
+            }
+          }
+          
+          return finalChanges;
         }
       }
     }
@@ -472,6 +485,84 @@ export class MyersAlgorithm {
     }
 
     return result;
+  }
+
+  /**
+   * WHITESPACE NOISE FILTERING: Convert space formatting artifacts to "unchanged" 
+   * Displays revised version but doesn't highlight or count as changes
+   */
+  private static filterWhitespaceNoise(changes: Array<{ type: string, content: string, originalContent?: string, revisedContent?: string }>): Array<{ type: string, content: string, originalContent?: string, revisedContent?: string }> {
+    const processed: Array<{ type: string, content: string, originalContent?: string, revisedContent?: string }> = [];
+    
+    for (let i = 0; i < changes.length; i++) {
+      const current = changes[i];
+      const next = changes[i + 1];
+      
+      // Check if current+next is a space formatting artifact
+      if (this.isSpaceFormattingArtifact(current, next)) {
+        // Convert to "unchanged" with the revised version's spacing
+        const revisedSpacing = next.content || '';
+        processed.push({
+          type: 'unchanged',
+          content: revisedSpacing,
+          originalContent: undefined,
+          revisedContent: undefined
+        });
+        i++; // Skip the next change since we processed both
+        continue;
+      }
+      
+      processed.push(current);
+    }
+    
+    return processed;
+  }
+
+  /**
+   * Detects space formatting artifacts: single↔double space changes
+   * Returns true for " " ↔ "  " (both directions)
+   */
+  private static isSpaceFormattingArtifact(
+    current: { type: string, content: string, originalContent?: string, revisedContent?: string },
+    next?: { type: string, content: string, originalContent?: string, revisedContent?: string }
+  ): boolean {
+    if (!next) return false;
+    
+    // Must be opposite operations (removed then added)
+    if (!(current.type === 'removed' && next.type === 'added')) {
+      return false;
+    }
+    
+    const removedContent = current.content || '';
+    const addedContent = next.content || '';
+    
+    // Both must be pure spaces (not tabs or newlines, just spaces)
+    if (!this.isPureSpaces(removedContent) || !this.isPureSpaces(addedContent)) {
+      return false;
+    }
+    
+    // Check for single↔double space formatting artifacts
+    // Single space ↔ double space (either direction)
+    if ((removedContent === ' ' && addedContent === '  ') ||
+        (removedContent === '  ' && addedContent === ' ')) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Helper function to detect pure space content (only spaces, not tabs/newlines)
+   */
+  private static isPureSpaces(content: string): boolean {
+    return content && /^ +$/.test(content);
+  }
+
+  /**
+   * Helper function to detect pure whitespace content (spaces, tabs, newlines)
+   */
+  private static isPureWhitespace(content: string): boolean {
+    return content && /^\s*$/.test(content);
   }
 
   /**
@@ -718,14 +809,28 @@ export class MyersAlgorithm {
    * Enhanced substitution detection with better structured data handling
    */
   private static shouldTreatAsSubstitution(removedContent: string, addedContent: string): boolean {
+    debugLog(`🔍 shouldTreatAsSubstitution check:`);
+    debugLog(`  Removed: ${JSON.stringify(removedContent)}`);
+    debugLog(`  Added: ${JSON.stringify(addedContent)}`);
+    
     // Don't create substitutions for very large content
     if (removedContent.length > 500 || addedContent.length > 500) {
+      debugLog(`  ❌ Rejected: Too large (${removedContent.length}, ${addedContent.length})`);
       return false;
     }
 
-    // Don't substitute across sentence boundaries
-    if (this.containsSentenceBoundary(removedContent) || this.containsSentenceBoundary(addedContent)) {
-      return false;
+    // Don't substitute across sentence boundaries, UNLESS both are pure whitespace
+    const removedHasBoundary = this.containsSentenceBoundary(removedContent);
+    const addedHasBoundary = this.containsSentenceBoundary(addedContent);
+    if (removedHasBoundary || addedHasBoundary) {
+      // Exception: Allow whitespace-only substitutions even if they contain boundaries
+      const bothPureWhitespace = this.isPureWhitespace(removedContent) && this.isPureWhitespace(addedContent);
+      if (bothPureWhitespace) {
+        debugLog(`  ✅ Allowing boundary crossing for pure whitespace substitution`);
+      } else {
+        debugLog(`  ❌ Rejected: Sentence boundary (removed: ${removedHasBoundary}, added: ${addedHasBoundary})`);
+        return false;
+      }
     }
 
     // ENHANCED: Special handling for pure numerical substitutions
@@ -738,20 +843,38 @@ export class MyersAlgorithm {
     const removedWords = this.countMeaningfulWords(removedContent);
     const addedWords = this.countMeaningfulWords(addedContent);
 
-    // Must have meaningful content in both
+    // SPECIAL CASE: Allow pure whitespace substitutions to avoid visual noise
+    // If both are pure whitespace, treat as substitution for cleaner display
+    if (removedWords === 0 && addedWords === 0) {
+      const bothPureWhitespace = this.isPureWhitespace(removedContent) && this.isPureWhitespace(addedContent);
+      if (bothPureWhitespace) {
+        debugLog(`  ✅ Accepted: Pure whitespace substitution`);
+        return true; // Clean substitution for whitespace changes
+      }
+      debugLog(`  ❌ Rejected: Zero words but not pure whitespace`);
+      return false;
+    }
+
+    // Must have meaningful content in both for regular substitutions
     if (removedWords === 0 || addedWords === 0) {
+      debugLog(`  ❌ Rejected: One side has no meaningful words (removed: ${removedWords}, added: ${addedWords})`);
       return false;
     }
 
     // Calculate ratio
     const ratio = Math.max(removedWords, addedWords) / Math.min(removedWords, addedWords);
+    debugLog(`  📊 Word ratio: ${ratio} (removed: ${removedWords}, added: ${addedWords})`);
 
     // More lenient for structured data (addresses, company names, etc.)
     if (this.looksLikeStructuredData(removedContent) || this.looksLikeStructuredData(addedContent)) {
-      return ratio <= 10; // Very lenient for structured data
+      const accepted = ratio <= 10;
+      debugLog(`  ${accepted ? '✅' : '❌'} Structured data: ratio ${ratio} <= 10: ${accepted}`);
+      return accepted; // Very lenient for structured data
     }
 
-    return ratio <= 5;
+    const accepted = ratio <= 5;
+    debugLog(`  ${accepted ? '✅' : '❌'} Regular content: ratio ${ratio} <= 5: ${accepted}`);
+    return accepted;
   }
 
 
@@ -1567,6 +1690,21 @@ export class MyersAlgorithm {
     const deletedChanges = finalChanges.filter(c => c.type === 'removed');
     const unchangedChanges = finalChanges.filter(c => c.type === 'unchanged');
     const changedChanges = finalChanges.filter(c => c.type === 'changed');
+    
+    // Clean mode: Filter out pure whitespace changes from statistics
+    const meaningfulChangedChanges = changedChanges.filter(change => {
+      const originalContent = change.originalContent || '';
+      const revisedContent = change.revisedContent || '';
+      const isPureWhitespace = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
+      return !isPureWhitespace;
+    });
+    
+    const whitespaceChangedChanges = changedChanges.filter(change => {
+      const originalContent = change.originalContent || '';
+      const revisedContent = change.revisedContent || '';
+      const isPureWhitespace = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
+      return isPureWhitespace;
+    });
 
     // Calculate word and character statistics
     // For 'added' and 'removed', use the content directly
@@ -1574,9 +1712,9 @@ export class MyersAlgorithm {
     const deletedTexts = deletedChanges.map(c => c.content);
     const unchangedTexts = unchangedChanges.map(c => c.content);
     
-    // For 'changed', treat as separate deletions and additions
-    const changedDeletedTexts = changedChanges.map(c => c.originalContent || '');
-    const changedAddedTexts = changedChanges.map(c => c.revisedContent || '');
+    // For 'changed', only include meaningful (non-whitespace) changes
+    const changedDeletedTexts = meaningfulChangedChanges.map(c => c.originalContent || '');
+    const changedAddedTexts = meaningfulChangedChanges.map(c => c.revisedContent || '');
 
     // Calculate base word stats
     const addedWordStats = getWordStatsForBlocks(addedTexts);
@@ -1608,11 +1746,11 @@ export class MyersAlgorithm {
     const characterPercentageChanged = totalCharactersInDocument > 0 ? (characterReviewWorkload / totalCharactersInDocument) * 100 : 0;
 
     const stats: ComparisonStats = {
-      // Block-level counts: substitutions count as both addition and deletion blocks
-      additions: addedChanges.length + changedChanges.length,
-      deletions: deletedChanges.length + changedChanges.length,
-      unchanged: unchangedChanges.length,
-      totalChanges: addedChanges.length + deletedChanges.length + (changedChanges.length * 2),
+      // Block-level counts: Only count meaningful changes, treat whitespace changes as unchanged
+      additions: addedChanges.length + meaningfulChangedChanges.length,
+      deletions: deletedChanges.length + meaningfulChangedChanges.length,
+      unchanged: unchangedChanges.length + whitespaceChangedChanges.length,
+      totalChanges: addedChanges.length + deletedChanges.length + (meaningfulChangedChanges.length * 2),
       wordStats: {
         addedWords: totalAddedWords,
         deletedWords: totalDeletedWords,

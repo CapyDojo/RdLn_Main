@@ -127,16 +127,16 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   const redlineOutputRef = useRef<HTMLDivElement>(null);
 
+  // State to trigger comparison after sample data is loaded
+  const [autoRunTrigger, setAutoRunTrigger] = useState(false);
+
   // Define scoped sample loader so it can be passed as a prop and exposed via ref
   const loadSampleData = (originalText: string, revisedText: string, autoRun: boolean = false) => {
     setOriginalText(originalText);
     setRevisedText(revisedText);
     
     if (autoRun) {
-      // Use setTimeout to ensure text is set before comparison
-      setTimeout(() => {
-        handleCompareDocuments();
-      }, 100);
+      setAutoRunTrigger(true); // Trigger the effect to run the comparison
     }
   };
 
@@ -144,6 +144,14 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   useImperativeHandle(ref, () => ({
     loadSampleData
   }), [loadSampleData]);
+
+  // Effect to run comparison automatically after sample data is loaded
+  useEffect(() => {
+    if (autoRunTrigger) {
+      handleCompareDocuments();
+      setAutoRunTrigger(false); // Reset the trigger
+    }
+  }, [autoRunTrigger, originalText, revisedText]); // Depend on text as well to ensure it's updated
 
   // Track content changes and notify parent
   useEffect(() => {
@@ -165,9 +173,14 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   // RdLn Memory side panel state
   const [isMemoryPanelOpen, setIsMemoryPanelOpen] = useState(false);
   
+  // Hover coordination state for unified filing cabinet
+  const [isTabHovered, setIsTabHovered] = useState(false);
+  const [isPanelHovered, setIsPanelHovered] = useState(false);
+  
   // Full screen overlay state
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [fullScreenBackgroundMode, setFullScreenBackgroundMode] = useState<'theme' | 'glassmorphism'>('theme');
+  
   
   // Full screen toggle handler
   const toggleFullScreen = () => {
@@ -919,6 +932,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         isOpen={isMemoryPanelOpen}
         onClick={() => setIsMemoryPanelOpen(!isMemoryPanelOpen)}
         isLoading={isLoadingMemory}
+        isPanelHovered={isPanelHovered}
+        onHoverChange={setIsTabHovered}
       />
 
       {/* RdLn Memory Side Panel - Slides out from right edge */}
@@ -934,6 +949,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         onExport={handleExportSessions}
         onImport={handleImportSessions}
         contentLength={originalText.length + revisedText.length}
+        isTabHovered={isTabHovered}
+        onHoverChange={setIsPanelHovered}
       />
 
     </div>

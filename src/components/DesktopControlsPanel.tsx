@@ -86,7 +86,7 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
         
         {/* Live Compare Toggle */}
         <CustomTooltip 
-          content={quickCompareEnabled ? 'Live mode' : 'Manual mode'}
+          content={quickCompareEnabled ? 'Live Compare mode - ON' : 'Live Compare mode - OFF'}
           shortcut="Alt+L"
         >
           <button
@@ -122,7 +122,7 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
         
         {/* Scroll Lock Button */}
         <CustomTooltip 
-          content={isScrollLocked ? 'Scroll locked' : 'Scroll free'}
+          content={isScrollLocked ? 'Scroll Lock - ON' : 'Scroll Lock - OFF'}
           shortcut="Alt+D"
         >
           <button

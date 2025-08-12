@@ -152,7 +152,7 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
   style,
   className
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const total = stats.additions + stats.deletions + stats.unchanged;
   const additionPercent = total > 0 ? (stats.additions / total) * 100 : 0;
   const deletionPercent = total > 0 ? (stats.deletions / total) * 100 : 0;
@@ -194,87 +194,24 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
         </div>
         <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-theme-neutral-300 to-transparent mb-4 -mx-6" style={{ width: 'calc(100% + 3.9rem)' }}></div>
         <div className="px-6 pb-6">
-        
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {/* Review Workload */}
-          <div className="text-center">
-            <div className="flex justify-center mb-3">
-              <CircularProgress 
-                percentage={Math.min((reviewWorkload / documentSize) * 100, 100)} 
-                color="#dc2626" 
-                size={80}
-              />
-            </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-theme-accent-700">{reviewWorkload}</p>
-              <Tooltip content="The total amount of content that requires attorney review, including all additions and deletions. This represents your billable review workload.">
-                <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                  Review Load ({sizeLabel})
-                  <HelpCircle className="w-3 h-3 opacity-60" />
-                </p>
-              </Tooltip>
-              <p className="text-xs text-theme-neutral-500">Requires attorney review</p>
-            </div>
-          </div>
-          
-          {/* Document Size */}
-          <div className="text-center">
-            <div className="flex justify-center mb-3">
-              <div className="p-4 bg-theme-primary-50 rounded-full">
-                <FileText className="w-8 h-8 text-theme-primary-600" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-theme-primary-700">{documentSize}</p>
-              <Tooltip content="The total size of the document being compared, representing the complete scope of content under legal review.">
-                <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                  Document Size ({sizeLabel})
-                  <HelpCircle className="w-3 h-3 opacity-60" />
-                </p>
-              </Tooltip>
-              <p className="text-xs text-theme-neutral-500">Total content volume</p>
-            </div>
-          </div>
-          
-          {/* Change Impact */}
-          <div className="text-center">
-            <div className="flex justify-center mb-3">
-              <CircularProgress 
-                percentage={impactPercentage} 
-                color={impactLevel === 'low' ? '#059669' : impactLevel === 'medium' ? '#d97706' : '#dc2626'}
-                size={80}
-              />
-            </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-theme-primary-700">{impactPercentage.toFixed(1)}%</p>
-              <Tooltip content="The percentage of the document that has been modified. Legal professionals use this to assess the scope of changes and estimate review time.">
-                <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                  Document Changed
-                  <HelpCircle className="w-3 h-3 opacity-60" />
-                </p>
-              </Tooltip>
-              <p className="text-xs text-theme-neutral-500">Overall modification rate</p>
-            </div>
-          </div>
-        </div>
-        
         {/* Quick Action Summary */}
-        <div className="flex items-center justify-between pt-4 border-t border-theme-neutral-200">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-theme-primary-700 hover:bg-theme-primary-50 rounded-lg transition-colors duration-200"
-          >
-            <TrendingUp className="w-4 h-4" />
-            {isExpanded ? 'Hide Details' : 'View Detailed Analysis'}
-            {isExpanded ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-          </button>
+        <div className="grid grid-cols-3 items-center">
+          <div className="col-start-2 flex justify-center">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-theme-primary-700 hover:bg-theme-primary-50 rounded-lg transition-colors duration-200"
+            >
+              <TrendingUp className="w-4 h-4" />
+              {isExpanded ? 'Hide Details' : 'View Detailed Analysis'}
+              {isExpanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+          </div>
           
-          <div className="flex items-center gap-6 text-sm">
+          <div className="flex justify-end items-center gap-6 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
               <span className="text-theme-neutral-600">
@@ -289,6 +226,72 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Key Metrics Grid - shown when expanded */}
+        {isExpanded && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-theme-neutral-200">
+            {/* Review Workload */}
+            <div className="text-center">
+              <div className="flex justify-center mb-3">
+                <CircularProgress 
+                  percentage={Math.min((reviewWorkload / documentSize) * 100, 100)} 
+                  color="#dc2626" 
+                  size={80}
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-theme-accent-700">{reviewWorkload}</p>
+                <Tooltip content="The total amount of content that requires attorney review, including all additions and deletions. This represents your billable review workload.">
+                  <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
+                    Review Load ({sizeLabel})
+                    <HelpCircle className="w-3 h-3 opacity-60" />
+                  </p>
+                </Tooltip>
+                <p className="text-xs text-theme-neutral-500">Requires attorney review</p>
+              </div>
+            </div>
+            
+            {/* Document Size */}
+            <div className="text-center">
+              <div className="flex justify-center mb-3">
+                <div className="p-4 bg-theme-primary-50 rounded-full">
+                  <FileText className="w-8 h-8 text-theme-primary-600" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-theme-primary-700">{documentSize}</p>
+                <Tooltip content="The total size of the document being compared, representing the complete scope of content under legal review.">
+                  <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
+                    Document Size ({sizeLabel})
+                    <HelpCircle className="w-3 h-3 opacity-60" />
+                  </p>
+                </Tooltip>
+                <p className="text-xs text-theme-neutral-500">Total content volume</p>
+              </div>
+            </div>
+            
+            {/* Change Impact */}
+            <div className="text-center">
+              <div className="flex justify-center mb-3">
+                <CircularProgress 
+                  percentage={impactPercentage} 
+                  color={impactLevel === 'low' ? '#059669' : impactLevel === 'medium' ? '#d97706' : '#dc2626'}
+                  size={80}
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-theme-primary-700">{impactPercentage.toFixed(1)}%</p>
+                <Tooltip content="The percentage of the document that has been modified. Legal professionals use this to assess the scope of changes and estimate review time.">
+                  <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
+                    Document Changed
+                    <HelpCircle className="w-3 h-3 opacity-60" />
+                  </p>
+                </Tooltip>
+                <p className="text-xs text-theme-neutral-500">Overall modification rate</p>
+              </div>
+            </div>
+          </div>
+        )}
         </div>
       </div>
       

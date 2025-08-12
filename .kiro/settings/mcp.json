@@ -19,7 +19,18 @@
         "@playwright/mcp@latest"
       ],
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [
+        "browser_navigate",
+        "browser_install",
+        "browser_take_screenshot",
+        "browser_click",
+        "browser_snapshot",
+        "browser_resize",
+        "browser_press_key",
+        "browser_hover",
+        "browser_evaluate",
+        "browser_type"
+      ]
     },
     "context7": {
       "command": "npx",
@@ -61,7 +72,10 @@
         "@modelcontextprotocol/server-sequential-thinking@latest"
       ],
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [
+        "sequentialthinking",
+        "sequentialthinking"
+      ]
     }
   }
 }
