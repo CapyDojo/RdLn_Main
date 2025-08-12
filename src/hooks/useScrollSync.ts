@@ -118,41 +118,43 @@ export const useScrollSync = ({
     try {
       setInternalError(null);
       
-      // OPTION C FIX: Detect actual scroll containers based on current layout
-      // Option C moves scrolling from textarea to .glass-panel-inner-content
-      const inputContainers = document.querySelectorAll('[data-input-panel] .glass-panel-inner-content');
-      
-      // Check if Option C layout is active by testing scroll behavior
-      const isOptionC = inputContainers.length > 0 && 
-        inputContainers[0] && 
-        getComputedStyle(inputContainers[0]).overflowY === 'auto';
-      
-      let input1Element = null;
-      let input2Element = null;
-      
-      if (isOptionC) {
-        // Option C: Use container elements for scroll events
-        input1Element = inputContainers[0] as HTMLElement || null;
-        input2Element = inputContainers[1] as HTMLElement || null;
-      } else {
-        // Other layouts: Use textarea elements for scroll events
-        const inputTextareas = document.querySelectorAll('[data-input-panel] .glass-panel-inner-content textarea');
-        input1Element = inputTextareas[0] as HTMLElement || null;
-        input2Element = inputTextareas[1] as HTMLElement || null;
-      }
-      
-      // ELEGANT FIX: Use ref-based detection for output panel instead of DOM queries
+      // New robust scroll element detection logic
+      const findScrollableElement = (panelId: 'original' | 'revised'): HTMLElement | null => {
+        const panelWrapper = document.querySelector(`[data-panel-id="${panelId}"][data-input-panel]`) as HTMLElement;
+        if (panelWrapper && panelWrapper.scrollHeight > panelWrapper.clientHeight) {
+          return panelWrapper; // Mobile layout often scrolls this outer wrapper
+        }
+
+        const innerContainer = document.querySelector(`[data-panel-id="${panelId}"] .glass-panel-inner-content`) as HTMLElement;
+        if (innerContainer && innerContainer.scrollHeight > innerContainer.clientHeight) {
+          return innerContainer; // Desktop "Option C" layout scrolls this container
+        }
+
+        const textarea = document.querySelector(`[data-panel-id="${panelId}"] textarea`) as HTMLElement;
+        if (textarea && textarea.scrollHeight > textarea.clientHeight) {
+          return textarea; // Fallback to textarea
+        }
+
+        // Default to a non-scrollable element if none are detected, to avoid null errors
+        return innerContainer || textarea || panelWrapper;
+      };
+
+      let input1Element = findScrollableElement('original');
+      let input2Element = findScrollableElement('revised');
+
+      // Determine if we are in the "Option C" layout for the legacy return value
+      const isOptionC = input1Element === document.querySelector('[data-panel-id="original"] .glass-panel-inner-content');
+
       const outputPanel = outputRef?.current || null;
-      
+
       scrollRefs.current = {
         input1: input1Element,
         input2: input2Element,
         output: outputPanel
       };
-      
-      // SSMR: Update layout detection status
+
       setIsLayoutDetected(!!input1Element && !!input2Element);
-      
+
       // Debug logging (guarded)
       if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) console.log('🔄 SCROLL SYNC: Scroll elements detected via layout adaptation:', {
         input1: !!scrollRefs.current.input1,
@@ -227,7 +229,9 @@ export const useScrollSync = ({
   
   const hookStatus = {
     isInitialized: true,
-    error: internalError
+    isLoading: false, // Add missing property
+    error: internalError ? { id: 'scroll-sync-error', message: internalError, timestamp: Date.now(), canRetry: false } : null, // Conform to error object type
+    lastUpdated: Date.now() // Add missing property
   };
   
   // SSMR: Return both standardized and legacy interfaces for backward compatibility

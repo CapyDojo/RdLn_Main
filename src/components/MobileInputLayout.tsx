@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { GripHorizontal } from 'lucide-react';
 import { TextInputPanel } from './TextInputPanel';
 import { FEATURE_FLAGS } from '../config/appConfig';
@@ -52,13 +52,13 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
   panelResizeHandlers,
   mobileResizeHandleRef,
   style,
-  className
+  className,
 }) => {
   return (
     <div className={`lg:hidden ${className || ''}`} style={style}>
       <div ref={panelResizeHandlers.mobileInputPanelsRef}>
         {/* Original Panel */}
-        <div data-input-panel className="mb-0 mobile-top-panel">
+        <div data-input-panel data-panel-id="original" className="mb-0 mobile-top-panel mobile-scroll-container">
           <TextInputPanel
             title="Original&nbsp;"
             value={originalText}
@@ -101,7 +101,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
           {/* Mobile layout: single line with left/center/right alignment */}
           <div className="flex justify-between items-center w-full text-xs text-theme-neutral-600 cursor-row-resize touch-none select-none">
             {/* Original character count - left aligned */}
-            <div className="text-left">
+            <div className="flex flex-col h-full">
               <span className="font-medium text-lg">&nbsp;&nbsp;&nbsp;⬆️ </span>
               <span className="font-medium text-sm">Original: </span>
               <span className="text-sm">{originalText.length.toLocaleString()} chars</span>
@@ -122,7 +122,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
         </div>
         
         {/* Revised Panel */}
-        <div data-input-panel className="mt-0 mobile-bottom-panel">
+        <div data-input-panel data-panel-id="revised" className="mt-0 mobile-bottom-panel mobile-scroll-container">
           <TextInputPanel
             title="Revised&nbsp;"
             value={revisedText}

@@ -1,5 +1,6 @@
 @import './styles/experimental-features.css';
 @import './styles/fullscreen-overlay.css';
+@import './styles/mobile-scroll-fix.css';
 @import './styles/glassmorphism.css';
 @tailwind base;
 @tailwind components;
@@ -82,19 +83,16 @@ body {
 .user-text-area[data-user-font-size="small"],
 .user-text-area[data-user-font-size="small"] * {
   font-size: 15px !important;
-  line-height: 1.5 !important;
 }
 
 .user-text-area[data-user-font-size="medium"],
 .user-text-area[data-user-font-size="medium"] * {
   font-size: 18px !important;
-  line-height: 1.6 !important;
 }
 
 .user-text-area[data-user-font-size="large"],
 .user-text-area[data-user-font-size="large"] * {
   font-size: 23px !important;
-  line-height: 1.7 !important;
 }
 
 /* Apply font scaling to body and common elements with smooth transitions */
@@ -265,7 +263,6 @@ button.enhanced-button.text-white,
 .libertinus-math-text {
   color: var(--text-body) !important;
   font-weight: 500 !important;
-  line-height: 1.7 !important;
   letter-spacing: 0.01em !important;
 }
 
@@ -405,12 +402,27 @@ button {
   /* More compact than default */
 }
 
-/* Dense layout for text content */
-p,
-span,
-div {
+/* Dense layout for text content - excluding redlined spans */
+p:not([style*="background: linear-gradient"]),
+span:not([style*="background: linear-gradient"]),
+div:not(.chunk-container):not(.user-text-area) {
   line-height: 1.5;
   /* Tighter than default 1.6 */
+}
+
+/* Force line-height for redlined content containers */
+.user-text-area[data-user-font-size] {
+  line-height: 6 !important;
+}
+
+.chunk-container {
+  line-height: 6 !important;
+}
+
+/* Override any inherited line-height for redlined spans */
+.user-text-area span[style*="background: linear-gradient"],
+.chunk-container span[style*="background: linear-gradient"] {
+  line-height: inherit !important;
 }
 
 /* Headings optimization */

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="professional">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option C: Synchronized CSS Properties</title>
+    <style>
+        /* Production theme variables */
+        :root {
+            --glass-subtle: 0.12;
+            --glass-panel: 0.18;
+            --glass-focus: 0.30;
+            --glass-strong: 0.45;
+            --glass-bg: 255, 255, 255;
+            --glass-border: 191, 219, 254;
+            --glass-shadow: 30, 64, 175;
+            --glass-blur: 16px;
+            --glass-saturate: 1.3;
+            
+            --theme-glass-bg: 255, 255, 255;
+            --theme-glass-border: 191, 219, 254;
+            --theme-glass-hover-border: 59, 130, 246;
+            --theme-glass-hover-shadow: 30, 64, 175;
+            
+            --theme-text-body: #1e293b;
+            --theme-text-header: #0f172a;
+            --theme-text-secondary: #475569;
+            --theme-text-interactive: #c2410c;
+            --theme-accent-400: #fb923c;
+
+            /* Synchronized glassmorphism properties - EXACT values */
+            --unified-bg: rgba(255, 255, 255, 0.18);
+            --unified-border: rgba(191, 219, 254, 0.30);
+            --unified-shadow: 0 8px 32px 0 rgba(30, 64, 175, 0.45);
+            --unified-backdrop: blur(16px) saturate(1.3);
+            --unified-radius: 12px;
+            --unified-transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Hover state synchronized properties */
+            --unified-hover-bg: rgba(255, 255, 255, 0.30);
+            --unified-hover-border: rgba(59, 130, 246, 0.6);
+            --unified-hover-shadow: 0 24px 64px 0 rgba(30, 64, 175, 0.6), 0 10px 36px 0 rgba(30, 64, 175, 0.4);
+            --unified-hover-transform: translateY(-2px);
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            color: var(--theme-text-body);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .description {
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        /* Synchronized properties approach */
+        .filing-cabinet {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            margin: 40px auto;
+            width: fit-content;
+        }
+
+        /* Tab with perfectly synchronized properties */
+        .filing-cabinet-tab {
+            position: relative;
+            width: 48px;
+            height: 96px;
+            z-index: 9999;
+            
+            /* EXACT synchronized glassmorphism */
+            background: var(--unified-bg);
+            backdrop-filter: var(--unified-backdrop);
+            -webkit-backdrop-filter: var(--unified-backdrop);
+            border: 1px solid var(--unified-border);
+            box-shadow: var(--unified-shadow);
+            
+            /* Perfect border coordination */
+            border-radius: var(--unified-radius) 0 0 var(--unified-radius);
+            border-right: none;
+            
+            /* Content styling */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: var(--unified-transition);
+            
+            /* Precise overlap for seamless connection */
+            margin-right: -1px;
+        }
+
+        /* Panel with identical synchronized properties */
+        .filing-cabinet-panel {
+            width: 450px;
+            height: 600px;
+            position: relative;
+            z-index: 9998;
+            
+            /* EXACT synchronized glassmorphism - identical to tab */
+            background: var(--unified-bg);
+            backdrop-filter: var(--unified-backdrop);
+            -webkit-backdrop-filter: var(--unified-backdrop);
+            border: 1px solid var(--unified-border);
+            box-shadow: var(--unified-shadow);
+            
+            /* Perfect border coordination */
+            border-radius: 0 var(--unified-radius) var(--unified-radius) 0;
+            border-left: none;
+            
+            /* Content styling */
+            padding: 24px;
+            box-sizing: border-box;
+            overflow: hidden;
+            transition: var(--unified-transition);
+        }
+
+        /* Synchronized visual bridge - uses same properties */
+        .filing-cabinet-tab::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: var(--unified-bg);
+            backdrop-filter: var(--unified-backdrop);
+            -webkit-backdrop-filter: var(--unified-backdrop);
+            z-index: 10000;
+        }
+
+        .filing-cabinet-panel::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: var(--unified-bg);
+            backdrop-filter: var(--unified-backdrop);
+            -webkit-backdrop-filter: var(--unified-backdrop);
+            z-index: 9999;
+        }
+
+        /* Tab content styling */
+        .tab-icon {
+            font-size: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .tab-chevron {
+            width: 12px;
+            height: 12px;
+            color: var(--theme-text-secondary);
+        }
+
+        .tab-badge {
+            position: absolute;
+            top: -6px;
+            left: -6px;
+            background: #dc2626;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            z-index: 10001;
+        }
+
+        /* Panel header */
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(var(--theme-glass-border), 0.2);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel-title h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--theme-text-header);
+        }
+
+        .panel-subtitle {
+            font-size: 14px;
+            color: var(--theme-text-secondary);
+            margin: 0;
+        }
+
+        /* Perfectly synchronized hover effects */
+        .filing-cabinet:hover .filing-cabinet-tab {
+            background: var(--unified-hover-bg);
+            border-color: var(--unified-hover-border);
+            box-shadow: var(--unified-hover-shadow);
+            transform: var(--unified-hover-transform);
+        }
+
+        .filing-cabinet:hover .filing-cabinet-panel {
+            background: var(--unified-hover-bg);
+            border-color: var(--unified-hover-border);
+            box-shadow: var(--unified-hover-shadow);
+            transform: var(--unified-hover-transform);
+        }
+
+        .filing-cabinet:hover .filing-cabinet-tab::after {
+            background: var(--unified-hover-bg);
+        }
+
+        .filing-cabinet:hover .filing-cabinet-panel::before {
+            background: var(--unified-hover-bg);
+        }
+
+        .filing-cabinet:hover .tab-icon {
+            transform: scale(1.1);
+        }
+
+        .filing-cabinet:hover .tab-badge {
+            transform: scale(1.1);
+        }
+
+        /* Closed state */
+        .filing-cabinet.closed .filing-cabinet-panel {
+            height: 96px;
+            overflow: hidden;
+        }
+
+        /* Demo controls */
+        .demo-controls {
+            margin: 40px 0;
+        }
+
+        .demo-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .demo-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .demo-button.active {
+            background: rgba(59, 130, 246, 0.6);
+            border-color: rgba(59, 130, 246, 0.8);
+        }
+
+        .pros-cons {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 40px;
+            text-align: left;
+        }
+
+        .pros-cons h3 {
+            color: white;
+            margin-top: 0;
+        }
+
+        .pros-cons ul {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+        }
+
+        .pros {
+            color: #4ade80;
+        }
+
+        .cons {
+            color: #f87171;
+        }
+
+        /* Debug visualization */
+        .debug-info {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Option C: Synchronized CSS Properties</h1>
+        <p class="description">
+            Two elements with perfectly synchronized glassmorphism properties via CSS custom properties
+        </p>
+        
+        <div class="demo-controls">
+            <button class="demo-button active" onclick="showOpen()">Open State</button>
+            <button class="demo-button" onclick="showClosed()">Closed State</button>
+            <button class="demo-button" onclick="toggleDebug()">Toggle Debug Info</button>
+        </div>
+        
+        <div class="filing-cabinet" id="cabinet">
+            <!-- Tab (RdLnMemoryEdgeTab) -->
+            <div class="filing-cabinet-tab">
+                <div class="tab-icon">🗂️</div>
+                <div class="tab-chevron">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15,18 9,12 15,6"></polyline>
+                    </svg>
+                </div>
+                <div class="tab-badge">3</div>
+            </div>
+            
+            <!-- Panel (RdLnMemorySidePanel) -->
+            <div class="filing-cabinet-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg style="width: 24px; height: 24px; color: var(--theme-accent-400);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="21,8 21,21 3,21 3,8"></polyline>
+                            <rect x="1" y="3" width="22" height="5"></rect>
+                            <line x1="10" y1="12" x2="14" y2="12"></line>
+                        </svg>
+                        <div>
+                            <h2>RdLn Memory</h2>
+                            <p class="panel-subtitle">Filing Cabinet</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="color: var(--theme-text-secondary); line-height: 1.6;">
+                    <p><strong>Synchronized Properties Approach:</strong></p>
+                    <ul>
+                        <li>CSS custom properties ensure identical values</li>
+                        <li>Perfect synchronization of all glassmorphism effects</li>
+                        <li>Maintains two-element structure</li>
+                        <li>Easy to maintain and update</li>
+                        <li>Guaranteed consistency across all states</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="debug-info" id="debug-info" style="display: none;">
+            <h4>Synchronized CSS Properties:</h4>
+            <div>--unified-bg: rgba(255, 255, 255, 0.18)</div>
+            <div>--unified-border: rgba(191, 219, 254, 0.30)</div>
+            <div>--unified-backdrop: blur(16px) saturate(1.3)</div>
+            <div>--unified-shadow: 0 8px 32px 0 rgba(30, 64, 175, 0.45)</div>
+            <div>--unified-radius: 12px</div>
+            <div>--unified-transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1)</div>
+            <br>
+            <h4>Hover State Properties:</h4>
+            <div>--unified-hover-bg: rgba(255, 255, 255, 0.30)</div>
+            <div>--unified-hover-border: rgba(59, 130, 246, 0.6)</div>
+            <div>--unified-hover-shadow: 0 24px 64px 0 rgba(30, 64, 175, 0.6), 0 10px 36px 0 rgba(30, 64, 175, 0.4)</div>
+            <div>--unified-hover-transform: translateY(-2px)</div>
+        </div>
+
+        <div class="pros-cons">
+            <h3 class="pros">✅ Pros:</h3>
+            <ul>
+                <li>Maintains familiar two-element structure</li>
+                <li>Perfect synchronization guaranteed by CSS custom properties</li>
+                <li>Easy to maintain - change one property, updates everywhere</li>
+                <li>No complex clip-path calculations needed</li>
+                <li>Works well with existing React component architecture</li>
+                <li>Excellent browser compatibility</li>
+                <li>Easy to debug and inspect</li>
+            </ul>
+
+            <h3 class="cons">❌ Cons:</h3>
+            <ul>
+                <li>Still relies on visual bridge elements</li>
+                <li>May still have subtle seam issues in some browsers</li>
+                <li>Requires careful border coordination</li>
+                <li>More CSS custom properties to manage</li>
+                <li>Potential for property drift if not maintained carefully</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const cabinet = document.getElementById('cabinet');
+        const debugInfo = document.getElementById('debug-info');
+        const buttons = document.querySelectorAll('.demo-button');
+        
+        function showOpen() {
+            cabinet.className = 'filing-cabinet';
+            updateActiveButton(0);
+        }
+        
+        function showClosed() {
+            cabinet.className = 'filing-cabinet closed';
+            updateActiveButton(1);
+        }
+        
+        function toggleDebug() {
+            debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+            updateActiveButton(2);
+        }
+        
+        function updateActiveButton(activeIndex) {
+            buttons.forEach((btn, index) => {
+                if (index === 2) return; // Skip debug button for active state
+                btn.classList.toggle('active', index === activeIndex);
+            });
+        }
+    </script>
+</body>
+</html>

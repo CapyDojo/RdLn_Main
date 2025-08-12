@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="professional">
+
+</html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn Filing Cabinet - Production Mockup</title>
+    <style>
+        /* Production theme variables */
+        :root {
+            --glass-subtle: 0.12;
+            --glass-panel: 0.18;
+            --glass-focus: 0.30;
+            --glass-strong: 0.45;
+            --glass-bg: 255, 255, 255;
+            --glass-border: 191, 219, 254;
+            --glass-shadow: 30, 64, 175;
+            --glass-blur: 16px;
+            --glass-saturate: 1.3;
+
+            --theme-glass-bg: 255, 255, 255;
+            --theme-glass-border: 191, 219, 254;
+            --theme-glass-hover-border: 59, 130, 246;
+            --theme-glass-hover-shadow: 30, 64, 175;
+
+            --theme-text-body: #1e293b;
+            --theme-text-header: #0f172a;
+            --theme-text-secondary: #475569;
+            --theme-text-interactive: #c2410c;
+            --theme-accent-400: #fb923c;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            color: var(--theme-text-body);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        /* Production Filing Cabinet Container */
+        .filing-cabinet {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            margin: 40px auto;
+            width: fit-content;
+        }
+
+        /* The Tab (RdLnMemoryEdgeTab) - Exact production dimensions */
+        .filing-cabinet-tab {
+            position: relative;
+            width: 48px;
+            height: 96px;
+            z-index: 9999;
+
+            /* Production glassmorphism styling */
+            background: rgba(var(--theme-glass-bg), var(--glass-panel));
+            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+            box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
+
+            /* Tab shape - rounded left, flat right */
+            border-radius: 12px 0 0 12px;
+            border-right: none;
+
+            /* Tab content */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.5s ease-out;
+
+            /* Overlap to eliminate seam */
+            margin-right: -1px;
+        }
+
+        /* The Main Panel Body (RdLnMemorySidePanel) - Exact production dimensions */
+        .filing-cabinet-panel {
+            width: 450px;
+            height: 600px;
+            position: relative;
+            z-index: 9998;
+
+            /* Production glassmorphism styling */
+            background: rgba(var(--theme-glass-bg), var(--glass-panel));
+            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+            box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
+
+            /* Panel shape - flat left, rounded right */
+            border-radius: 0 12px 12px 0;
+            border-left: none;
+
+            /* Panel content */
+            padding: 24px;
+            box-sizing: border-box;
+            overflow: hidden;
+            transition: all 0.5s ease-out;
+        }
+
+        /* Visual bridge - eliminate seam completely */
+        .filing-cabinet-tab::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: rgba(var(--theme-glass-bg), var(--glass-panel));
+            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            z-index: 10000;
+        }
+
+        /* Additional seamless connection from panel side */
+        .filing-cabinet-panel::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: rgba(var(--theme-glass-bg), var(--glass-panel));
+            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            z-index: 9999;
+        }
+
+        /* Tab content styling - matches production */
+        .tab-icon {
+            font-size: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .tab-chevron {
+            width: 12px;
+            height: 12px;
+            color: var(--theme-text-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .tab-badge {
+            position: absolute;
+            top: -6px;
+            left: -6px;
+            background: #dc2626;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            z-index: 10001;
+        }
+
+        /* Panel content styling - matches production */
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(var(--theme-glass-border), 0.2);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel-title h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--theme-text-header);
+        }
+
+        .panel-subtitle {
+            font-size: 14px;
+            color: var(--theme-text-secondary);
+            margin: 0;
+        }
+
+        .panel-count {
+            font-size: 14px;
+            color: var(--theme-text-secondary);
+        }
+
+        .close-button {
+            padding: 8px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            color: var(--theme-text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .close-button:hover {
+            background: rgba(var(--theme-glass-border), 0.4);
+            color: var(--theme-text-header);
+        }
+
+        /* Production hover coordination - both components respond together */
+        .filing-cabinet:hover .filing-cabinet-tab {
+            background: rgba(var(--theme-glass-bg), var(--glass-focus));
+            border-color: rgba(var(--theme-glass-hover-border), 0.6);
+            box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+            transform: translateY(-2px);
+        }
+
+        .filing-cabinet:hover .filing-cabinet-panel {
+            background: rgba(var(--theme-glass-bg), var(--glass-focus));
+            border-color: rgba(var(--theme-glass-hover-border), 0.6);
+            box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+            transform: translateY(-2px);
+        }
+
+        .filing-cabinet:hover .filing-cabinet-tab::after {
+            background: rgba(var(--theme-glass-bg), var(--glass-focus));
+        }
+
+        .filing-cabinet:hover .filing-cabinet-panel::before {
+            background: rgba(var(--theme-glass-bg), var(--glass-focus));
+        }
+
+        .filing-cabinet:hover .tab-icon {
+            transform: scale(1.1);
+        }
+
+        .filing-cabinet:hover .tab-badge {
+            transform: scale(1.1);
+        }
+
+        /* Demo variations */
+        .variations {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 80px;
+            margin-top: 80px;
+        }
+
+        .variation {
+            text-align: center;
+        }
+
+        .variation h3 {
+            color: white;
+            margin-bottom: 40px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Closed state variation */
+        .filing-cabinet.closed .filing-cabinet-panel {
+            width: 450px;
+            height: 96px;
+            overflow: hidden;
+        }
+
+        .filing-cabinet.closed .panel-header {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        /* Animation states */
+        .filing-cabinet.opening .filing-cabinet-panel {
+            animation: panelOpen 0.5s ease-out forwards;
+        }
+
+        .filing-cabinet.closing .filing-cabinet-panel {
+            animation: panelClose 0.5s ease-out forwards;
+        }
+
+        @keyframes panelOpen {
+            from {
+                height: 96px;
+            }
+
+            to {
+                height: 600px;
+            }
+        }
+
+        @keyframes panelClose {
+            from {
+                height: 600px;
+            }
+
+            to {
+                height: 96px;
+            }
+        }
+
+        /* Utility styles */
+        .archive-icon {
+            width: 24px;
+            height: 24px;
+            color: var(--theme-accent-400);
+        }
+
+        .chevron-right {
+            width: 12px;
+            height: 12px;
+        }
+
+        .x-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Demo controls */
+        .demo-controls {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .demo-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .demo-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-30px);
+        }
+
+        .demo-button.active {
+            background: rgba(59, 130, 246, 0.6);
+            border-color: rgba(59, 130, 246, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>RdLn Filing Cabinet - Production Mockup</h1>
+        <p style="text-align: center; color: rgba(255,255,255,0.8); margin-bottom: 40px;">
+            Exact dimensions and styling from production components
+        </p>
+
+        <div class="demo-controls">
+            <button class="demo-button active" onclick="showOpen()">Open State</button>
+            <button class="demo-button" onclick="showClosed()">Closed State</button>
+            <button class="demo-button" onclick="toggleAnimation()">Toggle Animation</button>
+        </div>
+
+        <div class="variations">
+            <div class="variation">
+                <h3 id="state-title">Open State - Production Dimensions</h3>
+                <div class="filing-cabinet" id="filing-cabinet">
+                    <!-- Tab (RdLnMemoryEdgeTab) -->
+                    <div class="filing-cabinet-tab">
+                        <div class="tab-icon">🗂️</div>
+                        <div class="tab-chevron">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15,18 9,12 15,6"></polyline>
+                            </svg>
+                        </div>
+                        <div class="tab-badge">3</div>
+                    </div>
+
+                    <!-- Panel (RdLnMemorySidePanel) -->
+                    <div class="filing-cabinet-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <svg class="archive-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="21,8 21,21 3,21 3,8"></polyline>
+                                    <rect x="1" y="3" width="22" height="5"></rect>
+                                    <line x1="10" y1="12" x2="14" y2="12"></line>
+                                </svg>
+                                <div>
+                                    <h2>RdLn Memory</h2>
+                                    <p class="panel-subtitle">Filing Cabinet</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="panel-count">3 sessions</div>
+                                <button class="close-button">
+                                    <svg class="x-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="color: var(--theme-text-secondary); line-height: 1.6;">
+                            <p><strong>Production Specifications:</strong></p>
+                            <ul style="text-align: left; margin: 16px 0;">
+                                <li>Tab: 48px × 96px (matches header height)</li>
+                                <li>Panel: 450px × 600px (full height)</li>
+                                <li>Glassmorphism: 16px blur, professional theme</li>
+                                <li>Border radius: 12px (tab left, panel right)</li>
+                                <li>No visible border separation</li>
+                                <li>Coordinated hover effects</li>
+                                <li>Smooth 0.5s transitions</li>
+                            </ul>
+                            <p>This mockup uses the exact production dimensions, colors, and glassmorphism effects from
+                                the current RdLnMemoryEdgeTab and RdLnMemorySidePanel components.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cabinet = document.getElementById('filing-cabinet');
+        const title = document.getElementById('state-title');
+        const buttons = document.querySelectorAll('.demo-button');
+
+        function showOpen() {
+            cabinet.className = 'filing-cabinet';
+            title.textContent = 'Open State - Production Dimensions';
+            updateActiveButton(0);
+        }
+
+        function showClosed() {
+            cabinet.className = 'filing-cabinet closed';
+            title.textContent = 'Closed State - Collapsed Panel';
+            updateActiveButton(1);
+        }
+
+        function toggleAnimation() {
+            if (cabinet.classList.contains('closed')) {
+                cabinet.className = 'filing-cabinet opening';
+                setTimeout(() => cabinet.className = 'filing-cabinet', 500);
+                title.textContent = 'Opening Animation - 0.5s Transition';
+            } else {
+                cabinet.className = 'filing-cabinet closing';
+                setTimeout(() => cabinet.className = 'filing-cabinet closed', 500);
+                title.textContent = 'Closing Animation - 0.5s Transition';
+            }
+            updateActiveButton(2);
+        }
+
+        function updateActiveButton(activeIndex) {
+            buttons.forEach((btn, index) => {
+                btn.classList.toggle('active', index === activeIndex);
+            });
+        }
+    </script>
+</body>
+
+</html>

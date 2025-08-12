@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="professional">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option B: Shared Background Continuity</title>
+    <style>
+        /* Production theme variables */
+        :root {
+            --glass-subtle: 0.12;
+            --glass-panel: 0.18;
+            --glass-focus: 0.30;
+            --glass-strong: 0.45;
+            --glass-bg: 255, 255, 255;
+            --glass-border: 191, 219, 254;
+            --glass-shadow: 30, 64, 175;
+            --glass-blur: 16px;
+            --glass-saturate: 1.3;
+
+            --theme-glass-bg: 255, 255, 255;
+            --theme-glass-border: 191, 219, 254;
+            --theme-glass-hover-border: 59, 130, 246;
+            --theme-glass-hover-shadow: 30, 64, 175;
+
+            --theme-text-body: #1e293b;
+            --theme-text-header: #0f172a;
+            --theme-text-secondary: #475569;
+            --theme-text-interactive: #c2410c;
+            --theme-accent-400: #fb923c;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            color: var(--theme-text-body);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .description {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        /* Shared background approach */
+        .filing-cabinet-container {
+            position: relative;
+            margin: 40px auto;
+            width: 498px;
+            /* 48px tab + 450px panel */
+            height: 600px;
+        }
+
+        /* Unified background element */
+        .shared-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+
+            /* Complex high-contrast gradient for stress testing */
+            background: linear-gradient(135deg,
+                    rgba(255, 0, 0, 0.8) 0%,
+                    rgba(0, 255, 0, 0.6) 12.5%,
+                    rgba(0, 0, 255, 0.9) 25%,
+                    rgba(255, 255, 0, 0.4) 37.5%,
+                    rgba(255, 0, 255, 0.7) 50%,
+                    rgba(0, 255, 255, 0.5) 62.5%,
+                    rgba(255, 128, 0, 0.8) 75%,
+                    rgba(128, 0, 255, 0.6) 87.5%,
+                    rgba(255, 255, 255, 0.9) 100%);
+            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+            box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
+
+            /* Manila folder shape */
+            clip-path: polygon(0 20%,
+                    /* Tab top-left */
+                    0 80%,
+                    /* Tab bottom-left */
+                    48px 80%,
+                    /* Tab bottom-right */
+                    48px 0,
+                    /* Panel top-left */
+                    100% 0,
+                    /* Panel top-right */
+                    100% 100%,
+                    /* Panel bottom-right */
+                    48px 100%,
+                    /* Panel bottom-left */
+                    48px 20%
+                    /* Back to tab top-right */
+                );
+
+            border-radius: 12px;
+            transition: all 0.5s ease-out;
+            z-index: 1;
+        }
+
+        /* Tab overlay - semi-transparent */
+        .tab-overlay {
+            position: absolute;
+            left: 0;
+            top: 20%;
+            width: 48px;
+            height: 60%;
+
+            /* Semi-transparent overlay */
+            background: rgba(var(--theme-glass-bg), 0.05);
+            border: none;
+            border-radius: 12px 0 0 12px;
+
+            /* Tab content */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            z-index: 3;
+            transition: all 0.3s ease;
+        }
+
+        /* Panel overlay - semi-transparent */
+        .panel-overlay {
+            position: absolute;
+            left: 48px;
+            top: 0;
+            width: 450px;
+            height: 100%;
+
+            /* Semi-transparent overlay */
+            background: rgba(var(--theme-glass-bg), 0.05);
+            border: none;
+            border-radius: 0 12px 12px 0;
+
+            /* Panel content */
+            padding: 24px;
+            box-sizing: border-box;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        /* Tab content styling */
+        .tab-icon {
+            font-size: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .tab-chevron {
+            width: 12px;
+            height: 12px;
+            color: var(--theme-text-secondary);
+        }
+
+        .tab-badge {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: #dc2626;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            z-index: 4;
+        }
+
+        /* Panel header */
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(var(--theme-glass-border), 0.2);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel-title h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--theme-text-header);
+        }
+
+        .panel-subtitle {
+            font-size: 14px;
+            color: var(--theme-text-secondary);
+            margin: 0;
+        }
+
+        /* Hover effects - coordinated across all layers */
+        .filing-cabinet-container:hover .shared-background {
+            background: linear-gradient(135deg,
+                    rgba(var(--theme-glass-bg), var(--glass-focus)) 0%,
+                    rgba(var(--theme-glass-bg), calc(var(--glass-focus) * 0.8)) 50%,
+                    rgba(var(--theme-glass-bg), var(--glass-focus)) 100%);
+            border-color: rgba(var(--theme-glass-hover-border), 0.6);
+            box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+            transform: translateY(-2px);
+        }
+
+        .filing-cabinet-container:hover .tab-overlay {
+            background: rgba(var(--theme-glass-bg), 0.1);
+        }
+
+        .filing-cabinet-container:hover .panel-overlay {
+            background: rgba(var(--theme-glass-bg), 0.1);
+        }
+
+        .filing-cabinet-container:hover .tab-icon {
+            transform: scale(1.1);
+        }
+
+        .filing-cabinet-container:hover .tab-badge {
+            transform: scale(1.1);
+        }
+
+        /* Closed state */
+        .filing-cabinet-container.closed {
+            height: 96px;
+        }
+
+        .filing-cabinet-container.closed .shared-background {
+            height: 96px;
+            clip-path: polygon(0 0,
+                    /* Tab top-left */
+                    0 100%,
+                    /* Tab bottom-left */
+                    48px 100%,
+                    /* Tab bottom-right */
+                    48px 0,
+                    /* Panel top-left */
+                    100% 0,
+                    /* Panel top-right */
+                    100% 100%,
+                    /* Panel bottom-right */
+                    48px 100%,
+                    /* Panel bottom-left */
+                    48px 0
+                    /* Back to panel top-left */
+                );
+        }
+
+        .filing-cabinet-container.closed .tab-overlay {
+            top: 0;
+            height: 100%;
+        }
+
+        .filing-cabinet-container.closed .panel-overlay {
+            height: 96px;
+            overflow: hidden;
+        }
+
+        /* Demo controls */
+        .demo-controls {
+            margin: 40px 0;
+        }
+
+        .demo-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .demo-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .demo-button.active {
+            background: rgba(59, 130, 246, 0.6);
+            border-color: rgba(59, 130, 246, 0.8);
+        }
+
+        .pros-cons {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 40px;
+            text-align: left;
+        }
+
+        .pros-cons h3 {
+            color: white;
+            margin-top: 0;
+        }
+
+        .pros-cons ul {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+        }
+
+        .pros {
+            color: #4ade80;
+        }
+
+        .cons {
+            color: #f87171;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Option B: Shared Background Continuity</h1>
+        <p class="description">
+            Unified background element with semi-transparent overlays for content areas
+        </p>
+
+        <div class="demo-controls">
+            <button class="demo-button active" onclick="showOpen()">Open State</button>
+            <button class="demo-button" onclick="showClosed()">Closed State</button>
+        </div>
+
+        <div class="filing-cabinet-container" id="cabinet">
+            <!-- Shared glassmorphism background -->
+            <div class="shared-background"></div>
+
+            <!-- Tab content overlay -->
+            <div class="tab-overlay">
+                <div class="tab-icon">🗂️</div>
+                <div class="tab-chevron">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15,18 9,12 15,6"></polyline>
+                    </svg>
+                </div>
+                <div class="tab-badge">3</div>
+            </div>
+
+            <!-- Panel content overlay -->
+            <div class="panel-overlay">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg style="width: 24px; height: 24px; color: var(--theme-accent-400);" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="21,8 21,21 3,21 3,8"></polyline>
+                            <rect x="1" y="3" width="22" height="5"></rect>
+                            <line x1="10" y1="12" x2="14" y2="12"></line>
+                        </svg>
+                        <div>
+                            <h2>RdLn Memory</h2>
+                            <p class="panel-subtitle">Filing Cabinet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="color: var(--theme-text-secondary); line-height: 1.6;">
+                    <p><strong>Shared Background Approach:</strong></p>
+                    <ul>
+                        <li>Single glassmorphism background element</li>
+                        <li>Semi-transparent content overlays</li>
+                        <li>Perfect visual continuity</li>
+                        <li>Maintains separate content areas</li>
+                        <li>Easy to animate individual sections</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="pros-cons">
+            <h3 class="pros">✅ Pros:</h3>
+            <ul>
+                <li>Eliminates seam completely</li>
+                <li>Maintains separate content areas for easier React component mapping</li>
+                <li>Single glassmorphism context for perfect continuity</li>
+                <li>Easy to animate individual overlays</li>
+                <li>Flexible for different content layouts</li>
+                <li>Better separation of concerns (background vs content)</li>
+            </ul>
+
+            <h3 class="cons">❌ Cons:</h3>
+            <ul>
+                <li>More complex DOM structure (3 elements instead of 2)</li>
+                <li>Still requires clip-path calculations</li>
+                <li>Overlay transparency might affect text readability</li>
+                <li>Additional z-index management</li>
+                <li>Slightly more CSS complexity</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const cabinet = document.getElementById('cabinet');
+        const buttons = document.querySelectorAll('.demo-button');
+
+        function showOpen() {
+            cabinet.className = 'filing-cabinet-container';
+            updateActiveButton(0);
+        }
+
+        function showClosed() {
+            cabinet.className = 'filing-cabinet-container closed';
+            updateActiveButton(1);
+        }
+
+        function updateActiveButton(activeIndex) {
+            buttons.forEach((btn, index) => {
+                btn.classList.toggle('active', index === activeIndex);
+            });
+        }
+    </script>
+</body>
+
+</html>

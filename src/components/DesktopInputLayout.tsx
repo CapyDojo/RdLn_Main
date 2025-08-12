@@ -57,7 +57,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
   return (
     <div className={`hidden lg:block ${className || ''}`} style={style}>
       <div ref={panelResizeHandlers.desktopInputPanelsRef} className="grid grid-cols-2 gap-6">
-        <div data-input-panel>
+        <div data-input-panel data-panel-id="original">
           <TextInputPanel
             title="Original&nbsp;"
             value={originalText}
@@ -69,7 +69,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
           />
         </div>
         
-        <div data-input-panel>
+        <div data-input-panel data-panel-id="revised">
           <TextInputPanel
             title="Revised&nbsp;"
             value={revisedText}

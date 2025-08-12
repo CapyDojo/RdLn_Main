@@ -12,13 +12,13 @@ import { DiffChange } from '../types';
 const getInlineStyles = (changeType: string): string => {
   switch (changeType) {
     case 'added':
-      return 'background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: #16a34a;';
+      return 'background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 8px; text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: #15803d; font-weight: 500; padding: 5px 4px; margin: 1.5px 2px; ';
     case 'removed':
-      return 'background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: #dc2626;';
+      return 'background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 8px; text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: #b91c1c; font-weight: 500; padding: 5px 4px; margin: 1.5px 2px; ';
     case 'changed-original':
-      return 'background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: #dc2626;';
+      return 'background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 8px; text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: #b91c1c; font-weight: 500; padding: 5px 4px; margin: 1.5px 2px; ';
     case 'changed-revised':
-      return 'background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: #16a34a;';
+      return 'background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 8px; text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: #15803d; font-weight: 500; padding: 5px 4px; margin: 1.5px 2px; ';
     default:
       return '';
   }
@@ -45,7 +45,7 @@ export const generateClipboardHTML = (changes: DiffChange[]): string => {
     return '';
   }
 
-  let html = '<div style="font-family: serif; line-height: 1.6; white-space: pre-wrap;">';
+  let html = '<div style="font-family: serif; line-height: 2.5; white-space: pre-wrap;">';
   
   changes.forEach(change => {
     switch (change.type) {

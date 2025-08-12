@@ -1,0 +1,11 @@
+/* Mobile scroll fix */
+.mobile-scroll-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.mobile-scroll-container .glass-panel-inner-content {
+  flex-grow: 1;
+  overflow-y: auto; /* Make it scrollable */
+}
