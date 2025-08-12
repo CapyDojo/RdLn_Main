@@ -687,8 +687,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           onDragOver={handleDragOver}
           placeholder={isProcessing ? '' : placeholder}
           disabled={disabled || isProcessing}
-          className="glass-input-field user-text-area w-full h-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 leading-relaxed disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent"
-          style={{ minHeight: '200px' }}
+          className="glass-input-field user-text-area w-full h-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent"
+          style={{ minHeight: '200px', lineHeight: '2' }}
         />
 
         {/* Enhanced OCR Progress Bar */}

@@ -261,9 +261,9 @@ button.enhanced-button.text-white,
 
 /* Legal document specific improvements */
 .libertinus-math-text {
-  color: var(--text-body) !important;
-  font-weight: 500 !important;
-  letter-spacing: 0.01em !important;
+  color: var(--text-body);
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 /* Focus states for accessibility */
@@ -410,20 +410,6 @@ div:not(.chunk-container):not(.user-text-area) {
   /* Tighter than default 1.6 */
 }
 
-/* Force line-height for redlined content containers */
-.user-text-area[data-user-font-size] {
-  line-height: 6 !important;
-}
-
-.chunk-container {
-  line-height: 6 !important;
-}
-
-/* Override any inherited line-height for redlined spans */
-.user-text-area span[style*="background: linear-gradient"],
-.chunk-container span[style*="background: linear-gradient"] {
-  line-height: inherit !important;
-}
 
 /* Headings optimization */
 h1 {
