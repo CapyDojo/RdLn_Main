@@ -143,7 +143,7 @@ export const DEV_CONFIG = {
 
   DEBUGGING: {
     SCROLL_SYNC_DEBUG: false, // Disabled to reduce console noise
-    RESIZE_DEBUG: false, // Disabled to reduce console noise
+    RESIZE_DEBUG: true, // Disabled to reduce console noise
     COMPARISON_DEBUG: false, // Disabled to reduce console noise
     OCR_DEBUG: false, // Disabled to reduce console noise
     SHOW_PERFORMANCE_DEBUG: false, // Disabled to reduce console noise
