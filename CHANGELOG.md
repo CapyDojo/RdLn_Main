@@ -1,3 +1,30 @@
+## Version 0.5.17 - "Mobile Scroll Sync Fix"
+*Released: 2025-08-12*
+
+### 🐛 Critical Fix: Mobile Scroll Lock Functionality
+- **FIXED**: Scroll lock feature now works properly in mobile view
+- **Issue**: Scroll synchronization worked perfectly in desktop but completely failed in mobile
+- **Root Cause**: Responsive layout visibility detection - scroll sync was targeting hidden layout elements
+- **Solution**: Enhanced element detection to find only visible layout elements
+
+### 🔧 Implementation Details
+- **Element Detection**: Modified `useScrollSync.ts` to search for visible elements across both layouts
+- **Visibility Check**: Added proper detection using `getComputedStyle()`, `getBoundingClientRect()` 
+- **Layout Awareness**: Both desktop (`hidden lg:block`) and mobile (`lg:hidden`) layouts always render in DOM
+- **Debug Enhancement**: Added comprehensive element detection logging for future troubleshooting
+
+### 🎯 User Experience Improvements
+- **Mobile UX**: Three-panel scroll synchronization now works seamlessly on mobile devices
+- **Consistent Behavior**: Desktop and mobile scroll lock features now have identical functionality
+- **Touch Interface**: Mobile users can now synchronize scrolling across input and output panels
+
+### 📊 Technical Architecture
+- **Responsive Design**: Fixed dual-layout rendering approach with proper visibility detection
+- **Performance**: Optimized element search to target only active layout components
+- **Debugging**: Enhanced logging system for mobile vs desktop layout troubleshooting
+
+---
+
 ## Version 0.5.16 - "Whitespace Noise Filtering Fix"
 *Released: 2025-08-12*
 

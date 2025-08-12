@@ -4,6 +4,54 @@
 
 ---
 
+## 🚨 Critical Lesson: Responsive Layout Element Detection (2025-08-12)
+
+### The Problem
+Scroll lock functionality worked perfectly in desktop view but completely failed in mobile view. No scroll events were generated from input panels in mobile mode, breaking the three-panel synchronization feature.
+
+### Initial Investigation Mistakes
+**❌ Wrong Assumptions:**
+- Assumed mobile tab interface was hiding panels with `display: none`
+- Thought height calculation differences were the issue (`9999px` vs `panelHeight`)
+- Focused on mobile-specific logic instead of understanding dual-layout architecture
+
+### The Real Issue: Hidden Layout Element Targeting
+**🔍 Root Cause Discovery:**
+- Both `DesktopInputLayout` and `MobileInputLayout` always render in DOM simultaneously
+- CSS responsive classes control visibility: `hidden lg:block` vs `lg:hidden`
+- `document.querySelector()` was finding **first matching element** (hidden desktop layout)
+- Hidden elements had `scrollHeight: 0, clientHeight: 0`, making them non-scrollable
+
+### Correct Solution: Visibility-Aware Element Detection
+**✅ What Worked:**
+```typescript
+// OLD: Found first element (could be hidden)
+const element = document.querySelector(`[data-panel-id="${panelId}"] .class`);
+
+// NEW: Find only visible elements
+const allElements = Array.from(document.querySelectorAll(`[data-panel-id="${panelId}"] .class`));
+const visibleElement = allElements.find(element => {
+  const styles = getComputedStyle(element);
+  const rect = element.getBoundingClientRect();
+  return styles.display !== 'none' && 
+         styles.visibility !== 'hidden' && 
+         rect.width > 0 && rect.height > 0;
+});
+```
+
+### Key Architectural Lessons
+1. **Responsive Design Complexity**: When multiple layouts exist simultaneously, element selection must be visibility-aware
+2. **Debug Methodology**: Comprehensive element detection logging revealed the true issue
+3. **DOM Structure Understanding**: Don't assume responsive layouts work like single-layout applications
+4. **Element Selection Patterns**: Always check for actual visibility, not just existence
+
+### User Feedback That Led to Breakthrough
+*"the debug still isn't picking up the input panel scrolling... the devtools div is: `<div class="glass-panel-inner-content overflow-y-auto" style="height: 300px; min-height: 200px;">`"*
+
+This provided the exact DOM structure and confirmed elements existed but weren't being targeted correctly.
+
+---
+
 ## 🚨 Critical Lesson: Whitespace Noise Filtering (2025-08-12)
 
 ### The Problem

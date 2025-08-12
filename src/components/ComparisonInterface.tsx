@@ -761,7 +761,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
           onToggleScrollLock={() => {
-            if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) console.log('🔧 SCROLL LOCK DEBUG: Button clicked, toggling from', isScrollLocked, 'to', !isScrollLocked);
+            if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) console.log('🔧 SCROLL LOCK DEBUG: Desktop button clicked, toggling from', isScrollLocked, 'to', !isScrollLocked);
             setIsScrollLocked(!isScrollLocked);
           }}
           onToggleSystemProtection={toggleSystemProtection}
@@ -781,7 +781,10 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onCompare={() => handleCompareDocuments()}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
-          onToggleScrollLock={() => setIsScrollLocked(!isScrollLocked)}
+          onToggleScrollLock={() => {
+            if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) console.log('🔧 SCROLL LOCK BUTTON: Clicked, toggling from', isScrollLocked, 'to', !isScrollLocked);
+            setIsScrollLocked(!isScrollLocked);
+          }}
           onResetComparison={handleResetComparison}
           canUndo={canUndo}
           onUndo={handleUndo}

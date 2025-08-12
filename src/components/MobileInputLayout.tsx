@@ -65,7 +65,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
             onChange={onOriginalTextChange}
             placeholder="TYPE or PASTE your original text here, or..."
             disabled={isProcessing}
-            height={USE_CSS_RESIZE ? 9999 : panelHeight}
+            height={panelHeight}
             iconEmoji="📝"
           />
         </div>
@@ -129,7 +129,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
             onChange={onRevisedTextChange}
             placeholder="TYPE or PASTE your revised text here, or..."
             disabled={isProcessing}
-            height={USE_CSS_RESIZE ? 9999 : panelHeight}
+            height={panelHeight}
             iconEmoji="📝"
           />
         </div>

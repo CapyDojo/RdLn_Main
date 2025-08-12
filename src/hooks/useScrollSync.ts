@@ -85,16 +85,51 @@ export const useScrollSync = ({
   // ==================== SCROLL SYNCHRONIZATION ====================
   
   const syncScroll = useCallback((sourceElement: HTMLElement, scrollTop: number) => {
-    if (!isScrollLocked || isScrolling.current) return;
+    if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+      console.log('🔄 SYNC SCROLL CALLED:', {
+        isScrollLocked,
+        isScrolling: isScrolling.current,
+        sourceElement: sourceElement.tagName + ' ' + sourceElement.className,
+        scrollTop,
+        scrollHeight: sourceElement.scrollHeight,
+        clientHeight: sourceElement.clientHeight
+      });
+    }
+    
+    if (!isScrollLocked || isScrolling.current) {
+      if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+        console.log('🚫 SYNC SCROLL BLOCKED:', { isScrollLocked, isScrolling: isScrolling.current });
+      }
+      return;
+    }
     
     isScrolling.current = true;
     
     const sourceScrollPercentage = scrollTop / (sourceElement.scrollHeight - sourceElement.clientHeight);
     
-    Object.values(scrollRefs.current).forEach(element => {
+    if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+      console.log('📊 SYNC CALCULATION:', {
+        sourceScrollPercentage,
+        willSyncTo: Object.values(scrollRefs.current).filter(el => el && el !== sourceElement).length + ' elements'
+      });
+    }
+    
+    Object.values(scrollRefs.current).forEach((element, index) => {
       if (element && element !== sourceElement) {
         const targetScrollTop = sourceScrollPercentage * (element.scrollHeight - element.clientHeight);
-        element.scrollTop = Math.max(0, targetScrollTop);
+        const finalScrollTop = Math.max(0, targetScrollTop);
+        element.scrollTop = finalScrollTop;
+        
+        if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+          const elementName = index === 0 ? 'input1' : index === 1 ? 'input2' : 'output';
+          console.log(`🎯 SYNCED ${elementName}:`, {
+            element: element.tagName + ' ' + element.className,
+            targetScrollTop,
+            finalScrollTop,
+            scrollHeight: element.scrollHeight,
+            clientHeight: element.clientHeight
+          });
+        }
       }
     });
     
@@ -118,25 +153,54 @@ export const useScrollSync = ({
     try {
       setInternalError(null);
       
-      // New robust scroll element detection logic
+      // VISIBLE ELEMENT SEARCH: Find the visible layout's scrollable elements
       const findScrollableElement = (panelId: 'original' | 'revised'): HTMLElement | null => {
-        const panelWrapper = document.querySelector(`[data-panel-id="${panelId}"][data-input-panel]`) as HTMLElement;
-        if (panelWrapper && panelWrapper.scrollHeight > panelWrapper.clientHeight) {
-          return panelWrapper; // Mobile layout often scrolls this outer wrapper
+        // Get ALL matching elements from both desktop and mobile layouts
+        const allElements = Array.from(document.querySelectorAll(`[data-panel-id="${panelId}"] .glass-panel-inner-content.overflow-y-auto`)) as HTMLElement[];
+        
+        // Find the element that's actually visible (not hidden by responsive CSS)
+        const visibleElement = allElements.find(element => {
+          const styles = getComputedStyle(element);
+          const rect = element.getBoundingClientRect();
+          return styles.display !== 'none' && 
+                 styles.visibility !== 'hidden' && 
+                 rect.width > 0 && 
+                 rect.height > 0;
+        });
+        
+        if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+          console.log(`🔍 VISIBLE ELEMENT SEARCH for ${panelId}:`, {
+            totalElementsFound: allElements.length,
+            visibleElementFound: !!visibleElement,
+            elementDetails: allElements.map((el, i) => ({
+              index: i,
+              isVisible: el === visibleElement,
+              display: getComputedStyle(el).display,
+              visibility: getComputedStyle(el).visibility,
+              width: el.getBoundingClientRect().width,
+              height: el.getBoundingClientRect().height,
+              scrollHeight: el.scrollHeight,
+              clientHeight: el.clientHeight,
+              parentLayoutClass: el.closest('.lg\\:hidden, .hidden')?.className || 'no-layout-class'
+            }))
+          });
+          
+          if (visibleElement) {
+            console.log(`🎯 VISIBLE ELEMENT for ${panelId}:`, {
+              scrollHeight: visibleElement.scrollHeight,
+              clientHeight: visibleElement.clientHeight,
+              isScrollable: visibleElement.scrollHeight > visibleElement.clientHeight,
+              boundingRect: visibleElement.getBoundingClientRect(),
+              computedStyle: {
+                display: getComputedStyle(visibleElement).display,
+                height: getComputedStyle(visibleElement).height,
+                overflowY: getComputedStyle(visibleElement).overflowY
+              }
+            });
+          }
         }
-
-        const innerContainer = document.querySelector(`[data-panel-id="${panelId}"] .glass-panel-inner-content`) as HTMLElement;
-        if (innerContainer && innerContainer.scrollHeight > innerContainer.clientHeight) {
-          return innerContainer; // Desktop "Option C" layout scrolls this container
-        }
-
-        const textarea = document.querySelector(`[data-panel-id="${panelId}"] textarea`) as HTMLElement;
-        if (textarea && textarea.scrollHeight > textarea.clientHeight) {
-          return textarea; // Fallback to textarea
-        }
-
-        // Default to a non-scrollable element if none are detected, to avoid null errors
-        return innerContainer || textarea || panelWrapper;
+        
+        return visibleElement || null;
       };
 
       let input1Element = findScrollableElement('original');
@@ -155,52 +219,170 @@ export const useScrollSync = ({
 
       setIsLayoutDetected(!!input1Element && !!input2Element);
 
-      // Debug logging (guarded)
-      if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) console.log('🔄 SCROLL SYNC: Scroll elements detected via layout adaptation:', {
-        input1: !!scrollRefs.current.input1,
-        input2: !!scrollRefs.current.input2,
-        output: !!scrollRefs.current.output,
-        outputRefDirect: !!outputRef?.current,
-        isScrollLocked,
-        isOptionC,
-        layoutDetection: isOptionC ? 'Option C (container scroll)' : 'Other layout (textarea scroll)',
-        input1Type: input1Element?.tagName,
-        input2Type: input2Element?.tagName,
-        outputType: outputPanel?.tagName,
-        outputHasOverflow: outputPanel ? getComputedStyle(outputPanel).overflowY : 'no element',
-        outputScrollHeight: outputPanel?.scrollHeight,
-        outputClientHeight: outputPanel?.clientHeight
-      });
+      // Simplified debug logging
+      if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+        console.log(`🔄 SCROLL SYNC: Element detection complete:`, {
+          viewport: {
+            width: window.innerWidth,
+            height: window.innerHeight
+          },
+          detection: {
+            input1Found: !!scrollRefs.current.input1,
+            input2Found: !!scrollRefs.current.input2,
+            outputFound: !!scrollRefs.current.output,
+            layoutDetected: !!input1Element && !!input2Element
+          },
+          elements: {
+            input1Type: input1Element?.tagName,
+            input1Classes: input1Element?.className,
+            input1ScrollHeight: input1Element?.scrollHeight,
+            input1ClientHeight: input1Element?.clientHeight,
+            input2Type: input2Element?.tagName,
+            input2Classes: input2Element?.className,
+            input2ScrollHeight: input2Element?.scrollHeight,
+            input2ClientHeight: input2Element?.clientHeight,
+            outputType: outputPanel?.tagName,
+            outputClasses: outputPanel?.className
+          },
+          state: {
+            isScrollLocked,
+            isOptionC,
+            outputRefDirect: !!outputRef?.current,
+            outputHasOverflow: outputPanel ? getComputedStyle(outputPanel).overflowY : 'no element',
+            outputScrollHeight: outputPanel?.scrollHeight,
+            outputClientHeight: outputPanel?.clientHeight
+          }
+        });
+      }
     } catch (error) {
       console.error('Error updating scroll refs:', error);
       setInternalError(error instanceof Error ? error.message : 'Unknown error');
     }
   }, [isScrollLocked, outputRef]);
+
+  // Retry mechanism for timing issues - sometimes DOM isn't ready immediately
+  const updateScrollRefsWithRetry = useCallback(async (retries = 2, delay = 100) => {
+    let attempts = 0;
+    
+    while (attempts <= retries) {
+      updateScrollRefs();
+      
+      const hasValidElements = scrollRefs.current.input1 && scrollRefs.current.input2;
+      
+      if (hasValidElements || attempts === retries) {
+        if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG && attempts > 0) {
+          console.log(`🔄 SCROLL SYNC: Element detection succeeded after ${attempts} ${attempts === 1 ? 'retry' : 'retries'}`);
+        }
+        break;
+      }
+      
+      if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+        console.log(`🔄 SCROLL SYNC: Elements not found, retrying in ${delay}ms... (attempt ${attempts + 1}/${retries + 1})`);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+      attempts++;
+    }
+  }, [updateScrollRefs]);
   
   // ==================== EVENT LISTENER MANAGEMENT ====================
   
+  // Debug: Track scroll lock state changes
+  useEffect(() => {
+    if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+      console.log(`🔧 SCROLL SYNC: State changed - isScrollLocked: ${isScrollLocked}`);
+    }
+  }, [isScrollLocked]);
+
   // Event listener management (Reversible - only when locked)
   useEffect(() => {
-    if (!isScrollLocked) return;
-    
-    updateScrollRefs();
+    if (!isScrollLocked) {
+      if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+        console.log('🔓 SCROLL SYNC: Disabled - not setting up listeners');
+      }
+      return;
+    }
     
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLElement;
+      
+      if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+        console.log('📜 SCROLL EVENT:', {
+          target: target.tagName + ' ' + target.className,
+          scrollTop: target.scrollTop,
+          scrollHeight: target.scrollHeight,
+          clientHeight: target.clientHeight,
+          isScrollable: target.scrollHeight > target.clientHeight,
+          isInScrollRefs: Object.values(scrollRefs.current).includes(target),
+          viewport: window.innerWidth + 'x' + window.innerHeight
+        });
+      }
+      
       syncScroll(target, target.scrollTop);
     };
     
-    // Add listeners to all scroll areas
-    Object.values(scrollRefs.current).forEach(element => {
-      if (element) {
-        element.addEventListener('scroll', handleScroll, { passive: true });
-        if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
-          console.log('🔗 SCROLL SYNC: Added scroll listener to:', element.tagName);
+    // Setup scroll sync with retry mechanism
+    const setupScrollSync = async () => {
+      await updateScrollRefsWithRetry();
+      
+      // Add listeners to all scroll areas after elements are found
+      const elementsWithListeners = [];
+      Object.values(scrollRefs.current).forEach((element, index) => {
+        if (element) {
+          element.addEventListener('scroll', handleScroll, { passive: true });
+          const elementName = index === 0 ? 'input1' : index === 1 ? 'input2' : 'output';
+          elementsWithListeners.push(elementName);
+          
+          if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+            console.log(`🔗 SCROLL SYNC: Added scroll listener to ${elementName}:`, element.tagName, element.className, {
+              scrollHeight: element.scrollHeight,
+              clientHeight: element.clientHeight,
+              isCurrentlyScrollable: element.scrollHeight > element.clientHeight,
+              hasOverflow: getComputedStyle(element).overflowY,
+              elementId: element.id || 'no-id',
+              dataAttrs: Array.from(element.attributes).filter(attr => attr.name.startsWith('data-')).map(attr => `${attr.name}="${attr.value}"`).join(' '),
+              boundingRect: element.getBoundingClientRect()
+            });
+            
+            // Test if the element can actually receive scroll events by adding a test listener
+            const testHandler = () => console.log(`🧪 TEST SCROLL EVENT on ${elementName}`);
+            element.addEventListener('scroll', testHandler, { passive: true, once: true });
+            setTimeout(() => element.removeEventListener('scroll', testHandler), 5000);
+          }
         }
+      });
+      
+      if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+        console.log(`✅ SCROLL SYNC: Setup complete. Listening to ${elementsWithListeners.length} elements:`, elementsWithListeners);
+        
+        // Test scroll listeners by programmatically scrolling each element
+        Object.values(scrollRefs.current).forEach((element, index) => {
+          if (element) {
+            const elementName = index === 0 ? 'input1' : index === 1 ? 'input2' : 'output';
+            console.log(`🧪 TESTING ${elementName}: Programmatically scrolling to trigger event...`);
+            
+            // Save original scroll position
+            const originalScrollTop = element.scrollTop;
+            
+            // Try to scroll the element
+            element.scrollTop = originalScrollTop + 1;
+            
+            // Reset after a brief moment
+            setTimeout(() => {
+              element.scrollTop = originalScrollTop;
+            }, 100);
+          }
+        });
       }
+    };
+    
+    // Setup async but don't wait for it
+    setupScrollSync().catch(error => {
+      console.error('Failed to setup scroll sync:', error);
     });
     
     return () => {
+      // Cleanup event listeners
       Object.values(scrollRefs.current).forEach(element => {
         if (element) {
           element.removeEventListener('scroll', handleScroll);
@@ -210,7 +392,7 @@ export const useScrollSync = ({
         }
       });
     };
-  }, [isScrollLocked, syncScroll, updateScrollRefs]);
+  }, [isScrollLocked, syncScroll, updateScrollRefsWithRetry]);
   
   // ==================== RETURN INTERFACE ====================
   
@@ -222,7 +404,7 @@ export const useScrollSync = ({
   };
   
   const hookActions: UseScrollSyncActions = {
-    updateScrollRefs,
+    updateScrollRefs: updateScrollRefsWithRetry,
     syncScroll,
     toggleScrollLock
   };
@@ -243,7 +425,7 @@ export const useScrollSync = ({
     
     // Legacy interface (backward compatibility)
     scrollRefs,
-    updateScrollRefs,
+    updateScrollRefs: updateScrollRefsWithRetry,
     syncScroll
   };
 };

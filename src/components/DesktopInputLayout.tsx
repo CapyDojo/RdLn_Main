@@ -64,7 +64,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
             onChange={onOriginalTextChange}
             placeholder="TYPE or PASTE your original text here, or..."
             disabled={isProcessing}
-            height={USE_CSS_RESIZE ? 9999 : panelHeight}
+            height={panelHeight}
             iconEmoji="📝"
           />
         </div>
@@ -76,7 +76,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
             onChange={onRevisedTextChange}
             placeholder="TYPE or PASTE your revised text here, or..."
             disabled={isProcessing}
-            height={USE_CSS_RESIZE ? 9999 : panelHeight}
+            height={panelHeight}
             iconEmoji="📝"
           />
         </div>

@@ -664,8 +664,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       <div
         className="glass-panel-inner-content overflow-y-auto"
         style={{
-          height: isDynamicScaling ? 'auto' : `${height - 70}px`, // Match RedlineOutput: calculate height minus header
-          minHeight: '200px',
+          height: `${height - 70}px`, // FIXED: Always use fixed height so container can scroll when textarea content exceeds height
+          minHeight: '200px', // Minimum usable height
         }}
       >
         <textarea
@@ -687,8 +687,13 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           onDragOver={handleDragOver}
           placeholder={isProcessing ? '' : placeholder}
           disabled={disabled || isProcessing}
-          className="glass-input-field user-text-area w-full h-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent"
-          style={{ minHeight: '200px', lineHeight: '2' }}
+          className="glass-input-field user-text-area w-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent"
+          style={{ 
+            minHeight: '200px', 
+            lineHeight: '2',
+            height: 'auto', // Allow textarea to grow
+            overflow: 'hidden' // Hide textarea scrollbar - container will scroll instead
+          }}
         />
 
         {/* Enhanced OCR Progress Bar */}
