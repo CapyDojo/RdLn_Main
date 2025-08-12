@@ -1,3 +1,37 @@
+## Version 0.5.16 - "Whitespace Noise Filtering Fix"
+*Released: 2025-08-12*
+
+### 🐛 Critical Fix: Whitespace Visual Noise Elimination
+- **FIXED**: Eliminated visual noise from pure whitespace changes in redline output
+- **Issue**: Minor whitespace differences (e.g., `"\n\n"` → `" \n\n"`) were showing as red/green highlights
+- **Root Cause**: Semantic chunking rendering path (`renderSingleChange`) lacked clean whitespace logic
+- **Solution**: Applied consistent whitespace substitution logic across both rendering paths
+
+### 🔧 Implementation Details
+- **Algorithm Level**: Modified `shouldTreatAsSubstitution()` to allow pure whitespace substitutions
+- **Statistics Fix**: Pure whitespace changes now counted as "unchanged" instead of additions/deletions
+- **Rendering Fix**: Both `generateHTMLString` and `renderSingleChange` now handle whitespace cleanly
+- **Consistency**: Unified clean whitespace logic across regular and semantic chunking paths
+
+### ⚠️ Rollback: Broken Toggle Mechanism
+- **REVERTED**: Removed broken strict/clean mode toggle that was non-functional
+- **Issue**: Toggle UI didn't affect output or statistics despite proper prop threading
+- **Decision**: Prioritized working clean mode over broken feature
+- **Default**: App now defaults to clean mode with whitespace noise filtering enabled
+
+### 🎯 User Experience Improvements
+- **Visual Clarity**: Legal documents now show clean comparisons focused on content changes
+- **Reduced Noise**: Word vs PDF paste operations no longer generate excessive highlighting
+- **Professional Output**: Redline output suitable for legal review without formatting distractions
+
+### 📊 Technical Debt Addressed
+- Removed complex component-level statistics filtering
+- Simplified rendering logic with hardcoded clean mode
+- Restored algorithm-level statistics calculation
+- Eliminated broken state management for whitespace modes
+
+---
+
 ## Version 0.5.15 - "HTML Diff → DOCX Track Changes"
 *Released: 2025-08-11*
 

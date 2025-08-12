@@ -56,27 +56,26 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
-  // Calculate absolute position for tooltip portal with improved scroll/zoom handling
+  // Calculate viewport position for tooltip portal (fixed positioning)
   const calculateTooltipPosition = (placementType: 'top' | 'bottom' | 'left' | 'right' | 'bottom-right') => {
     if (!triggerRef.current) return { top: 0, left: 0 };
     
     const rect = triggerRef.current.getBoundingClientRect();
     
-    // Better scroll position detection that works with zoom
-    const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-    const scrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
+    // For fixed positioning, we use viewport coordinates directly (no scroll offset needed)
+    // getBoundingClientRect() already gives us viewport-relative positions
     
     switch (placementType) {
       case 'top':
         return {
-          top: rect.top + scrollY - 30, // Above the element with space for tooltip height
-          left: rect.left + scrollX - 207 // Just to the left of the element
+          top: rect.top - 30, // Above the element with space for tooltip height
+          left: rect.left - 207 // Just to the left of the element
         };
         
       case 'bottom':
         return {
-          top: rect.bottom + scrollY + 2, // Even closer: 2px below
-          left: rect.right + scrollX + 2 // Tucked: align to right edge + 2px
+          top: rect.bottom + 2, // Even closer: 2px below
+          left: rect.right + 2 // Tucked: align to right edge + 2px
         };
         
       case 'left':
@@ -90,21 +89,21 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
         }
         
         return {
-          top: rect.bottom + scrollY, // Align tooltip top with element bottom
-          left: rect.left + scrollX - tooltipWidth // Position tooltip so its right edge touches element's left edge
+          top: rect.bottom, // Align tooltip top with element bottom
+          left: rect.left - tooltipWidth // Position tooltip so its right edge touches element's left edge
         };
         
       case 'right':
         return {
-          top: rect.bottom + scrollY + 2, // Align to bottom edge + 2px
-          left: rect.right + scrollX + 2 // Even closer: 2px to the right
+          top: rect.bottom + 2, // Align to bottom edge + 2px
+          left: rect.right + 2 // Even closer: 2px to the right
         };
         
       case 'bottom-right':
       default:
         return {
-          top: rect.bottom + scrollY + 2, // Even closer: 2px below
-          left: rect.right + scrollX + 2 // Even closer: 2px to the right
+          top: rect.bottom + 2, // Even closer: 2px below
+          left: rect.right + 2 // Even closer: 2px to the right
         };
     }
   };
@@ -192,13 +191,47 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
 
     // Add event listeners when tooltip is visible
     if (isVisible) {
+      // For fixed positioning, we need to track when elements move in viewport
+      // This happens during window scroll, resize, or internal container scroll
+      
       window.addEventListener('scroll', handleScrollOrResize, { passive: true });
       window.addEventListener('resize', handleScrollOrResize, { passive: true });
-      // Also listen for zoom changes (resize event covers most zoom cases)
+      
+      // Find and listen to all scrollable containers in the app
+      const scrollableContainers: HTMLElement[] = [];
+      
+      // App-specific scroll containers based on useScrollSync patterns
+      const containerSelectors = [
+        '[data-panel-id] .glass-panel-inner-content', // Desktop Option C layout
+        '[data-panel-id][data-input-panel]',          // Mobile layout wrapper
+        '[data-panel-id] textarea',                   // Textarea scroll
+        '.scroll-container',                          // General scroll containers
+        '[data-testid="scroll-container"]'            // Test scroll containers
+      ];
+      
+      containerSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector) as NodeListOf<HTMLElement>;
+        elements.forEach(element => {
+          // Only add if it's actually scrollable
+          if (element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth) {
+            scrollableContainers.push(element);
+          }
+        });
+      });
+      
+      // Add scroll listeners to all detected scrollable containers
+      scrollableContainers.forEach(container => {
+        container.addEventListener('scroll', handleScrollOrResize, { passive: true });
+      });
       
       return () => {
         window.removeEventListener('scroll', handleScrollOrResize);
         window.removeEventListener('resize', handleScrollOrResize);
+        
+        // Clean up container scroll listeners
+        scrollableContainers.forEach(container => {
+          container.removeEventListener('scroll', handleScrollOrResize);
+        });
       };
     }
   }, [isVisible, updateTooltipPosition]);
