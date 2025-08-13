@@ -1,7 +1,6 @@
 import React from 'react';
 import { GripHorizontal } from 'lucide-react';
 import { TextInputPanel } from './TextInputPanel';
-import { FEATURE_FLAGS } from '../config/appConfig';
 import { BaseComponentProps } from '../types/components';
 
 interface DesktopInputLayoutProps extends BaseComponentProps {
@@ -13,8 +12,6 @@ interface DesktopInputLayoutProps extends BaseComponentProps {
   isProcessing: boolean;
   /** Panel height for fallback React state */
   panelHeight: number;
-  /** Whether to use CSS-based resize */
-  USE_CSS_RESIZE?: boolean;
   /** Callback for original text changes */
   onOriginalTextChange: (value: string, isPasteAction?: boolean) => void;
   /** Callback for revised text changes */
@@ -46,7 +43,6 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
   revisedText,
   isProcessing,
   panelHeight,
-  USE_CSS_RESIZE = FEATURE_FLAGS.ENABLE_CSS_RESIZE,
   onOriginalTextChange,
   onRevisedTextChange,
   panelResizeHandlers,

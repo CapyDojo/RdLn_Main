@@ -142,7 +142,7 @@ export const DEV_CONFIG = {
   },
 
   DEBUGGING: {
-    SCROLL_SYNC_DEBUG: false, // Fixed mobile scroll sync issue
+    SCROLL_SYNC_DEBUG: false, // Fixed view transition issues
     RESIZE_DEBUG: false, // Disabled to reduce console noise
     COMPARISON_DEBUG: false, // Disabled to reduce console noise
     OCR_DEBUG: false, // Disabled to reduce console noise

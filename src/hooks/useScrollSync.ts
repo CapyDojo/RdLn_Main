@@ -294,6 +294,28 @@ export const useScrollSync = ({
     }
   }, [isScrollLocked]);
 
+  // Layout change detection for desktop/mobile transitions
+  const [layoutReinitTrigger, setLayoutReinitTrigger] = useState(0);
+  
+  useEffect(() => {
+    if (!isScrollLocked) return;
+
+    const handleResize = () => {
+      const currentWidth = window.innerWidth;
+      const isNowDesktop = currentWidth >= 1024; // lg breakpoint
+      
+      if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) {
+        console.log(`🔄 SCROLL SYNC: Viewport changed to ${currentWidth}px (${isNowDesktop ? 'desktop' : 'mobile'})`);
+      }
+
+      // Trigger re-initialization by incrementing state
+      setLayoutReinitTrigger(prev => prev + 1);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isScrollLocked]);
+
   // Event listener management (Reversible - only when locked)
   useEffect(() => {
     if (!isScrollLocked) {
@@ -392,7 +414,7 @@ export const useScrollSync = ({
         }
       });
     };
-  }, [isScrollLocked, syncScroll, updateScrollRefsWithRetry]);
+  }, [isScrollLocked, syncScroll, updateScrollRefsWithRetry, layoutReinitTrigger]);
   
   // ==================== RETURN INTERFACE ====================
   

@@ -728,7 +728,6 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           revisedText={revisedText}
           isProcessing={isProcessing}
           panelHeight={panelHeight}
-          USE_CSS_RESIZE={USE_CSS_RESIZE}
           onOriginalTextChange={(value: string, isPasteAction?: boolean) => setOriginalText(value, isPasteAction)}
           onRevisedTextChange={(value: string, isPasteAction?: boolean) => setRevisedText(value, isPasteAction)}
           panelResizeHandlers={panelResizeHandlers}
@@ -741,7 +740,6 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           revisedText={revisedText}
           isProcessing={isProcessing}
           panelHeight={panelHeight}
-          USE_CSS_RESIZE={USE_CSS_RESIZE}
           onOriginalTextChange={(value: string, isPasteAction?: boolean) => setOriginalText(value, isPasteAction)}
           onRevisedTextChange={(value: string, isPasteAction?: boolean) => setRevisedText(value, isPasteAction)}
           panelResizeHandlers={panelResizeHandlers}
