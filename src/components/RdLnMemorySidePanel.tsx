@@ -30,24 +30,18 @@ interface RdLnMemorySidePanelProps extends BaseComponentProps {
   isOpen: boolean;
   /** Callback to close side panel */
   onClose: () => void;
-  /** Whether there are saved sessions available */
-  hasSessions: boolean;
-  /** Number of saved sessions */
-  sessionCount: number;
-  /** Callback when save current session is requested */
-  onSaveSession?: () => void;
   /** Callback when a session should be loaded */
   onLoadSession?: (sessionId: string) => void;
-  /** Callback when a session should be deleted */
-  onDeleteSession?: (sessionId: string) => void;
-  /** Callback when all sessions should be cleared */
-  onClearAll?: () => void;
   /** Callback when export is requested */
   onExport?: () => void;
   /** Callback when import is requested */
   onImport?: (jsonData: string) => void;
-  /** Current content lengths for smart save detection */
-  contentLength?: number;
+  /** Current document content for saving sessions */
+  originalText?: string;
+  /** Current revised text for saving sessions */
+  revisedText?: string;
+  /** Whether current content has comparison results */
+  hasResult?: boolean;
   /** Callback when panel is hovered (for coordinated hover states) */
   onHover?: (isHovered: boolean) => void;
 }
@@ -61,15 +55,12 @@ interface RdLnMemorySidePanelProps extends BaseComponentProps {
 export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
   isOpen,
   onClose,
-  hasSessions,
-  sessionCount,
-  onSaveSession,
   onLoadSession,
-  onDeleteSession,
-  onClearAll,
   onExport,
   onImport,
-  contentLength = 0,
+  originalText = '',
+  revisedText = '',
+  hasResult = false,
   onHover,
   style,
   className
@@ -77,8 +68,20 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
   const panelRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get sessions from RdLn Memory hook
-  const { sessions } = useRdLnMemory();
+  // Get sessions and methods from RdLn Memory hook
+  const {
+    sessions,
+    hasSessions,
+    saveSession,
+    deleteSession,
+    clearAllSessions,
+    exportSessions,
+    importSessions
+  } = useRdLnMemory();
+
+  // Calculate content length for display
+  const contentLength = (originalText?.length || 0) + (revisedText?.length || 0);
+  const sessionCount = sessions.length;
 
   // Handle escape key to close panel
   useEffect(() => {
@@ -96,6 +99,47 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
 
 
 
+  // Handle save session
+  const handleSaveSession = () => {
+    if (contentLength === 0) return;
+
+    saveSession(originalText, revisedText, hasResult);
+    onClose();
+  };
+
+  // Handle delete session
+  const handleDeleteSession = (sessionId: string) => {
+    deleteSession(sessionId);
+  };
+
+  // Handle clear all sessions
+  const handleClearAll = () => {
+    if (confirm(`Delete all ${sessionCount} sessions? This cannot be undone.`)) {
+      clearAllSessions();
+      onClose();
+    }
+  };
+
+  // Handle export
+  const handleExport = () => {
+    if (onExport) {
+      onExport();
+    } else {
+      // Fallback to direct export from hook
+      const exportData = exportSessions();
+      const blob = new Blob([exportData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rdln-sessions-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    onClose();
+  };
+
   // Handle file import
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -108,8 +152,18 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
-      if (content && onImport) {
-        onImport(content);
+      if (content) {
+        if (onImport) {
+          onImport(content);
+        } else {
+          // Fallback to direct import from hook
+          const success = importSessions(content);
+          if (success) {
+            console.log('Sessions imported successfully');
+          } else {
+            alert('Failed to import sessions. Please check the file format.');
+          }
+        }
         onClose();
       }
     };
@@ -264,10 +318,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
             <div className="space-y-3 mb-6">
               <h3 className="text-lg font-semibold text-theme-textHeader">Quick Actions</h3>
               <button
-                onClick={() => {
-                  onSaveSession?.();
-                  onClose();
-                }}
+                onClick={handleSaveSession}
                 disabled={contentLength === 0}
                 className="w-full flex items-center gap-4 p-4 rounded-xl bg-theme-accent-500/20 hover:bg-theme-accent-500/30 text-theme-textBody transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
               >
@@ -334,9 +385,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
                           <FolderOpen className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => {
-                            onDeleteSession?.(session.id);
-                          }}
+                          onClick={() => handleDeleteSession(session.id)}
                           className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 transition-all duration-200"
                           title="Delete session"
                         >
@@ -370,10 +419,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => {
-                    onExport?.();
-                    onClose();
-                  }}
+                  onClick={handleExport}
                   disabled={!hasSessions}
                   className="flex items-center justify-center gap-2 p-3 rounded-xl bg-theme-secondary-500/20 hover:bg-theme-secondary-500/30 text-theme-textBody transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -392,12 +438,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
 
               {hasSessions && (
                 <button
-                  onClick={() => {
-                    if (confirm(`Delete all ${sessionCount} sessions? This cannot be undone.`)) {
-                      onClearAll?.();
-                      onClose();
-                    }
-                  }}
+                  onClick={handleClearAll}
                   className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 transition-all duration-200"
                 >
                   <Trash2 className="w-4 h-4" />

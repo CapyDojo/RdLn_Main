@@ -70,6 +70,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
               <button
                 onClick={handleQuickDemo}
                 disabled={isProcessing}
+                data-testid="quick-demo-button"
                 className="enhanced-button flex items-center gap-2 px-3 py-1.5 bg-theme-primary-600 hover:bg-theme-primary-700 text-white rounded-md text-xs font-medium transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <PlayCircle className="w-3.5 h-3.5" />

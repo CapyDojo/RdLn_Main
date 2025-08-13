@@ -1,0 +1,354 @@
+/**
+ * Onboarding Tour Styles
+ * 
+ * Theme-aware styles for the user onboarding tour system.
+ * Follows the existing glassmorphism design patterns.
+ */
+
+/* Tour Overlay */
+.onboarding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none;
+}
+
+.onboarding-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Tour Tooltip Container */
+.onboarding-tooltip {
+  position: fixed;
+  z-index: 9999;
+  max-width: 320px;
+  min-width: 280px;
+  padding: 0;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: scale(0.9) translateY(8px);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.onboarding-tooltip.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
+
+/* Glassmorphism panel styling */
+.onboarding-tooltip-panel {
+  background: var(--theme-glassPanelBg);
+  border: 1px solid var(--theme-glassPanelBorder);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  padding: 20px;
+  position: relative;
+}
+
+/* Header */
+.onboarding-tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.onboarding-tooltip-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-textHeader);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.onboarding-tooltip-close {
+  background: none;
+  border: none;
+  color: var(--theme-textSecondary);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.onboarding-tooltip-close:hover {
+  background: var(--theme-glassPanelHover);
+  color: var(--theme-textHeader);
+}
+
+/* Content */
+.onboarding-tooltip-content {
+  color: var(--theme-textPrimary);
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* Progress indicator */
+.onboarding-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.onboarding-progress-dots {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+}
+
+.onboarding-progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--theme-textSecondary);
+  opacity: 0.3;
+  transition: all 0.2s ease;
+}
+
+.onboarding-progress-dot.active {
+  background: var(--theme-accent);
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.onboarding-progress-dot.completed {
+  background: var(--theme-success, #10B981);
+  opacity: 1;
+}
+
+.onboarding-progress-text {
+  font-size: 12px;
+  color: var(--theme-textSecondary);
+  font-weight: 500;
+}
+
+/* Navigation buttons */
+.onboarding-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.onboarding-nav-left {
+  display: flex;
+  gap: 8px;
+}
+
+.onboarding-nav-right {
+  display: flex;
+  gap: 8px;
+}
+
+.onboarding-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 80px;
+  justify-content: center;
+}
+
+.onboarding-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.onboarding-btn-secondary {
+  background: var(--theme-glassPanelHover);
+  color: var(--theme-textSecondary);
+  border: 1px solid var(--theme-glassPanelBorder);
+}
+
+.onboarding-btn-secondary:hover:not(:disabled) {
+  background: var(--theme-glassPanelActive);
+  color: var(--theme-textPrimary);
+}
+
+.onboarding-btn-primary {
+  background: var(--theme-accent);
+  color: var(--theme-textHeader);
+}
+
+.onboarding-btn-primary:hover:not(:disabled) {
+  background: var(--theme-accentHover, var(--theme-accent));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.onboarding-btn-skip {
+  background: none;
+  color: var(--theme-textSecondary);
+  border: none;
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+.onboarding-btn-skip:hover:not(:disabled) {
+  color: var(--theme-textPrimary);
+}
+
+/* Spotlight effect for highlighted elements */
+.onboarding-spotlight {
+  position: relative;
+  z-index: 9997;
+  border-radius: 8px;
+  box-shadow: 0 0 0 4px var(--theme-accent), 
+              0 0 0 8px rgba(255, 255, 255, 0.1);
+  animation: spotlightPulse 2s ease-in-out infinite;
+}
+
+@keyframes spotlightPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px var(--theme-accent), 
+                0 0 0 8px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px var(--theme-accent), 
+                0 0 0 12px rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Floating action button for tour restart */
+.onboarding-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--theme-accent);
+  color: var(--theme-textHeader);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.onboarding-fab.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.onboarding-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .onboarding-tooltip {
+    max-width: calc(100vw - 32px);
+    min-width: calc(100vw - 32px);
+    left: 16px !important;
+    right: 16px !important;
+  }
+  
+  .onboarding-tooltip-panel {
+    padding: 16px;
+  }
+  
+  .onboarding-nav {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .onboarding-nav-left,
+  .onboarding-nav-right {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .onboarding-btn {
+    flex: 1;
+    min-width: auto;
+  }
+}
+
+/* Animation for entrance */
+@keyframes tooltipEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes tooltipExit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+}
+
+/* Accessibility improvements */
+.onboarding-tooltip:focus-within {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-tooltip,
+  .onboarding-btn,
+  .onboarding-overlay,
+  .onboarding-spotlight,
+  .onboarding-fab {
+    transition: none;
+    animation: none;
+  }
+  
+  .onboarding-spotlight {
+    box-shadow: 0 0 0 4px var(--theme-accent);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .onboarding-tooltip-panel {
+    border-width: 2px;
+    background: var(--theme-backgroundPrimary);
+  }
+  
+  .onboarding-btn-primary {
+    border: 2px solid currentColor;
+  }
+}

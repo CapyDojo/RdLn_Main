@@ -397,15 +397,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     }
   }, 'load_session', performanceTracker);
 
-  const handleDeleteSession = usePerformanceAwareHandler((sessionId: string) => {
-    deleteSession(sessionId);
-    console.log('🗑️ Session deleted from RdLn Memory:', sessionId);
-  }, 'delete_session', performanceTracker);
 
-  const handleClearAllSessions = usePerformanceAwareHandler(() => {
-    clearAllSessions();
-    console.log('🧹 All sessions cleared from RdLn Memory');
-  }, 'clear_all_sessions', performanceTracker);
 
   const handleExportSessions = usePerformanceAwareHandler(() => {
     const jsonData = exportSessions();
@@ -941,17 +933,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       <RdLnMemorySidePanel
         isOpen={isMemoryPanelOpen}
         onClose={() => setIsMemoryPanelOpen(false)}
-        hasSessions={hasSessions}
-        sessionCount={sessions.length}
-        onSaveSession={handleSaveSession}
         onLoadSession={handleLoadSession}
-        onDeleteSession={handleDeleteSession}
-        onClearAll={handleClearAllSessions}
         onExport={handleExportSessions}
         onImport={handleImportSessions}
-        contentLength={originalText.length + revisedText.length}
-        isTabHovered={isTabHovered}
-        onHoverChange={setIsPanelHovered}
+        originalText={originalText}
+        revisedText={revisedText}
+        hasResult={!!result}
+        onHover={setIsPanelHovered}
       />
 
     </div>

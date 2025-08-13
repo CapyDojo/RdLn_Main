@@ -10,7 +10,7 @@
  * For licensing information, see LICENSE file.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Languages } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatusBar } from './components/StatusBar';
@@ -31,6 +31,7 @@ import { SmartPasteTest } from './components/SmartPasteTest';
 import { OCRFeatureCard } from './components/OCRFeatureCard';
 import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
+import OnboardingTour, { TourRestartButton } from './components/experimental/onboarding/OnboardingTour';
 import './styles/resize-overrides.css';
 
 interface AppContentProps {
@@ -50,7 +51,7 @@ function AppContent({
   onTogglePerformanceDemo,
   onToggleExtremeTestSuite
 }: AppContentProps) {
-  const { themeConfig } = useTheme();
+  useTheme(); // For theme context initialization
 
   // Get experimental features to check if results overlay is enabled
   const { features } = useExperimentalFeatures();
@@ -59,7 +60,7 @@ function AppContent({
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
 
   // Track whether inputs currently have any content (used by onContentChange)
-  const [hasContent, setHasContent] = useState(false);
+  const [, setHasContent] = useState(false);
 
   // Beta agreement state
   const [showBetaAgreement, setShowBetaAgreement] = useState(false);
@@ -70,7 +71,10 @@ function AppContent({
   // Beta terms dialog state
   const [showBetaTermsDialog, setShowBetaTermsDialog] = useState(false);
 
-  const comparisonInterfaceRef = React.useRef<any>(null);
+  // Onboarding tour state
+  const [showTourRestart, setShowTourRestart] = useState(false);
+
+  const comparisonInterfaceRef = React.useRef<{ loadSampleData?: (original: string, revised: string, autoRun: boolean) => void }>(null);
 
   // Check beta agreement acceptance on mount
   useEffect(() => {
@@ -97,6 +101,8 @@ function AppContent({
 
   const handleBetaAgreementAccept = () => {
     setShowBetaAgreement(false);
+    // Show tour restart button after beta agreement acceptance
+    setTimeout(() => setShowTourRestart(true), 2000);
   };
 
   // Overlay visibility handlers (only used when results overlay feature is enabled)
@@ -128,7 +134,7 @@ function AppContent({
     const setupGlobalTauriHandler = async () => {
       try {
         // Only setup in Tauri environment
-        if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+        if (typeof window !== 'undefined' && (window as unknown as { __TAURI__?: unknown }).__TAURI__) {
           const { setupGlobalTauriFileDrop } = await import('./utils/tauriFileDrop');
           await setupGlobalTauriFileDrop();
         }
@@ -142,15 +148,48 @@ function AppContent({
     // Cleanup on unmount
     return () => {
       try {
-        const cleanup = (window as any).__TAURI_FILE_DROP_CLEANUP__;
-        if (cleanup) {
-          cleanup();
-          (window as any).__TAURI_FILE_DROP_CLEANUP__ = null;
+        const tauriCleanup = (window as unknown as { __TAURI_FILE_DROP_CLEANUP__?: () => void }).__TAURI_FILE_DROP_CLEANUP__;
+        if (tauriCleanup) {
+          tauriCleanup();
+          (window as unknown as { __TAURI_FILE_DROP_CLEANUP__?: null }).__TAURI_FILE_DROP_CLEANUP__ = null;
         }
       } catch (error) {
         console.log(' TAURI APP: Cleanup error:', error);
       }
     };
+  }, []);
+
+  // Onboarding tour handlers
+  const handleTourComplete = (tourId: string, duration: number) => {
+    console.log(`✅ Tour completed: ${tourId} in ${duration}ms`);
+    setShowTourRestart(true);
+  };
+
+  const handleTourSkip = (tourId: string, stepNumber: number) => {
+    console.log(`⏭️ Tour skipped: ${tourId} at step ${stepNumber}`);
+    setShowTourRestart(true);
+  };
+
+  const handleTourStepChange = (stepNumber: number, stepId: string) => {
+    console.log(`📍 Tour step: ${stepNumber + 1} - ${stepId}`);
+  };
+
+  const handleTourRestart = () => {
+    // Reset tour completion status
+    localStorage.removeItem('tour-rdln-welcome-tour-completed');
+    localStorage.removeItem('tour-rdln-welcome-tour-skipped');
+    window.location.reload(); // Simple way to restart tour
+  };
+
+  // Check if user has completed beta agreement and tour
+  useEffect(() => {
+    const betaAcceptance = localStorage.getItem('rdln_beta_terms_accepted');
+    const tourCompleted = localStorage.getItem('tour-rdln-welcome-tour-completed');
+    const tourSkipped = localStorage.getItem('tour-rdln-welcome-tour-skipped');
+    
+    if (betaAcceptance && (tourCompleted || tourSkipped)) {
+      setShowTourRestart(true);
+    }
   }, []);
 
   // Determine if header should be hidden (only when results overlay feature is enabled AND overlay is visible)
@@ -270,6 +309,20 @@ function AppContent({
         isOpen={showBetaTermsDialog}
         onClose={() => setShowBetaTermsDialog(false)}
       />
+
+      {/* Onboarding Tour - Only show if feature flag is enabled */}
+      <OnboardingTour
+        isEnabled={features.enableOnboardingTour}
+        onTourComplete={handleTourComplete}
+        onTourSkip={handleTourSkip}
+        onStepChange={handleTourStepChange}
+      />
+
+      {/* Tour Restart Button - Only show after tour completion/skip */}
+      <TourRestartButton
+        show={showTourRestart && features.enableOnboardingTour}
+        onRestart={handleTourRestart}
+      />
     </div>
   );
 }
@@ -318,7 +371,7 @@ function App() {
     localStorage.setItem('showExtremeTestSuite', JSON.stringify(newState));
   };
 
-  const isInProduction = process.env.NODE_ENV === 'production';
+  // const isInProduction = process.env.NODE_ENV === 'production';
 
   return (
     <LayoutProvider>
