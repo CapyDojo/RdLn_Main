@@ -132,7 +132,10 @@ export const useTourNavigation = (
   }, [tourConfig.steps, onStepChange, setTourState]);
 
   const resetTour = useCallback(() => {
-    setTourState(DEFAULT_TOUR_STATE);
+    setTourState({
+      ...DEFAULT_TOUR_STATE,
+      totalSteps: tourConfig.steps.length
+    });
     
     // Clear persistence data
     if (tourConfig.persistCompletion) {
@@ -167,15 +170,24 @@ export const useOnboardingTour = (
   onStepChange?: (stepNumber: number, stepId: string) => void
 ): UseOnboardingTourReturn => {
   
-  const [tourConfig, setTourConfig] = useState<TourConfig>({
-    ...DEFAULT_TOUR_CONFIG,
-    ...initialConfig
+  const [tourConfig, setTourConfig] = useState<TourConfig>(() => {
+    const config = {
+      ...DEFAULT_TOUR_CONFIG,
+      ...initialConfig
+    };
+    return config;
   });
   
-  const [tourState, setTourState] = useState<TourState>(() => ({
-    ...DEFAULT_TOUR_STATE,
-    totalSteps: tourConfig.steps.length
-  }));
+  const [tourState, setTourState] = useState<TourState>(() => {
+    const config = {
+      ...DEFAULT_TOUR_CONFIG,
+      ...initialConfig
+    };
+    return {
+      ...DEFAULT_TOUR_STATE,
+      totalSteps: config.steps.length
+    };
+  });
 
   const analyticsRef = useRef<TourAnalytics | null>(null);
   const interactionsRef = useRef<TourInteraction[]>([]);

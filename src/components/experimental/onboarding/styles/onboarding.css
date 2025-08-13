@@ -29,8 +29,8 @@
 .onboarding-tooltip {
   position: fixed;
   z-index: 9999;
-  max-width: 320px;
-  min-width: 280px;
+  max-width: 420px;
+  min-width: 380px;
   padding: 0;
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -52,7 +52,7 @@
   border: 1px solid var(--theme-glassPanelBorder);
   border-radius: 16px;
   backdrop-filter: blur(20px);
-  padding: 20px;
+  padding: 28px;
   position: relative;
 }
 
@@ -65,7 +65,7 @@
 }
 
 .onboarding-tooltip-title {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--theme-textHeader);
   margin: 0;
@@ -76,16 +76,16 @@
   background: none;
   border: none;
   color: var(--theme-textSecondary);
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   border-radius: 8px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
 }
 
 .onboarding-tooltip-close:hover {
@@ -96,9 +96,9 @@
 /* Content */
 .onboarding-tooltip-content {
   color: var(--theme-textPrimary);
-  font-size: 15px;
-  line-height: 1.5;
-  margin-bottom: 20px;
+  font-size: 17px;
+  line-height: 1.6;
+  margin-bottom: 24px;
 }
 
 /* Progress indicator */
@@ -136,7 +136,7 @@
 }
 
 .onboarding-progress-text {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--theme-textSecondary);
   font-weight: 500;
 }
@@ -160,17 +160,17 @@
 }
 
 .onboarding-btn {
-  padding: 8px 16px;
+  padding: 12px 20px;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 80px;
+  gap: 8px;
+  min-width: 100px;
   justify-content: center;
 }
 
