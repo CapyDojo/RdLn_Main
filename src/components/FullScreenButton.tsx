@@ -24,7 +24,7 @@ export const FullScreenButton: React.FC<FullScreenButtonProps> = ({
   if (!hasResults) return null;
 
   return (
-    <CustomTooltip content={isFullScreen ? "Return to normal view" : "Open RdLn in full-screen"} placement="left">
+    <CustomTooltip content={isFullScreen ? "Return to normal view" : "Open RdLn in full-screen"} placement="bottom-left">
       <button
       onClick={onToggle}
       className={`
@@ -65,7 +65,7 @@ export const FullScreenButtonCompact: React.FC<FullScreenButtonProps> = ({
   if (!hasResults) return null;
 
   return (
-    <CustomTooltip content={isFullScreen ? "Return to normal view" : "Open RdLn in full-screen"} placement="left">
+    <CustomTooltip content={isFullScreen ? "Return to normal view" : "Open RdLn in full-screen"} placement="bottom-left">
       <button
       onClick={onToggle}
       className={`

@@ -91,11 +91,15 @@
             border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
             box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
 
-            /* Manila folder shape */
-            clip-path: polygon(0 20%,
-                    /* Tab top-left */
-                    0 80%,
-                    /* Tab bottom-left */
+            /* Manila folder shape with rounded left corners */
+            clip-path: polygon(12px 20%,
+                    /* Tab top-left (rounded) */
+                    0 32px,
+                    /* Tab top-left curve */
+                    0 calc(80% - 12px),
+                    /* Tab left side */
+                    12px 80%,
+                    /* Tab bottom-left (rounded) */
                     48px 80%,
                     /* Tab bottom-right */
                     48px 0,

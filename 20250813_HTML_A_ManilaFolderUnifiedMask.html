@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="professional">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unified Manila Folder (SVG Mask)</title>
+    <style>
+      :root {
+        /* Geometry (tweak as needed) */
+        --panel-w: 450px; /* main panel width */
+        --tab-w: 56px;   /* tab width (protrusion) */
+        --tab-h: 54px;   /* tab height */
+        --tab-y: 56px;   /* tab vertical offset from top */
+        --r: 12px;       /* corner radius */
+        --h: 600px;      /* open height */
+        --h-closed: 96px;/* closed height */
+
+        /* Theme tokens */
+        --glass-subtle: 0.12;
+        --glass-panel: 0.18;
+        --glass-focus: 0.30;
+        --glass-strong: 0.45;
+        --glass-bg: 255, 255, 255;
+        --glass-border: 191, 219, 254;
+        --glass-shadow: 30, 64, 175;
+        --glass-blur: 16px;
+        --glass-saturate: 1.3;
+
+        --theme-glass-bg: 255, 255, 255;
+        --theme-glass-border: 191, 219, 254;
+        --theme-glass-hover-border: 59, 130, 246;
+        --theme-glass-hover-shadow: 30, 64, 175;
+
+        --theme-text-body: #1e293b;
+        --theme-text-header: #0f172a;
+        --theme-text-secondary: #475569;
+        --theme-text-interactive: #c2410c;
+        --theme-accent-400: #fb923c;
+      }
+
+      body {
+        margin: 0;
+        padding: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh;
+        color: var(--theme-text-body);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      h1 {
+        color: white;
+        margin-bottom: 20px;
+        font-size: 2rem;
+        font-weight: 700;
+      }
+
+      .description {
+        color: rgba(255, 255, 255, 0.85);
+        margin-bottom: 28px;
+        font-size: 1.05rem;
+      }
+
+      .demo-controls {
+        margin: 24px 0 8px 0;
+      }
+
+      .demo-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 10px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 0 6px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+      }
+      .demo-button:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-1px); }
+      .demo-button.active { background: rgba(59, 130, 246, 0.6); border-color: rgba(59, 130, 246, 0.8); }
+
+      /* Unified surface container (single compositing layer) */
+      .filing-cabinet {
+        position: relative;
+        margin: 28px auto 40px auto;
+        width: calc(var(--tab-w) + var(--panel-w));
+        height: var(--h);
+        border-radius: var(--r);
+        /* One background/backdrop/border for the whole surface to ensure seamlessness */
+        background: linear-gradient(135deg,
+          rgba(255, 0, 0, 0.8) 0%,
+          rgba(0, 255, 0, 0.6) 12.5%,
+          rgba(0, 0, 255, 0.9) 25%,
+          rgba(255, 255, 0, 0.4) 37.5%,
+          rgba(255, 0, 255, 0.7) 50%,
+          rgba(0, 255, 255, 0.5) 62.5%,
+          rgba(255, 128, 0, 0.8) 75%,
+          rgba(128, 0, 255, 0.6) 87.5%,
+          rgba(255, 255, 255, 0.9) 100%);
+        backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        border: 1px solid rgba(var(--theme-glass-border), var(--glass-focus));
+        box-shadow: 0 8px 32px 0 rgba(var(--theme-glass-hover-shadow), var(--glass-strong));
+        transition: height 300ms ease, box-shadow 200ms ease, transform 200ms ease;
+      }
+
+      .filing-cabinet:hover {
+        box-shadow: 0 24px 64px 0 rgba(var(--theme-glass-hover-shadow), 0.6), 0 10px 36px 0 rgba(var(--theme-glass-hover-shadow), 0.4);
+        transform: translateY(-2px);
+      }
+
+      .filing-cabinet.closed { height: var(--h-closed); }
+
+      /* Content overlays (no backgrounds) */
+      .tab-area {
+        position: absolute;
+        left: calc(-1 * var(--tab-w)); /* Move tab overlay left to match protrusion */
+        top: var(--tab-y);
+        width: var(--tab-w);
+        height: var(--tab-h);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+        z-index: 3;
+        color: var(--theme-text-header);
+        user-select: none;
+      }
+      .tab-icon { font-size: 18px; transition: transform 0.2s ease; }
+      .tab-area:hover .tab-icon { transform: scale(1.08); }
+      .tab-chevron { width: 12px; height: 12px; color: var(--theme-text-secondary); }
+      .tab-badge {
+        position: absolute; top: -10px; left: -10px;
+        background: #dc2626; color: white; font-size: 10px; font-weight: 700;
+        border-radius: 999px; min-width: 20px; height: 20px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      }
+
+      .panel-area {
+        position: absolute;
+        left: var(--tab-w);
+        top: 0;
+        width: var(--panel-w);
+        height: 100%;
+        padding: 24px;
+        box-sizing: border-box;
+        z-index: 1;
+      }
+      .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(var(--theme-glass-border), 0.25); }
+      .panel-title { display: flex; align-items: center; gap: 10px; }
+      .panel-title h2 { margin: 0; font-size: 20px; font-weight: 700; color: var(--theme-text-header); }
+      .panel-subtitle { font-size: 14px; color: var(--theme-text-secondary); margin: 0; }
+
+      .pros-cons { background: rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 20px; margin-top: 28px; text-align: left; }
+      .pros-cons h3 { color: white; margin-top: 0; }
+      .pros-cons ul { color: rgba(255, 255, 255, 0.9); line-height: 1.6; }
+      .pros { color: #4ade80; }
+      .cons { color: #f87171; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Unified Manila Folder (SVG Mask)</h1>
+      <p class="description">Single composited surface with an SVG mask for a seamless tab + panel.</p>
+
+      <div class="demo-controls">
+        <button class="demo-button active" id="btn-open">Open</button>
+        <button class="demo-button" id="btn-closed">Closed</button>
+      </div>
+
+      <div class="filing-cabinet" id="cabinet">
+        <!-- Tab area (overlay, no background of its own) -->
+        <div class="tab-area" id="tab">
+          <div class="tab-icon">🗂️</div>
+          <div class="tab-chevron">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15,18 9,12 15,6"></polyline>
+            </svg>
+          </div>
+          <div class="tab-badge">3</div>
+        </div>
+
+        <!-- Panel content -->
+        <div class="panel-area">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg style="width: 24px; height: 24px; color: var(--theme-accent-400);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="21,8 21,21 3,21 3,8"></polyline>
+                <rect x="1" y="3" width="22" height="5"></rect>
+                <line x1="10" y1="12" x2="14" y2="12"></line>
+              </svg>
+              <div>
+                <h2>RdLn Memory</h2>
+                <p class="panel-subtitle">Filing Cabinet</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="color: var(--theme-text-secondary); line-height: 1.6; text-align: left;">
+            <p><strong>Architecture:</strong> Single element with mask. All visual effects (background, border, blur) live on the same element to eliminate seams.</p>
+            <ul>
+              <li>Parametric geometry via CSS variables</li>
+              <li>SVG mask path generated at runtime</li>
+              <li>Resize-aware using ResizeObserver</li>
+              <li>Seamless tab-to-panel continuity</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons">
+        <h3 class="pros">✅ Pros</h3>
+        <ul>
+          <li>Truly seamless surface (one compositing layer)</li>
+          <li>Backdrops, borders, shadows computed once</li>
+          <li>Geometry controlled by CSS vars + TS</li>
+          <li>Responsive and animation-friendly</li>
+        </ul>
+        <h3 class="cons">❌ Cons</h3>
+        <ul>
+          <li>Mask path math (simple but necessary)</li>
+          <li>Clip/mask transitions need perf consideration</li>
+        </ul>
+      </div>
+    </div>
+
+    <script type="module">
+      // Utility: read pixel CSS variable from an element
+      function readPx(el, varName) {
+        const v = getComputedStyle(el).getPropertyValue(varName).trim();
+        return parseFloat(v || '0') || 0;
+      }
+
+      // Build a parametric manila folder path (clockwise) with a tab protruding to the left
+      function buildFolderPath(w, h, tabW, tabH, tabY, r) {
+        // Clamp values
+        const R = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+        const TAB_W = Math.max(R, Math.min(tabW, w - R));
+        const TAB_H = Math.max(R, Math.min(tabH, h - R));
+        const TAB_Y = Math.max(R, Math.min(tabY, h - TAB_H - R));
+
+        const cmds = [];
+        // Start at top-left corner
+        cmds.push(`M ${R} 0`);
+        // Top edge to top-right
+        cmds.push(`L ${w - R} 0`);
+        // Top-right corner
+        cmds.push(`Q ${w} 0 ${w} ${R}`);
+        // Right edge down to bottom-right
+        cmds.push(`L ${w} ${h - R}`);
+        // Bottom-right corner
+        cmds.push(`Q ${w} ${h} ${w - R} ${h}`);
+        // Bottom edge to bottom-left
+        cmds.push(`L ${R} ${h}`);
+        // Bottom-left corner
+        cmds.push(`Q 0 ${h} 0 ${h - R}`);
+        // Left edge up to just before tab
+        cmds.push(`L 0 ${TAB_Y + TAB_H}`);
+        // Tab protrudes left
+        cmds.push(`L ${-TAB_W} ${TAB_Y + TAB_H}`);
+        cmds.push(`L ${-TAB_W} ${TAB_Y}`);
+        cmds.push(`L 0 ${TAB_Y}`);
+        // Continue up to top-left corner
+        cmds.push(`L 0 ${R}`);
+        // Top-left corner
+        cmds.push(`Q 0 0 ${R} 0`);
+        cmds.push('Z');
+        return cmds.join(' ');
+      }
+
+      // Apply mask to element using data-URL SVG
+      function applyMask(el) {
+        const style = getComputedStyle(el);
+        const w = el.clientWidth;
+        const h = el.clientHeight;
+        const r = readPx(el, '--r');
+        const tabW = readPx(el, '--tab-w');
+        const tabH = readPx(el, '--tab-h');
+        const tabY = readPx(el, '--tab-y');
+
+        const d = buildFolderPath(w, h, tabW, tabH, tabY, r);
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}' preserveAspectRatio='none'><path d='${d}' fill='white'/></svg>`;
+        const url = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+
+        el.style.mask = `${url} no-repeat`;
+        el.style.webkitMask = `${url} no-repeat`;
+        el.style.maskSize = '100% 100%';
+        el.style.webkitMaskSize = '100% 100%';
+      }
+
+      const cabinet = document.getElementById('cabinet');
+      const btnOpen = document.getElementById('btn-open');
+      const btnClosed = document.getElementById('btn-closed');
+      const buttons = [btnOpen, btnClosed];
+
+      function setActive(i) {
+        buttons.forEach((b, idx) => b.classList.toggle('active', idx === i));
+      }
+
+      function openState() {
+        cabinet.classList.remove('closed');
+        // In case height transition completes after a while, observe resize and also apply now
+        applyMask(cabinet);
+        setActive(0);
+      }
+      function closedState() {
+        cabinet.classList.add('closed');
+        applyMask(cabinet);
+        setActive(1);
+      }
+
+      btnOpen.addEventListener('click', openState);
+      btnClosed.addEventListener('click', closedState);
+
+      // Recalculate on resize of the element
+      const ro = new ResizeObserver(() => applyMask(cabinet));
+      ro.observe(cabinet);
+
+      // Initial paint
+      applyMask(cabinet);
+    </script>
+  </body>
+</html>

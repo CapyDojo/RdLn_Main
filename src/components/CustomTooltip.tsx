@@ -22,7 +22,7 @@ interface CustomTooltipProps extends BaseComponentProps {
   /** Optional inline status badge (like ON/OFF) */
   status?: string;
   /** Tooltip placement relative to trigger */
-  placement?: 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' | 'auto';
+  placement?: 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' | 'bottom-left' | 'auto';
   /** Delay before showing tooltip in milliseconds */
   delay?: number;
   /** Whether tooltip is disabled */
@@ -50,14 +50,14 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   ...props
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [actualPlacement, setActualPlacement] = useState<'top' | 'bottom' | 'left' | 'right' | 'bottom-right'>('bottom-right');
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const [actualPlacement, setActualPlacement] = useState<'top' | 'bottom' | 'left' | 'right' | 'bottom-right' | 'bottom-left'>('bottom-right');
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0, transform: undefined as string | undefined });
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   // Calculate viewport position for tooltip portal (fixed positioning)
-  const calculateTooltipPosition = (placementType: 'top' | 'bottom' | 'left' | 'right' | 'bottom-right') => {
+  const calculateTooltipPosition = (placementType: 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' | 'bottom-left') => {
     if (!triggerRef.current) return { top: 0, left: 0 };
     
     const rect = triggerRef.current.getBoundingClientRect();
@@ -69,13 +69,15 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
       case 'top':
         return {
           top: rect.top - 30, // Above the element with space for tooltip height
-          left: rect.left - 207 // Just to the left of the element
+          left: rect.left - 207, // Just to the left of the element
+          transform: undefined
         };
         
       case 'bottom':
         return {
           top: rect.bottom + 2, // Even closer: 2px below
-          left: rect.right + 2 // Tucked: align to right edge + 2px
+          left: rect.right + 2, // Tucked: align to right edge + 2px
+          transform: undefined
         };
         
       case 'left':
@@ -99,31 +101,42 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
         
         return {
           top: rect.bottom, // Align tooltip top edge with element bottom edge
-          left: rect.left - tooltipWidth // Position tooltip so its right edge aligns with element's left edge
+          left: rect.right - tooltipWidth, // Position tooltip so its right edge aligns with element's right edge
+          transform: undefined
         };
         
       case 'right':
         return {
           top: rect.bottom + 2, // Align to bottom edge + 2px
-          left: rect.right + 2 // Even closer: 2px to the right
+          left: rect.right + 2, // Even closer: 2px to the right
+          transform: undefined
+        };
+        
+      case 'bottom-left':
+        // Elegant CSS transform approach: let CSS handle the width calculation
+        return {
+          top: rect.bottom, // Tooltip top edge aligns with element bottom edge
+          left: rect.left, // Position at element's left edge, CSS transform will shift by tooltip width
+          transform: 'translateX(-100%)' // Shift left by tooltip's own width
         };
         
       case 'bottom-right':
       default:
         return {
           top: rect.bottom + 2, // Even closer: 2px below
-          left: rect.right + 2 // Even closer: 2px to the right
+          left: rect.right + 2, // Even closer: 2px to the right
+          transform: undefined
         };
     }
   };
 
   // Calculate optimal placement based on viewport position and screen location
-  const calculatePlacement = (): 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' => {
+  const calculatePlacement = (): 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' | 'bottom-left' => {
     if (!triggerRef.current) return 'bottom-right';
     
     // If user specified a placement, use it unless it's auto
     if (placement !== 'auto') {
-      return placement as 'top' | 'bottom' | 'left' | 'right' | 'bottom-right';
+      return placement as 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' | 'bottom-left';
     }
 
     const rect = triggerRef.current.getBoundingClientRect();
@@ -268,12 +281,13 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
       style={{
         top: `${tooltipPosition.top}px`,
         left: `${tooltipPosition.left}px`,
+        transform: tooltipPosition.transform
       }}
       role="tooltip"
       aria-hidden="true"
     >
       {/* Modern tooltip without arrow - clean shadow design */}
-      <div className={`glass-panel py-1.5 rounded-lg text-xs font-medium bg-theme-neutral-50/95 text-theme-primary-800 shadow-xl backdrop-blur-md border border-theme-neutral-200/50 max-w-64 min-w-32 shadow-theme-primary-900/20 ${actualPlacement === 'left' ? 'pl-3 pr-0' : 'px-3'}`}>
+      <div className={`glass-panel py-1.5 rounded-lg text-xs font-medium bg-theme-neutral-50/95 text-theme-primary-800 shadow-xl backdrop-blur-md border border-theme-neutral-200/50 max-w-64 min-w-32 shadow-theme-primary-900/20 ${actualPlacement === 'left' ? 'pl-3 pr-3' : 'px-3'}`}>
         <div className="flex items-start gap-2">
           <span className="leading-tight whitespace-pre-line">{content}</span>
           {status && (

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tabbed Folder Silhouette (One Element)</title>
+  <style>
+    :root{
+      --folder-w: 420px;   /* total width including tab */
+      --folder-h: 560px;
+      --corner-r: 14px;    /* corner radius for main panel */
+      --tab-w: 28px;       /* tab protrusion */
+      --tab-h: 88px;       /* tab height */
+      --tab-top: 200px;    /* tab top offset */
+      --bg-a: #5aa6ff;     /* gradient start */
+      --bg-b: #2f6bff;     /* gradient end */
+      --inner-pad: 20px;   /* content padding */
+    }
+
+    html, body{ height:100%; margin:0; background:#0b1020; color:#fff; font:500 14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; }
+
+    .demo-wrap{ min-height:100%; display:grid; place-items:center; padding:40px 20px; }
+
+    /* The folder element */
+    .folder{
+      width:var(--folder-w);
+      height:var(--folder-h);
+      position:relative;
+      background: linear-gradient(135deg,var(--bg-a),var(--bg-b));
+      border-radius: var(--corner-r);
+      border:1px solid rgba(0,0,0,.12);
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+
+      /* Use the in-DOM SVG mask for maximum compatibility (avoids data-URI issues) */
+      -webkit-mask: url(#folderMask);
+              mask: url(#folderMask);
+      -webkit-mask-composite: source-over;
+              mask-composite: add;
+      overflow:hidden;
+    }
+
+    /* Fallback if CSS mask isn't supported in preview: approximate with clip-path */
+    @supports not (mask: url(#folderMask)){
+      .folder{
+        /* Rough polygon fallback (no rounded corners on the tab) */
+        clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% calc(var(--tab-top) + var(--tab-h)), -6.666% calc(var(--tab-top) + var(--tab-h)), -6.666% var(--tab-top), 0% var(--tab-top));
+      }
+    }
+
+    .folder__body{
+      height:100%;
+      padding: var(--inner-pad) var(--inner-pad) var(--inner-pad) calc(var(--inner-pad) + var(--tab-w));
+      box-sizing:border-box;
+    }
+
+    .folder__title{ margin:0 0 8px 0; font-weight:700; letter-spacing:.3px; }
+    .folder__muted{ opacity:.9; }
+
+    @media (max-width: 540px){
+      .folder{ width:min(90vw, 420px); height:calc((min(90vw,420px)) * (560/420)); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Put the SVG defs in the DOM so mask URL(#id) works everywhere -->
+  <svg width="0" height="0" viewBox="0 0 1 1" aria-hidden="true" focusable="false" style="position:absolute">
+    <defs>
+      <!-- Mask draws: rounded rect panel + left protruding rounded-rect tab -->
+      <mask id="folderMask" maskUnits="objectBoundingBox">
+        <!-- We draw in objectBoundingBox space (0..1). Convert variables to percentages. -->
+        <!-- Base panel (white = visible) -->
+        <rect x="0" y="0" width="1" height="1" rx="0.033" ry="0.033" fill="white"/>
+        <!-- Tab: width is ~28/420 ≈ 0.0667; height ~88/560 ≈ 0.157; top ~200/560 ≈ 0.357 -->
+        <rect x="-0.0667" y="0.357" width="0.0667" height="0.157" rx="0.014" ry="0.014" fill="white"/>
+      </mask>
+    </defs>
+  </svg>
+
+  <div class="demo-wrap">
+    <div class="folder">
+      <div class="folder__body">
+        <h2 class="folder__title">Tabbed Folder</h2>
+        <p class="folder__muted">If you previously saw a big blue rectangle, your preview likely blocked data-URI masks. This version uses an in-DOM SVG mask (<code>url(#folderMask)</code>) so the silhouette renders reliably.</p>
+        <p>Adjust the tab by editing the mask's second <code>&lt;rect&gt;</code> in the inline SVG (y/height/rx). For content spacing, tweak the left padding which includes <code>var(--tab-w)</code>.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

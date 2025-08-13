@@ -1,3 +1,41 @@
+## Version 0.5.18 - "Elegant Tooltip Positioning"
+*Released: 2025-01-15*
+
+### 🎯 Major Enhancement: Tooltip Positioning System Redesign
+- **NEW**: Introduced `bottom-left` placement with CSS transform architecture
+- **FIXED**: Eliminated tooltip positioning inconsistencies across output panel buttons
+- **IMPROVED**: Replaced width estimation with elegant CSS transform approach
+
+### 🏗️ Architectural Excellence
+- **CSS Transform Pattern**: Leveraged `translateX(-100%)` for automatic width calculation
+- **Zero Width Estimation**: Removed all JavaScript-based tooltip width guessing
+- **Self-Correcting**: Tooltips automatically adapt to any content or styling changes
+- **Separation of Concerns**: CSS handles spatial transformation, JS handles logical positioning
+
+### 🔧 Implementation Details
+- **New Placement Type**: Added `placement="bottom-left"` to CustomTooltip component
+- **Transform Integration**: Enhanced positioning logic to support CSS transforms
+- **Consistent Positioning**: All output panel buttons (Copy, Word, DOCX, Full Screen) use unified positioning
+- **Clean Architecture**: Eliminated complex width estimation logic in favor of platform capabilities
+
+### 📁 Files Affected
+- `src/components/CustomTooltip.tsx` - Core tooltip positioning system with new bottom-left placement
+- `src/components/RedlineOutput.tsx` - Updated Copy, Word Copy, and DOCX Export button tooltips
+- `src/components/FullScreenButton.tsx` - Updated Full Screen button tooltip placement
+
+### 🎨 User Experience Improvements  
+- **Perfect Alignment**: Tooltip right edge precisely touches element's left edge
+- **Consistent Behavior**: All output panel tooltips position identically
+- **Visual Polish**: Professional tooltip placement enhances UI quality
+- **Cross-Browser Reliability**: Platform-native calculations ensure consistent results
+
+### 🚀 Performance Benefits
+- **Reduced Complexity**: Eliminated width calculation overhead
+- **Browser Optimization**: Leverages native CSS transform capabilities
+- **Maintainable Code**: Self-maintaining positioning requires no manual width updates
+
+---
+
 ## Version 0.5.17 - "Mobile Scroll Sync Fix"
 *Released: 2025-08-12*
 
