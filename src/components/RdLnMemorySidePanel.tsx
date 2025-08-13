@@ -10,7 +10,7 @@
  * For licensing information, see LICENSE file.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Save,
   FolderOpen,
@@ -67,17 +67,22 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { sessions, hasSessions, saveSession, deleteSession, clearAllSessions, exportSessions, importSessions } = useRdLnMemory();
+  
+  // Track hover state to coordinate backdrop visibility
+  const [isHovered, setIsHovered] = React.useState(false);
 
-  // Get sessions and methods from RdLn Memory hook
-  const {
-    sessions,
-    hasSessions,
-    saveSession,
-    deleteSession,
-    clearAllSessions,
-    exportSessions,
-    importSessions
-  } = useRdLnMemory();
+  // Effect to listen for hover events from tab
+  useEffect(() => {
+    const handleTabHover = (event: CustomEvent) => {
+      setIsHovered(event.detail.isHovered);
+    };
+
+    window.addEventListener('rdln-memory-tab-hover', handleTabHover as EventListener);
+    return () => {
+      window.removeEventListener('rdln-memory-tab-hover', handleTabHover as EventListener);
+    };
+  }, []);
 
   // Calculate content length for display
   const contentLength = (originalText?.length || 0) + (revisedText?.length || 0);
@@ -209,15 +214,14 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
 
       {/* Unified Glassmorphism Backdrop - spans tab and panel area */}
       <div
-        className={`fixed z-[9997] transition-all duration-500 ease-out ${isOpen
-          ? 'visible opacity-100'
-          : 'invisible opacity-0'
-          }`}
+        className={`fixed z-[9997] transition-all duration-500 ease-out ${
+          isOpen && !isHovered ? 'visible opacity-100' : 'invisible opacity-0'
+        }`}
         style={{
           top: '3.9rem',
           right: '0px',
           width: '466.5px', // 423px panel + 43.5px tab
-          height: '96px', // Match tab height
+          height: '90px', // Match tab height
           background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 10%, rgba(255,255,255,0.1) 100%)',
           backdropFilter: 'blur(8px)',
           borderRadius: '0.75rem 0 0 0.75rem',
@@ -254,6 +258,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
             element.style.transition = 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)';
           });
 
+          setIsHovered(true);
           onHover?.(true);
         }}
         onMouseLeave={() => {
@@ -275,6 +280,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
             element.style.transform = '';
           });
 
+          setIsHovered(false);
           onHover?.(false);
         }}
         className={`
@@ -377,7 +383,8 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
                         <button
                           onClick={() => {
                             onLoadSession?.(session.id);
-                            onClose();
+                            setIsHovered(true);
+                            onHover?.(true);
                           }}
                           className="p-2 rounded-lg bg-theme-accent-500/20 hover:bg-theme-accent-500/40 text-theme-accent-400 hover:text-theme-accent-300 transition-all duration-200"
                           title="Load session"

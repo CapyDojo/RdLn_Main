@@ -10,7 +10,7 @@
  * For licensing information, see LICENSE file.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
 
@@ -42,16 +42,18 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
   style,
   className
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
   return (
     <div
       data-memory-tab
       className={`fixed z-[9999] transition-all duration-500 ease-out ${className || ''}`}
       style={{
         // Position aligned with header card (moved down slightly)
-        top: '3.9rem', // Moved down from 2rem
+        top: '3.9rem',
         right: isOpen ? '423px' : '0px', // Slide with panel
         height: '90px', // Match header card height (nav with padding)
         width: '43.5px', // Compact edge tab width
+        transform: isHovered ? 'translateY(-2px)' : '',
         ...style
       }}
     >
@@ -78,6 +80,12 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
             element.style.transition = 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)';
           });
 
+          // Dispatch custom event for backdrop coordination
+          window.dispatchEvent(new CustomEvent('rdln-memory-tab-hover', {
+            detail: { isHovered: true }
+          }));
+
+          setIsHovered(true);
           onHover?.(true);
         }}
         onMouseLeave={() => {
@@ -99,6 +107,12 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
             element.style.transform = '';
           });
 
+          // Dispatch custom event for backdrop coordination
+          window.dispatchEvent(new CustomEvent('rdln-memory-tab-hover', {
+            detail: { isHovered: false }
+          }));
+
+          setIsHovered(false);
           onHover?.(false);
         }}
         className={`
