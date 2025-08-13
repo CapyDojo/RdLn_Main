@@ -49,6 +49,8 @@ interface RdLnMemorySidePanelProps extends BaseComponentProps {
   onImport?: (jsonData: string) => void;
   /** Current content lengths for smart save detection */
   contentLength?: number;
+  /** Whether the tab is currently being hovered (for coordinated states) */
+  isTabHovered?: boolean;
 }
 
 /**
@@ -69,6 +71,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
   onExport,
   onImport,
   contentLength = 0,
+  isTabHovered = false,
   style,
   className
 }) => {
@@ -162,9 +165,30 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
         className="hidden"
       />
       
-      {/* Backdrop overlay */}
+      {/* Unified Glassmorphism Backdrop - spans tab and panel area */}
       <div
-        className={`fixed inset-0 z-[9998] transition-all duration-300 ${
+        className={`fixed z-[9997] transition-all duration-500 ease-out ${
+          isOpen 
+            ? 'visible opacity-100' 
+            : 'invisible opacity-0'
+        }`}
+        style={{
+          top: '3.9rem',
+          right: '0px',
+          width: '498px', // 450px panel + 48px tab
+          height: '96px', // Match tab height
+          background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 10%, rgba(255,255,255,0.1) 100%)',
+          backdropFilter: 'blur(8px)',
+          borderRadius: '0.75rem 0 0 0.75rem',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRight: 'none'
+        }}
+        aria-hidden="true"
+      />
+      
+      {/* Main Backdrop overlay */}
+      <div
+        className={`fixed inset-0 z-[9998] transition-all duration-500 ease-out ${
           isOpen 
             ? 'bg-black bg-opacity-30 backdrop-blur-sm visible opacity-100' 
             : 'invisible opacity-0'
@@ -186,12 +210,9 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
       >
         {/* Glassmorphism Panel Container */}
         <div 
-          className="glass-panel h-full rounded-l-xl rounded-r-none border-r-0 flex flex-col"
-          style={{
-            borderTopRightRadius: 0,
-            borderBottomRightRadius: 0,
-            borderLeft: 'none'
-          }}
+          className={`glass-panel h-full rounded-l-xl rounded-r-none border-r-0 border-l-0 flex flex-col transition-all duration-500 ease-out ${
+            isTabHovered ? 'shadow-lg shadow-theme-accent-500/20 border-l-2 border-l-theme-accent-500/30' : ''
+          }`}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 pb-4 border-b border-theme-glassPanelBorder/20">

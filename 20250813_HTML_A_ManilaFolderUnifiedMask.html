@@ -11,6 +11,7 @@
         --tab-w: 56px;   /* tab width (protrusion) */
         --tab-h: 54px;   /* tab height */
         --tab-y: 56px;   /* tab vertical offset from top */
+        --tab-r: 12px;   /* tab corner radius */
         --r: 12px;       /* corner radius */
         --h: 600px;      /* open height */
         --h-closed: 96px;/* closed height */
@@ -146,7 +147,7 @@
 
       .panel-area {
         position: absolute;
-        left: var(--tab-w);
+        left: var(--tab-w); /* shift right by tab width */
         top: 0;
         width: var(--panel-w);
         height: 100%;
@@ -239,39 +240,51 @@
         return parseFloat(v || '0') || 0;
       }
 
-      // Build a parametric manila folder path (clockwise) with a tab protruding to the left
-      function buildFolderPath(w, h, tabW, tabH, tabY, r) {
+      // Build a parametric manila folder path (clockwise) with a tab protruding to the left (shifted right by tabW), with rounded tab corners
+      function buildFolderPath(w, h, tabW, tabH, tabY, r, tabR) {
         // Clamp values
         const R = Math.max(0, Math.min(r, Math.min(w, h) / 2));
-        const TAB_W = Math.max(R, Math.min(tabW, w - R));
-        const TAB_H = Math.max(R, Math.min(tabH, h - R));
+        const TAB_W = Math.max(tabR, Math.min(tabW, w - R));
+        const TAB_H = Math.max(tabR, Math.min(tabH, h - R));
         const TAB_Y = Math.max(R, Math.min(tabY, h - TAB_H - R));
-
+        const TAB_R = Math.max(0, Math.min(tabR, TAB_H/2, TAB_W/2));
+        // All X coordinates are shifted right by TAB_W
+        const X = x => x + TAB_W;
         const cmds = [];
         // Start at top-left corner
-        cmds.push(`M ${R} 0`);
+        cmds.push(`M ${X(R)} 0`);
         // Top edge to top-right
-        cmds.push(`L ${w - R} 0`);
+        cmds.push(`L ${X(w - R)} 0`);
         // Top-right corner
-        cmds.push(`Q ${w} 0 ${w} ${R}`);
+        cmds.push(`Q ${X(w)} 0 ${X(w)} ${R}`);
         // Right edge down to bottom-right
-        cmds.push(`L ${w} ${h - R}`);
+        cmds.push(`L ${X(w)} ${h - R}`);
         // Bottom-right corner
-        cmds.push(`Q ${w} ${h} ${w - R} ${h}`);
+        cmds.push(`Q ${X(w)} ${h} ${X(w - R)} ${h}`);
         // Bottom edge to bottom-left
-        cmds.push(`L ${R} ${h}`);
+        cmds.push(`L ${X(R)} ${h}`);
         // Bottom-left corner
-        cmds.push(`Q 0 ${h} 0 ${h - R}`);
+        cmds.push(`Q ${X(0)} ${h} ${X(0)} ${h - R}`);
         // Left edge up to just before tab
-        cmds.push(`L 0 ${TAB_Y + TAB_H}`);
-        // Tab protrudes left
-        cmds.push(`L ${-TAB_W} ${TAB_Y + TAB_H}`);
-        cmds.push(`L ${-TAB_W} ${TAB_Y}`);
-        cmds.push(`L 0 ${TAB_Y}`);
+        cmds.push(`L ${X(0)} ${TAB_Y + TAB_H - TAB_R}`);
+        // Tab bottom-left corner (rounded)
+        cmds.push(`Q ${X(0)} ${TAB_Y + TAB_H} ${X(0) - TAB_R} ${TAB_Y + TAB_H}`);
+        // Tab left edge up
+        cmds.push(`L ${X(0) - TAB_W + TAB_R} ${TAB_Y + TAB_H}`);
+        // Tab top-left corner (rounded)
+        cmds.push(`Q ${X(0) - TAB_W} ${TAB_Y + TAB_H} ${X(0) - TAB_W} ${TAB_Y + TAB_H - TAB_R}`);
+        // Tab up to top
+        cmds.push(`L ${X(0) - TAB_W} ${TAB_Y + TAB_R}`);
+        // Tab top-left corner (rounded)
+        cmds.push(`Q ${X(0) - TAB_W} ${TAB_Y} ${X(0) - TAB_W + TAB_R} ${TAB_Y}`);
+        // Tab right edge down to folder
+        cmds.push(`L ${X(0) - TAB_R} ${TAB_Y}`);
+        // Tab top-right corner (rounded)
+        cmds.push(`Q ${X(0)} ${TAB_Y} ${X(0)} ${TAB_Y + TAB_R}`);
         // Continue up to top-left corner
-        cmds.push(`L 0 ${R}`);
+        cmds.push(`L ${X(0)} ${R}`);
         // Top-left corner
-        cmds.push(`Q 0 0 ${R} 0`);
+        cmds.push(`Q ${X(0)} 0 ${X(R)} 0`);
         cmds.push('Z');
         return cmds.join(' ');
       }
@@ -286,8 +299,10 @@
         const tabH = readPx(el, '--tab-h');
         const tabY = readPx(el, '--tab-y');
 
-        const d = buildFolderPath(w, h, tabW, tabH, tabY, r);
-        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}' preserveAspectRatio='none'><path d='${d}' fill='white'/></svg>`;
+        const tabR = readPx(el, '--tab-r');
+        const d = buildFolderPath(w, h, tabW, tabH, tabY, r, tabR);
+        // Expand viewBox width by tabW to fit the protruding tab
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w + tabW} ${h}' preserveAspectRatio='none'><path d='${d}' fill='white'/></svg>`;
         const url = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 
         el.style.mask = `${url} no-repeat`;

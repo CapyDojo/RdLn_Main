@@ -23,6 +23,8 @@ interface RdLnMemoryEdgeTabProps extends BaseComponentProps {
   onClick: () => void;
   /** Whether sessions are currently loading */
   isLoading?: boolean;
+  /** Callback when tab is hovered (for coordinated hover states) */
+  onHover?: (isHovered: boolean) => void;
 }
 
 /**
@@ -36,6 +38,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
   isOpen,
   onClick,
   isLoading = false,
+  onHover,
   style,
   className
 }) => {
@@ -53,32 +56,36 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
     >
       <button
         onClick={onClick}
+        onMouseEnter={() => onHover?.(true)}
+        onMouseLeave={() => onHover?.(false)}
         className={`
           glass-panel 
           w-full h-full 
           flex flex-col items-center justify-center gap-1
-          transition-all duration-300
-          hover:scale-105
+          transition-all duration-500 ease-out
+          hover:scale-105 hover:shadow-lg hover:shadow-theme-accent-500/20
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
           relative overflow-hidden
-          rounded-l-xl
+          ${isOpen ? 'bg-theme-accent-500/10 border-theme-accent-500/30' : ''}
         `}
         style={{
-          borderTopRightRadius: 0,
-          borderBottomRightRadius: 0,
+          borderTopLeftRadius: '0.75rem',
+          borderBottomLeftRadius: '0.75rem', 
+          borderTopRightRadius: '0',
+          borderBottomRightRadius: '0',
           borderRight: 'none'
         }}
         title={`RdLn Memory (${sessionCount} sessions)`}
         aria-label={`Open RdLn Memory filing cabinet with ${sessionCount} saved sessions`}
         disabled={isLoading}
       >
-        {/* Filing cabinet icon */}
-        <div className={`text-lg transition-transform duration-300 ${isOpen ? 'scale-110' : ''}`}>
-          🗂️
+        {/* Filing cabinet icon - changes based on state */}
+        <div className={`text-lg transition-all duration-500 ease-out ${isOpen ? 'scale-110' : ''}`}>
+          {isOpen ? '📂' : '🗂️'}
         </div>
         
         {/* Directional chevron indicator - moved down for better spacing */}
-        <div className="transition-transform duration-300 mt-1">
+        <div className="transition-transform duration-500 ease-out mt-1">
           {isOpen ? (
             <ChevronRight className="w-3 h-3 text-theme-textSecondary" />
           ) : (
@@ -114,7 +121,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
             rounded-full min-w-[20px] h-5 px-1
             flex items-center justify-center
             shadow-lg
-            transition-all duration-300
+            transition-all duration-500 ease-out
             ${sessionCount > 99 ? 'text-[10px]' : ''}
             ${isOpen ? 'scale-110' : ''}
           `}
