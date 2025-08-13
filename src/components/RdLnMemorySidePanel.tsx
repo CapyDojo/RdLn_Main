@@ -11,14 +11,14 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { 
-  Save, 
-  FolderOpen, 
-  Trash2, 
-  Download, 
-  Upload, 
-  Clock, 
-  FileText, 
+import {
+  Save,
+  FolderOpen,
+  Trash2,
+  Download,
+  Upload,
+  Clock,
+  FileText,
   Zap,
   Archive,
   X
@@ -49,8 +49,8 @@ interface RdLnMemorySidePanelProps extends BaseComponentProps {
   onImport?: (jsonData: string) => void;
   /** Current content lengths for smart save detection */
   contentLength?: number;
-  /** Whether the tab is currently being hovered (for coordinated states) */
-  isTabHovered?: boolean;
+  /** Callback when panel is hovered (for coordinated hover states) */
+  onHover?: (isHovered: boolean) => void;
 }
 
 /**
@@ -71,13 +71,13 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
   onExport,
   onImport,
   contentLength = 0,
-  isTabHovered = false,
+  onHover,
   style,
   className
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Get sessions from RdLn Memory hook
   const { sessions } = useRdLnMemory();
 
@@ -102,7 +102,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
     } else {
       document.body.style.overflow = 'auto';
     }
-    
+
     return () => {
       document.body.style.overflow = 'auto';
     };
@@ -134,7 +134,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
-    
+
     if (diffHours < 1) {
       const diffMinutes = Math.floor(diffMs / (1000 * 60));
       return `${diffMinutes}m ago`;
@@ -164,14 +164,13 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
         onChange={handleFileImport}
         className="hidden"
       />
-      
+
       {/* Unified Glassmorphism Backdrop - spans tab and panel area */}
       <div
-        className={`fixed z-[9997] transition-all duration-500 ease-out ${
-          isOpen 
-            ? 'visible opacity-100' 
-            : 'invisible opacity-0'
-        }`}
+        className={`fixed z-[9997] transition-all duration-500 ease-out ${isOpen
+          ? 'visible opacity-100'
+          : 'invisible opacity-0'
+          }`}
         style={{
           top: '3.9rem',
           right: '0px',
@@ -185,20 +184,64 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
         }}
         aria-hidden="true"
       />
-      
+
       {/* Main Backdrop overlay */}
       <div
-        className={`fixed inset-0 z-[9998] transition-all duration-500 ease-out ${
-          isOpen 
-            ? 'bg-black bg-opacity-30 backdrop-blur-sm visible opacity-100' 
-            : 'invisible opacity-0'
-        }`}
+        className={`fixed inset-0 z-[9998] transition-all duration-500 ease-out ${isOpen
+          ? 'bg-black bg-opacity-30 backdrop-blur-sm visible opacity-100'
+          : 'invisible opacity-0'
+          }`}
         onClick={onClose}
       />
-      
+
       {/* Side Panel */}
       <div
         ref={panelRef}
+        data-memory-panel
+        onMouseEnter={() => {
+          // Apply hover effects to BOTH panel and tab - unified elevation
+          const memoryTabs = document.querySelectorAll('[data-memory-tab] .glass-panel');
+          const memoryPanels = document.querySelectorAll('[data-memory-panel] .glass-panel');
+
+          // Apply to panel (self)
+          memoryPanels.forEach(panel => {
+            const element = panel as HTMLElement;
+            element.classList.add('hover-from-panel', 'shadow-xl');
+            element.style.transform = 'translateY(-2px)';
+            element.style.transition = 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)';
+          });
+
+          // Apply to tab
+          memoryTabs.forEach(tab => {
+            const element = tab as HTMLElement;
+            element.classList.add('hover-from-panel', 'shadow-xl');
+            element.style.transform = 'translateY(-2px)';
+            element.style.transition = 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)';
+          });
+
+          onHover?.(true);
+        }}
+        onMouseLeave={() => {
+          // Remove hover effects from BOTH panel and tab
+          const memoryTabs = document.querySelectorAll('[data-memory-tab] .glass-panel');
+          const memoryPanels = document.querySelectorAll('[data-memory-panel] .glass-panel');
+
+          // Remove from panel (self)
+          memoryPanels.forEach(panel => {
+            const element = panel as HTMLElement;
+            element.classList.remove('hover-from-panel', 'shadow-xl');
+            element.style.transform = '';
+          });
+
+          // Remove from tab
+          memoryTabs.forEach(tab => {
+            const element = tab as HTMLElement;
+            element.classList.remove('hover-from-panel', 'shadow-xl');
+            element.style.transform = '';
+          });
+
+          onHover?.(false);
+        }}
         className={`
           fixed top-0 right-0 h-full z-[9999]
           w-[450px] 
@@ -209,10 +252,8 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
         style={style}
       >
         {/* Glassmorphism Panel Container */}
-        <div 
-          className={`glass-panel h-full rounded-l-xl rounded-r-none border-r-0 border-l-0 flex flex-col transition-all duration-500 ease-out ${
-            isTabHovered ? 'shadow-lg shadow-theme-accent-500/20 border-l-2 border-l-theme-accent-500/30' : ''
-          }`}
+        <div
+          className="glass-panel h-full rounded-l-xl rounded-r-none border-r-0 border-l-0 flex flex-col transition-all duration-500 ease-out"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 pb-4 border-b border-theme-glassPanelBorder/20">
@@ -223,7 +264,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
                 <p className="text-sm text-theme-textSecondary">Filing Cabinet</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="text-sm text-theme-textSecondary">
                 {sessionCount} session{sessionCount !== 1 ? 's' : ''}
@@ -275,7 +316,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
                     {sessions.length > 0 && `Showing ${Math.min(sessions.length, 12)} of ${sessions.length}`}
                   </div>
                 </div>
-                
+
                 <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
                   {sessions.slice(0, 12).map((session) => (
                     <div
@@ -285,7 +326,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
                       <div className="p-2 rounded-lg bg-theme-textInteractive/20 flex-shrink-0 mt-1">
                         <FileText className="w-4 h-4 text-theme-textInteractive" />
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-theme-textBody text-base mb-1 truncate">
                           {session.sessionName}
@@ -301,7 +342,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
                           {session.preview}
                         </div>
                       </div>
-                      
+
                       <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <button
                           onClick={() => {
@@ -325,7 +366,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
                       </div>
                     </div>
                   ))}
-                  
+
                   {sessions.length > 12 && (
                     <div className="text-sm text-theme-textSecondary text-center py-3 bg-theme-glassPanelBg/20 rounded-lg">
                       ... and {sessions.length - 12} more sessions
@@ -359,7 +400,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
                   <Download className="w-4 h-4" />
                   <span className="font-medium">Export</span>
                 </button>
-                
+
                 <button
                   onClick={handleImportClick}
                   className="flex items-center justify-center gap-2 p-3 rounded-xl bg-theme-secondary-500/20 hover:bg-theme-secondary-500/30 text-theme-textBody transition-all duration-200"
@@ -368,7 +409,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
                   <span className="font-medium">Import</span>
                 </button>
               </div>
-              
+
               {hasSessions && (
                 <button
                   onClick={() => {

@@ -44,6 +44,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
 }) => {
   return (
     <div
+      data-memory-tab
       className={`fixed z-[9999] transition-all duration-500 ease-out ${className || ''}`}
       style={{
         // Position aligned with header card (moved down slightly)
@@ -56,14 +57,55 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
     >
       <button
         onClick={onClick}
-        onMouseEnter={() => onHover?.(true)}
-        onMouseLeave={() => onHover?.(false)}
+        onMouseEnter={() => {
+          // Apply hover effects to BOTH tab and panel - unified elevation
+          const memoryTabs = document.querySelectorAll('[data-memory-tab] .glass-panel');
+          const memoryPanels = document.querySelectorAll('[data-memory-panel] .glass-panel');
+          
+          // Apply to tab (self)
+          memoryTabs.forEach(tab => {
+            const element = tab as HTMLElement;
+            element.classList.add('hover-from-tab', 'shadow-xl');
+            element.style.transform = 'translateY(-2px)';
+            element.style.transition = 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)';
+          });
+          
+          // Apply to panel
+          memoryPanels.forEach(panel => {
+            const element = panel as HTMLElement;
+            element.classList.add('hover-from-tab', 'shadow-xl');
+            element.style.transform = 'translateY(-2px)';
+            element.style.transition = 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)';
+          });
+          
+          onHover?.(true);
+        }}
+        onMouseLeave={() => {
+          // Remove hover effects from BOTH tab and panel
+          const memoryTabs = document.querySelectorAll('[data-memory-tab] .glass-panel');
+          const memoryPanels = document.querySelectorAll('[data-memory-panel] .glass-panel');
+          
+          // Remove from tab (self)
+          memoryTabs.forEach(tab => {
+            const element = tab as HTMLElement;
+            element.classList.remove('hover-from-tab', 'shadow-xl');
+            element.style.transform = '';
+          });
+          
+          // Remove from panel
+          memoryPanels.forEach(panel => {
+            const element = panel as HTMLElement;
+            element.classList.remove('hover-from-tab', 'shadow-xl');
+            element.style.transform = '';
+          });
+          
+          onHover?.(false);
+        }}
         className={`
           glass-panel 
           w-full h-full 
           flex flex-col items-center justify-center gap-1
           transition-all duration-500 ease-out
-          hover:scale-105 hover:shadow-lg hover:shadow-theme-accent-500/20
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
           relative overflow-hidden
           ${isOpen ? 'bg-theme-accent-500/10 border-theme-accent-500/30' : ''}
