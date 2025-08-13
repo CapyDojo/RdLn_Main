@@ -259,9 +259,9 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
           </div>
 
           {/* Content Area - Scrollable */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 flex flex-col p-6 min-h-0">
             {/* Save Current Session - Enhanced */}
-            <div className="space-y-3">
+            <div className="space-y-3 mb-6">
               <h3 className="text-lg font-semibold text-theme-textHeader">Quick Actions</h3>
               <button
                 onClick={() => {
@@ -288,15 +288,15 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
 
             {/* Recent Sessions - Enhanced */}
             {hasSessions ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
+              <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-semibold text-theme-textHeader">Recent Sessions</h3>
                   <div className="text-sm text-theme-textSecondary">
                     {sessions.length > 0 && `Showing ${Math.min(sessions.length, 12)} of ${sessions.length}`}
                   </div>
                 </div>
 
-                <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
+                <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar">
                   {sessions.slice(0, 12).map((session) => (
                     <div
                       key={session.id}
@@ -354,10 +354,12 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="text-lg font-semibold text-theme-textSecondary mb-2">No saved sessions</div>
-                <div className="text-sm text-theme-textSecondary">
-                  Start comparing documents to build your memory
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-theme-textSecondary mb-2">No saved sessions</div>
+                  <div className="text-sm text-theme-textSecondary">
+                    Start comparing documents to build your memory
+                  </div>
                 </div>
               </div>
             )}
