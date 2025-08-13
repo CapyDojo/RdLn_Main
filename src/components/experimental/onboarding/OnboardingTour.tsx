@@ -88,9 +88,11 @@ const RDLN_WELCOME_TOUR: TourConfig = {
 const OnboardingTour: React.FC<OnboardingTourProps> = ({
   config = RDLN_WELCOME_TOUR,
   isEnabled,
+  shouldStart = false,
   onTourComplete,
   onTourSkip,
-  onStepChange
+  onStepChange,
+  onTourStart
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null);
@@ -213,6 +215,22 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       }
     };
   }, [highlightedElement]);
+
+  // Handle manual tour start via shouldStart prop
+  useEffect(() => {
+    if (shouldStart && isEnabled && !tourState.isActive) {
+      console.log('🎯 Starting tour manually via shouldStart prop (ignoring completion status)');
+      // Reset tour state first to allow restart
+      navigationHandlers.resetTour();
+      // Small delay to ensure reset is processed
+      setTimeout(() => {
+        navigationHandlers.startTour();
+        if (onTourStart) {
+          onTourStart();
+        }
+      }, 10);
+    }
+  }, [shouldStart, isEnabled, tourState.isActive, navigationHandlers, onTourStart]);
 
   // Handle overlay clicks
   const handleOverlayClick = useCallback((event: React.MouseEvent) => {

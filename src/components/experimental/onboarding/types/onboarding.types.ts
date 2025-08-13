@@ -59,11 +59,13 @@ export interface TourTooltipProps {
 }
 
 export interface OnboardingTourProps {
-  config: TourConfig;
+  config?: TourConfig;
   isEnabled: boolean;
+  shouldStart?: boolean;
   onTourComplete?: (tourId: string, duration: number) => void;
   onTourSkip?: (tourId: string, stepNumber: number) => void;
   onStepChange?: (stepNumber: number, stepId: string) => void;
+  onTourStart?: () => void;
 }
 
 export interface UseTourNavigationReturn {

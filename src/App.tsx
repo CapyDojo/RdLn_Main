@@ -73,6 +73,7 @@ function AppContent({
 
   // Onboarding tour state
   const [showTourRestart, setShowTourRestart] = useState(false);
+  const [shouldStartTour, setShouldStartTour] = useState(false);
 
   const comparisonInterfaceRef = React.useRef<{ loadSampleData?: (original: string, revised: string, autoRun: boolean) => void }>(null);
 
@@ -181,6 +182,21 @@ function AppContent({
     window.location.reload(); // Simple way to restart tour
   };
 
+  const handleStartTour = () => {
+    // Reset tour completion status and start fresh
+    localStorage.removeItem('tour-rdln-welcome-tour-completed');
+    localStorage.removeItem('tour-rdln-welcome-tour-skipped');
+    // Ensure feature flag is enabled
+    const currentFeatures = JSON.parse(localStorage.getItem('experimental-features') || '{}');
+    localStorage.setItem('experimental-features', JSON.stringify({
+      ...currentFeatures,
+      enableOnboardingTour: true
+    }));
+    // Reset shouldStartTour first, then set to true to trigger change
+    setShouldStartTour(false);
+    setTimeout(() => setShouldStartTour(true), 10);
+  };
+
   // Check if user has completed beta agreement and tour
   useEffect(() => {
     const betaAcceptance = localStorage.getItem('rdln_beta_terms_accepted');
@@ -213,6 +229,7 @@ function AppContent({
             }
           }}
           isProcessing={false}
+          onStartTour={handleStartTour}
         />
       )}
       <main className={`flex-1 overflow-y-auto ${shouldHideHeader ? "pt-0" : "pt-56"}`}>
@@ -313,9 +330,11 @@ function AppContent({
       {/* Onboarding Tour - Only show if feature flag is enabled */}
       <OnboardingTour
         isEnabled={features.enableOnboardingTour}
+        shouldStart={shouldStartTour}
         onTourComplete={handleTourComplete}
         onTourSkip={handleTourSkip}
         onStepChange={handleTourStepChange}
+        onTourStart={() => setShouldStartTour(false)}
       />
 
       {/* Tour Restart Button - Only show after tour completion/skip */}

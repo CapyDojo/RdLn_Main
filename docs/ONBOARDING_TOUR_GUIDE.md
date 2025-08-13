@@ -10,7 +10,19 @@ npm run dev
 The app should be available at `http://localhost:5173`
 
 ## 2. Enable the Feature Flag
-Open your browser and navigate to RdLn. Then:
+
+### Option A: Easy Button Method (Recommended)
+1. **Enable the feature flag first** (one-time setup):
+   - Open Browser Developer Tools (`F12`)
+   - Go to Console tab
+   - Run: `localStorage.setItem("experimental-features", JSON.stringify({enableOnboardingTour: true}))`
+   - Refresh the page (`F5`)
+
+2. **Look for the "Take Tour" button** next to "Quick Demo" in the beta status bar
+3. **Click "Take Tour"** - it will automatically start the onboarding tour
+
+### Option B: Manual Method
+If you don't see the button, follow the original method:
 
 1. **Open Browser Developer Tools**:
    - **Chrome/Edge**: Press `F12` or `Ctrl+Shift+I`
@@ -49,9 +61,14 @@ Open your browser and navigate to RdLn. Then:
 
 ## 4. Restart the Tour
 
-After completing or skipping the tour:
+You have multiple ways to restart the tour:
 
-1. **Look for the "?" button** in the bottom-right corner
+### Method 1: Take Tour Button (Easiest)
+1. **Click the "Take Tour" button** in the beta status bar (next to Quick Demo)
+2. The tour will restart immediately
+
+### Method 2: Floating Help Button
+1. **Look for the "?" button** in the bottom-right corner (appears after completing/skipping tour)
 2. **Click it** to restart the tour anytime
 
 ### OR manually reset:
@@ -133,9 +150,12 @@ src/components/experimental/onboarding/
 ```
 
 ### Integration Points
-- **App.tsx**: Main integration with feature flag checks
+- **App.tsx**: Main integration with feature flag checks and tour handlers
 - **ExperimentalLayoutContext.tsx**: Feature flag definition
-- **StatusBar.tsx**: Added `data-testid="quick-demo-button"` for targeting
+- **StatusBar.tsx**: Added tour button and targeting attributes
+  - `data-testid="quick-demo-button"` for tour targeting
+  - `data-testid="take-tour-button"` for easy access
+  - Conditional "Take Tour" button (only visible when feature flag enabled)
 
 ### Safety Features
 - **Zero Impact When Disabled**: No performance or UI impact when flag is off

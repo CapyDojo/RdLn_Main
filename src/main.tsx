@@ -17,6 +17,7 @@ import './index.css';
 import './styles/themes/themes.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { FontSizeProvider } from './contexts/FontSizeContext';
+import { RdLnMemoryProvider } from './contexts/RdLnMemoryContext';
 import { isElectron } from './utils/runtime';
 // STEP 1: Import Background Language Loader (Safe, Modular)
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
@@ -152,7 +153,9 @@ if (process.env.NODE_ENV === 'development' && !ENABLE_DEV_LOGS) {
 const AppWithProvider = (
   <ThemeProvider>
     <FontSizeProvider>
-      <App />
+      <RdLnMemoryProvider>
+        <App />
+      </RdLnMemoryProvider>
     </FontSizeProvider>
   </ThemeProvider>
 );
