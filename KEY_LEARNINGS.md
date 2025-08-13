@@ -4,6 +4,68 @@
 
 ---
 
+## 🚨 Critical Lesson: Feature Flag Production vs Development Gotcha (2025-01-15)
+
+### The Problem
+Word Copy button appeared correctly in local development but was completely missing from Netlify production deployment. User reported: "for some reason, the Word Copy button doesn't appear?"
+
+### Initial Investigation Mistakes
+**❌ Wrong Assumptions:**
+- Assumed component refactoring broke button rendering
+- Thought imports or performance tracking were missing
+- Focused on component logic instead of configuration
+
+### The Real Issue: Development-Only Feature Flag
+**🔍 Root Cause Discovery:**
+```typescript
+// In appConfig.ts - THE PROBLEM
+ENABLE_WORD_OPTIMIZED_COPY: IS_DEVELOPMENT,  // Only true in development!
+
+// Where IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
+```
+
+**The Issue Chain:**
+1. Feature flag `ENABLE_WORD_OPTIMIZED_COPY` set to `IS_DEVELOPMENT`
+2. Development mode: `NODE_ENV === 'development'` → flag = `true` → button shows
+3. Production mode: `NODE_ENV === 'production'` → flag = `false` → button hidden
+4. RedlineOutput conditionally renders: `{FEATURE_FLAGS.ENABLE_WORD_OPTIMIZED_COPY && (...)}`
+
+### Correct Solution: Production Feature Enablement
+**✅ What Worked:**
+```typescript
+// FIXED: Enable for all environments
+ENABLE_WORD_OPTIMIZED_COPY: true,  // Was: IS_DEVELOPMENT
+```
+
+### Key Architectural Lessons
+1. **Feature Flag Discipline**: Always audit development-only flags before releases
+2. **Environment Parity**: Features working locally may not work in production
+3. **Configuration Review**: Check `appConfig.ts` when deployment behavior differs
+4. **User Feedback Value**: "Button missing in production" immediately points to feature flags
+
+### Prevention Strategy
+- **Pre-deployment Checklist**: Review all `IS_DEVELOPMENT` flags in config
+- **Production Testing**: Test feature availability in production-like environments
+- **Flag Documentation**: Comment why flags are development vs production
+- **Staging Environment**: Catch production flag issues before user reports
+
+### Development vs Production Flag Patterns
+```typescript
+// Development-only features (debugging, experiments)
+ENABLE_PERFORMANCE_DEMO: IS_DEVELOPMENT,     // ✅ Correct
+ENABLE_LAYOUT_EXPERIMENTS: IS_DEVELOPMENT,   // ✅ Correct
+
+// Production features (user-facing functionality)  
+ENABLE_WORD_OPTIMIZED_COPY: true,            // ✅ Fixed
+ENABLE_ADVANCED_OCR: true,                   // ✅ Correct
+```
+
+### User Impact
+- **Before**: Missing functionality in production, user confusion
+- **After**: Feature parity between development and production environments
+
+---
+
 ## 🚨 Critical Lesson: Responsive Layout Element Detection (2025-08-12)
 
 ### The Problem

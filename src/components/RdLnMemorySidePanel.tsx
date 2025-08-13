@@ -20,7 +20,6 @@ import {
   Clock,
   FileText,
   Zap,
-  Archive,
   X
 } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
@@ -95,18 +94,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  // Lock body scroll when panel is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
 
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isOpen]);
 
   // Handle file import
   const handleImportClick = () => {
@@ -185,14 +173,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
         aria-hidden="true"
       />
 
-      {/* Main Backdrop overlay */}
-      <div
-        className={`fixed inset-0 z-[9998] transition-all duration-500 ease-out ${isOpen
-          ? 'bg-black bg-opacity-30 backdrop-blur-sm visible opacity-100'
-          : 'invisible opacity-0'
-          }`}
-        onClick={onClose}
-      />
+
 
       {/* Side Panel */}
       <div
@@ -258,10 +239,8 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between p-6 pb-4 border-b border-theme-glassPanelBorder/20">
             <div className="flex items-center gap-3">
-              <Archive className="w-6 h-6 text-theme-accent-400" />
               <div>
                 <h2 className="text-xl font-bold text-theme-textHeader">RdLn Memory</h2>
-                <p className="text-sm text-theme-textSecondary">Filing Cabinet</p>
               </div>
             </div>
 
@@ -376,10 +355,9 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
               </div>
             ) : (
               <div className="text-center py-12">
-                <Archive className="w-16 h-16 mx-auto mb-4 opacity-30 text-theme-textSecondary" />
                 <div className="text-lg font-semibold text-theme-textSecondary mb-2">No saved sessions</div>
                 <div className="text-sm text-theme-textSecondary">
-                  Start comparing documents to build your filing cabinet
+                  Start comparing documents to build your memory
                 </div>
               </div>
             )}

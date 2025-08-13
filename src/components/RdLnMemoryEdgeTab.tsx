@@ -122,7 +122,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
         disabled={isLoading}
       >
         {/* Filing cabinet icon - changes based on state */}
-        <div className={`text-lg transition-all duration-500 ease-out ${isOpen ? 'scale-110' : ''}`}>
+        <div className={`text-2xl transition-all duration-500 ease-out ${isOpen ? 'scale-110' : ''}`}>
           {isOpen ? '📂' : '🗂️'}
         </div>
 
