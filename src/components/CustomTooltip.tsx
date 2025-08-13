@@ -59,12 +59,12 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   // Calculate viewport position for tooltip portal (fixed positioning)
   const calculateTooltipPosition = (placementType: 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' | 'bottom-left') => {
     if (!triggerRef.current) return { top: 0, left: 0 };
-    
+
     const rect = triggerRef.current.getBoundingClientRect();
-    
+
     // For fixed positioning, we use viewport coordinates directly (no scroll offset needed)
     // getBoundingClientRect() already gives us viewport-relative positions
-    
+
     switch (placementType) {
       case 'top':
         return {
@@ -72,19 +72,19 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
           left: rect.left - 207, // Just to the left of the element
           transform: undefined
         };
-        
+
       case 'bottom':
         return {
           top: rect.bottom + 2, // Even closer: 2px below
           left: rect.right + 2, // Tucked: align to right edge + 2px
           transform: undefined
         };
-        
+
       case 'left':
         // For precise alignment: tooltip's top-right corner touches element's bottom-left corner
         // Use actual tooltip width if available, otherwise estimate
         let tooltipWidth = 285; // Default fallback
-        
+
         if (tooltipRef.current) {
           const tooltipRect = tooltipRef.current.getBoundingClientRect();
           if (tooltipRect.width > 0) {
@@ -98,20 +98,20 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
             tooltipWidth = 200; // More accurate estimate for Auto tooltip
           }
         }
-        
+
         return {
           top: rect.bottom, // Align tooltip top edge with element bottom edge
           left: rect.right - tooltipWidth, // Position tooltip so its right edge aligns with element's right edge
           transform: undefined
         };
-        
+
       case 'right':
         return {
           top: rect.bottom + 2, // Align to bottom edge + 2px
           left: rect.right + 2, // Even closer: 2px to the right
           transform: undefined
         };
-        
+
       case 'bottom-left':
         // Elegant CSS transform approach: let CSS handle the width calculation
         return {
@@ -119,7 +119,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
           left: rect.left, // Position at element's left edge, CSS transform will shift by tooltip width
           transform: 'translateX(-100%)' // Shift left by tooltip's own width
         };
-        
+
       case 'bottom-right':
       default:
         return {
@@ -133,7 +133,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   // Calculate optimal placement based on viewport position and screen location
   const calculatePlacement = (): 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' | 'bottom-left' => {
     if (!triggerRef.current) return 'bottom-right';
-    
+
     // If user specified a placement, use it unless it's auto
     if (placement !== 'auto') {
       return placement as 'top' | 'bottom' | 'left' | 'right' | 'bottom-right' | 'bottom-left';
@@ -153,18 +153,18 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
 
     // Simplified positioning: default to close diagonal bottom-right for most cases
     // Only use other positions if there's insufficient space
-    
+
     // Check if we have enough space for the compact diagonal positioning
     const minSpaceNeeded = 80; // Reduced from 200px since we're positioning closer
-    
+
     // Try bottom-right diagonal first (works for most screen positions)
     if (spaceBottom > 40 && spaceRight > 40) {
       return 'bottom-right';
     }
-    
+
     // Fallback based on available space
     if (spaceTop > minSpaceNeeded) return 'top';
-    if (spaceLeft > minSpaceNeeded) return 'left'; 
+    if (spaceLeft > minSpaceNeeded) return 'left';
     if (spaceRight > minSpaceNeeded) return 'right';
     if (spaceBottom > minSpaceNeeded) return 'bottom';
 
@@ -179,7 +179,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   // Update tooltip position (for scroll/zoom events)
   const updateTooltipPosition = useCallback(() => {
     if (!isVisible) return;
-    
+
     const placementType = calculatePlacement();
     const position = calculateTooltipPosition(placementType);
     setActualPlacement(placementType);
@@ -188,7 +188,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
 
   const showTooltip = () => {
     if (disabled || !content.trim()) return;
-    
+
     timeoutRef.current = setTimeout(() => {
       const placementType = calculatePlacement();
       const position = calculateTooltipPosition(placementType);
@@ -215,13 +215,13 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
     if (isVisible) {
       // For fixed positioning, we need to track when elements move in viewport
       // This happens during window scroll, resize, or internal container scroll
-      
+
       window.addEventListener('scroll', handleScrollOrResize, { passive: true });
       window.addEventListener('resize', handleScrollOrResize, { passive: true });
-      
+
       // Find and listen to all scrollable containers in the app
       const scrollableContainers: HTMLElement[] = [];
-      
+
       // App-specific scroll containers based on useScrollSync patterns
       const containerSelectors = [
         '[data-panel-id] .glass-panel-inner-content', // Desktop Option C layout
@@ -230,7 +230,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
         '.scroll-container',                          // General scroll containers
         '[data-testid="scroll-container"]'            // Test scroll containers
       ];
-      
+
       containerSelectors.forEach(selector => {
         const elements = document.querySelectorAll(selector) as NodeListOf<HTMLElement>;
         elements.forEach(element => {
@@ -240,16 +240,16 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
           }
         });
       });
-      
+
       // Add scroll listeners to all detected scrollable containers
       scrollableContainers.forEach(container => {
         container.addEventListener('scroll', handleScrollOrResize, { passive: true });
       });
-      
+
       return () => {
         window.removeEventListener('scroll', handleScrollOrResize);
         window.removeEventListener('resize', handleScrollOrResize);
-        
+
         // Clean up container scroll listeners
         scrollableContainers.forEach(container => {
           container.removeEventListener('scroll', handleScrollOrResize);
@@ -307,7 +307,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
 
   return (
     <>
-      <div 
+      <div
         ref={triggerRef}
         className={`relative inline-block ${className || ''}`}
         style={style}
@@ -319,7 +319,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
       >
         {children}
       </div>
-      
+
       {tooltipContent && createPortal(tooltipContent, document.body)}
     </>
   );

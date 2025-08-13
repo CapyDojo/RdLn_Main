@@ -49,9 +49,9 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
       style={{
         // Position aligned with header card (moved down slightly)
         top: '3.9rem', // Moved down from 2rem
-        right: isOpen ? '450px' : '0px', // Slide with panel
-        height: '96px', // Match header card height (nav with padding)
-        width: '48px', // Same width as theme selector button
+        right: isOpen ? '423px' : '0px', // Slide with panel
+        height: '90px', // Match header card height (nav with padding)
+        width: '43.5px', // Compact edge tab width
         ...style
       }}
     >
@@ -61,7 +61,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
           // Apply hover effects to BOTH tab and panel - unified elevation
           const memoryTabs = document.querySelectorAll('[data-memory-tab] .glass-panel');
           const memoryPanels = document.querySelectorAll('[data-memory-panel] .glass-panel');
-          
+
           // Apply to tab (self)
           memoryTabs.forEach(tab => {
             const element = tab as HTMLElement;
@@ -69,7 +69,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
             element.style.transform = 'translateY(-2px)';
             element.style.transition = 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)';
           });
-          
+
           // Apply to panel
           memoryPanels.forEach(panel => {
             const element = panel as HTMLElement;
@@ -77,28 +77,28 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
             element.style.transform = 'translateY(-2px)';
             element.style.transition = 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)';
           });
-          
+
           onHover?.(true);
         }}
         onMouseLeave={() => {
           // Remove hover effects from BOTH tab and panel
           const memoryTabs = document.querySelectorAll('[data-memory-tab] .glass-panel');
           const memoryPanels = document.querySelectorAll('[data-memory-panel] .glass-panel');
-          
+
           // Remove from tab (self)
           memoryTabs.forEach(tab => {
             const element = tab as HTMLElement;
             element.classList.remove('hover-from-tab', 'shadow-xl');
             element.style.transform = '';
           });
-          
+
           // Remove from panel
           memoryPanels.forEach(panel => {
             const element = panel as HTMLElement;
             element.classList.remove('hover-from-tab', 'shadow-xl');
             element.style.transform = '';
           });
-          
+
           onHover?.(false);
         }}
         className={`
@@ -112,7 +112,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
         `}
         style={{
           borderTopLeftRadius: '0.75rem',
-          borderBottomLeftRadius: '0.75rem', 
+          borderBottomLeftRadius: '0.75rem',
           borderTopRightRadius: '0',
           borderBottomRightRadius: '0',
           borderRight: 'none'
@@ -125,7 +125,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
         <div className={`text-lg transition-all duration-500 ease-out ${isOpen ? 'scale-110' : ''}`}>
           {isOpen ? '📂' : '🗂️'}
         </div>
-        
+
         {/* Directional chevron indicator - moved down for better spacing */}
         <div className="transition-transform duration-500 ease-out mt-1">
           {isOpen ? (
@@ -134,7 +134,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
             <ChevronLeft className="w-3 h-3 text-theme-textSecondary" />
           )}
         </div>
-        
+
         {/* Loading indicator */}
         {isLoading && (
           <div
@@ -144,7 +144,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
             <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
           </div>
         )}
-        
+
         {/* Visual connection line when open */}
         {isOpen && (
           <div
@@ -153,7 +153,7 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
           />
         )}
       </button>
-      
+
       {/* Session count badge - positioned outside button to avoid overflow clipping */}
       {sessionCount > 0 && (
         <div

@@ -1,17 +1,16 @@
 import React from 'react';
-import { Copy, Check, Download } from 'lucide-react';
 import { DiffChange } from '../types';
 import { BaseComponentProps } from '../types/components';
 import { UI_CONFIG, FEATURE_FLAGS, DEV_CONFIG } from '../config/appConfig';
-import { useComponentPerformance, usePerformanceAwareHandler } from '../utils/performanceUtils.tsx';
+import { useComponentPerformance } from '../utils/performanceUtils.tsx';
 import { useExperimentalFeatures } from '../contexts/ExperimentalLayoutContext';
 import { ResultsOverlayTrigger } from './experimental/ResultsOverlayTrigger';
 import { FullScreenButton } from './FullScreenButton';
-import { CustomTooltip } from './CustomTooltip';
+import { CopyButton } from './CopyButton';
+import { WordCopyButton } from './WordCopyButton';
+import { DocxExportButton } from './DocxExportButton';
 import { useFontSize } from '../contexts/FontSizeContext';
-import { copyToClipboardMultiFormat, isMultiFormatClipboardSupported, copyToClipboardWordCompatible } from '../utils/clipboardUtils';
 import { FontSizeSelector } from './FontSizeSelector';
-import { exportHtmlDiffToDocx } from '../lib/docxExport';
 
 interface RedlineOutputProps extends BaseComponentProps {
   changes: DiffChange[];
@@ -80,82 +79,12 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   }, [externalBackgroundMode, backgroundMode]);
 
   
-  // Copy success state for microinteraction
-  const [copySuccess, setCopySuccess] = React.useState(false);
-  const [copyWordSuccess, setCopyWordSuccess] = React.useState(false);
-
-  // DOCX export state
-  const [exportingDocx, setExportingDocx] = React.useState(false);
-  const [exportSuccess, setExportSuccess] = React.useState(false);
 
   // Font size context
   const { fontSize } = useFontSize();
 
   // Always render changes directly in clean mode
   const filteredChanges = changes;
-
-  // --- Smart DOCX filename helpers ---
-  const sanitizeFilename = (name: string) =>
-    name
-      .replace(/[<>:"/\\|?*]+/g, ' ') // illegal filename chars
-      .replace(/\s+/g, ' ') // collapse whitespace
-      .trim()
-      .slice(0, 120); // keep it reasonable
-
-  const firstLineFrom = (text?: string): string | undefined => {
-    if (!text) return undefined;
-    // remove basic HTML tags if any and split into lines
-    const plain = text.replace(/<[^>]+>/g, ' ').replace(/\r\n/g, '\n');
-    const firstNonEmpty = plain
-      .split('\n')
-      .map(s => s.trim())
-      .find(s => s.length > 0);
-    return firstNonEmpty;
-  };
-
-  const timestamp = () => {
-    const d = new Date();
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const yyyy = d.getFullYear();
-    const mm = pad(d.getMonth() + 1);
-    const dd = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const mi = pad(d.getMinutes());
-    return `${yyyy}${mm}${dd}_${hh}${mi}`;
-  };
-
-  const suggestDocxName = () => {
-    // Prefer explicit document title
-    const docTitle = props.documentTitle && sanitizeFilename(props.documentTitle);
-    // Titles from props if provided
-    const origTitle = props.originalTitle || firstLineFrom(props.originalText);
-    const revTitle = props.revisedTitle || firstLineFrom(props.revisedText);
-
-    const ts = timestamp();
-
-    if (docTitle && docTitle.length > 0) {
-      return `${docTitle} - RdLn - ${ts}.docx`;
-    }
-
-    if (origTitle && revTitle) {
-      const a = sanitizeFilename(origTitle);
-      const b = sanitizeFilename(revTitle);
-      if (a && b) return `${a} → ${b} - RdLn - ${ts}.docx`;
-    }
-
-    if (origTitle) {
-      const a = sanitizeFilename(origTitle);
-      if (a) return `${a} - RdLn - ${ts}.docx`;
-    }
-
-    if (revTitle) {
-      const b = sanitizeFilename(revTitle);
-      if (b) return `${b} - RdLn - ${ts}.docx`;
-    }
-
-    return `RdLn_${ts}.docx`;
-  };
-
 
   // Handle background mode toggle
   const handleBackgroundToggle = () => {
@@ -235,158 +164,8 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     return result;
   }, [filteredChanges, performanceTracker]);
 
-  const copyToClipboard = usePerformanceAwareHandler(async () => {
-    if (!filteredChanges || !Array.isArray(filteredChanges)) {
-      return;
-    }
 
-    try {
-      await copyToClipboardMultiFormat(filteredChanges);
-      
-      // Show success microinteraction
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 1500);
-      
-      onCopy();
 
-      // Track success metrics
-      const textLength = filteredChanges.reduce((acc, change) => {
-        const content = change.type === 'changed' ? change.revisedContent || '' : change.content || '';
-        return acc + content.length;
-      }, 0);
-
-      performanceTracker.trackMetric('copy_success', {
-        textLength,
-        multiFormat: isMultiFormatClipboardSupported(),
-        changeCount: filteredChanges.length
-      });
-
-    } catch (err) {
-      console.error('Failed to copy text:', err);
-      performanceTracker.trackMetric('copy_failure', {
-        error: err instanceof Error ? err.message : 'Unknown error',
-        multiFormat: isMultiFormatClipboardSupported()
-      });
-      // Still call onCopy in case of error for testing purposes
-      onCopy();
-    }
-  }, 'copy_to_clipboard', performanceTracker);
-
-  const copyToClipboardWord = usePerformanceAwareHandler(async () => {
-    if (!filteredChanges || !Array.isArray(filteredChanges)) {
-      return;
-    }
-
-    try {
-      await copyToClipboardWordCompatible(filteredChanges);
-      
-      // Show success microinteraction
-      setCopyWordSuccess(true);
-      setTimeout(() => setCopyWordSuccess(false), 1500);
-      
-      onCopy();
-
-      // Track success metrics
-      const textLength = filteredChanges.reduce((acc, change) => {
-        const content = change.type === 'changed' ? change.revisedContent || '' : change.content || '';
-        return acc + content.length;
-      }, 0);
-
-      performanceTracker.trackMetric('copy_word_success', {
-        textLength,
-        changeCount: filteredChanges.length
-      });
-
-    } catch (err) {
-      console.error('Failed to copy Word-compatible text:', err);
-      performanceTracker.trackMetric('copy_word_failure', {
-        error: err instanceof Error ? err.message : 'Unknown error'
-      });
-      // Still call onCopy in case of error for testing purposes
-      onCopy();
-    }
-  }, 'copy_to_clipboard_word', performanceTracker);
-
-  const exportDocx = usePerformanceAwareHandler(async () => {
-    if (!filteredChanges || !Array.isArray(filteredChanges) || filteredChanges.length === 0) return;
-    try {
-      setExportingDocx(true);
-      // Combine chunk HTML into a single container div to match our exporter expectations
-      const combinedHtml = `\n<div style="font-family: serif;  white-space: pre-wrap;">${
-        (chunks || []).map(c => c.html).join('')
-      }</div>`;
-      const bytes = await exportHtmlDiffToDocx(combinedHtml, { author: 'RdLn' });
-
-      const mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      const blob = new Blob([bytes], { type: mime });
-      const filename = suggestDocxName();
-
-      // Quick validity check: DOCX (ZIP) should start with 'PK' (0x50, 0x4B)
-      if (!(bytes && bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {
-        console.error('Generated file is not a ZIP (PK) header. Size:', bytes?.byteLength);
-      }
-
-      // Prefer browser download UI (anchor + download) for consistent user feedback.
-      // Keep native File System Access picker available behind a flag if needed later.
-      const w = window as any;
-      const useNativePicker = FEATURE_FLAGS.ENABLE_NATIVE_SAVE_PICKER;
-
-      if (useNativePicker && w && typeof w.showSaveFilePicker === 'function') {
-        try {
-          const handle = await w.showSaveFilePicker({
-            suggestedName: filename,
-            types: [{
-              description: 'Word Document (.docx)',
-              accept: { [mime]: ['.docx'] },
-            }],
-          });
-          const stream = await handle.createWritable();
-          await stream.write(blob);
-          await stream.close();
-        } catch (pickerErr: any) {
-          // If user cancels (AbortError), do nothing.
-          const name = pickerErr?.name || pickerErr?.constructor?.name;
-          if (name === 'AbortError') {
-            return; // user cancelled save dialog
-          }
-          // For other failures, fall back to anchor method
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.setAttribute('href', url);
-          a.setAttribute('download', filename);
-          a.style.display = 'none';
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            a.remove();
-            URL.revokeObjectURL(url);
-          }, 1000);
-        }
-      } else {
-        // Blob URL + download attribute triggers browser's download UI
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('href', url);
-        a.setAttribute('download', filename);
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          a.remove();
-          URL.revokeObjectURL(url);
-        }, 1000);
-      }
-
-      setExportSuccess(true);
-      setTimeout(() => setExportSuccess(false), 1500);
-      performanceTracker.trackMetric('docx_export_success', { bytes: bytes.byteLength });
-    } catch (err) {
-      console.error('DOCX export failed:', err);
-      performanceTracker.trackMetric('docx_export_failure', { error: err instanceof Error ? err.message : String(err) });
-    } finally {
-      setExportingDocx(false);
-    }
-  }, 'export_docx', performanceTracker);
 
   return (
     <div
@@ -452,106 +231,29 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             )}
 
             {/* Copy Button */}
-            <div className="relative segmented-control">
-              <CustomTooltip
-                content={isMultiFormatClipboardSupported()
-                  ? "Copy RdLn - formatted for pasting into Emails"
-                  : "Copy RdLn as plain text"
-                }
-                placement="bottom-left"
-              >
-                <button
-                  onClick={copyToClipboard}
-                  className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
-                    copySuccess ? 'bg-green-100 border-green-300' : ''
-                  }`}
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  aspectRatio: '1/1',
-                  transform: copySuccess ? 'scale(1.05)' : 'scale(1)',
-                }}
-              >
-                <div className="flex flex-col items-center justify-center">
-                  {copySuccess ? (
-                    <Check className={`w-6 h-6 text-green-600 transition-all duration-300`} aria-hidden="true" />
-                  ) : (
-                    <Copy className="w-6 h-6 transition-all duration-300" aria-hidden="true" />
-                  )}
-                  <span className={`text-xs mt-0.5 hidden sm:block transition-all duration-300 ${
-                    copySuccess ? 'text-green-600' : ''
-                  }`}>
-                    {copySuccess ? 'Copied!' : 'Copy'}
-                  </span>
-                </div>
-                </button>
-              </CustomTooltip>
-            </div>
+            <CopyButton
+              changes={filteredChanges}
+              onCopy={onCopy}
+            />
 
             {/* Copy for Word Button - Feature Flagged */}
             {FEATURE_FLAGS.ENABLE_WORD_OPTIMIZED_COPY && (
-              <div className="relative segmented-control">
-                <CustomTooltip content="Copy RdLn - formatted for pasting into MS Word / Google Docs" placement="bottom-left">
-                  <button
-                    onClick={copyToClipboardWord}
-                    className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
-                      copyWordSuccess ? 'bg-green-100 border-green-300' : ''
-                    }`}
-                    style={{
-                      width: '48px',
-                      height: '48px',
-                      aspectRatio: '1/1',
-                      transform: copyWordSuccess ? 'scale(1.05)' : 'scale(1)',
-                    }}
-                  >
-                    <div className="flex flex-col items-center justify-center">
-                      {copyWordSuccess ? (
-                        <Check className={`w-6 h-6 text-green-600 transition-all duration-300`} aria-hidden="true" />
-                      ) : (
-                        <Copy className="w-6 h-6 transition-all duration-300" aria-hidden="true" />
-                      )}
-                      <span className={`text-xs mt-0.5 hidden sm:block transition-all duration-300 ${
-                        copyWordSuccess ? 'text-green-600' : ''
-                      }`}>
-                        {copyWordSuccess ? 'Copied!' : 'Word'}
-                      </span>
-                    </div>
-                  </button>
-                </CustomTooltip>
-              </div>
+              <WordCopyButton
+                changes={filteredChanges}
+                onCopy={onCopy}
+              />
             )}
 
             {/* Download DOCX Button */}
-            <div className="relative segmented-control">
-              <CustomTooltip content="Export RdLn as native Word .DOCX with Track Changes" placement="bottom-left">
-                <button
-                  onClick={exportDocx}
-                  disabled={exportingDocx || !filteredChanges || filteredChanges.length === 0}
-                  className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
-                    exportSuccess ? 'bg-green-100 border-green-300' : ''
-                  } ${exportingDocx ? 'opacity-70 cursor-not-allowed' : ''}`}
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    aspectRatio: '1/1',
-                    transform: exportSuccess ? 'scale(1.05)' : 'scale(1)',
-                  }}
-                >
-                  <div className="flex flex-col items-center justify-center">
-                    {exportSuccess ? (
-                      <Check className={`w-6 h-6 text-green-600 transition-all duration-300`} aria-hidden="true" />
-                    ) : (
-                      <Download className="w-6 h-6 transition-all duration-300" aria-hidden="true" />
-                    )}
-                    <span className={`text-xs mt-0.5 hidden sm:block transition-all duration-300 ${
-                      exportSuccess ? 'text-green-600' : ''
-                    }`}>
-                      {exportSuccess ? 'Saved!' : 'DOCX'}
-                    </span>
-                  </div>
-                </button>
-              </CustomTooltip>
-            </div>
+            <DocxExportButton
+              changes={filteredChanges}
+              chunks={chunks}
+              documentTitle={props.documentTitle}
+              originalTitle={props.originalTitle}
+              revisedTitle={props.revisedTitle}
+              originalText={props.originalText}
+              revisedText={props.revisedText}
+            />
 
             {/* Full Screen Button */}
             <div className="relative segmented-control">
