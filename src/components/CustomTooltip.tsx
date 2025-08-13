@@ -80,17 +80,26 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
         
       case 'left':
         // For precise alignment: tooltip's top-right corner touches element's bottom-left corner
-        // Dynamic width based on content length
-        let tooltipWidth = 285; // Default for "Auto" tooltip
+        // Use actual tooltip width if available, otherwise estimate
+        let tooltipWidth = 285; // Default fallback
         
-        // Adjust width based on content for better alignment
-        if (content.includes('Manually select')) {
-          tooltipWidth = 220; // Narrower offset for Manual tooltip
+        if (tooltipRef.current) {
+          const tooltipRect = tooltipRef.current.getBoundingClientRect();
+          if (tooltipRect.width > 0) {
+            tooltipWidth = tooltipRect.width;
+          }
+        } else {
+          // Adjust width estimate based on content length for better initial positioning
+          if (content.includes('Manually select')) {
+            tooltipWidth = 220;
+          } else if (content.includes('Automatically detect')) {
+            tooltipWidth = 200; // More accurate estimate for Auto tooltip
+          }
         }
         
         return {
-          top: rect.bottom, // Align tooltip top with element bottom
-          left: rect.left - tooltipWidth // Position tooltip so its right edge touches element's left edge
+          top: rect.bottom, // Align tooltip top edge with element bottom edge
+          left: rect.left - tooltipWidth // Position tooltip so its right edge aligns with element's left edge
         };
         
       case 'right':
@@ -264,7 +273,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
       aria-hidden="true"
     >
       {/* Modern tooltip without arrow - clean shadow design */}
-      <div className="glass-panel px-3 py-1.5 rounded-lg text-xs font-medium bg-theme-neutral-50/95 text-theme-primary-800 shadow-xl backdrop-blur-md border border-theme-neutral-200/50 max-w-64 min-w-32 shadow-theme-primary-900/20">
+      <div className={`glass-panel py-1.5 rounded-lg text-xs font-medium bg-theme-neutral-50/95 text-theme-primary-800 shadow-xl backdrop-blur-md border border-theme-neutral-200/50 max-w-64 min-w-32 shadow-theme-primary-900/20 ${actualPlacement === 'left' ? 'pl-3 pr-0' : 'px-3'}`}>
         <div className="flex items-start gap-2">
           <span className="leading-tight whitespace-pre-line">{content}</span>
           {status && (

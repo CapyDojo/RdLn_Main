@@ -455,9 +455,10 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             <div className="relative segmented-control">
               <CustomTooltip
                 content={isMultiFormatClipboardSupported()
-                  ? "Copy RdLn with HTML formatting"
+                  ? "Copy RdLn - optimized for Emails"
                   : "Copy RdLn as plain text"
                 }
+                placement="left"
               >
                 <button
                   onClick={copyToClipboard}
@@ -490,7 +491,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             {/* Copy for Word Button - Feature Flagged */}
             {FEATURE_FLAGS.ENABLE_WORD_OPTIMIZED_COPY && (
               <div className="relative segmented-control">
-                <CustomTooltip content="Copy RdLn optimized for Microsoft Word">
+                <CustomTooltip content="Copy RdLn - optimized for MS Word / Google Docs" placement="left">
                   <button
                     onClick={copyToClipboardWord}
                     className={`flex items-center justify-center rounded-lg transition-all duration-300 shrink-0 relative group segment ${
@@ -522,7 +523,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
             {/* Download DOCX Button */}
             <div className="relative segmented-control">
-              <CustomTooltip content="Export RdLn as native Word .DOCX with Track Changes">
+              <CustomTooltip content="Export RdLn as native Word .DOCX with Track Changes" placement="left">
                 <button
                   onClick={exportDocx}
                   disabled={exportingDocx || !filteredChanges || filteredChanges.length === 0}

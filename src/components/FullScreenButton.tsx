@@ -24,7 +24,7 @@ export const FullScreenButton: React.FC<FullScreenButtonProps> = ({
   if (!hasResults) return null;
 
   return (
-    <CustomTooltip content={isFullScreen ? "Return to normal view" : "Open results in full-screen"}>
+    <CustomTooltip content={isFullScreen ? "Return to normal view" : "Open RdLn in full-screen"} placement="left">
       <button
       onClick={onToggle}
       className={`
@@ -36,7 +36,7 @@ export const FullScreenButton: React.FC<FullScreenButtonProps> = ({
         height: '48px',
         aspectRatio: '1/1',
       }}
-      aria-label={isFullScreen ? "Return to normal view" : "Open results in full-screen"}
+      aria-label={isFullScreen ? "Return to normal view" : "Open RdLn in full-screen"}
     >
       <div className="flex flex-col items-center justify-center">
         {isFullScreen ? (
@@ -65,7 +65,7 @@ export const FullScreenButtonCompact: React.FC<FullScreenButtonProps> = ({
   if (!hasResults) return null;
 
   return (
-    <CustomTooltip content={isFullScreen ? "Return to normal view" : "Open results in full-screen"}>
+    <CustomTooltip content={isFullScreen ? "Return to normal view" : "Open RdLn in full-screen"} placement="left">
       <button
       onClick={onToggle}
       className={`
@@ -77,7 +77,7 @@ export const FullScreenButtonCompact: React.FC<FullScreenButtonProps> = ({
         height: '48px',
         aspectRatio: '1/1',
       }}
-      aria-label={isFullScreen ? "Return to normal view" : "Open results in full-screen"}
+      aria-label={isFullScreen ? "Return to normal view" : "Open RdLn in full-screen"}
     >
       <div className="flex flex-col items-center justify-center">
         {isFullScreen ? (

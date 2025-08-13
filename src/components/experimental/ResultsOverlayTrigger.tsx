@@ -62,8 +62,8 @@ export const ResultsOverlayTrigger: React.FC<ResultsOverlayTriggerProps> = ({
         hover:scale-105 
         ${className}
       `}
-      title="Open results in full-screen overlay"
-      aria-label="Open results in full-screen overlay"
+      title="Open RdLn in full-screen overlay"
+      aria-label="Open RdLn in full-screen overlay"
     >
       <Maximize2 className="w-4 h-4" />
       <span>Full Screen</span>
@@ -120,8 +120,8 @@ export const ResultsOverlayTriggerCompact: React.FC<ResultsOverlayTriggerProps> 
         hover:scale-105 
         ${className}
       `}
-      title="Open results in full-screen overlay"
-      aria-label="Open results in full-screen overlay"
+      title="Open RdLn in full-screen overlay"
+      aria-label="Open RdLn in full-screen overlay"
     >
       <Eye className="w-4 h-4" />
     </button>
