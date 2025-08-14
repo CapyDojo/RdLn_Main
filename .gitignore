@@ -42,3 +42,6 @@ src-tauri/Cargo.lock
 # Rust installer
 rustup-init.exe
 nul
+
+# Python virtual environment
+.venv/
