@@ -24,6 +24,21 @@ interface RdLnSession {
   preview: string; // First 50 chars for quick identification
 }
 
+interface ExportMetadata {
+  lastExportTimestamp?: number;
+  exportedSessionIds: string[];
+  totalExports: number;
+}
+
+interface StorageQuotaInfo {
+  usagePercentage: number;
+  totalSessions: number;
+  shouldShowWarning: boolean;
+  warningLevel: '75%' | '85%' | '95%' | null;
+  newSessionsSinceExport: number;
+  lastExportDate?: Date;
+}
+
 interface RdLnMemoryOptions {
   maxSessions?: number;
   storageKey?: string;
@@ -36,6 +51,7 @@ interface RdLnMemoryReturn {
   sessions: RdLnSession[];
   hasSessions: boolean;
   isLoading: boolean;
+  storageQuotaInfo: StorageQuotaInfo;
   
   // Actions
   saveSession: (originalText: string, revisedText: string, hasResult: boolean, sessionName?: string) => void;
@@ -43,8 +59,11 @@ interface RdLnMemoryReturn {
   deleteSession: (sessionId: string) => void;
   clearAllSessions: () => void;
   generateSessionName: (originalText: string, revisedText: string) => string;
-  exportSessions: () => string;
+  exportSessions: (type?: 'full' | 'incremental' | 'dateRange' | 'selected', options?: any) => string;
   importSessions: (jsonData: string) => boolean;
+  autoCleanOldSessions: (olderThanDays: number) => number;
+  exportAndClean: (exportType: 'full' | 'incremental' | 'none', cleanupPercentage: number) => { exportData?: string; cleanedCount: number };
+  dismissQuotaWarning: (remindAt?: '75%' | '85%' | '95%') => void;
 }
 
 /**
@@ -63,7 +82,94 @@ export const useRdLnMemory = (options: RdLnMemoryOptions = {}): RdLnMemoryReturn
 
   const [sessions, setSessions] = useState<RdLnSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [storageQuotaInfo, setStorageQuotaInfo] = useState<StorageQuotaInfo>({
+    usagePercentage: 0,
+    totalSessions: 0,
+    shouldShowWarning: false,
+    warningLevel: null,
+    newSessionsSinceExport: 0,
+  });
   const isInitializedRef = useRef(false);
+  
+  // Storage keys for metadata
+  const exportMetadataKey = `${storageKey}_export_metadata`;
+  const quotaWarningKey = `${storageKey}_quota_warnings`;
+
+  // Calculate storage quota usage
+  const calculateStorageQuota = useCallback((currentSessions: RdLnSession[]): StorageQuotaInfo => {
+    try {
+      // Estimate localStorage usage
+      const sessionsData = JSON.stringify(currentSessions);
+      const sessionsSizeKB = new Blob([sessionsData]).size / 1024;
+      
+      // Estimate total localStorage usage (sessions + other app data)
+      let totalSizeKB = sessionsSizeKB;
+      try {
+        // Add size of other localStorage items
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key !== storageKey) {
+            const value = localStorage.getItem(key) || '';
+            totalSizeKB += new Blob([value]).size / 1024;
+          }
+        }
+      } catch (error) {
+        console.warn('Could not calculate total localStorage usage:', error);
+      }
+      
+      // Estimate localStorage quota (typically 5-10MB, we'll use 5MB as conservative estimate)
+      const quotaKB = 5 * 1024; // 5MB in KB
+      const usagePercentage = Math.min(Math.round((totalSizeKB / quotaKB) * 100), 100);
+      
+      // Get export metadata
+      const exportMetadata: ExportMetadata = JSON.parse(
+        localStorage.getItem(exportMetadataKey) || '{"exportedSessionIds": [], "totalExports": 0}'
+      );
+      
+      // Calculate new sessions since last export
+      const newSessionsSinceExport = currentSessions.filter(
+        session => !exportMetadata.exportedSessionIds.includes(session.id)
+      ).length;
+      
+      // Get dismissed warning levels
+      const dismissedWarnings = JSON.parse(
+        localStorage.getItem(quotaWarningKey) || '{}'
+      );
+      
+      // Determine warning level and if we should show warning
+      let warningLevel: '75%' | '85%' | '95%' | null = null;
+      let shouldShowWarning = false;
+      
+      if (usagePercentage >= 95) {
+        warningLevel = '95%';
+        shouldShowWarning = !dismissedWarnings['95%'] || dismissedWarnings['95%'] < Date.now();
+      } else if (usagePercentage >= 85) {
+        warningLevel = '85%';
+        shouldShowWarning = !dismissedWarnings['85%'] || dismissedWarnings['85%'] < Date.now();
+      } else if (usagePercentage >= 75) {
+        warningLevel = '75%';
+        shouldShowWarning = !dismissedWarnings['75%'] || dismissedWarnings['75%'] < Date.now();
+      }
+      
+      return {
+        usagePercentage,
+        totalSessions: currentSessions.length,
+        shouldShowWarning,
+        warningLevel,
+        newSessionsSinceExport,
+        lastExportDate: exportMetadata.lastExportTimestamp ? new Date(exportMetadata.lastExportTimestamp) : undefined,
+      };
+    } catch (error) {
+      console.warn('Error calculating storage quota:', error);
+      return {
+        usagePercentage: 0,
+        totalSessions: currentSessions.length,
+        shouldShowWarning: false,
+        warningLevel: null,
+        newSessionsSinceExport: 0,
+      };
+    }
+  }, [storageKey, exportMetadataKey, quotaWarningKey]);
 
   // Load sessions from localStorage on initialization
   useEffect(() => {
@@ -92,6 +198,10 @@ export const useRdLnMemory = (options: RdLnMemoryOptions = {}): RdLnMemoryReturn
           const sortedSessions = validSessions.sort((a, b) => b.timestamp - a.timestamp);
           setSessions(sortedSessions);
           
+          // Calculate storage quota info
+          const quotaInfo = calculateStorageQuota(sortedSessions);
+          setStorageQuotaInfo(quotaInfo);
+          
           console.log(`📚 RdLn Memory: Loaded ${sortedSessions.length} sessions from storage`);
         }
       } catch (error) {
@@ -114,6 +224,10 @@ export const useRdLnMemory = (options: RdLnMemoryOptions = {}): RdLnMemoryReturn
       // Only store recent sessions to prevent localStorage overflow
       const sessionsToStore = sessions.slice(0, maxSessions);
       localStorage.setItem(storageKey, JSON.stringify(sessionsToStore));
+      
+      // Update storage quota info
+      const quotaInfo = calculateStorageQuota(sessionsToStore);
+      setStorageQuotaInfo(quotaInfo);
       
       console.log(`💾 RdLn Memory: Saved ${sessionsToStore.length} sessions to storage`);
     } catch (error) {
@@ -232,17 +346,99 @@ export const useRdLnMemory = (options: RdLnMemoryOptions = {}): RdLnMemoryReturn
     console.log('🧹 RdLn Memory: All sessions cleared');
   }, []);
 
-  // Export sessions as JSON
-  const exportSessions = useCallback((): string => {
+  // Enhanced export sessions with different options
+  const exportSessions = useCallback((
+    type: 'full' | 'incremental' | 'dateRange' | 'selected' = 'full',
+    options?: {
+      startDate?: Date;
+      endDate?: Date;
+      selectedIds?: string[];
+    }
+  ): string => {
+    let sessionsToExport: RdLnSession[] = [];
+    let exportType = type;
+    
+    // Get export metadata
+    const exportMetadata: ExportMetadata = JSON.parse(
+      localStorage.getItem(exportMetadataKey) || '{"exportedSessionIds": [], "totalExports": 0}'
+    );
+    
+    switch (type) {
+      case 'full':
+        sessionsToExport = sessions;
+        break;
+        
+      case 'incremental':
+        sessionsToExport = sessions.filter(
+          session => !exportMetadata.exportedSessionIds.includes(session.id)
+        );
+        break;
+        
+      case 'dateRange':
+        if (options?.startDate && options?.endDate) {
+          sessionsToExport = sessions.filter(session => {
+            const sessionDate = new Date(session.timestamp);
+            return sessionDate >= options.startDate! && sessionDate <= options.endDate!;
+          });
+        } else {
+          sessionsToExport = sessions;
+          exportType = 'full';
+        }
+        break;
+        
+      case 'selected':
+        if (options?.selectedIds?.length) {
+          sessionsToExport = sessions.filter(session => 
+            options.selectedIds!.includes(session.id)
+          );
+        } else {
+          sessionsToExport = sessions;
+          exportType = 'full';
+        }
+        break;
+    }
+    
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+    
     const exportData = {
-      exportDate: new Date().toISOString(),
+      exportDate: now.toISOString(),
+      exportType,
       version: '1.0',
-      sessions: sessions
+      totalSessions: sessions.length,
+      exportedSessions: sessionsToExport.length,
+      sessions: sessionsToExport,
+      metadata: {
+        previousExports: exportMetadata.totalExports,
+        lastExportDate: exportMetadata.lastExportTimestamp ? new Date(exportMetadata.lastExportTimestamp).toISOString() : null,
+      }
     };
     
-    console.log(`📤 RdLn Memory: Exported ${sessions.length} sessions`);
+    // Update export metadata
+    const updatedMetadata: ExportMetadata = {
+      lastExportTimestamp: now.getTime(),
+      exportedSessionIds: [
+        ...new Set([
+          ...exportMetadata.exportedSessionIds,
+          ...sessionsToExport.map(s => s.id)
+        ])
+      ],
+      totalExports: exportMetadata.totalExports + 1,
+    };
+    
+    try {
+      localStorage.setItem(exportMetadataKey, JSON.stringify(updatedMetadata));
+    } catch (error) {
+      console.warn('Failed to update export metadata:', error);
+    }
+    
+    // Update storage quota info after export
+    const quotaInfo = calculateStorageQuota(sessions);
+    setStorageQuotaInfo(quotaInfo);
+    
+    console.log(`📤 RdLn Memory: Exported ${sessionsToExport.length} sessions (${exportType})`);
     return JSON.stringify(exportData, null, 2);
-  }, [sessions]);
+  }, [sessions, exportMetadataKey, calculateStorageQuota]);
 
   // Import sessions from JSON
   const importSessions = useCallback((jsonData: string): boolean => {
@@ -288,6 +484,91 @@ export const useRdLnMemory = (options: RdLnMemoryOptions = {}): RdLnMemoryReturn
     }
   }, [maxSessions]);
 
+  // Auto-clean old sessions
+  const autoCleanOldSessions = useCallback((olderThanDays: number): number => {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+    const cutoffTimestamp = cutoffDate.getTime();
+    
+    setSessions(prevSessions => {
+      const sessionsToKeep = prevSessions.filter(session => session.timestamp > cutoffTimestamp);
+      const cleanedCount = prevSessions.length - sessionsToKeep.length;
+      
+      console.log(`🧹 RdLn Memory: Auto-cleaned ${cleanedCount} sessions older than ${olderThanDays} days`);
+      return sessionsToKeep;
+    });
+    
+    // Return count of cleaned sessions (will be calculated in the effect)
+    const sessionsToKeep = sessions.filter(session => session.timestamp > cutoffTimestamp);
+    return sessions.length - sessionsToKeep.length;
+  }, [sessions]);
+
+  // Export and clean combined operation
+  const exportAndClean = useCallback((
+    exportType: 'full' | 'incremental' | 'none',
+    cleanupPercentage: number
+  ): { exportData?: string; cleanedCount: number } => {
+    let exportData: string | undefined;
+    
+    // Export first if requested
+    if (exportType !== 'none') {
+      exportData = exportSessions(exportType);
+    }
+    
+    // Then clean up sessions
+    const sessionsToRemove = Math.floor(sessions.length * (cleanupPercentage / 100));
+    
+    setSessions(prevSessions => {
+      // Sort by timestamp and remove oldest sessions
+      const sortedSessions = [...prevSessions].sort((a, b) => b.timestamp - a.timestamp);
+      const sessionsToKeep = sortedSessions.slice(0, sortedSessions.length - sessionsToRemove);
+      
+      console.log(`🧹 RdLn Memory: Cleaned up ${sessionsToRemove} oldest sessions (${cleanupPercentage}%)`);
+      return sessionsToKeep;
+    });
+    
+    return {
+      exportData,
+      cleanedCount: sessionsToRemove,
+    };
+  }, [sessions, exportSessions]);
+
+  // Dismiss quota warning
+  const dismissQuotaWarning = useCallback((remindAt?: '75%' | '85%' | '95%') => {
+    try {
+      const dismissedWarnings = JSON.parse(
+        localStorage.getItem(quotaWarningKey) || '{}'
+      );
+      
+      if (remindAt) {
+        // Set reminder for next threshold
+        const remindAtPercentages = { '75%': 75, '85%': 85, '95%': 95 };
+        const currentPercentage = storageQuotaInfo.usagePercentage;
+        const targetPercentage = remindAtPercentages[remindAt];
+        
+        if (currentPercentage < targetPercentage) {
+          // Clear current dismissal so warning shows at target percentage
+          delete dismissedWarnings[storageQuotaInfo.warningLevel || ''];
+        }
+      } else {
+        // Dismiss current warning level indefinitely
+        if (storageQuotaInfo.warningLevel) {
+          dismissedWarnings[storageQuotaInfo.warningLevel] = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days
+        }
+      }
+      
+      localStorage.setItem(quotaWarningKey, JSON.stringify(dismissedWarnings));
+      
+      // Update storage quota info
+      const quotaInfo = calculateStorageQuota(sessions);
+      setStorageQuotaInfo(quotaInfo);
+      
+      console.log(`🔕 RdLn Memory: Dismissed quota warning${remindAt ? ` until ${remindAt}` : ''}`);
+    } catch (error) {
+      console.warn('Failed to dismiss quota warning:', error);
+    }
+  }, [quotaWarningKey, storageQuotaInfo, calculateStorageQuota, sessions]);
+
   // Computed state
   const hasSessions = sessions.length > 0;
 
@@ -296,6 +577,7 @@ export const useRdLnMemory = (options: RdLnMemoryOptions = {}): RdLnMemoryReturn
     sessions,
     hasSessions,
     isLoading,
+    storageQuotaInfo,
     
     // Actions
     saveSession,
@@ -304,6 +586,9 @@ export const useRdLnMemory = (options: RdLnMemoryOptions = {}): RdLnMemoryReturn
     clearAllSessions,
     generateSessionName,
     exportSessions,
-    importSessions
+    importSessions,
+    autoCleanOldSessions,
+    exportAndClean,
+    dismissQuotaWarning,
   };
 };

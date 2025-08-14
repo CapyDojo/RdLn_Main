@@ -8,6 +8,12 @@
  * distributed, modified, or used without express written permission.
  * 
  * For licensing information, see LICENSE file.
+ * 
+ * RdLnMemoryContext - Centralized session state management
+ * 
+ * This context provider solves the synchronization issue where multiple components
+ * using separate instances of useRdLnMemory would not see each other's session
+ * changes until page reload. Now all components share a single session state.
  */
 
 import React, { createContext, useContext, ReactNode } from 'react';
@@ -29,6 +35,28 @@ interface RdLnSession {
 }
 
 /**
+ * Storage quota information interface
+ */
+interface StorageQuotaInfo {
+  usagePercentage: number;
+  totalSessions: number;
+  shouldShowWarning: boolean;
+  warningLevel: '75%' | '85%' | '95%' | null;
+  newSessionsSinceExport: number;
+  lastExportDate?: Date;
+}
+
+/**
+ * Export options interface for different export types
+ */
+interface ExportOptions {
+  startDate?: Date;
+  endDate?: Date;
+  sessionIds?: string[];
+  includeMetadata?: boolean;
+}
+
+/**
  * Context type for RdLn Memory management
  * Provides shared state for session management across all components
  */
@@ -37,6 +65,7 @@ interface RdLnMemoryContextType {
   sessions: RdLnSession[];
   hasSessions: boolean;
   isLoading: boolean;
+  storageQuotaInfo: StorageQuotaInfo;
   
   // Actions
   saveSession: (originalText: string, revisedText: string, hasResult: boolean, sessionName?: string) => void;
@@ -44,8 +73,11 @@ interface RdLnMemoryContextType {
   deleteSession: (sessionId: string) => void;
   clearAllSessions: () => void;
   generateSessionName: (originalText: string, revisedText: string) => string;
-  exportSessions: () => string;
+  exportSessions: (type?: 'full' | 'incremental' | 'dateRange' | 'selected', options?: ExportOptions) => string;
   importSessions: (jsonData: string) => boolean;
+  autoCleanOldSessions: (olderThanDays: number) => number;
+  exportAndClean: (exportType: 'full' | 'incremental' | 'none', cleanupPercentage: number) => { exportData?: string; cleanedCount: number };
+  dismissQuotaWarning: (remindAt?: '75%' | '85%' | '95%') => void;
 }
 
 /**

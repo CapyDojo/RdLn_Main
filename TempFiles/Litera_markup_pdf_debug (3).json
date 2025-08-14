@@ -1,0 +1,623 @@
+{
+  "file": "Litera_markup.pdf",
+  "legendPalette": {
+    "Move To": {
+      "color": {
+        "r": 0,
+        "g": 1,
+        "b": 0
+      },
+      "band": "baseline",
+      "samples": 1
+    },
+    "Table Insert": {
+      "color": {
+        "r": 0,
+        "g": 0,
+        "b": 1
+      },
+      "band": "baseline",
+      "samples": 1
+    },
+    "Add": {
+      "color": {
+        "r": 0,
+        "g": 0,
+        "b": 1
+      },
+      "band": "baseline",
+      "samples": 1
+    }
+  },
+  "pages": [
+    {
+      "page": 1,
+      "viewportWidth": 612,
+      "annotationsRaw": [],
+      "annotRectsViewport": [],
+      "excludeXMin": null,
+      "textItemsRawCount": 70,
+      "textItemsKeptCount": 56,
+      "rightMarginStartGuess": 428.4,
+      "rightMarginItemsSample": []
+    },
+    {
+      "page": 2,
+      "viewportWidth": 612,
+      "annotationsRaw": [],
+      "annotRectsViewport": [],
+      "excludeXMin": null,
+      "textItemsRawCount": 47,
+      "textItemsKeptCount": 47,
+      "rightMarginStartGuess": 428.4,
+      "rightMarginItemsSample": []
+    },
+    {
+      "page": 3,
+      "viewportWidth": 612,
+      "annotationsRaw": [],
+      "annotRectsViewport": [],
+      "excludeXMin": null,
+      "textItemsRawCount": 131,
+      "textItemsKeptCount": 90,
+      "rightMarginStartGuess": 428.4,
+      "rightMarginItemsSample": [
+        {
+          "text": " ",
+          "x": 430.2818249999999,
+          "y": 91.35000000000002,
+          "w": 5.333790000000022,
+          "h": 10.55625
+        },
+        {
+          "text": "without",
+          "x": 436.94906249999997,
+          "y": 91.35000000000002,
+          "w": 25.866380000000024,
+          "h": 8.445
+        },
+        {
+          "text": " ",
+          "x": 469.2820375000001,
+          "y": 91.35000000000002,
+          "w": 5.333619999999939,
+          "h": 10.55625
+        },
+        {
+          "text": "limitation,",
+          "x": 475.9490625,
+          "y": 91.35000000000002,
+          "w": 35.114340000000226,
+          "h": 8.445
+        },
+        {
+          "text": "direction,",
+          "x": 429,
+          "y": 115.34999999999991,
+          "w": 29.152100000000182,
+          "h": 7.62
+        },
+        {
+          "text": " ",
+          "x": 465.4401250000002,
+          "y": 115.34999999999991,
+          "w": 5.767899999999827,
+          "h": 9.525
+        },
+        {
+          "text": "collectively,",
+          "x": 472.65,
+          "y": 115.34999999999991,
+          "w": 37.3266400000001,
+          "h": 7.62
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "viewportWidth": 612,
+      "annotationsRaw": [],
+      "annotRectsViewport": [],
+      "excludeXMin": null,
+      "textItemsRawCount": 52,
+      "textItemsKeptCount": 50,
+      "rightMarginStartGuess": 428.4,
+      "rightMarginItemsSample": [
+        {
+          "text": " ",
+          "x": 501.08794374999997,
+          "y": 476.70000000000005,
+          "w": 5.088895000000036,
+          "h": 10.55625
+        },
+        {
+          "text": "No",
+          "x": 507.44906249999997,
+          "y": 476.70000000000005,
+          "w": 10.223249999999997,
+          "h": 8.445
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "viewportWidth": 612,
+      "annotationsRaw": [],
+      "annotRectsViewport": [],
+      "excludeXMin": null,
+      "textItemsRawCount": 117,
+      "textItemsKeptCount": 72,
+      "rightMarginStartGuess": 428.4,
+      "rightMarginItemsSample": [
+        {
+          "text": " ",
+          "x": 469.88473749999997,
+          "y": 538.05,
+          "w": 5.091459999999984,
+          "h": 10.55625
+        },
+        {
+          "text": "receipt",
+          "x": 476.2490624999999,
+          "y": 538.05,
+          "w": 23.107410000000037,
+          "h": 8.445
+        },
+        {
+          "text": " ",
+          "x": 505.13332499999996,
+          "y": 538.05,
+          "w": 5.09259000000003,
+          "h": 10.55625
+        },
+        {
+          "text": "of",
+          "x": 511.49906250000004,
+          "y": 538.05,
+          "w": 7.012935000000003,
+          "h": 8.445
+        },
+        {
+          "text": "",
+          "x": 590.1,
+          "y": 211.20000000000005,
+          "w": 0,
+          "h": 9.525
+        },
+        {
+          "text": "DLA Piper [DLA Piper1]",
+          "x": 590.1,
+          "y": 211.20000000000005,
+          "w": 72.69737999999977,
+          "h": 7.62
+        },
+        {
+          "text": " ",
+          "x": 680.9717249999995,
+          "y": 211.20000000000005,
+          "w": 1.582620000000361,
+          "h": 9.525
+        },
+        {
+          "text": "August 1,",
+          "x": 682.95,
+          "y": 211.20000000000005,
+          "w": 29.144579999999912,
+          "h": 7.62
+        },
+        {
+          "text": "2025 05:22 PM",
+          "x": 590.1,
+          "y": 222.75,
+          "w": 46.61975999999997,
+          "h": 7.62
+        },
+        {
+          "text": "",
+          "x": 588.6,
+          "y": 233.70000000000005,
+          "w": 0,
+          "h": 8.60625
+        },
+        {
+          "text": "Note to MRPL: we have seen this carve-out",
+          "x": 588.6,
+          "y": 233.70000000000005,
+          "w": 120.69962499999926,
+          "h": 6.885
+        },
+        {
+          "text": "language being a standard inclusion from",
+          "x": 588.6,
+          "y": 243.60000000000002,
+          "w": 113.89162500000063,
+          "h": 6.885
+        },
+        {
+          "text": "Blackstone in other transaction. This,",
+          "x": 588.6,
+          "y": 253.5,
+          "w": 103.17855500000044,
+          "h": 6.885
+        },
+        {
+          "text": "together with their above language of us",
+          "x": 588.6,
+          "y": 263.25,
+          "w": 110.98157999999917,
+          "h": 6.885
+        },
+        {
+          "text": "being unable to have recourse against their",
+          "x": 588.6,
+          "y": 273.15,
+          "w": 118.07569499999876,
+          "h": 6.885
+        },
+        {
+          "text": "non-director/officer/employee, effectively",
+          "x": 588.6,
+          "y": 283.05000000000007,
+          "w": 115.36878000000138,
+          "h": 6.885
+        },
+        {
+          "text": "nullifies the Disclosing Party’s ability to",
+          "x": 588.6,
+          "y": 292.95000000000005,
+          "w": 111.5025750000001,
+          "h": 6.885
+        },
+        {
+          "text": "claim for loss from either Blackstone or",
+          "x": 588.6,
+          "y": 302.8499999999999,
+          "w": 109.60466999999935,
+          "h": 6.885
+        },
+        {
+          "text": "their relevant Representative. We have",
+          "x": 588.6,
+          "y": 312.6,
+          "w": 106.72785499999935,
+          "h": 6.885
+        },
+        {
+          "text": "made drafting changes above to make sure",
+          "x": 588.6,
+          "y": 322.5,
+          "w": 117.15166499999921,
+          "h": 6.885
+        },
+        {
+          "text": "we can at least make claims against the",
+          "x": 588.6,
+          "y": 332.4,
+          "w": 107.57653500000103,
+          "h": 6.885
+        },
+        {
+          "text": "Blackstone company entity if their",
+          "x": 588.6,
+          "y": 342.30000000000007,
+          "w": 94.96931999999961,
+          "h": 6.885
+        },
+        {
+          "text": "representatives (within the categories",
+          "x": 588.6,
+          "y": 352.20000000000005,
+          "w": 102.63900500000065,
+          "h": 6.885
+        },
+        {
+          "text": "mentioned here) are in breach, or in other",
+          "x": 588.6,
+          "y": 361.95000000000005,
+          "w": 114.70584000000022,
+          "h": 6.885
+        },
+        {
+          "text": "cases like agents / financiers who provided",
+          "x": 588.6,
+          "y": 371.85,
+          "w": 118.12525500000068,
+          "h": 6.885
+        },
+        {
+          "text": "the same confidentiality undertaking to the",
+          "x": 588.6,
+          "y": 381.75,
+          "w": 118.07224499999889,
+          "h": 6.885
+        },
+        {
+          "text": "disclosing party, we have direct recourse",
+          "x": 588.6,
+          "y": 391.65,
+          "w": 112.34516500000075,
+          "h": 6.885
+        },
+        {
+          "text": "against that representative.",
+          "x": 588.6,
+          "y": 401.54999999999995,
+          "w": 73.61441999999998,
+          "h": 6.885
+        },
+        {
+          "text": "",
+          "x": 590.1,
+          "y": 422.1,
+          "w": 0,
+          "h": 9.525
+        },
+        {
+          "text": "DLA Piper [DLA Piper2]",
+          "x": 590.1,
+          "y": 422.1,
+          "w": 72.69737999999977,
+          "h": 7.62
+        },
+        {
+          "text": " ",
+          "x": 680.9717249999995,
+          "y": 422.1,
+          "w": 1.582620000000361,
+          "h": 9.525
+        },
+        {
+          "text": "August 1,",
+          "x": 682.95,
+          "y": 422.1,
+          "w": 29.144579999999912,
+          "h": 7.62
+        },
+        {
+          "text": "2025 05:23 PM",
+          "x": 590.1,
+          "y": 433.65,
+          "w": 46.61975999999997,
+          "h": 7.62
+        },
+        {
+          "text": "",
+          "x": 588.6,
+          "y": 444.6,
+          "w": 0,
+          "h": 8.60625
+        },
+        {
+          "text": "Note to MRPL: this is fine with us.",
+          "x": 588.6,
+          "y": 444.6,
+          "w": 97.12244499999991,
+          "h": 6.885
+        },
+        {
+          "text": "",
+          "x": 590.1,
+          "y": 465.29999999999995,
+          "w": 0,
+          "h": 9.525
+        },
+        {
+          "text": "DLA Piper [DLA Piper3]",
+          "x": 590.1,
+          "y": 465.29999999999995,
+          "w": 72.69737999999977,
+          "h": 7.62
+        },
+        {
+          "text": " ",
+          "x": 680.9717249999995,
+          "y": 465.29999999999995,
+          "w": 1.582620000000361,
+          "h": 9.525
+        },
+        {
+          "text": "August 1,",
+          "x": 682.95,
+          "y": 465.29999999999995,
+          "w": 29.144579999999912,
+          "h": 7.62
+        },
+        {
+          "text": "2025 05:32 PM",
+          "x": 590.1,
+          "y": 476.85,
+          "w": 46.61975999999997,
+          "h": 7.62
+        },
+        {
+          "text": "",
+          "x": 588.6,
+          "y": 487.8,
+          "w": 0,
+          "h": 8.60625
+        },
+        {
+          "text": "Note to MRPL: this is a",
+          "x": 588.6,
+          "y": 487.8,
+          "w": 65.87116499999959,
+          "h": 6.885
+        },
+        {
+          "text": "quasi-confidentiality clause reversely",
+          "x": 588.6,
+          "y": 497.70000000000005,
+          "w": 102.64678500000086,
+          "h": 6.885
+        },
+        {
+          "text": "imposed on MRPL.",
+          "x": 588.6,
+          "y": 507.45,
+          "w": 54.33987000000014,
+          "h": 6.885
+        },
+        {
+          "text": "We do not think MRPL will act in breach.",
+          "x": 588.6,
+          "y": 527.25,
+          "w": 116.4321000000002,
+          "h": 6.885
+        },
+        {
+          "text": "But any Affiliates and consultants of MRPL",
+          "x": 588.6,
+          "y": 547.05,
+          "w": 121.58941000000065,
+          "h": 6.885
+        },
+        {
+          "text": "should be reminded that Blackstone cannot",
+          "x": 588.6,
+          "y": 556.8,
+          "w": 119.15247999999973,
+          "h": 6.885
+        },
+        {
+          "text": "be identified publicly as participating in the",
+          "x": 588.6,
+          "y": 566.7,
+          "w": 120.36505499999899,
+          "h": 6.885
+        },
+        {
+          "text": "transaction.",
+          "x": 588.6,
+          "y": 576.5999999999999,
+          "w": 31.965629999999845,
+          "h": 6.885
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "viewportWidth": 612,
+      "annotationsRaw": [],
+      "annotRectsViewport": [],
+      "excludeXMin": null,
+      "textItemsRawCount": 27,
+      "textItemsKeptCount": 14,
+      "rightMarginStartGuess": 428.4,
+      "rightMarginItemsSample": [
+        {
+          "text": "",
+          "x": 590.1,
+          "y": 123.89999999999998,
+          "w": 0,
+          "h": 9.525
+        },
+        {
+          "text": "DLA Piper [DLA Piper4]",
+          "x": 590.1,
+          "y": 123.89999999999998,
+          "w": 72.69737999999977,
+          "h": 7.62
+        },
+        {
+          "text": " ",
+          "x": 680.9717249999995,
+          "y": 123.89999999999998,
+          "w": 1.582620000000361,
+          "h": 9.525
+        },
+        {
+          "text": "August 1,",
+          "x": 682.95,
+          "y": 123.89999999999998,
+          "w": 29.144579999999912,
+          "h": 7.62
+        },
+        {
+          "text": "2025 05:34 PM",
+          "x": 590.1,
+          "y": 135.45000000000005,
+          "w": 46.61975999999997,
+          "h": 7.62
+        },
+        {
+          "text": "",
+          "x": 588.6,
+          "y": 146.39999999999998,
+          "w": 0,
+          "h": 8.60625
+        },
+        {
+          "text": "Note to MRPL: similarly we have seen",
+          "x": 588.6,
+          "y": 146.39999999999998,
+          "w": 107.29984999999986,
+          "h": 6.885
+        },
+        {
+          "text": "these carve-outs and qualification language",
+          "x": 588.6,
+          "y": 156.29999999999995,
+          "w": 119.39416499999892,
+          "h": 6.885
+        },
+        {
+          "text": "from Blackstone. We are fine with it as they",
+          "x": 588.6,
+          "y": 166.05000000000007,
+          "w": 121.50153500000101,
+          "h": 6.885
+        },
+        {
+          "text": "are not diminishing your rights under this",
+          "x": 588.6,
+          "y": 175.95000000000005,
+          "w": 114.69473500000048,
+          "h": 6.885
+        },
+        {
+          "text": "NDA. The intention is to allow BX to",
+          "x": 588.6,
+          "y": 185.8499999999999,
+          "w": 104.3892349999999,
+          "h": 6.885
+        },
+        {
+          "text": "continue with their other businesses without",
+          "x": 588.6,
+          "y": 195.75,
+          "w": 121.91062999999947,
+          "h": 6.885
+        },
+        {
+          "text": "the limitation of this NDA.",
+          "x": 588.6,
+          "y": 205.64999999999998,
+          "w": 74.42530999999948,
+          "h": 6.885
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "viewportWidth": 612,
+      "annotationsRaw": [],
+      "annotRectsViewport": [],
+      "excludeXMin": null,
+      "textItemsRawCount": 17,
+      "textItemsKeptCount": 17,
+      "rightMarginStartGuess": 428.4,
+      "rightMarginItemsSample": []
+    },
+    {
+      "page": 8,
+      "viewportWidth": 612,
+      "annotationsRaw": [],
+      "annotRectsViewport": [],
+      "excludeXMin": null,
+      "textItemsRawCount": 52,
+      "textItemsKeptCount": 52,
+      "rightMarginStartGuess": 428.4,
+      "rightMarginItemsSample": []
+    }
+  ]
+}

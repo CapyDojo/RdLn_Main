@@ -70,17 +70,55 @@ This implementation plan converts the RdLn Memory state synchronization fix into
   - Confirm no breaking changes to component APIs
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-- [ ] 10. Implement Storage Quota Warning Modal
+- [x] 10. Implement Progressive Storage Quota Warning System
+
+
+
+
+
   - Create `StorageQuotaModal` component with glassmorphism design matching RdLn theme
-  - Add storage quota warning state to `RdLnMemoryContext`
-  - Hook into existing quota exceeded error handling in `useRdLnMemory`
-  - Show modal before automatic session reduction with options to export or continue
-  - Implement automatic JSON export download using existing `exportSessions()` function
-  - Add modal state management and user interaction handling
-  - Test modal appears on quota exceeded and handles user choices correctly
+  - Add storage quota monitoring to `RdLnMemoryContext` with progressive warning levels and appropriate theming:
+    - **75% capacity** (Gentle Blue): "Storage Getting Full"
+    - **85% capacity** (Orange): "Storage Nearly Full" 
+    - **95% capacity** (Red): "Storage Critical"
+  - Implement storage usage calculation and monitoring in `useRdLnMemory`
+  - Show modal with contextual user options based on urgency level:
+    
+    **75% Capacity Options:**
+    - **"Export Sessions"** - Download backup JSON file (safe, non-disruptive)
+    - **"Manage Sessions"** - Open RdLn Memory panel to review and delete specific sessions
+    - **"Remind Me Later"** - Dismiss until 85% capacity reached
+    
+    **85% Capacity Options:**
+    - **"Export & Clean Up"** - Download backup, then remove oldest 25% of sessions (recommended)
+    - **"Manage Sessions"** - Open memory panel for manual cleanup (with urgency indicator)
+    - **"Auto-Clean Old Sessions"** - Remove sessions older than 30 days automatically
+    - **"Final Warning at 95%"** - Dismiss until critical threshold
+    
+    **95% Capacity Options:**
+    - **"Export & Clean Up Now"** - Download backup, remove oldest 50% (recommended, highlighted)
+    - **"Open Memory Manager"** - Manual cleanup with critical urgency warning
+    - **"Clean Without Export"** - Remove oldest 50% without backup (clearly marked as risky)
+    
+  - Add modal state management with dismissal tracking and threshold-based re-appearance
+  - Enhance export system with smart export options:
+    - **"Full Backup"** - All sessions (current behavior, timestamped)
+    - **"Incremental Export"** - Only new/changed sessions since last export
+    - **"Date Range Export"** - Sessions from specific time period
+    - **"Selected Sessions"** - User-chosen specific sessions
+  - Add export tracking to localStorage (last export timestamp, exported session IDs)
+  - Implement smart file naming: `rdln-full-2025-01-12.json`, `rdln-incremental-2025-01-12.json`
+  - Show export preview (e.g., "5 new sessions since last export")
+  - Implement automatic JSON export download using enhanced `exportSessions()` function
+  - Test modal appears at correct thresholds with appropriate urgency and handles all user choices correctly
   - _Requirements: 3.4, User Experience Enhancement_
 
-- [ ] 11. Clean Up and Documentation
+- [x] 11. Clean Up and Documentation
+
+
+
+
+
   - Add JSDoc comments to new context provider
   - Update any relevant code comments that reference the old pattern
   - Verify TypeScript compilation with no errors

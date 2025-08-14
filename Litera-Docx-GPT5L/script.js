@@ -387,6 +387,10 @@ window.onload = () => {
                 let collectedComments = [];
                 const debugPages = [];
 
+                // Accumulate legend palette across first 2 pages
+                const legendPalette = {};
+                const legendLabels = ['Add','Delete','Move From','Move To','Table Insert','Table Delete'];
+
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
@@ -437,6 +441,53 @@ window.onload = () => {
                         const style = checkStyle({ x, y, width, height }, lines);
                         return { text: item.str, style, x, y, width, height, pageIndex: i };
                     });
+
+                    // Legend probe: only on first two pages, attempt to infer palette by sampling strokes overlapping legend labels
+                    if (i <= 2) {
+                        const addSample = (label, sample) => {
+                            if (!legendPalette[label]) legendPalette[label] = { samples: [], bandCounts: { baseline: 0, midline: 0 } };
+                            legendPalette[label].samples.push(sample);
+                            legendPalette[label].bandCounts[sample.band]++;
+                        };
+                        const baselineTolFor = (h) => Math.max(0.8, h * 0.18);
+                        const midlineTolFor = (h) => Math.max(0.8, h * 0.28);
+                        for (const item of textContent.items) {
+                            const raw = (item.str || '').trim();
+                            if (!raw) continue;
+                            const label = legendLabels.find(lbl => raw.toLowerCase().includes(lbl.toLowerCase()));
+                            if (!label) continue;
+                            const m = pdfjsLib.Util.transform(viewport.transform, item.transform);
+                            const tx = m[4];
+                            const ty = m[5];
+                            const fs = Math.hypot(m[0], m[1]);
+                            const th = item.height || fs || 10;
+                            const tw = item.width || (item.str ? item.str.length * (fs * 0.5) : 0);
+                            const baselineY = ty + th * 0.06;
+                            const midlineY = ty + th * 0.52;
+                            const bTol = baselineTolFor(th);
+                            const mTol = midlineTolFor(th);
+                            // Search strokes overlapping this text item
+                            let best = null;
+                            for (const ln of lines) {
+                                const overlap = Math.max(0, Math.min(tx + tw, ln.x2) - Math.max(tx, ln.x1));
+                                const frac = overlap / Math.max(1, tw);
+                                if (frac < 0.3) continue;
+                                let band = null;
+                                let ydist = Infinity;
+                                if (Math.abs(ln.y1 - baselineY) <= bTol) { band = 'baseline'; ydist = Math.abs(ln.y1 - baselineY); }
+                                if (Math.abs(ln.y1 - midlineY) <= mTol) {
+                                    const d = Math.abs(ln.y1 - midlineY);
+                                    if (d < ydist) { band = 'midline'; ydist = d; }
+                                }
+                                if (!band) continue;
+                                const score = frac - ydist / ((band === 'baseline' ? bTol : mTol) + 1e-6);
+                                if (!best || score > best.score) {
+                                    best = { score, band, color: { r: ln.r, g: ln.g, b: ln.b }, x1: ln.x1, x2: ln.x2 };
+                                }
+                            }
+                            if (best) addSample(label, best);
+                        }
+                    }
 
                     // Heuristic exclusion: any text that intersects an annotation rect, or lies to the right of the leftmost annotation rect (margin)
                     const intersects = (bx, by, bw, bh, r) => {
@@ -555,6 +606,17 @@ window.onload = () => {
                     } catch (_) { /* ignore */ }
                 }
 
+                // Reduce legend palette samples into averages and dominant band
+                const reducedLegend = {};
+                for (const [label, entry] of Object.entries(legendPalette)) {
+                    const n = entry.samples.length;
+                    if (!n) continue;
+                    const avg = entry.samples.reduce((a, s) => ({ r: a.r + s.color.r, g: a.g + s.color.g, b: a.b + s.color.b }), { r: 0, g: 0, b: 0 });
+                    avg.r /= n; avg.g /= n; avg.b /= n;
+                    const band = (entry.bandCounts.baseline >= entry.bandCounts.midline) ? 'baseline' : 'midline';
+                    reducedLegend[label] = { color: avg, band, samples: n };
+                }
+
                 const htmlDiff = generateHtmlDiff(styledText);
                 const docxBytes = await exportHtmlDiffToDocx(htmlDiff, { author: 'Converter', comments: collectedComments });
 
@@ -571,7 +633,7 @@ window.onload = () => {
                 try {
                     const fname = (file.name || '').toLowerCase();
                     if (fname.includes('litera_markup') || fname.endsWith('.pdf')) {
-                        const debugBlob = new Blob([JSON.stringify({ file: file.name, pages: debugPages }, null, 2)], { type: 'application/json' });
+                        const debugBlob = new Blob([JSON.stringify({ file: file.name, legendPalette: reducedLegend, pages: debugPages }, null, 2)], { type: 'application/json' });
                         const dbgLink = document.createElement('a');
                         dbgLink.href = window.URL.createObjectURL(debugBlob);
                         const base = (file.name || 'document').replace(/\.pdf$/i, '');

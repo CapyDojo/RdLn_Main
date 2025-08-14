@@ -32,6 +32,7 @@ import { OCRFeatureCard } from './components/OCRFeatureCard';
 import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
 import OnboardingTour, { TourRestartButton } from './components/experimental/onboarding/OnboardingTour';
+import { StorageQuotaManager } from './components/StorageQuotaManager';
 import './styles/resize-overrides.css';
 
 interface AppContentProps {
@@ -342,6 +343,9 @@ function AppContent({
         show={showTourRestart && features.enableOnboardingTour}
         onRestart={handleTourRestart}
       />
+
+      {/* Storage Quota Manager - Progressive storage warning system */}
+      <StorageQuotaManager />
     </div>
   );
 }
