@@ -10,7 +10,7 @@
  * For licensing information, see LICENSE file.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Save,
   FolderOpen,
@@ -23,7 +23,7 @@ import {
   X
 } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
-import { useRdLnMemory } from '../hooks/useRdLnMemory';
+import { useRdLnMemoryContext } from '../contexts/RdLnMemoryContext';
 
 interface RdLnMemorySidePanelProps extends BaseComponentProps {
   /** Whether side panel is open */
@@ -67,7 +67,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { sessions, hasSessions, saveSession, deleteSession, clearAllSessions, exportSessions, importSessions } = useRdLnMemory();
+  const { sessions, hasSessions, saveSession, deleteSession, clearAllSessions, exportSessions, importSessions } = useRdLnMemoryContext();
   
   // Track hover state to coordinate backdrop visibility
   const [isHovered, setIsHovered] = React.useState(false);

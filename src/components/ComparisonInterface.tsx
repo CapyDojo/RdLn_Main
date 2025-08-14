@@ -15,7 +15,7 @@ import { DEV_CONFIG } from '../config/appConfig';
 import { AlertCircle } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
 import { useUndoHistory } from '../hooks/useUndoHistory';
-import { useRdLnMemory } from '../hooks/useRdLnMemory';
+import { useRdLnMemoryContext } from '../contexts/RdLnMemoryContext';
 import { RedlineOutput } from './RedlineOutput';
 import { ProcessingDisplay } from './ProcessingDisplay';
 import { OutputLayout } from './OutputLayout';
@@ -121,7 +121,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     clearAllSessions,
     exportSessions,
     importSessions
-  } = useRdLnMemory();
+  } = useRdLnMemoryContext();
   
   
 

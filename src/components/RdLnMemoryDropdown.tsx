@@ -23,7 +23,7 @@ import {
   Archive
 } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
-import { useRdLnMemory } from '../hooks/useRdLnMemory';
+import { useRdLnMemoryContext } from '../contexts/RdLnMemoryContext';
 
 interface RdLnMemoryDropdownProps extends BaseComponentProps {
   /** Whether dropdown is open */
@@ -77,8 +77,8 @@ export const RdLnMemoryDropdown: React.FC<RdLnMemoryDropdownProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Get sessions from RdLn Memory hook
-  const { sessions } = useRdLnMemory();
+  // Get sessions from RdLn Memory context
+  const { sessions } = useRdLnMemoryContext();
 
   // Close dropdown when clicking outside
   useEffect(() => {
