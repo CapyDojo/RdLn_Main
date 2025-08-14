@@ -1,0 +1,9 @@
+leveraging the redline to docx conversion component in the codebase
+  (to the extent helpful), can you build a separate independent
+  standalone component and minimal web app UI.  the component's core
+  function is to turn the PDF litera redlines (example at
+  "C:\temp\RdLn_MVP_Stream\TempFiles\Litera_markup.pdf") into a native
+  word .docx track changes?  do everything in a new directory called
+  "Litera-Docx-Claude".  feel free to read any existing codebase for
+  inspiration, but do not make changes to any existing code files
+  outside of this new directory

@@ -1,0 +1,24 @@
+{
+  "name": "litera-docx-claude",
+  "version": "1.0.0",
+  "description": "Standalone component to convert PDF Litera redlines to Word DOCX track changes",
+  "main": "src/LiteraDocxConverter.js",
+  "scripts": {
+    "dev": "http-server . -p 8080 -c-1",
+    "build": "echo 'No build step needed - pure client-side HTML/JS'",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "litera",
+    "pdf",
+    "docx",
+    "track-changes",
+    "document-conversion",
+    "redline"
+  ],
+  "author": "Claude Code",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

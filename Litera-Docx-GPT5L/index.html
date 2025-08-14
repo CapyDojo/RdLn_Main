@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Litera PDF → DOCX (Track Changes) Converter</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 0; }
+    header { padding: 16px 20px; border-bottom: 1px solid #ddd; }
+    h1 { margin: 0; font-size: 18px; }
+    main { max-width: 900px; margin: 0 auto; padding: 20px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .row > * { flex: 0 0 auto; }
+    input[type="file"] { padding: 8px; }
+    button { padding: 10px 14px; border-radius: 8px; border: 1px solid #666; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #status { margin-top: 12px; font-size: 14px; white-space: pre-wrap; }
+    footer { color: #666; font-size: 12px; margin-top: 24px; }
+    .hint { color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Litera PDF → DOCX (Track Changes) Converter</h1>
+  </header>
+  <main>
+    <div class="card">
+      <div class="row">
+        <input id="pdf-upload" type="file" accept="application/pdf" />
+        <button id="convert-btn" disabled>Convert to DOCX</button>
+      </div>
+      <div class="hint">Upload a Litera redline PDF (with underlines for insertions and strikethroughs for deletions). The app will generate a Word .docx with native Track Changes.</div>
+      <div id="status">Select a PDF to begin.</div>
+    </div>
+
+    <footer>
+      Limitations: heuristic detection of underline/strikethrough may miss edge cases. Best with clean Litera exports.
+    </footer>
+  </main>
+
+  <!-- Dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xmlbuilder2@3.0.2/umd/xmlbuilder2.min.js"></script>
+
+  <!-- App script -->
+  <script src="./script.js"></script>
+</body>
+</html>

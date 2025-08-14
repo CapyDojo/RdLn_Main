@@ -40,7 +40,8 @@
       "mcp__playwright__browser_press_key",
       "mcp__playwright__browser_evaluate",
       "mcp__playwright__browser_console_messages",
-      "mcp__playwright__browser_snapshot"
+      "mcp__playwright__browser_snapshot",
+      "Bash(start index.html)"
     ],
     "deny": []
   }

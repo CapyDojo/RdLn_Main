@@ -55,7 +55,7 @@ interface RdLnMemoryReturn {
  */
 export const useRdLnMemory = (options: RdLnMemoryOptions = {}): RdLnMemoryReturn => {
   const {
-    maxSessions = 50,
+    maxSessions = 99,
     storageKey = 'rdln_memory_sessions',
     autoSave = true,
     previewLength = 50

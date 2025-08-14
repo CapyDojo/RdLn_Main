@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Litera to Docx Converter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Litera to Docx Converter</h1>
+        <p>Upload a Litera Compare PDF file to convert it into a Word document with track changes.</p>
+        <div class="upload-area">
+            <input type="file" id="pdf-upload" accept=".pdf">
+            <label for="pdf-upload">Select PDF File</label>
+        </div>
+        <button id="convert-btn" disabled>Convert</button>
+        <div id="status"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xmlbuilder2@3.1.1/lib/xmlbuilder2.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

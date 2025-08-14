@@ -18,6 +18,11 @@
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
   pointer-events: none;
+  /* Ensure mask support with fallback */
+  -webkit-mask-composite: source-out;
+  mask-composite: subtract;
+  /* Smooth transitions for cutout changes */
+  transition: opacity 0.3s ease-in-out, clip-path 0.2s ease-out;
 }
 
 .onboarding-overlay.active {
@@ -213,24 +218,25 @@
   color: var(--theme-textPrimary);
 }
 
-/* Spotlight effect for highlighted elements */
+/* Spotlight effect for highlighted elements - subtle since cutout provides main focus */
 .onboarding-spotlight {
   position: relative;
-  z-index: 9997;
+  z-index: 9999;
   border-radius: 8px;
-  box-shadow: 0 0 0 4px var(--theme-accent), 
-              0 0 0 8px rgba(255, 255, 255, 0.1);
-  animation: spotlightPulse 2s ease-in-out infinite;
+  /* Subtle glow instead of heavy border since cutout provides the main highlight */
+  box-shadow: 0 0 0 2px var(--theme-accent), 
+              0 0 16px rgba(var(--theme-accent-rgb, 59, 130, 246), 0.3);
+  animation: spotlightGlow 3s ease-in-out infinite;
 }
 
-@keyframes spotlightPulse {
+@keyframes spotlightGlow {
   0%, 100% {
-    box-shadow: 0 0 0 4px var(--theme-accent), 
-                0 0 0 8px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 2px var(--theme-accent), 
+                0 0 16px rgba(var(--theme-accent-rgb, 59, 130, 246), 0.3);
   }
   50% {
-    box-shadow: 0 0 0 6px var(--theme-accent), 
-                0 0 0 12px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 2px var(--theme-accent), 
+                0 0 24px rgba(var(--theme-accent-rgb, 59, 130, 246), 0.5);
   }
 }
 

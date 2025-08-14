@@ -36,7 +36,7 @@ const RDLN_WELCOME_TOUR: TourConfig = {
       id: 'input-method',
       title: 'Add Your Documents',
       content: 'Type or paste text into these panels. You can also paste screenshots for OCR text extraction in 10+ languages.',
-      targetElement: '[data-testid="input-panel-original"], .comparison-input-section',
+      targetElement: 'textarea[placeholder*="original text here"]',
       placement: 'bottom',
       duration: 0,
       allowSkip: true,
@@ -46,7 +46,7 @@ const RDLN_WELCOME_TOUR: TourConfig = {
       id: 'quick-demo',
       title: 'Try It Instantly',
       content: 'Click "Quick Demo" to see RdLn in action with sample legal text. Perfect for getting started quickly.',
-      targetElement: '[data-testid="quick-demo-button"], button:has-text("Quick Demo")',
+      targetElement: '[data-testid="quick-demo-button"]',
       placement: 'bottom',
       duration: 0,
       allowSkip: true,
@@ -56,7 +56,7 @@ const RDLN_WELCOME_TOUR: TourConfig = {
       id: 'results-preview',
       title: 'Professional Results',
       content: 'Get beautifully formatted redlined results with additions, deletions, and professional export options (Word, HTML, DOCX).',
-      targetElement: '[data-testid="output-panel"], .output-section',
+      targetElement: 'main',
       placement: 'top',
       duration: 0,
       allowSkip: true,
@@ -66,7 +66,7 @@ const RDLN_WELCOME_TOUR: TourConfig = {
       id: 'memory-system',
       title: 'RdLn Memory',
       content: 'Save and organize your comparison sessions. Never lose important document comparisons again.',
-      targetElement: '[data-testid="memory-button"], button:has([src*="filing-cabinet"])',
+      targetElement: 'filing-cabinet-button',
       placement: 'left',
       duration: 0,
       allowSkip: true,
@@ -76,7 +76,7 @@ const RDLN_WELCOME_TOUR: TourConfig = {
       id: 'customization',
       title: 'Personalize Your Experience',
       content: 'Choose from 10+ professional themes and adjust text size for optimal readability.',
-      targetElement: '[data-testid="theme-selector"], .text-size-controls',
+      targetElement: 'theme-selector-button',
       placement: 'bottom',
       duration: 0,
       allowSkip: true,
@@ -97,6 +97,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
   const overlayRef = useRef<HTMLDivElement>(null);
   const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
+  const [cutoutRect, setCutoutRect] = useState<DOMRect | null>(null);
   
   const {
     tourState,
@@ -125,15 +126,37 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       () => document.querySelector(selector) as HTMLElement,
       () => document.querySelector(`[data-testid="${selector.replace('[data-testid="', '').replace('"]', '')}"]`) as HTMLElement,
       () => {
-        // Try finding by text content for buttons
-        if (selector.includes('has-text')) {
-          const text = selector.match(/has-text\("([^"]+)"\)/)?.[1];
-          if (text) {
-            const buttons = document.querySelectorAll('button');
-            return Array.from(buttons).find(btn => 
-              btn.textContent?.toLowerCase().includes(text.toLowerCase())
-            ) as HTMLElement || null;
-          }
+        // Handle special text-based selectors
+        if (selector.includes('text:')) {
+          const text = selector.replace('text:', '');
+          const buttons = document.querySelectorAll('button');
+          return Array.from(buttons).find(btn => 
+            btn.textContent?.toLowerCase().includes(text.toLowerCase())
+          ) as HTMLElement || null;
+        }
+        return null;
+      },
+      () => {
+        // Handle memory button with filing cabinet icon
+        if (selector.includes('filing-cabinet-button')) {
+          const buttons = document.querySelectorAll('button');
+          return Array.from(buttons).find(btn => {
+            const hasText = btn.textContent?.includes('filing cabinet') || btn.textContent?.includes('Memory');
+            const hasIcon = btn.querySelector('img') || btn.textContent?.includes('🗂️');
+            return hasText || hasIcon;
+          }) as HTMLElement || null;
+        }
+        return null;
+      },
+      () => {
+        // Handle theme selector button
+        if (selector.includes('theme-selector-button')) {
+          const buttons = document.querySelectorAll('button');
+          return Array.from(buttons).find(btn => 
+            btn.getAttribute('aria-label')?.includes('Theme selector') ||
+            btn.textContent?.includes('theme') ||
+            btn.querySelector('img[alt*="theme"]')
+          ) as HTMLElement || null;
         }
         return null;
       },
@@ -168,6 +191,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     if (!tourState.isActive || !currentTourStep) {
       setTargetElement(null);
       setHighlightedElement(null);
+      setCutoutRect(null);
       return;
     }
 
@@ -178,13 +202,26 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
         setTargetElement(element);
         setHighlightedElement(element);
         
-        // Scroll element into view if found
+        // Calculate cutout rectangle with padding
         if (element) {
+          const rect = element.getBoundingClientRect();
+          const padding = 8; // 8px padding around the element
+          const cutout = new DOMRect(
+            rect.x - padding,
+            rect.y - padding,
+            rect.width + (padding * 2),
+            rect.height + (padding * 2)
+          );
+          setCutoutRect(cutout);
+          
+          // Scroll element into view if found
           element.scrollIntoView({
             behavior: 'smooth',
             block: 'center',
             inline: 'center'
           });
+        } else {
+          setCutoutRect(null);
         }
       }, 100);
 
@@ -192,6 +229,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     } else {
       setTargetElement(null);
       setHighlightedElement(null);
+      setCutoutRect(null);
     }
   }, [tourState.isActive, currentTourStep, findTargetElement]);
 
@@ -215,6 +253,36 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       }
     };
   }, [highlightedElement]);
+
+  // Update cutout position on scroll/resize
+  useEffect(() => {
+    if (!tourState.isActive || !targetElement) {
+      return;
+    }
+
+    const updateCutoutPosition = () => {
+      if (targetElement) {
+        const rect = targetElement.getBoundingClientRect();
+        const padding = 8;
+        const cutout = new DOMRect(
+          rect.x - padding,
+          rect.y - padding,
+          rect.width + (padding * 2),
+          rect.height + (padding * 2)
+        );
+        setCutoutRect(cutout);
+      }
+    };
+
+    // Update on scroll and resize
+    window.addEventListener('scroll', updateCutoutPosition, { passive: true });
+    window.addEventListener('resize', updateCutoutPosition);
+    
+    return () => {
+      window.removeEventListener('scroll', updateCutoutPosition);
+      window.removeEventListener('resize', updateCutoutPosition);
+    };
+  }, [tourState.isActive, targetElement]);
 
   // Handle manual tour start via shouldStart prop
   useEffect(() => {
@@ -244,19 +312,69 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     return null;
   }
 
+  // Generate clip-path for cutout as fallback
+  const generateClipPath = () => {
+    if (!cutoutRect) return undefined;
+    
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    
+    const leftPercent = (cutoutRect.x / vw) * 100;
+    const topPercent = (cutoutRect.y / vh) * 100;
+    const rightPercent = ((cutoutRect.x + cutoutRect.width) / vw) * 100;
+    const bottomPercent = ((cutoutRect.y + cutoutRect.height) / vh) * 100;
+    
+    // Create a polygon that covers the full screen but excludes the cutout area
+    return `polygon(0% 0%, 0% 100%, ${leftPercent}% 100%, ${leftPercent}% ${topPercent}%, ${rightPercent}% ${topPercent}%, ${rightPercent}% ${bottomPercent}%, ${leftPercent}% ${bottomPercent}%, ${leftPercent}% 100%, 100% 100%, 100% 0%)`;
+  };
+
   return (
     <div className="onboarding-tour">
-      {/* Overlay */}
+      {/* Overlay with cutout */}
       {tourConfig.overlay && (
-        <div
-          ref={overlayRef}
-          className={`onboarding-overlay ${tourState.isActive ? 'active' : ''}`}
-          style={{
-            backgroundColor: `rgba(0, 0, 0, ${tourConfig.overlayOpacity})`
-          }}
-          onClick={handleOverlayClick}
-          aria-hidden="true"
-        />
+        <>
+          {/* SVG mask definition for browsers that support it */}
+          <svg
+            style={{
+              position: 'absolute',
+              width: 0,
+              height: 0,
+              visibility: 'hidden'
+            }}
+          >
+            <defs>
+              <mask id={`cutout-mask-${tourState.currentStep + 1}`}>
+                <rect width="100%" height="100%" fill="white" />
+                {cutoutRect && (
+                  <rect
+                    x={cutoutRect.x}
+                    y={cutoutRect.y}
+                    width={cutoutRect.width}
+                    height={cutoutRect.height}
+                    fill="black"
+                    rx="8"
+                    ry="8"
+                  />
+                )}
+              </mask>
+            </defs>
+          </svg>
+          
+          <div
+            ref={overlayRef}
+            className={`onboarding-overlay ${tourState.isActive ? 'active' : ''}`}
+            style={{
+              backgroundColor: `rgba(0, 0, 0, ${tourConfig.overlayOpacity})`,
+              backdropFilter: 'blur(4px)',
+              // Use CSS mask first, then clip-path as fallback
+              mask: cutoutRect ? `url(#cutout-mask-${tourState.currentStep + 1})` : undefined,
+              WebkitMask: cutoutRect ? `url(#cutout-mask-${tourState.currentStep + 1})` : undefined,
+              clipPath: cutoutRect ? generateClipPath() : undefined
+            }}
+            onClick={handleOverlayClick}
+            aria-hidden="true"
+          />
+        </>
       )}
 
       {/* Tour Tooltip */}
