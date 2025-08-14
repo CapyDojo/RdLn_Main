@@ -590,7 +590,7 @@ window.onload = () => {
 
     function parseLinesFromOps(opList, viewport) {
         const lines = [];
-        const H_TOL = 1.0; // horizontal tolerance in viewport units
+        const H_TOL = 1.2; // horizontal tolerance in viewport units
 
         // Track minimal graphics state we care about
         let strokeRGB = [0, 0, 0]; // 0..1
@@ -614,14 +614,38 @@ window.onload = () => {
             if (fn === pdfjsLib.OPS.constructPath) {
                 const pathOps = args[0];
                 const pathArgs = args[1];
-                // Look for simple moveTo -> lineTo
-                if (pathOps.length === 2 && pathOps[0] === pdfjsLib.OPS.moveTo && pathOps[1] === pdfjsLib.OPS.lineTo) {
-                    const start = viewport.convertToViewportPoint(pathArgs[0], pathArgs[1]);
-                    const end = viewport.convertToViewportPoint(pathArgs[2], pathArgs[3]);
-                    if (Math.abs(start[1] - end[1]) <= H_TOL) {
-                        const [r, g, b] = strokeRGB;
-                        const typeHint = classifyColor(r, g, b);
-                        lines.push({ x1: start[0], y1: start[1], x2: end[0], y2: end[1], r, g, b, lineWidth, typeHint });
+                // Handle multiple segments: iterate ops and collect horizontal lineTo segments
+                let cx = null, cy = null;
+                let argIdx = 0;
+                for (let j = 0; j < pathOps.length; j++) {
+                    const op = pathOps[j];
+                    if (op === pdfjsLib.OPS.moveTo) {
+                        const x = pathArgs[argIdx++];
+                        const y = pathArgs[argIdx++];
+                        const p = viewport.convertToViewportPoint(x, y);
+                        cx = p[0]; cy = p[1];
+                    } else if (op === pdfjsLib.OPS.lineTo) {
+                        const x = pathArgs[argIdx++];
+                        const y = pathArgs[argIdx++];
+                        const p = viewport.convertToViewportPoint(x, y);
+                        if (cx != null && cy != null) {
+                            const startX = cx, startY = cy;
+                            const endX = p[0], endY = p[1];
+                            if (Math.abs(startY - endY) <= H_TOL) {
+                                const [r, g, b] = strokeRGB;
+                                const typeHint = classifyColor(r, g, b);
+                                const x1 = Math.min(startX, endX);
+                                const x2 = Math.max(startX, endX);
+                                lines.push({ x1, y1: startY, x2, y2: endY, r, g, b, lineWidth, typeHint });
+                            }
+                        }
+                        cx = p[0]; cy = p[1];
+                    } else {
+                        // skip other ops' args length safely
+                        // curveTo has 6 args; closePath has none, rect has 4
+                        if (op === pdfjsLib.OPS.curveTo) argIdx += 6;
+                        else if (op === pdfjsLib.OPS.rectangle) argIdx += 4;
+                        else if (op === pdfjsLib.OPS.closePath) { /* noop */ }
                     }
                 }
             }
@@ -630,10 +654,15 @@ window.onload = () => {
     }
 
     function classifyColor(r, g, b) {
-        // Very simple heuristic: red-ish => deletion, green-ish => insertion
+        // Improved heuristic: consider saturation and relative dominance
         const max = Math.max(r, g, b);
-        const isRed = r === max && (r - Math.max(g, b)) >= 0.2;
-        const isGreen = g === max && (g - Math.max(r, b)) >= 0.2;
+        const min = Math.min(r, g, b);
+        const chroma = max - min;
+        if (chroma < 0.12) return 'unknown'; // too gray to be a hint
+        const rDom = r - Math.max(g, b);
+        const gDom = g - Math.max(r, b);
+        const isRed = rDom >= 0.18 && r > 0.4;
+        const isGreen = gDom >= 0.18 && g > 0.4;
         if (isRed) return 'del';
         if (isGreen) return 'ins';
         return 'unknown';
@@ -641,25 +670,29 @@ window.onload = () => {
 
     function checkStyle(textGeom, lines) {
         const { x, y, width, height } = textGeom; // viewport coords
-        const textMidY = y + height * 0.5;
-        const baselineTol = Math.max(1.0, height * 0.2);
-        const midlineTol = Math.max(1.0, height * 0.35);
+        if (!width || !height) return 'equal';
+        const baselineY = y + height * 0.06; // slightly below top to approximate baseline in viewport mapping
+        const midlineY = y + height * 0.52;
+        const baselineTol = Math.max(0.8, height * 0.18);
+        const midlineTol = Math.max(0.8, height * 0.28);
 
-        let best = { dist: Infinity, type: 'equal' };
+        let best = { score: -Infinity, type: 'equal' };
 
         for (const line of lines) {
             const lineY = line.y1; // viewport coords
-            const overlapsX = (line.x1 < x + width && line.x2 > x);
-            if (!overlapsX) continue;
+            // compute horizontal overlap fraction of text with line segment
+            const overlap = Math.max(0, Math.min(x + width, line.x2) - Math.max(x, line.x1));
+            const frac = overlap / Math.max(1, width);
+            if (frac < 0.35) continue; // require at least 35% overlap to consider
 
-            // Prefer color hint when available
-            if (Math.abs(lineY - y) <= baselineTol && (line.typeHint === 'ins' || line.typeHint === 'unknown')) {
-                const d = Math.abs(lineY - y);
-                if (d < best.dist) best = { dist: d, type: 'ins' };
-            }
-            if (Math.abs(lineY - textMidY) <= midlineTol && (line.typeHint === 'del' || line.typeHint === 'unknown')) {
-                const d = Math.abs(lineY - textMidY);
-                if (d < best.dist) best = { dist: d, type: 'del' };
+            // score candidate
+            const colorBonus = (line.typeHint === 'ins' || line.typeHint === 'del') ? 0.4 : 0.0;
+            if (Math.abs(lineY - baselineY) <= baselineTol) {
+                const score = 1.0 * frac + colorBonus - Math.abs(lineY - baselineY) / (baselineTol + 1e-6);
+                if (score > best.score) best = { score, type: (line.typeHint === 'ins' ? 'ins' : 'ins') };
+            } else if (Math.abs(lineY - midlineY) <= midlineTol) {
+                const score = 1.0 * frac + colorBonus - Math.abs(lineY - midlineY) / (midlineTol + 1e-6);
+                if (score > best.score) best = { score, type: (line.typeHint === 'del' ? 'del' : 'del') };
             }
         }
         return best.type;
