@@ -122,7 +122,7 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
         
         {/* Scroll Lock Button */}
         <CustomTooltip 
-          content={isScrollLocked ? 'Scroll Lock - ON' : 'Scroll Lock - OFF'}
+          content={isScrollLocked ? 'Lock scroll between input and output panels - ON' : 'Lock scroll between input and output panels - OFF'}
           shortcut="Alt+D"
         >
           <button

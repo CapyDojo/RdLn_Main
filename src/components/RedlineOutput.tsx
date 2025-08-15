@@ -130,14 +130,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     return () => clearTimeout(timeoutId);
   }, [filteredChanges, onHeightChangeRequest, isProcessing, hideHeader, height]);
 
-  // Handle background mode toggle
-  const handleBackgroundToggle = () => {
-    const newMode = backgroundMode === 'theme' ? 'glassmorphism' : 'theme';
-    setBackgroundMode(newMode);
-    if (onBackgroundModeChange) {
-      onBackgroundModeChange(newMode);
-    }
-  };
+
 
   // Memoize the generated chunks and their HTML strings with performance tracking
   const chunks = React.useMemo(() => {
@@ -416,14 +409,24 @@ const Chunk: React.FC<{ html: string, estimatedHeight: number, root: Element | n
 const generateHTMLString = (changes: DiffChange[]) => {
   let html = '';
   changes.forEach(change => {
-    const escape = (str: string) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+    const escapeHTML = (str: unknown): string => {
+      if (str == null) return '';
+      const stringValue = String(str);
+      return stringValue
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/`/g, '&#x60;');
+    };
 
     switch (change.type) {
       case 'added':
-        html += `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escape(change.content || '')}</span>`;
+        html += `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
         break;
       case 'removed':
-        html += `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escape(change.content || '')}</span>`;
+        html += `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
         break;
       case 'changed':
         // Special case: if both original and revised are pure whitespace, render cleanly
@@ -433,14 +436,14 @@ const generateHTMLString = (changes: DiffChange[]) => {
 
         if (isPureWhitespaceSubstitution) {
           // Clean mode: render whitespace substitutions without highlighting
-          html += `<span>${escape(revisedContent)}</span>`;
+          html += `<span>${escapeHTML(revisedContent)}</span>`;
         } else {
           // For regular substitutions: show full highlighting
-          html += `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escape(originalContent)}</span><span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escape(revisedContent)}</span>`;
+          html += `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(originalContent)}</span><span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(revisedContent)}</span>`;
         }
         break;
       default:
-        html += `<span>${escape(change.content || '')}</span>`;
+        html += `<span>${escapeHTML(change.content)}</span>`;
         break;
     }
   });
@@ -493,15 +496,25 @@ const collectConsecutiveChanges = (changes: DiffChange[], startIndex: number, ty
 };
 
 const renderChangeGroup = (group: DiffChange[], type: string) => {
-  const escape = (str: string) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+  const escapeHTML = (str: unknown): string => {
+    if (str == null) return '';
+    const stringValue = String(str);
+    return stringValue
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/`/g, '&#x60;');
+  };
 
   if (type === 'changed') {
     // For changed type, combine all original content and all revised content
     const combinedOriginal = group.map(change => change.originalContent || '').join('');
     const combinedRevised = group.map(change => change.revisedContent || '').join('');
 
-    return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escape(combinedOriginal)}</span>` +
-      `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escape(combinedRevised)}</span>`;
+    return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(combinedOriginal)}</span>` +
+      `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(combinedRevised)}</span>`;
   } else {
     // For added/removed, combine content
     const combinedContent = group.map(change => change.content || '').join('');
@@ -509,19 +522,29 @@ const renderChangeGroup = (group: DiffChange[], type: string) => {
       ? 'background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; '
       : 'background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ';
 
-    return `<span style="${styleAttr}">${escape(combinedContent)}</span>`;
+    return `<span style="${styleAttr}">${escapeHTML(combinedContent)}</span>`;
   }
 };
 
 const renderSingleChange = (change: DiffChange) => {
   // Use existing logic for single changes
-  const escape = (str: string) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+  const escapeHTML = (str: unknown): string => {
+    if (str == null) return '';
+    const stringValue = String(str);
+    return stringValue
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/`/g, '&#x60;');
+  };
 
   switch (change.type) {
     case 'added':
-      return `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escape(change.content || '')}</span>`;
+      return `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
     case 'removed':
-      return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escape(change.content || '')}</span>`;
+      return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
     case 'changed':
       // Apply clean whitespace logic consistently across both rendering paths
       const originalContent = change.originalContent || '';
@@ -530,14 +553,14 @@ const renderSingleChange = (change: DiffChange) => {
 
       if (isPureWhitespaceSubstitution) {
         // Clean mode: render whitespace substitutions without highlighting
-        return `<span>${escape(revisedContent)}</span>`;
+        return `<span>${escapeHTML(revisedContent)}</span>`;
       } else {
         // For regular substitutions: show full highlighting
-        return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escape(originalContent)}</span>` +
-          `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escape(revisedContent)}</span>`;
+        return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(originalContent)}</span>` +
+          `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(revisedContent)}</span>`;
       }
     default:
-      return `<span>${escape(change.content || '')}</span>`;
+      return `<span>${escapeHTML(change.content)}</span>`;
   }
 };
 

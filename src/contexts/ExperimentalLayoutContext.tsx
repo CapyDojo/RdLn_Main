@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// Environment detection
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 /**
  * Experimental UX Features for "Results First" Testing
  * 
@@ -51,7 +54,7 @@ const defaultFeatures: ExperimentalFeatures = {
   resultsPeekButton: false,
   
   // Navigation Enhancement Features
-  autoScrollToResults: true,
+  autoScrollToResults: IS_PRODUCTION, // Only enabled in production
   mobileTabInterface: false,
   stickyResultsPanel: false,
   

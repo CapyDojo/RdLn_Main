@@ -241,13 +241,12 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
               </div>
               <div className="space-y-1">
                 <p className="text-2xl font-bold text-theme-accent-700">{reviewWorkload}</p>
-                <Tooltip content="The total amount of content that requires attorney review, including all additions and deletions. This represents your billable review workload.">
+                <Tooltip content="The total amount of added / deleted content that requires review.">
                   <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
                     Review Load ({sizeLabel})
                     <HelpCircle className="w-3 h-3 opacity-60" />
                   </p>
                 </Tooltip>
-                <p className="text-xs text-theme-neutral-500">Requires attorney review</p>
               </div>
             </div>
             
@@ -260,13 +259,12 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
               </div>
               <div className="space-y-1">
                 <p className="text-2xl font-bold text-theme-primary-700">{documentSize}</p>
-                <Tooltip content="The total size of the document being compared, representing the complete scope of content under legal review.">
+                <Tooltip content="The total size of the redlined output content.">
                   <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                    Document Size ({sizeLabel})
+                  Total output content volume ({sizeLabel})
                     <HelpCircle className="w-3 h-3 opacity-60" />
                   </p>
                 </Tooltip>
-                <p className="text-xs text-theme-neutral-500">Total content volume</p>
               </div>
             </div>
             
@@ -281,13 +279,12 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
               </div>
               <div className="space-y-1">
                 <p className="text-2xl font-bold text-theme-primary-700">{impactPercentage.toFixed(1)}%</p>
-                <Tooltip content="The percentage of the document that has been modified. Legal professionals use this to assess the scope of changes and estimate review time.">
+                <Tooltip content="The percentage of the total output content that has been modified. Use this to assess overall scope of modifications.">
                   <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                    Document Changed
+                  Overall modification rate
                     <HelpCircle className="w-3 h-3 opacity-60" />
                   </p>
                 </Tooltip>
-                <p className="text-xs text-theme-neutral-500">Overall modification rate</p>
               </div>
             </div>
           </div>

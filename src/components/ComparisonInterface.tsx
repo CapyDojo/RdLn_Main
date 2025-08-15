@@ -167,8 +167,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     }
   }, [originalText, revisedText, onContentChange, canUndo, clearUndoState]);
 
-  // SSMR Step 1: Scroll lock state (Safe - no functionality yet)
-  const [isScrollLocked, setIsScrollLocked] = useState(false);
+  // SSMR Step 1: Scroll lock state (Enabled for production)
+  const [isScrollLocked, setIsScrollLocked] = useState(true);
 
   // RdLn Memory side panel state
   const [isMemoryPanelOpen, setIsMemoryPanelOpen] = useState(false);
