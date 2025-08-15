@@ -1,3 +1,164 @@
+## 2025-01-15: Smart Autosaving Architecture & Event Handler Debugging - From Inconsistent Behavior to Intelligent Context-Aware System
+
+**Problem**: RdLn Memory autosaving was inconsistent - manual comparisons (button clicks) worked fine, but live comparisons (typing) never auto-saved. Additionally, Alt+Enter keyboard shortcut was causing double auto-saves, creating duplicate sessions.
+
+**User Impact Discovery**: The inconsistent autosaving broke user workflow expectations. Users expected live typing to save meaningful comparisons automatically, but only manual button clicks were being preserved. The double-save bug created confusion with duplicate sessions appearing.
+
+### **The Dual Challenge Analysis**
+
+**Issue 1 - Missing Live Compare Autosaving**:
+- **Manual Compares**: Button clicks → `handleCompareDocuments()` → autosave logic executed
+- **Live Compares**: Typing → `triggerAutoCompare()` → `compareDocuments()` directly → **no autosave logic**
+- **Root Cause**: Autosave logic only existed in `handleCompareDocuments()` wrapper, but live compare bypassed this wrapper
+
+**Issue 2 - Double Auto-Save Bug**:
+- **Evidence**: Console logs showed `🎯 Auto-saved manual comparison to RdLn Memory` appearing twice
+- **Symptom**: Alt+Enter created duplicate sessions with identical content
+- **Investigation**: `🎯 Progress tracking enabled by algorithm` also appeared twice, indicating `compareDocuments()` was being called twice
+
+### **The Systematic Debugging Breakthrough**
+
+**Evidence-Based Root Cause Discovery**:
+```typescript
+// The smoking gun: Duplicate event listeners
+const eventOptions = { capture: true, passive: false };
+window.addEventListener('keydown', handleKeyDown, eventOptions);
+document.addEventListener('keydown', handleKeyDown, eventOptions); // DUPLICATE!
+```
+
+**Why This Caused Double-Firing**:
+- Both listeners registered with `capture: true` in same phase
+- Alt+Enter triggered both `window` and `document` listeners
+- Each listener called `handleCompareDocuments()` independently
+- Result: Two complete comparison operations with two autosaves
+
+**Why Button Clicks Worked Fine**:
+- Button clicks are single DOM events without event listener duplication
+- No keyboard event propagation issues with mouse interactions
+
+### **The Intelligent Autosaving Solution**
+
+**Centralized Architecture**:
+```typescript
+// BEFORE: Autosave logic only in wrapper function
+const handleCompareDocuments = async (...) => {
+  await compareDocuments(...);
+  // Autosave logic here - only for manual compares
+};
+
+// AFTER: Autosave logic in core comparison function
+const compareDocuments = async (isAutoCompare, ..., saveSessionCallback) => {
+  // ... comparison logic ...
+  
+  // Intelligent autosaving with context-aware thresholds
+  if (saveSessionCallback && result) {
+    const totalContent = (originalText?.length || 0) + (revisedText?.length || 0);
+    
+    if (!isAutoCompare) {
+      // Manual compares: always save (no threshold)
+      saveSessionCallback(originalText, revisedText, true);
+      console.log('🎯 Auto-saved manual comparison to RdLn Memory');
+    } else if (totalContent > 90) {
+      // Live compares: save only if substantial content
+      saveSessionCallback(originalText, revisedText, true);
+      console.log('🎯 Auto-saved live comparison to RdLn Memory');
+    }
+  }
+};
+```
+
+**Context-Aware Intelligence**:
+- **Manual Compares** (button, Alt+Enter): Always saved - user explicitly requested comparison
+- **Live Compares** (typing): Saved only if total content > 90 characters - filters out trivial edits
+- **Unified Logic**: Both paths use same autosave implementation for consistency
+
+### **The Event Handler Fix**
+
+**Elegant Minimal Solution**:
+```typescript
+// BEFORE: Duplicate listeners causing double-firing
+window.addEventListener('keydown', handleKeyDown, eventOptions);
+document.addEventListener('keydown', handleKeyDown, eventOptions);
+
+// AFTER: Single listener with proper global coverage
+window.addEventListener('keydown', handleKeyDown, eventOptions);
+// Removed document listener - window captures all events with capture: true
+```
+
+**Why Window Listener is Superior**:
+- **Broader Scope**: Captures events from entire browser window
+- **Standard Practice**: Most global keyboard shortcuts use window listeners
+- **Consistent with Intent**: Application-level shortcuts should work regardless of focus
+- **Eliminates Duplication**: Single listener prevents double-firing issues
+
+### **Technical Architecture Excellence**
+
+**Hook Parameter Enhancement**:
+```typescript
+// Enhanced useComparison hook with callback support
+export const useComparison = (saveSessionCallback?: (originalText: string, revisedText: string, hasResult: boolean) => void) => {
+  // Hook now receives saveSession callback from context
+  // All comparison paths (manual + live) use same autosave logic
+};
+```
+
+**Component Integration**:
+```typescript
+// ComparisonInterface passes saveSession to hook
+const { saveSession } = useRdLnMemoryContext();
+const { compareDocuments } = useComparison(saveSession);
+
+// Now all comparisons have access to consistent autosaving
+```
+
+### **User Experience Transformation**
+
+**Before Enhancement**:
+- Manual compares auto-saved, live compares didn't (inconsistent)
+- Alt+Enter created duplicate sessions (confusing)
+- Users had to manually save live comparisons (workflow friction)
+- Keyboard shortcuts fired twice (unpredictable behavior)
+
+**After Enhancement**:
+- Manual compares always auto-saved (no character threshold)
+- Live compares auto-saved when substantial (>90 characters)
+- Alt+Enter creates single session (predictable behavior)
+- All keyboard shortcuts fire exactly once (reliable interaction)
+
+### **Key Architectural Insights**
+
+**The Centralization Principle**: When multiple code paths need the same functionality, centralize it in the lowest common function rather than duplicating logic in wrapper functions. This ensures consistency and eliminates maintenance overhead.
+
+**The Evidence-Based Debugging Strategy**: When facing mysterious bugs, trace the actual execution flow through console logs rather than making assumptions. The double auto-save wasn't a logic bug - it was an event handling bug causing the logic to run twice.
+
+**The Context-Aware Intelligence Pattern**: Different user interaction patterns deserve different treatment. Manual comparisons indicate user intent to preserve, while live comparisons should be filtered for significance to avoid noise.
+
+**Legal Mind → Technical Translation**: *"This debugging process felt exactly like investigating contract disputes - gather evidence first (console logs), trace the actual sequence of events (execution flow), then identify the root cause (duplicate event listeners). The best technical solutions, like the best legal solutions, address the underlying issue rather than treating symptoms."*
+
+### **Production Impact & Future Value**
+
+**Immediate Benefits**:
+- **Intelligent Workflow**: Manual and live comparisons both auto-saved with appropriate thresholds
+- **Reliable Keyboard Shortcuts**: All shortcuts fire exactly once as users expect
+- **Reduced User Friction**: No manual saving required for substantial live comparisons
+- **Clean Session Management**: No duplicate sessions from keyboard shortcuts
+
+**Long-term Architecture Value**:
+- **Maintainable Codebase**: Centralized autosave logic reduces complexity and bugs
+- **Scalable Pattern**: Easy to add new comparison triggers with consistent autosaving
+- **Event Handler Best Practices**: Single listener pattern prevents future duplication issues
+- **Context-Aware Framework**: Intelligence pattern applicable to other user interaction scenarios
+
+**Development Process Excellence**:
+- **Systematic Investigation**: Evidence-based debugging revealed actual root causes
+- **Minimal Intervention**: Targeted fixes that solved problems without architectural disruption
+- **User-Centric Design**: Different thresholds for different user interaction patterns
+- **Quality Assurance**: Comprehensive testing across all comparison methods and keyboard shortcuts
+
+**Achievement**: Transformed inconsistent autosaving behavior into an intelligent, context-aware system while solving critical event handling bugs through systematic debugging, creating a reliable and user-friendly document comparison workflow that adapts to different usage patterns.
+
+---
+
 ## 2025-01-15: React Context Architecture - Single Source of Truth for State Synchronization
 
 **Problem**: RdLn Memory session management suffered from critical state synchronization issues. Three components (`ComparisonInterface`, `RdLnMemorySidePanel`, `RdLnMemoryDropdown`) were using independent instances of the `useRdLnMemory` hook, causing sessions saved in one component to not appear in others until page reload.

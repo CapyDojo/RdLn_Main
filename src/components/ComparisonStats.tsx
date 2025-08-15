@@ -169,7 +169,7 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
   const sizeLabel = stats.wordStats ? 'words' : 'elements';
 
   return (
-    <div className={`space-y-4 ${className || ''}`} style={style}>
+    <div className={`space-y-4 w-full max-w-6xl mx-auto ${className || ''}`} style={style}>
       {/* Executive Summary Card */}
       <div className="glass-panel border border-theme-neutral-300 rounded-xl shadow-lg">
         <div className="px-6 pt-6 pb-2">

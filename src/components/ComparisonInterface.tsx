@@ -569,13 +569,28 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           const targetElement = outputSection || outputPanel;
 
           if (targetElement) {
-            targetElement.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',  // Center in viewport for better continuity
-              inline: 'nearest'
-            });
-
-            if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎯 Auto-scrolled to output section (results completed) - Feature #2');
+            // Calculate scroll position to stop below the BetaDemoControlsPanel
+            const targetRect = targetElement.getBoundingClientRect();
+            const currentScrollY = window.scrollY;
+            
+            // Find the BetaDemoControlsPanel to get its height
+            const demoPanel = document.querySelector('.glass-panel.bg-theme-primary-50\\/80');
+            const demoPanelHeight = demoPanel ? demoPanel.getBoundingClientRect().height + 20 : 80; // 20px margin, 80px fallback
+            
+            // Calculate target scroll position (element top + current scroll - demo panel height - small margin)
+            const targetScrollY = targetRect.top + currentScrollY - demoPanelHeight - 20;
+            
+            // Only scroll if we need to (don't scroll up if already visible)
+            const shouldScroll = targetRect.top < demoPanelHeight || targetRect.top > window.innerHeight;
+            
+            if (shouldScroll) {
+              window.scrollTo({
+                top: Math.max(0, targetScrollY), // Don't scroll above page top
+                behavior: 'smooth'
+              });
+              
+              if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎯 Auto-scrolled to output section (results completed) - Feature #2');
+            }
           }
         }, 200); // Slightly longer delay to ensure content is rendered
       }
