@@ -67,7 +67,7 @@ const checkSystemResources = (originalText: string, revisedText: string) => {
   return { canProceed: true, reason: null };
 };
 
-export const useComparison = () => {
+export const useComparison = (saveSessionCallback?: (originalText: string, revisedText: string, hasResult: boolean) => void) => {
   // SSMR SAFE: Performance monitoring integration with optional enable/disable
   const performanceMonitor = usePerformanceMonitor({
     category: 'comparison-service',
@@ -472,6 +472,35 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
       
       // SSMR: Clear global signal on successful completion
       (globalThis as any).currentAbortSignal = null;
+      
+      // Auto-save completed comparisons with different thresholds for manual vs live compare
+      if (saveSessionCallback && result) {
+        setTimeout(() => {
+          const currentOriginal = overrideOriginal || actualOriginal;
+          const currentRevised = overrideRevised || actualRevised;
+          const totalContent = (currentOriginal?.length || 0) + (currentRevised?.length || 0);
+          
+          let shouldSave = false;
+          let saveReason = '';
+          
+          if (!isAutoCompare) {
+            // Manual compares: always save (no char threshold)
+            shouldSave = true;
+            saveReason = 'manual comparison';
+          } else {
+            // Live compares: save if total content exceeds 90 chars
+            if (totalContent > 90) {
+              shouldSave = true;
+              saveReason = `live comparison (${totalContent} chars > 90)`;
+            }
+          }
+          
+          if (shouldSave) {
+            saveSessionCallback(currentOriginal, currentRevised, true); // true = has result
+            console.log(`🎯 Auto-saved ${saveReason} to RdLn Memory`);
+          }
+        }, 100);
+      }
       
       // Clear manual operation flag after completion
       if (overrideOriginal || overrideRevised) {

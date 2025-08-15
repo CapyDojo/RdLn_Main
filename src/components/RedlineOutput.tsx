@@ -26,6 +26,8 @@ interface RedlineOutputProps extends BaseComponentProps {
   onBackgroundModeChange?: (mode: 'theme' | 'glassmorphism') => void;
   onToggleFullScreen?: () => void;
   isFullScreen?: boolean;
+  // Optional callback for auto-height adjustment
+  onHeightChangeRequest?: (height: number) => void;
   // Optional metadata to improve export filenames
   documentTitle?: string;
   originalTitle?: string;
@@ -52,6 +54,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   onBackgroundModeChange,
   onToggleFullScreen,
   isFullScreen = false,
+  onHeightChangeRequest,
   style,
   className,
   ...props
@@ -85,6 +88,47 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
   // Always render changes directly in clean mode
   const filteredChanges = changes;
+
+  // Auto-expand height to fit content when new comparison results are loaded
+  React.useEffect(() => {
+    // Only auto-expand if we have content and a callback
+    if (!onHeightChangeRequest || !filteredChanges || filteredChanges.length === 0 || isProcessing) {
+      return;
+    }
+
+    // Use requestAnimationFrame to ensure content is fully rendered
+    const measureHeight = () => {
+      requestAnimationFrame(() => {
+        const contentContainer = scrollContainerRef.current;
+        if (!contentContainer) return;
+
+        // Get the actual content height (scrollHeight includes all content)
+        const contentHeight = contentContainer.scrollHeight;
+        
+        // Add header height to get total panel height
+        const headerHeight = hideHeader ? 0 : UI_CONFIG.PANEL_HEIGHTS.HEADER_FOOTER_HEIGHT;
+        const totalHeight = contentHeight + headerHeight;
+        
+        // Respect max height limit
+        const maxHeight = UI_CONFIG.PANEL_HEIGHTS.MAX_OUTPUT_HEIGHT;
+        const requestedHeight = Math.min(totalHeight, maxHeight);
+        
+        // Only request height change if it's significantly different from current
+        const currentHeight = height;
+        const heightDifference = Math.abs(requestedHeight - currentHeight);
+        
+        // Request height change if difference is more than 50px (avoid tiny adjustments)
+        if (heightDifference > 50) {
+          onHeightChangeRequest(requestedHeight);
+        }
+      });
+    };
+
+    // Delay measurement slightly to ensure chunks are rendered
+    const timeoutId = setTimeout(measureHeight, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [filteredChanges, onHeightChangeRequest, isProcessing, hideHeader, height]);
 
   // Handle background mode toggle
   const handleBackgroundToggle = () => {

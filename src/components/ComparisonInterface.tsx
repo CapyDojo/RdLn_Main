@@ -11,7 +11,7 @@
  */
 
 import React, { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { DEV_CONFIG } from '../config/appConfig';
+import { DEV_CONFIG, UI_CONFIG } from '../config/appConfig';
 import { AlertCircle } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
 import { useUndoHistory } from '../hooks/useUndoHistory';
@@ -85,7 +85,23 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     autoTrackRender: true,
     autoTrackInteractions: true
   });
-  
+
+  // Simple clear undo protection
+  const { canUndo, saveClearState, undoClear, clearUndoState } = useUndoHistory();
+
+  // RdLn Memory system for session management
+  const {
+    sessions,
+    hasSessions,
+    isLoading: isLoadingMemory,
+    saveSession,
+    loadSession,
+    deleteSession,
+    clearAllSessions,
+    exportSessions,
+    importSessions
+  } = useRdLnMemoryContext();
+
   const {
     originalText,
     revisedText,
@@ -105,25 +121,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     // System Protection for stress testing
     systemProtectionEnabled,
     toggleSystemProtection
-  } = useComparison();
+  } = useComparison(saveSession);
 
-  // Simple clear undo protection
-  const { canUndo, saveClearState, undoClear, clearUndoState } = useUndoHistory();
-  
-  // RdLn Memory system for session management
-  const { 
-    sessions,
-    hasSessions, 
-    isLoading: isLoadingMemory,
-    saveSession,
-    loadSession,
-    deleteSession,
-    clearAllSessions,
-    exportSessions,
-    importSessions
-  } = useRdLnMemoryContext();
-  
-  
+
 
   const redlineOutputRef = useRef<HTMLDivElement>(null);
 
@@ -134,7 +134,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   const loadSampleData = (originalText: string, revisedText: string, autoRun: boolean = false) => {
     setOriginalText(originalText);
     setRevisedText(revisedText);
-    
+
     if (autoRun) {
       setAutoRunTrigger(true); // Trigger the effect to run the comparison
     }
@@ -159,37 +159,37 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     if (onContentChange) {
       onContentChange(hasContent);
     }
-    
+
     // Clear undo state when user starts typing new content
     // (Prevents accidentally restoring old cleared content when user has moved on)
     if (hasContent && canUndo) {
       clearUndoState();
     }
   }, [originalText, revisedText, onContentChange, canUndo, clearUndoState]);
-  
+
   // SSMR Step 1: Scroll lock state (Safe - no functionality yet)
   const [isScrollLocked, setIsScrollLocked] = useState(false);
-  
+
   // RdLn Memory side panel state
   const [isMemoryPanelOpen, setIsMemoryPanelOpen] = useState(false);
-  
+
   // Hover coordination state for unified filing cabinet
   const [isTabHovered, setIsTabHovered] = useState(false);
   const [isPanelHovered, setIsPanelHovered] = useState(false);
-  
+
   // Full screen overlay state
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [fullScreenBackgroundMode, setFullScreenBackgroundMode] = useState<'theme' | 'glassmorphism'>('theme');
-  
-  
+
+
   // Full screen toggle handler
   const toggleFullScreen = () => {
     setIsFullScreen(prev => !prev);
   };
-  
+
   // DEBUG: Immediate logging to verify component initialization
   // console.log('🔧 SCROLL LOCK DEBUG: Component initialized, isScrollLocked:', isScrollLocked);
-  
+
   // Performance tracking for processing states
   useEffect(() => {
     if (isProcessing) {
@@ -202,7 +202,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       });
     }
   }, [isProcessing, originalText.length, revisedText.length, performanceTracker]);
-  
+
   // Track comparison completion and results
   useEffect(() => {
     if (result && !isProcessing) {
@@ -216,11 +216,11 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       });
     }
   }, [result, isProcessing, chunkingProgress.enabled, performanceTracker]);
-  
+
   // Track memory usage periodically during processing
   useEffect(() => {
     if (!isProcessing || !performanceTracker.isEnabled) return;
-    
+
     const memoryInterval = setInterval(() => {
       const memoryInfo = (performance as any)?.memory;
       if (memoryInfo) {
@@ -231,16 +231,16 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         });
       }
     }, 1000); // Track every second during processing
-    
+
     return () => clearInterval(memoryInterval);
   }, [isProcessing, performanceTracker]);
-  
+
   // SSMR STEP 6: Extracted scroll sync logic into custom hook
   const { updateScrollRefs } = useScrollSync({
     isScrollLocked,
     outputRef: redlineOutputRef
   });
-  
+
   // SSMR STEP 6: Scroll sync logic now handled by useScrollSync hook
   // Test element detection when scroll lock state changes (safe testing)
   // TIMING FIX: Also update when result changes so scroll lock works if already on before output
@@ -253,13 +253,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     // Only run element detection for testing purposes (no event listeners yet)
     updateScrollRefs();
   }, [isScrollLocked, updateScrollRefs, result]);
-  
+
   // SSMR FIX: CSS-based resize to prevent React re-renders
   // SAFE: Fallback to React state if CSS manipulation fails
   // MODULAR: Can be disabled by setting USE_CSS_RESIZE = false
   // REVERSIBLE: Easy rollback to React state
   const USE_CSS_RESIZE = true; // ROLLBACK: Set to false to use React state
-  
+
   const { isMobile, getPanelVisibility } = useMobileTabInterface();
 
   // SSMR STEP 5: Extracted resize logic into custom hook
@@ -276,32 +276,50 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     isMobile
   });
 
-  
+
   // Local refs for resize handles (not managed by hook)
   const desktopResizeHandleRef = useRef<HTMLDivElement>(null);
   const mobileResizeHandleRef = useRef<HTMLDivElement>(null);
-  
-  
+
+
+  // Handle auto-height expansion requests from RedlineOutput
+  const handleHeightChangeRequest = React.useCallback((requestedHeight: number) => {
+    if (!USE_CSS_RESIZE) return;
+
+    // Respect min/max height limits from config
+    const minHeight = UI_CONFIG.PANEL_HEIGHTS.MIN_OUTPUT_HEIGHT;
+    const maxHeight = UI_CONFIG.PANEL_HEIGHTS.MAX_OUTPUT_HEIGHT;
+    const clampedHeight = Math.max(minHeight, Math.min(requestedHeight, maxHeight));
+
+    if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) {
+      console.log('🎯 Auto-height request:', { requested: requestedHeight, clamped: clampedHeight });
+    }
+
+    setOutputHeightCSS(clampedHeight);
+  }, [USE_CSS_RESIZE, setOutputHeightCSS]);
+
   // FIX: Apply output height CSS constraint when result changes
   useEffect(() => {
     if (result && USE_CSS_RESIZE) {
-      // Apply proper height constraint after new comparison result
+      // Reset to default height initially - auto-expansion will adjust if needed
       // Use setTimeout to ensure DOM is ready after component renders
       setTimeout(() => {
-        setOutputHeightCSS(500); // Reset to default constrained height
+        setOutputHeightCSS(UI_CONFIG.PANEL_HEIGHTS.DEFAULT_OUTPUT_HEIGHT);
       }, 10);
     }
   }, [result, USE_CSS_RESIZE, setOutputHeightCSS]);
 
   // Get experimental features (moved here before useEffect that depends on it)
   const { features } = useExperimentalFeatures();
-  
+
+
+
   // Enable keyboard shortcut for dev dashboard
   const experimentalCSSClasses = useExperimentalCSSClasses();
-  
+
   // Jump to results functionality for experimental features
   const { jumpToResults } = useJumpToResults();
-  
+
   // Results overlay hook - only active when feature is enabled (moved here before useEffect)
   const {
     isVisible: overlayVisible,
@@ -309,8 +327,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     hideOverlay,
     forceHideOverlay
   } = useResultsOverlay(
-    !!result, 
-    isProcessing, 
+    !!result,
+    isProcessing,
     {
       autoShow: features.resultsOverlay,
       onShow: onOverlayShow,
@@ -323,7 +341,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     const tempOriginal = originalText;
     setOriginalText(revisedText);
     setRevisedText(tempOriginal);
-    
+
     // Track swap metrics
     performanceTracker.trackMetric('content_swap', {
       originalLength: originalText.length,
@@ -337,9 +355,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     if (originalText.trim() || revisedText.trim()) {
       saveClearState(originalText, revisedText);
     }
-    
+
     resetComparison();
-    
+
     // Track reset metrics
     performanceTracker.trackMetric('comparison_reset', {
       hadContent: !!(originalText.trim() || revisedText.trim()),
@@ -365,21 +383,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   // Wrapped comparison function with auto-save
   const handleCompareDocuments = usePerformanceAwareHandler(async (autoRunOnly?: boolean, manualOperation?: boolean, overrideOriginal?: string, overrideRevised?: string) => {
-    // Run the comparison
+    // Run the comparison - autosaving is now handled within compareDocuments via the hook
     await compareDocuments(autoRunOnly, manualOperation, overrideOriginal, overrideRevised);
-    
-    // Auto-save completed comparisons after the comparison completes
-    // Use setTimeout to ensure the state has updated
-    setTimeout(() => {
-      const currentOriginal = overrideOriginal || originalText;
-      const currentRevised = overrideRevised || revisedText;
-      const totalContent = (currentOriginal?.length || 0) + (currentRevised?.length || 0);
-      
-      if (totalContent > 50) { // Only save if there's meaningful content
-        saveSession(currentOriginal, currentRevised, true); // true = has result
-        console.log('🎯 Auto-saved comparison to RdLn Memory');
-      }
-    }, 100);
   }, 'compare_with_autosave', performanceTracker);
 
   const handleLoadSession = usePerformanceAwareHandler((sessionId: string) => {
@@ -388,10 +393,10 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       // Load the session content into the input fields
       setOriginalText(session.originalText);
       setRevisedText(session.revisedText);
-      
+
       // Don't call resetComparison since it clears the inputs we just set
       // The user can run a new comparison if they want to see results
-      
+
       console.log('📖 Session loaded from RdLn Memory:', session.sessionName);
       console.log(`📝 Loaded ${session.originalText.length} + ${session.revisedText.length} characters`);
     }
@@ -426,58 +431,58 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   // Keyboard shortcuts and global cancellation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-        // Global ESC key cancellation - but check overlay first
-        if (e.key === 'Escape') {
-          // If overlay is visible, let it handle the ESC key
-          if (features.resultsOverlay && overlayVisible) {
-            return; // Let overlay handle ESC
-          }
-          
-          e.preventDefault();
-          e.stopPropagation();
-          if (isProcessing && !isCancelling) {
-            cancelComparison();
-          }
-          return;
+      // Global ESC key cancellation - but check overlay first
+      if (e.key === 'Escape') {
+        // If overlay is visible, let it handle the ESC key
+        if (features.resultsOverlay && overlayVisible) {
+          return; // Let overlay handle ESC
         }
-      
+
+        e.preventDefault();
+        e.stopPropagation();
+        if (isProcessing && !isCancelling) {
+          cancelComparison();
+        }
+        return;
+      }
+
       // Alt+Enter comparison shortcut
       if (e.altKey && e.key === 'Enter') {
         e.preventDefault();
         handleCompareDocuments();
       }
-      
+
       // Alt+L toggle live compare
       if (e.altKey && e.key === 'l') {
         e.preventDefault();
         toggleQuickCompare();
       }
-      
+
       // Alt+W swap content
       if (e.altKey && e.key === 'w') {
         e.preventDefault();
         handleSwapContent();
       }
-      
+
       // Alt+D toggle scroll lock
       if (e.altKey && e.key === 'd') {
         e.preventDefault();
         setIsScrollLocked(!isScrollLocked);
       }
-      
+
       // Alt+Delete clear/reset (no confirmation - lightning-fast UX)
       if (e.altKey && e.key === 'Delete') {
         e.preventDefault();
         handleResetComparison();
       }
-      
-      
+
+
       // Ctrl+Z undo clear (simple protection against accidental clears)
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         const target = e.target as HTMLElement;
         const isTextarea = target?.tagName === 'TEXTAREA';
         const isInput = target?.tagName === 'INPUT';
-        
+
         // If we have a cleared state to restore, use our undo
         if (canUndo) {
           e.preventDefault();
@@ -491,7 +496,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           e.preventDefault();
         }
       }
-      
+
       // Alt+M RdLn Memory quick save
       if (e.altKey && e.key === 'm') {
         e.preventDefault();
@@ -506,13 +511,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     // Use capture phase with additional options to ensure Ctrl+Z works regardless of focus
     const eventOptions = { capture: true, passive: false };
     window.addEventListener('keydown', handleKeyDown, eventOptions);
-    
-    // Also add to document for extra coverage
-    document.addEventListener('keydown', handleKeyDown, eventOptions);
-    
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown, eventOptions);
-      document.removeEventListener('keydown', handleKeyDown, eventOptions);
     };
   }, [handleCompareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible, toggleQuickCompare, handleSwapContent, isScrollLocked, setIsScrollLocked, handleResetComparison, canUndo, handleUndo, originalText, revisedText, handleSaveSession]);
 
@@ -522,18 +523,18 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       // SSMR: Clear inputs first to prevent persistence issues
       setOriginalText('');
       setRevisedText('');
-      
+
       // Cancel any ongoing operations
       if (isProcessing) {
         cancelComparison();
       }
-      
+
       // Use setTimeout to ensure state is cleared before loading new content
       await new Promise(resolve => {
         setTimeout(() => {
           setOriginalText(originalText);
           setRevisedText(revisedText);
-          
+
           // Auto-compare if enabled - use manual operation flag to ensure cancellation works
           if (quickCompareEnabled) {
             setTimeout(() => {
@@ -543,7 +544,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           resolve(undefined);
         }, 100);
       });
-      
+
       // Track metrics
       performanceTracker.trackMetric('load_test_size', {
         originalLength: originalText.length,
@@ -552,36 +553,35 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       });
     });
   }, 'load_test', performanceTracker);
-  
+
   // SSMR STEP 5: Mouse handlers now provided by useResizeHandlers hook
 
   // Auto-scroll to output panel when it appears (Feature #2)
   useEffect(() => {
     if (features.autoScrollToResults) {
-      // Only scroll when processing starts, not when results complete
-      // (user is already positioned at output area from the first scroll)
-      if (isProcessing) {
+      // Scroll when results are completed (better timing for when output actually exists)
+      if (result && !isProcessing) {
         // Wait for DOM to update, then scroll to output section
         setTimeout(() => {
           // Try to find the output section first, then fallback to data-output-panel
           const outputSection = document.querySelector('.output-section');
           const outputPanel = document.querySelector('[data-output-panel]');
           const targetElement = outputSection || outputPanel;
-          
+
           if (targetElement) {
-            targetElement.scrollIntoView({ 
-              behavior: 'smooth', 
+            targetElement.scrollIntoView({
+              behavior: 'smooth',
               block: 'center',  // Center in viewport for better continuity
               inline: 'nearest'
             });
-            
-            if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎯 Auto-scrolled to output section (processing started) - Feature #2');
+
+            if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎯 Auto-scrolled to output section (results completed) - Feature #2');
           }
-        }, 100);
+        }, 200); // Slightly longer delay to ensure content is rendered
       }
     }
-  }, [features.autoScrollToResults, isProcessing]); // Removed 'result' from dependencies
-  
+  }, [features.autoScrollToResults, result, isProcessing]);
+
   // Results spotlight animation (Feature #1)
   useEffect(() => {
     if (features.resultsSpotlight && result && !isProcessing) {
@@ -592,7 +592,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           // Add spotlight animation class
           outputPanel.classList.add('results-appearing');
           if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('✨ Results spotlight activated (Feature #1) - 3s persist + 3s fade');
-          
+
           // Remove animation class after 6 seconds (3s persist + 3s fade)
           setTimeout(() => {
             outputPanel.classList.remove('results-appearing');
@@ -601,11 +601,11 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       }, 50); // Slightly faster than auto-scroll for immediate visual feedback
     }
   }, [features.resultsSpotlight, result, isProcessing]);
-  
+
   // Results First Animation (Feature #9) - Enhanced with proper cleanup and diagnostics
   useEffect(() => {
     const container = document.querySelector('.comparison-interface-container');
-    
+
     if (!container) {
       console.error('🔧 FEATURE #9 ERROR: Container .comparison-interface-container not found');
       return;
@@ -620,21 +620,21 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 Input section exists:', !!container.querySelector('.input-section'));
         if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 Output section exists:', !!container.querySelector('.output-section'));
         if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 Has experimental-results-first class:', container.classList.contains('experimental-results-first'));
-        
+
         // Ensure we have the base experimental class
         if (!container.classList.contains('experimental-results-first')) {
           if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.warn('🔧 FEATURE #9 WARNING: Missing experimental-results-first class, animation may not work properly');
         }
-        
+
         // Add results-active class to trigger CSS animations
         container.classList.add('results-active');
         if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔄 Results First Animation activated (Feature #9) - Seamless position swap');
         if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 Container classes after adding results-active:', container.className);
-        
+
         // Verify the animation elements exist
         const inputSection = container.querySelector('.input-section');
         const outputSection = container.querySelector('.output-section');
-        
+
         if (inputSection && outputSection) {
           if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('✅ FEATURE #9: Animation elements found, transition should be smooth');
         } else {
@@ -648,7 +648,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       // Remove animation class when feature is disabled or no results
       if (container.classList.contains('results-active')) {
         container.classList.remove('results-active');
-        
+
         if (!features.resultsFirstAnimation && result) {
           if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🔧 FEATURE #9: Removed results-active class (feature disabled)');
         } else if (!result) {
@@ -657,7 +657,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       }
     }
   }, [features.resultsFirstAnimation, result, isProcessing]);
-  
+
   // Refined Results First Animation (Feature #10)
   useEffect(() => {
     if (features.refinedResultsFirst && result && !isProcessing) {
@@ -668,7 +668,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           // Add transition animation class
           outputPanel.classList.add('results-overlay-transition');
           if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎭 Refined Results First Animation activated (Feature #10) - 2s overlay then animate to top');
-          
+
           // Remove animation class after 3 seconds (animation duration)
           setTimeout(() => {
             outputPanel.classList.remove('results-overlay-transition');
@@ -683,7 +683,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       }
     }
   }, [features.refinedResultsFirst, result, isProcessing]);
-  
+
   return (
     <div className={`comparison-interface-container ${experimentalCSSClasses}`}>
       {/* Test Suite - DISABLED FOR PRODUCTION */}
@@ -696,12 +696,12 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       {showExtremeTestSuite && <ExtremeTestSuite onLoadTest={handleLoadTest} />}
 
       {/* STEP 3b: Background Loading Status - Removed to be placed in App.tsx */}
-      
+
       {/* SSMR CHUNKING: Progress now shown in output area during processing */}
-      
-      
+
+
       {/* Demo Performance Test Buttons */}
-      <PerformanceDemoCard 
+      <PerformanceDemoCard
         visible={showPerformanceDemoCard}
         onLoadTest={handleLoadTest}
       />
@@ -711,7 +711,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         isVisible={true}
         hasResults={!!result}
       />
-      
+
       {/* Input Section with Centered Swap Button - Enhanced with glassmorphism */}
       <div className="input-section relative mb-8" style={{ display: getPanelVisibility('input') }}>
         {/* Desktop Input Layout Component */}
@@ -725,7 +725,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           panelResizeHandlers={panelResizeHandlers}
           desktopResizeHandleRef={desktopResizeHandleRef}
         />
-        
+
         {/* Mobile Input Layout Component */}
         <MobileInputLayout
           originalText={originalText}
@@ -790,17 +790,17 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           {error}
         </div>
       )}
-      
 
 
-      
+
+
       {(result || isProcessing) && (
         <div className="output-section" style={{ display: getPanelVisibility('output') }}>
           {isProcessing && (
-            <ProcessingDisplay 
-              chunkingProgress={chunkingProgress} 
-              isCancelling={isCancelling} 
-              onCancel={cancelComparison} 
+            <ProcessingDisplay
+              chunkingProgress={chunkingProgress}
+              isCancelling={isCancelling}
+              onCancel={cancelComparison}
             />
           )}
           {result && !isProcessing && (
@@ -816,13 +816,14 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
                   stats={result.stats}
                   USE_CSS_RESIZE={USE_CSS_RESIZE}
                   outputHeight={outputHeight}
-                  onCopy={() => {}}
+                  onCopy={() => { }}
                   outputResizeHandlers={outputResizeHandlers}
                   scrollRef={redlineOutputRef}
                   onShowOverlay={showOverlay}
                   isInOverlayMode={false}
                   onToggleFullScreen={toggleFullScreen}
                   isFullScreen={isFullScreen}
+                  onHeightChangeRequest={handleHeightChangeRequest}
                 />
               </StickyResultsPanel>
             ) : (
@@ -831,19 +832,20 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
                 stats={result.stats}
                 USE_CSS_RESIZE={USE_CSS_RESIZE}
                 outputHeight={outputHeight}
-                onCopy={() => {}}
+                onCopy={() => { }}
                 outputResizeHandlers={outputResizeHandlers}
                 scrollRef={redlineOutputRef}
                 onShowOverlay={showOverlay}
                 isInOverlayMode={false}
                 onToggleFullScreen={toggleFullScreen}
                 isFullScreen={isFullScreen}
+                onHeightChangeRequest={handleHeightChangeRequest}
               />
             )
           )}
         </div>
       )}
-      
+
       {/* Experimental Features */}
       {features.floatingJumpButton && (
         <FloatingJumpButton
@@ -852,8 +854,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           hasResults={!!result}
         />
       )}
-      
-      
+
+
       {/* Results Overlay - Feature #8 */}
       {features.resultsOverlay && result && (
         <ResultsOverlay
@@ -863,7 +865,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
         >
           <RedlineOutput
             changes={result.changes}
-            onCopy={() => {}}
+            onCopy={() => { }}
             height={9999} // Full height in overlay
             isProcessing={false}
             processingStatus=""
@@ -899,8 +901,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
             <div className="h-full flex flex-col">
               <div data-output-panel className="flex-1">
                 <RedlineOutput
-                  changes={result.changes} 
-                  onCopy={() => {}}
+                  changes={result.changes}
+                  onCopy={() => { }}
                   height={window.innerHeight}
                   isProcessing={false}
                   processingStatus=""

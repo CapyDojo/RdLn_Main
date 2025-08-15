@@ -33,6 +33,8 @@ interface OutputLayoutProps extends BaseComponentProps {
   onToggleFullScreen?: () => void;
   /** Whether currently in full screen mode */
   isFullScreen?: boolean;
+  /** Optional callback for auto-height adjustment */
+  onHeightChangeRequest?: (height: number) => void;
 }
 
 /**
@@ -60,6 +62,7 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
   hideHeader = false,
   onToggleFullScreen,
   isFullScreen = false,
+  onHeightChangeRequest,
   style,
   className
 }) => {
@@ -79,6 +82,7 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
           hideHeader={hideHeader}
           onToggleFullScreen={onToggleFullScreen}
           isFullScreen={isFullScreen}
+          onHeightChangeRequest={onHeightChangeRequest}
         />
       </div>
       

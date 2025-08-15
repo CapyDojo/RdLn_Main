@@ -51,7 +51,7 @@ const defaultFeatures: ExperimentalFeatures = {
   resultsPeekButton: false,
   
   // Navigation Enhancement Features
-  autoScrollToResults: false,
+  autoScrollToResults: true,
   mobileTabInterface: false,
   stickyResultsPanel: false,
   

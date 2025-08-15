@@ -1,3 +1,105 @@
+## Version 0.5.21 - "Smart Autosaving System & Event Handler Debugging Excellence"
+*Released: 2025-01-15*
+
+### 🧠 **Smart Autosaving System - Intelligent Session Management**
+- **BREAKTHROUGH**: Implemented intelligent autosaving with different thresholds for manual vs live comparisons
+- **MANUAL COMPARES**: Button clicks and Alt+Enter shortcuts always auto-saved (no character threshold)
+- **LIVE COMPARES**: Typing-triggered comparisons auto-saved only if total content > 90 characters
+- **CENTRALIZED LOGIC**: Moved autosave logic into core `compareDocuments()` function for consistency across all comparison types
+
+### 🐛 **Critical Fix: Double Auto-Save Bug Resolution**
+- **PROBLEM SOLVED**: Alt+Enter keyboard shortcut was triggering duplicate autosaves
+- **ROOT CAUSE DISCOVERY**: Duplicate event listeners registered on both `window` and `document` with `capture: true`
+- **EVIDENCE-BASED DEBUGGING**: Console logs revealed `compareDocuments()` was being called twice, not autosave logic duplication
+- **ELEGANT SOLUTION**: Removed redundant `document` event listener, kept `window` listener for proper global keyboard shortcut coverage
+
+### 🔧 **Event Handler Architecture Excellence**
+- **SYSTEMATIC INVESTIGATION**: Traced through console logs to identify real problem (function calls, not logic)
+- **PLATFORM UNDERSTANDING**: Recognized that both listeners were firing in capture phase for same event
+- **MINIMAL FIX**: Two-line change eliminated duplicate behavior while preserving all keyboard shortcut functionality
+- **FUTURE-PROOF**: Single `window` listener with `capture: true` handles all global shortcuts correctly
+
+### ✨ **Autosaving Intelligence Features**
+- **CONTEXT-AWARE THRESHOLDS**: Different rules for different user interaction patterns
+- **SEAMLESS INTEGRATION**: Works transparently with existing RdLn Memory system
+- **PERFORMANCE OPTIMIZED**: Minimal overhead with smart content analysis
+- **USER-FRIENDLY**: No configuration required - automatically detects comparison type and applies appropriate rules
+
+### 🎯 **User Experience Improvements**
+- **PROFESSIONAL WORKFLOW**: Manual comparisons always preserved for important document analysis
+- **SMART FILTERING**: Live comparisons only saved when substantial content is present (>90 chars)
+- **CONSISTENT BEHAVIOR**: All keyboard shortcuts now fire exactly once as intended
+- **ZERO CONFIGURATION**: Intelligent behavior works automatically without user setup
+
+### 📊 **Technical Implementation Details**
+- **Hook Architecture**: Enhanced `useComparison` hook with `saveSessionCallback` parameter
+- **State Management**: Proper coordination between comparison logic and memory system
+- **Event Optimization**: Streamlined keyboard event handling prevents duplicate registrations
+- **Cross-Component Integration**: Seamless integration with existing RdLn Memory context provider
+
+### 🧪 **Debugging Process Excellence**
+- **EVIDENCE-BASED APPROACH**: Used console logs to identify actual problem vs assumptions
+- **SYSTEMATIC ANALYSIS**: Traced execution flow to find root cause in event handling
+- **MINIMAL INTERVENTION**: Targeted fix that solved problem without architectural changes
+- **VALIDATION**: Confirmed single autosave behavior across all comparison methods
+
+**Achievement**: Transformed autosaving from inconsistent behavior into an intelligent, context-aware system while solving critical event handling bugs through systematic debugging and minimal, targeted fixes.
+
+---
+
+## Version 0.5.20 - "RdLn Memory State Management Fix - Context Provider Architecture"
+*Released: 2025-01-15*
+
+### 🧠 **Critical Fix: RdLn Memory State Synchronization**
+- **PROBLEM SOLVED**: Sessions saved in one component didn't appear in others until page reload
+- **ROOT CAUSE**: Three components (`ComparisonInterface`, `RdLnMemorySidePanel`, `RdLnMemoryDropdown`) using independent `useRdLnMemory` hook instances
+- **SOLUTION**: Centralized Context Provider architecture following existing `ThemeProvider` pattern
+
+### 🏗️ **Architectural Excellence: Single Source of Truth**
+- **NEW**: `RdLnMemoryProvider` context provider wrapping the existing `useRdLnMemory` hook
+- **NEW**: `useRdLnMemoryContext()` hook for components to access shared session state
+- **PATTERN**: Follows established app architecture with `ThemeProvider` and `FontSizeProvider`
+- **RESULT**: All components now share identical session data with automatic synchronization
+
+### ✨ **Immediate Session Synchronization**
+- **BEFORE**: Save session in side panel → Not visible in dropdown until page reload
+- **AFTER**: Save session in side panel → Appears immediately in dropdown and all components
+- **CROSS-COMPONENT**: Delete, load, and export operations sync instantly across all interfaces
+- **ZERO RELOAD**: No page refresh required for any session operations
+
+### 🔧 **Implementation Details**
+- **Context Provider**: Single `useRdLnMemory` instance shared across entire application
+- **Component Updates**: All three components now use `useRdLnMemoryContext()` instead of independent hooks
+- **Error Handling**: Clear error messages when context is used outside provider
+- **Backward Compatibility**: Same localStorage key and data format - existing sessions preserved
+
+### 📁 **Files Created/Modified**
+- `src/contexts/RdLnMemoryContext.tsx` - NEW: Context provider with shared state management
+- `src/main.tsx` - UPDATED: Added RdLnMemoryProvider alongside existing providers
+- `src/components/ComparisonInterface.tsx` - UPDATED: Uses shared context instead of independent hook
+- `src/components/RdLnMemorySidePanel.tsx` - UPDATED: Uses shared context, removed redundant props
+- `src/components/RdLnMemoryDropdown.tsx` - UPDATED: Uses shared context for consistent data
+
+### 🎯 **Architectural Simplicity Principle**
+- **MINIMAL CHANGES**: Existing `useRdLnMemory` hook unchanged - wrapped by provider
+- **CLEAN MIGRATION**: Components only needed import statement changes
+- **NO COMPLEXITY**: Simple Context Provider pattern without overengineering
+- **MAINTAINABLE**: Easy to understand and modify architecture
+
+### 🚀 **Benefits Achieved**
+- **Professional UX**: Session management now works as users expect
+- **State Consistency**: All components show identical session data automatically
+- **Performance**: Single hook instance reduces memory usage and localStorage operations
+- **Developer Experience**: Clean, maintainable architecture following established patterns
+
+### 🧪 **Comprehensive Testing**
+- **Cross-Component Sync**: Save in side panel, verify immediate appearance in dropdown
+- **Session Persistence**: Page reload maintains all session data correctly
+- **Error Handling**: Context missing scenarios handled with clear error messages
+- **Regression Testing**: All existing functionality preserved without changes
+
+---
+
 ## Version 0.5.19 - "Button Component Refactoring & Production Feature Flag Fix"
 *Released: 2025-01-15*
 
