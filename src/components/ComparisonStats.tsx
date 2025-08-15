@@ -403,23 +403,50 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                   </CustomTooltip>
                 </div>
                 <div className="relative text-xs text-theme-neutral-600" style={{ height: '16px' }}>
-                  {stats.additions > 0 && (
-                    <div className="absolute left-0" style={{ width: `${Math.max(additionPercent, 25)}%` }}>
-                      <div className="text-left px-1">{stats.additions} added ({additionPercent.toFixed(1)}%)</div>
-                    </div>
-                  )}
-                  
-                  {stats.deletions > 0 && (
-                    <div className="absolute left-0" style={{ left: `${additionPercent}%`, width: `${Math.max(deletionPercent, 25)}%` }}>
-                      <div className="text-center px-1">{stats.deletions} deleted ({deletionPercent.toFixed(1)}%)</div>
-                    </div>
-                  )}
-                  
-                  {stats.unchanged > 0 && (
-                    <div className="absolute right-0" style={{ width: `${Math.max(100 - additionPercent - deletionPercent, 25)}%` }}>
-                      <div className="text-right px-1">{stats.unchanged} unchanged ({(100 - additionPercent - deletionPercent).toFixed(1)}%)</div>
-                    </div>
-                  )}
+                  {(() => {
+                    // Calculate smart positioning to prevent overlaps
+                    const additionWidth = Math.max(additionPercent, 25);
+                    const deletionWidth = Math.max(deletionPercent, 25);
+                    const unchangedWidth = Math.max(100 - additionPercent - deletionPercent, 25);
+                    
+                    // Calculate positions with collision detection
+                    let additionPos = 0;
+                    let deletionPos = Math.max(additionPercent, additionWidth);
+                    let unchangedPos = 100 - unchangedWidth;
+                    
+                    // Ensure deletion doesn't overlap with addition
+                    if (deletionPos < additionWidth) {
+                      deletionPos = additionWidth;
+                    }
+                    
+                    // Ensure unchanged doesn't overlap with deletion
+                    const deletionEnd = deletionPos + deletionWidth;
+                    if (unchangedPos < deletionEnd) {
+                      unchangedPos = deletionEnd;
+                    }
+                    
+                    return (
+                      <>
+                        {stats.additions > 0 && (
+                          <div className="absolute left-0" style={{ left: `${additionPos}%`, width: `${additionWidth}%` }}>
+                            <div className="text-left px-1">{stats.additions} added ({additionPercent.toFixed(1)}%)</div>
+                          </div>
+                        )}
+                        
+                        {stats.deletions > 0 && (
+                          <div className="absolute left-0" style={{ left: `${deletionPos}%`, width: `${deletionWidth}%` }}>
+                            <div className="text-center px-1">{stats.deletions} deleted ({deletionPercent.toFixed(1)}%)</div>
+                          </div>
+                        )}
+                        
+                        {stats.unchanged > 0 && (
+                          <div className="absolute left-0" style={{ left: `${unchangedPos}%`, width: `${unchangedWidth}%` }}>
+                            <div className="text-right px-1">{stats.unchanged} unchanged ({(100 - additionPercent - deletionPercent).toFixed(1)}%)</div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -447,23 +474,55 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                     ></div>
                   </div>
                   <div className="relative text-xs text-theme-neutral-600" style={{ height: '16px' }}>
-                    {stats.wordStats.addedWords > 0 && (
-                      <div className="absolute left-0" style={{ width: `${Math.max((stats.wordStats.addedWords / stats.wordStats.totalWords) * 100, 25)}%` }}>
-                        <div className="text-left px-1">{stats.wordStats.addedWords.toLocaleString()} added ({((stats.wordStats.addedWords / stats.wordStats.totalWords) * 100).toFixed(1)}%)</div>
-                      </div>
-                    )}
-                    
-                    {stats.wordStats.deletedWords > 0 && (
-                      <div className="absolute left-0" style={{ left: `${(stats.wordStats.addedWords / stats.wordStats.totalWords) * 100}%`, width: `${Math.max((stats.wordStats.deletedWords / stats.wordStats.totalWords) * 100, 25)}%` }}>
-                        <div className="text-center px-1">{stats.wordStats.deletedWords.toLocaleString()} deleted ({((stats.wordStats.deletedWords / stats.wordStats.totalWords) * 100).toFixed(1)}%)</div>
-                      </div>
-                    )}
-                    
-                    {stats.wordStats.unchangedWords > 0 && (
-                      <div className="absolute right-0" style={{ width: `${Math.max((stats.wordStats.unchangedWords / stats.wordStats.totalWords) * 100, 25)}%` }}>
-                        <div className="text-right px-1">{stats.wordStats.unchangedWords.toLocaleString()} unchanged ({((stats.wordStats.unchangedWords / stats.wordStats.totalWords) * 100).toFixed(1)}%)</div>
-                      </div>
-                    )}
+                    {(() => {
+                      // Calculate percentages for words
+                      const wordAdditionPercent = (stats.wordStats.addedWords / stats.wordStats.totalWords) * 100;
+                      const wordDeletionPercent = (stats.wordStats.deletedWords / stats.wordStats.totalWords) * 100;
+                      const wordUnchangedPercent = (stats.wordStats.unchangedWords / stats.wordStats.totalWords) * 100;
+                      
+                      // Calculate smart positioning to prevent overlaps
+                      const additionWidth = Math.max(wordAdditionPercent, 25);
+                      const deletionWidth = Math.max(wordDeletionPercent, 25);
+                      const unchangedWidth = Math.max(wordUnchangedPercent, 25);
+                      
+                      // Calculate positions with collision detection
+                      let additionPos = 0;
+                      let deletionPos = Math.max(wordAdditionPercent, additionWidth);
+                      let unchangedPos = 100 - unchangedWidth;
+                      
+                      // Ensure deletion doesn't overlap with addition
+                      if (deletionPos < additionWidth) {
+                        deletionPos = additionWidth;
+                      }
+                      
+                      // Ensure unchanged doesn't overlap with deletion
+                      const deletionEnd = deletionPos + deletionWidth;
+                      if (unchangedPos < deletionEnd) {
+                        unchangedPos = deletionEnd;
+                      }
+                      
+                      return (
+                        <>
+                          {stats.wordStats.addedWords > 0 && (
+                            <div className="absolute left-0" style={{ left: `${additionPos}%`, width: `${additionWidth}%` }}>
+                              <div className="text-left px-1">{stats.wordStats.addedWords.toLocaleString()} added ({wordAdditionPercent.toFixed(1)}%)</div>
+                            </div>
+                          )}
+                          
+                          {stats.wordStats.deletedWords > 0 && (
+                            <div className="absolute left-0" style={{ left: `${deletionPos}%`, width: `${deletionWidth}%` }}>
+                              <div className="text-center px-1">{stats.wordStats.deletedWords.toLocaleString()} deleted ({wordDeletionPercent.toFixed(1)}%)</div>
+                            </div>
+                          )}
+                          
+                          {stats.wordStats.unchangedWords > 0 && (
+                            <div className="absolute left-0" style={{ left: `${unchangedPos}%`, width: `${unchangedWidth}%` }}>
+                              <div className="text-right px-1">{stats.wordStats.unchangedWords.toLocaleString()} unchanged ({wordUnchangedPercent.toFixed(1)}%)</div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               )}
@@ -492,23 +551,55 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                     ></div>
                   </div>
                   <div className="relative text-xs text-theme-neutral-600" style={{ height: '16px' }}>
-                    {stats.characterStats.addedCharacters > 0 && (
-                      <div className="absolute left-0" style={{ width: `${Math.max((stats.characterStats.addedCharacters / stats.characterStats.totalCharacters) * 100, 25)}%` }}>
-                        <div className="text-left px-1">{stats.characterStats.addedCharacters.toLocaleString()} added ({((stats.characterStats.addedCharacters / stats.characterStats.totalCharacters) * 100).toFixed(1)}%)</div>
-                      </div>
-                    )}
-                    
-                    {stats.characterStats.deletedCharacters > 0 && (
-                      <div className="absolute left-0" style={{ left: `${(stats.characterStats.addedCharacters / stats.characterStats.totalCharacters) * 100}%`, width: `${Math.max((stats.characterStats.deletedCharacters / stats.characterStats.totalCharacters) * 100, 25)}%` }}>
-                        <div className="text-center px-1">{stats.characterStats.deletedCharacters.toLocaleString()} deleted ({((stats.characterStats.deletedCharacters / stats.characterStats.totalCharacters) * 100).toFixed(1)}%)</div>
-                      </div>
-                    )}
-                    
-                    {stats.characterStats.unchangedCharacters > 0 && (
-                      <div className="absolute right-0" style={{ width: `${Math.max((stats.characterStats.unchangedCharacters / stats.characterStats.totalCharacters) * 100, 25)}%` }}>
-                        <div className="text-right px-1">{stats.characterStats.unchangedCharacters.toLocaleString()} unchanged ({((stats.characterStats.unchangedCharacters / stats.characterStats.totalCharacters) * 100).toFixed(1)}%)</div>
-                      </div>
-                    )}
+                    {(() => {
+                      // Calculate percentages for characters
+                      const charAdditionPercent = (stats.characterStats.addedCharacters / stats.characterStats.totalCharacters) * 100;
+                      const charDeletionPercent = (stats.characterStats.deletedCharacters / stats.characterStats.totalCharacters) * 100;
+                      const charUnchangedPercent = (stats.characterStats.unchangedCharacters / stats.characterStats.totalCharacters) * 100;
+                      
+                      // Calculate smart positioning to prevent overlaps
+                      const additionWidth = Math.max(charAdditionPercent, 25);
+                      const deletionWidth = Math.max(charDeletionPercent, 25);
+                      const unchangedWidth = Math.max(charUnchangedPercent, 25);
+                      
+                      // Calculate positions with collision detection
+                      let additionPos = 0;
+                      let deletionPos = Math.max(charAdditionPercent, additionWidth);
+                      let unchangedPos = 100 - unchangedWidth;
+                      
+                      // Ensure deletion doesn't overlap with addition
+                      if (deletionPos < additionWidth) {
+                        deletionPos = additionWidth;
+                      }
+                      
+                      // Ensure unchanged doesn't overlap with deletion
+                      const deletionEnd = deletionPos + deletionWidth;
+                      if (unchangedPos < deletionEnd) {
+                        unchangedPos = deletionEnd;
+                      }
+                      
+                      return (
+                        <>
+                          {stats.characterStats.addedCharacters > 0 && (
+                            <div className="absolute left-0" style={{ left: `${additionPos}%`, width: `${additionWidth}%` }}>
+                              <div className="text-left px-1">{stats.characterStats.addedCharacters.toLocaleString()} added ({charAdditionPercent.toFixed(1)}%)</div>
+                            </div>
+                          )}
+                          
+                          {stats.characterStats.deletedCharacters > 0 && (
+                            <div className="absolute left-0" style={{ left: `${deletionPos}%`, width: `${deletionWidth}%` }}>
+                              <div className="text-center px-1">{stats.characterStats.deletedCharacters.toLocaleString()} deleted ({charDeletionPercent.toFixed(1)}%)</div>
+                            </div>
+                          )}
+                          
+                          {stats.characterStats.unchangedCharacters > 0 && (
+                            <div className="absolute left-0" style={{ left: `${unchangedPos}%`, width: `${unchangedWidth}%` }}>
+                              <div className="text-right px-1">{stats.characterStats.unchangedCharacters.toLocaleString()} unchanged ({charUnchangedPercent.toFixed(1)}%)</div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               )}

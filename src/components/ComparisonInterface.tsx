@@ -569,28 +569,23 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           const targetElement = outputSection || outputPanel;
 
           if (targetElement) {
-            // Calculate scroll position to stop below the BetaDemoControlsPanel
-            const targetRect = targetElement.getBoundingClientRect();
-            const currentScrollY = window.scrollY;
-            
-            // Find the BetaDemoControlsPanel to get its height
+            // Get the demo panel height first
             const demoPanel = document.querySelector('.glass-panel.bg-theme-primary-50\\/80');
-            const demoPanelHeight = demoPanel ? demoPanel.getBoundingClientRect().height + 20 : 80; // 20px margin, 80px fallback
+            const demoPanelHeight = demoPanel ? demoPanel.getBoundingClientRect().height + 60 : 140; // 60px margin, 140px fallback
             
-            // Calculate target scroll position (element top + current scroll - demo panel height - small margin)
-            const targetScrollY = targetRect.top + currentScrollY - demoPanelHeight - 20;
+            // Calculate the target position manually
+            const targetRect = targetElement.getBoundingClientRect();
+            const targetTop = targetRect.top + window.scrollY;
             
-            // Only scroll if we need to (don't scroll up if already visible)
-            const shouldScroll = targetRect.top < demoPanelHeight || targetRect.top > window.innerHeight;
+            // Scroll to position the output section just below the demo panel
+            const scrollToPosition = Math.max(0, targetTop - demoPanelHeight);
             
-            if (shouldScroll) {
-              window.scrollTo({
-                top: Math.max(0, targetScrollY), // Don't scroll above page top
-                behavior: 'smooth'
-              });
-              
-              if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎯 Auto-scrolled to output section (results completed) - Feature #2');
-            }
+            window.scrollTo({
+              top: scrollToPosition,
+              behavior: 'smooth'
+            });
+            
+            if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎯 Auto-scrolled to output section (results completed) - Feature #2');
           }
         }, 200); // Slightly longer delay to ensure content is rendered
       }
