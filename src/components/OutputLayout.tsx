@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { GripHorizontal } from 'lucide-react';
 import { RedlineOutput } from './RedlineOutput';
 import { ComparisonStats } from './ComparisonStats';
 import { DiffChange, ComparisonStats as ComparisonStatsType } from '../types';
 import { BaseComponentProps } from '../types/components';
+import { getTextMetrics, TextMetrics } from '../utils/textMetrics';
 
 interface OutputLayoutProps extends BaseComponentProps {
   /** Comparison result changes */
@@ -48,6 +49,7 @@ interface OutputLayoutProps extends BaseComponentProps {
  * - ComparisonStats display
  * - Output resize handle with hover effects
  * - Visual legend for additions/deletions
+ * - Real-time output content metrics (character and word counts)
  */
 export const OutputLayout: React.FC<OutputLayoutProps> = ({
   changes,
@@ -66,6 +68,46 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
   style,
   className
 }) => {
+  const [outputMetrics, setOutputMetrics] = useState<TextMetrics>({ characters: 0, words: 0 });
+
+  // Extract text content from the output panel and calculate metrics
+  useEffect(() => {
+    const updateMetrics = () => {
+      const outputPanel = document.querySelector('[data-output-panel]');
+      if (outputPanel) {
+        // Get the text content from all content divs within the output panel
+        const contentElements = outputPanel.querySelectorAll('.chunk-container');
+        let totalText = '';
+        
+        contentElements.forEach(element => {
+          const textContent = element.textContent || '';
+          totalText += textContent;
+        });
+        
+        const metrics = getTextMetrics(totalText);
+        setOutputMetrics(metrics);
+      }
+    };
+
+    // Update metrics initially and whenever changes occur
+    updateMetrics();
+    
+    // Set up a mutation observer to watch for content changes
+    const outputPanel = document.querySelector('[data-output-panel]');
+    if (outputPanel) {
+      const observer = new MutationObserver(() => {
+        updateMetrics();
+      });
+      
+      observer.observe(outputPanel, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+      
+      return () => observer.disconnect();
+    }
+  }, [changes]); // Re-run when changes prop updates
   return (
     <div className={`mb-6 ${className || ''}`} style={style}> {/* Match input panel structure for natural expansion */}
       {/* SSMR: Direct RedlineOutput with proper container identity */}
@@ -116,16 +158,23 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
           }}
           title="Drag to resize output panel"
         >
-          <div className="flex items-center gap-4 text-xs text-theme-primary-700">
-            <span></span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 bg-[#dcfce7] border border-[#bbf7d0] rounded"></span>
-              Additions
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 bg-[#fee2e2] border border-[#fecaca] rounded"></span>
-              Deletions
-            </span>
+          <div className="flex justify-between items-center w-full text-xs text-theme-primary-700">
+            {/* Left: Visual legend */}
+            <div className="flex items-center gap-4 pl-2">
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 bg-[#dcfce7] border border-[#bbf7d0] rounded"></span>
+                Additions
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 bg-[#fee2e2] border border-[#fecaca] rounded"></span>
+                Deletions
+              </span>
+            </div>
+            
+            {/* Right: Output content metrics */}
+            <div className="text-right pr-2">
+              <span className="font-medium">Output:</span> {outputMetrics.characters.toLocaleString()} chars, {outputMetrics.words.toLocaleString()} words
+            </div>
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <GripHorizontal className="w-6 h-6 text-theme-neutral-700" />

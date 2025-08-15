@@ -2,6 +2,7 @@ import * as React from 'react';
 import { GripHorizontal } from 'lucide-react';
 import { TextInputPanel } from './TextInputPanel';
 import { BaseComponentProps } from '../types/components';
+import { getTextMetrics } from '../utils/textMetrics';
 
 interface MobileInputLayoutProps extends BaseComponentProps {
   /** Original text content */
@@ -34,7 +35,7 @@ interface MobileInputLayoutProps extends BaseComponentProps {
  * 
  * Features:
  * - Stacked input panels with resize handle between them
- * - Character count display in resize handle
+ * - Character and word count display in resize handle
  * - Hover effects for visual feedback
  * - Integrated with useResizeHandlers hook
  */
@@ -50,6 +51,8 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
   style,
   className,
 }) => {
+  const originalMetrics = getTextMetrics(originalText);
+  const revisedMetrics = getTextMetrics(revisedText);
   return (
     <div className={`lg:hidden ${className || ''}`} style={style}>
       <div ref={panelResizeHandlers.mobileInputPanelsRef}>
@@ -68,7 +71,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
         
         {/* Mobile Handle - Between panels for integrated unit */}
         <div 
-          className="glass-panel bg-theme-neutral-200/60 hover:bg-theme-neutral-300/70 transition-all duration-300 backdrop-blur-md border-l border-r border-theme-neutral-300/30 shadow-sm hover:shadow-md px-3 h-10"
+          className="glass-panel bg-theme-neutral-200/60 hover:bg-theme-neutral-300/70 transition-all duration-300 backdrop-blur-md border-l border-r border-theme-neutral-300/30 shadow-sm hover:shadow-md px-3 min-h-12"
           data-resize-handle="input-panels"
           ref={mobileResizeHandleRef}
           onMouseDown={panelResizeHandlers.handleMouseDown}
@@ -96,11 +99,10 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
         >
           {/* Mobile layout: single line with left/center/right alignment */}
           <div className="flex justify-between items-center w-full text-xs text-theme-neutral-600 cursor-row-resize touch-none select-none">
-            {/* Original character count - left aligned */}
-            <div className="flex flex-col h-full">
-              <span className="font-medium text-lg">&nbsp;&nbsp;&nbsp;⬆️ </span>
-              <span className="font-medium text-sm">Original: </span>
-              <span className="text-sm">{originalText.length.toLocaleString()} chars</span>
+            {/* Original metrics - left aligned */}
+            <div className="flex flex-col justify-center">
+              <span className="font-medium text-xs">⬆️ Original:</span>
+              <span className="text-xs">{originalMetrics.characters.toLocaleString()} chars, {originalMetrics.words.toLocaleString()} words</span>
             </div>
             
             {/* Grip handle - center aligned */}
@@ -108,11 +110,10 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
               <GripHorizontal className="w-6 h-6 text-theme-neutral-700" />
             </div>
             
-            {/* Revised character count - right aligned */}
-            <div className="text-right">
-              <span className="font-medium text-sm">Revised: </span>
-              <span className="text-sm">{revisedText.length.toLocaleString()} chars</span>
-              <span className="font-medium text-lg">⬇️&nbsp;&nbsp;&nbsp;</span>
+            {/* Revised metrics - right aligned */}
+            <div className="text-right flex flex-col justify-center">
+              <span className="font-medium text-xs">Revised: ⬇️</span>
+              <span className="text-xs">{revisedMetrics.characters.toLocaleString()} chars, {revisedMetrics.words.toLocaleString()} words</span>
             </div>
           </div>
         </div>

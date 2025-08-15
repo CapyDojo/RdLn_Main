@@ -3,7 +3,6 @@ import { PlayCircle, HelpCircle } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
 import { CustomTooltip } from './CustomTooltip';
 import { getRecommendedSample } from '../utils/sampleData';
-import { useExperimentalFeatures } from '../contexts/ExperimentalLayoutContext';
 
 // Beta countdown component
 const BetaBadge: React.FC = () => {
@@ -43,7 +42,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   style, 
   className 
 }) => {
-  const { features } = useExperimentalFeatures();
   const handleQuickDemo = () => {
     if (onLoadSample) {
       const sample = getRecommendedSample();
@@ -93,7 +91,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
                 </button>
               </CustomTooltip>
             )}
-            {features.enableOnboardingTour && onStartTour && (
+            {onStartTour && (
               <CustomTooltip content="Learn how to use RdLn">
                 <button
                   onClick={handleStartTour}

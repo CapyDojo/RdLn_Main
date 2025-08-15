@@ -2,6 +2,7 @@ import React from 'react';
 import { GripHorizontal } from 'lucide-react';
 import { TextInputPanel } from './TextInputPanel';
 import { BaseComponentProps } from '../types/components';
+import { getTextMetrics } from '../utils/textMetrics';
 
 interface DesktopInputLayoutProps extends BaseComponentProps {
   /** Original text content */
@@ -34,7 +35,7 @@ interface DesktopInputLayoutProps extends BaseComponentProps {
  * 
  * Features:
  * - Side-by-side input panels with shared resize handle
- * - Character count display in resize handle
+ * - Character and word count display in resize handle
  * - Hover effects for visual feedback
  * - Integrated with useResizeHandlers hook
  */
@@ -50,6 +51,8 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
   style,
   className
 }) => {
+  const originalMetrics = getTextMetrics(originalText);
+  const revisedMetrics = getTextMetrics(revisedText);
   return (
     <div className={`hidden lg:block ${className || ''}`} style={style}>
       <div ref={panelResizeHandlers.desktopInputPanelsRef} className="grid grid-cols-2 gap-6">
@@ -83,9 +86,9 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
         <div className="glass-panel bg-theme-neutral-200/60 hover:bg-theme-neutral-300/70 transition-all duration-300 backdrop-blur-md border border-theme-neutral-300/30 shadow-sm hover:shadow-md px-2 py-1">
           {/* Desktop layout: horizontal */}
           <div className="flex items-center gap-4">
-            {/* Original character count */}
+            {/* Original metrics */}
             <div className="text-xs text-theme-neutral-600 whitespace-nowrap">
-              <span className="font-medium">  Original:</span> {originalText.length.toLocaleString()} chars
+              <span className="font-medium">  Original:</span> {originalMetrics.characters.toLocaleString()} chars, {originalMetrics.words.toLocaleString()} words
             </div>
             
             {/* Resize handle grip */}
@@ -119,9 +122,9 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
               <GripHorizontal className="w-6 h-6 text-theme-neutral-700" />
             </div>
             
-            {/* Revised character count */}
+            {/* Revised metrics */}
             <div className="text-xs text-theme-neutral-600 whitespace-nowrap">
-              <span className="font-medium">Revised:</span> {revisedText.length.toLocaleString()} chars
+              <span className="font-medium">Revised:</span> {revisedMetrics.characters.toLocaleString()} chars, {revisedMetrics.words.toLocaleString()} words
             </div>
           </div>
         </div>

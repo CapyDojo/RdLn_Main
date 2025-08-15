@@ -33,8 +33,6 @@ export interface ExperimentalFeatures {
   popoutResultsWindow: boolean;          // #12: Results open in separate browser window
   userConfigurableOrder: boolean;        // #13: Save user's preferred layout
   
-  // User Experience Features (Safe)
-  enableOnboardingTour: boolean;         // New user onboarding tour with step-by-step guidance
 }
 
 interface ExperimentalLayoutContextType {
@@ -67,8 +65,6 @@ const defaultFeatures: ExperimentalFeatures = {
   popoutResultsWindow: false,
   userConfigurableOrder: false,
   
-  // User Experience Features
-  enableOnboardingTour: false,
 };
 
 // Predefined test groups for A/B testing
@@ -206,7 +202,6 @@ export const useExperimentalCSSClasses = () => {
   if (features.refinedResultsFirst) classes.push('experimental-refined-results-first');
   if (features.popoutResultsWindow) classes.push('experimental-popout-window');
   if (features.userConfigurableOrder) classes.push('experimental-configurable-order');
-  if (features.enableOnboardingTour) classes.push('experimental-onboarding-tour');
   
   return classes.join(' ');
 };

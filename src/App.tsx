@@ -187,12 +187,6 @@ function AppContent({
     // Reset tour completion status and start fresh
     localStorage.removeItem('tour-rdln-welcome-tour-completed');
     localStorage.removeItem('tour-rdln-welcome-tour-skipped');
-    // Ensure feature flag is enabled
-    const currentFeatures = JSON.parse(localStorage.getItem('experimental-features') || '{}');
-    localStorage.setItem('experimental-features', JSON.stringify({
-      ...currentFeatures,
-      enableOnboardingTour: true
-    }));
     // Reset shouldStartTour first, then set to true to trigger change
     setShouldStartTour(false);
     setTimeout(() => setShouldStartTour(true), 10);
@@ -328,9 +322,9 @@ function AppContent({
         onClose={() => setShowBetaTermsDialog(false)}
       />
 
-      {/* Onboarding Tour - Only show if feature flag is enabled */}
+      {/* Onboarding Tour */}
       <OnboardingTour
-        isEnabled={features.enableOnboardingTour}
+        isEnabled={true}
         shouldStart={shouldStartTour}
         onTourComplete={handleTourComplete}
         onTourSkip={handleTourSkip}
@@ -340,7 +334,7 @@ function AppContent({
 
       {/* Tour Restart Button - Only show after tour completion/skip */}
       <TourRestartButton
-        show={showTourRestart && features.enableOnboardingTour}
+        show={showTourRestart}
         onRestart={handleTourRestart}
       />
 

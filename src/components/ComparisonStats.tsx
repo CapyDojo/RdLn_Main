@@ -233,15 +233,14 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
             {/* Review Workload */}
             <div className="text-center">
               <div className="flex justify-center mb-3">
-                <div className="flex items-center gap-4 p-4 bg-theme-accent-50 rounded-xl border-2 border-theme-accent-200">
-                  <div className="flex items-center gap-2 text-green-600">
+                <div className="flex items-center rounded-xl border-2 border-gray-200 overflow-hidden">
+                  <div className="flex items-center gap-2 text-green-700 bg-green-50 px-4 py-4">
                     <Plus className="w-5 h-5" />
                     <span className="font-semibold text-base">
                       {stats.wordStats?.addedWords || stats.additions}
                     </span>
                   </div>
-                  <div className="w-px h-8 bg-theme-accent-300"></div>
-                  <div className="flex items-center gap-2 text-red-600">
+                  <div className="flex items-center gap-2 text-red-700 bg-red-50 px-4 py-4">
                     <Minus className="w-5 h-5" />
                     <span className="font-semibold text-base">
                       {stats.wordStats?.deletedWords || stats.deletions}
