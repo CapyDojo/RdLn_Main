@@ -88,7 +88,7 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
           data-resize-handle="output-panel"
           data-testid="output-resize-handle"
           ref={outputResizeHandlers.outputResizeHandleRef}
-          className="glass-panel output-resize-handle relative flex items-center w-full h-10 cursor-row-resize touch-none select-none backdrop-blur-md px-4"
+          className="glass-panel output-resize-handle relative flex items-center w-full max-w-2xl h-10 cursor-row-resize touch-none select-none backdrop-blur-md px-4"
           onMouseDown={outputResizeHandlers.handleMouseDown}
           onMouseEnter={() => {
             // Apply hover effects to output panel - same as handle bar

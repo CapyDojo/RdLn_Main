@@ -169,7 +169,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
   return (
     <div
-      className={`glass-panel glass-content-panel overflow-hidden shadow-lg transition-all duration-300 ${className || ''}`}
+      className={`glass-panel glass-content-panel overflow-hidden shadow-lg transition-all duration-300 w-full max-w-6xl mx-auto ${className || ''}`}
       style={style}
       {...props}
     >
