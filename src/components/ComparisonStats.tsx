@@ -233,11 +233,21 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
             {/* Review Workload */}
             <div className="text-center">
               <div className="flex justify-center mb-3">
-                <CircularProgress 
-                  percentage={Math.min((reviewWorkload / documentSize) * 100, 100)} 
-                  color="#dc2626" 
-                  size={80}
-                />
+                <div className="flex items-center gap-4 p-4 bg-theme-accent-50 rounded-xl border-2 border-theme-accent-200">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <Plus className="w-5 h-5" />
+                    <span className="font-semibold text-base">
+                      {stats.wordStats?.addedWords || stats.additions}
+                    </span>
+                  </div>
+                  <div className="w-px h-8 bg-theme-accent-300"></div>
+                  <div className="flex items-center gap-2 text-red-600">
+                    <Minus className="w-5 h-5" />
+                    <span className="font-semibold text-base">
+                      {stats.wordStats?.deletedWords || stats.deletions}
+                    </span>
+                  </div>
+                </div>
               </div>
               <div className="space-y-1">
                 <p className="text-2xl font-bold text-theme-accent-700">{reviewWorkload}</p>
