@@ -36,6 +36,8 @@ interface OutputLayoutProps extends BaseComponentProps {
   isFullScreen?: boolean;
   /** Optional callback for auto-height adjustment */
   onHeightChangeRequest?: (height: number) => void;
+  /** Callback to provide calculated stats from output content */
+  onStatsCalculated?: (stats: ComparisonStatsType) => void;
 }
 
 /**
@@ -50,6 +52,8 @@ interface OutputLayoutProps extends BaseComponentProps {
  * - Output resize handle with hover effects
  * - Visual legend for additions/deletions
  * - Real-time output content metrics (character and word counts)
+ * - Comprehensive stats calculation based on actual rendered content
+ * - Stats synchronization with ComparisonStats component
  */
 export const OutputLayout: React.FC<OutputLayoutProps> = ({
   changes,
@@ -65,12 +69,13 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
   onToggleFullScreen,
   isFullScreen = false,
   onHeightChangeRequest,
+  onStatsCalculated,
   style,
   className
 }) => {
   const [outputMetrics, setOutputMetrics] = useState<TextMetrics>({ characters: 0, words: 0 });
 
-  // Extract text content from the output panel and calculate metrics
+  // Extract text content from the output panel and calculate comprehensive metrics
   useEffect(() => {
     const updateMetrics = () => {
       const outputPanel = document.querySelector('[data-output-panel]');
@@ -79,13 +84,71 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
         const contentElements = outputPanel.querySelectorAll('.chunk-container');
         let totalText = '';
         
+        // Also calculate detailed stats by analyzing the styled spans
+        let addedWords = 0;
+        let deletedWords = 0;
+        let unchangedWords = 0;
+        let addedCharacters = 0;
+        let deletedCharacters = 0;
+        let unchangedCharacters = 0;
+        
         contentElements.forEach(element => {
           const textContent = element.textContent || '';
           totalText += textContent;
+          
+          // Count additions (green spans)
+          const addedSpans = element.querySelectorAll('span[style*="background: linear-gradient(135deg, #f0fdf4"]');
+          addedSpans.forEach(span => {
+            const text = span.textContent || '';
+            const spanMetrics = getTextMetrics(text);
+            addedWords += spanMetrics.words;
+            addedCharacters += spanMetrics.characters;
+          });
+          
+          // Count deletions (red spans)
+          const deletedSpans = element.querySelectorAll('span[style*="background: linear-gradient(135deg, #fef7f7"]');
+          deletedSpans.forEach(span => {
+            const text = span.textContent || '';
+            const spanMetrics = getTextMetrics(text);
+            deletedWords += spanMetrics.words;
+            deletedCharacters += spanMetrics.characters;
+          });
         });
         
-        const metrics = getTextMetrics(totalText);
-        setOutputMetrics(metrics);
+        const totalMetrics = getTextMetrics(totalText);
+        setOutputMetrics(totalMetrics);
+        
+        // Calculate unchanged content (total - added - deleted)
+        unchangedWords = Math.max(0, totalMetrics.words - addedWords - deletedWords);
+        unchangedCharacters = Math.max(0, totalMetrics.characters - addedCharacters - deletedCharacters);
+        
+        // Calculate comprehensive stats and pass back to parent
+        if (onStatsCalculated) {
+          const comprehensiveStats: ComparisonStatsType = {
+            additions: addedWords > 0 ? Math.ceil(addedWords / 10) : 0, // Rough block estimate
+            deletions: deletedWords > 0 ? Math.ceil(deletedWords / 10) : 0, // Rough block estimate  
+            unchanged: unchangedWords > 0 ? Math.ceil(unchangedWords / 10) : 0, // Rough block estimate
+            totalChanges: addedWords + deletedWords,
+            wordStats: {
+              addedWords,
+              deletedWords,
+              unchangedWords,
+              totalWords: totalMetrics.words,
+              reviewWorkload: addedWords + deletedWords,
+              percentageChanged: totalMetrics.words > 0 ? Math.round(((addedWords + deletedWords) / totalMetrics.words) * 1000) / 10 : 0
+            },
+            characterStats: {
+              addedCharacters,
+              deletedCharacters,
+              unchangedCharacters,
+              totalCharacters: totalMetrics.characters,
+              totalCharactersNoSpaces: totalMetrics.characters, // Simplified for now
+              reviewWorkload: addedCharacters + deletedCharacters,
+              percentageChanged: totalMetrics.characters > 0 ? Math.round(((addedCharacters + deletedCharacters) / totalMetrics.characters) * 1000) / 10 : 0
+            }
+          };
+          onStatsCalculated(comprehensiveStats);
+        }
       }
     };
 

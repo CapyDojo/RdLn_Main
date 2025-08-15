@@ -130,6 +130,21 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   // State to trigger comparison after sample data is loaded
   const [autoRunTrigger, setAutoRunTrigger] = useState(false);
 
+  // State to store output-based stats (overrides algorithm-generated stats)
+  const [outputBasedStats, setOutputBasedStats] = useState<import('../types').ComparisonStats | null>(null);
+
+  // Callback to receive calculated stats from OutputLayout
+  const handleStatsCalculated = (calculatedStats: import('../types').ComparisonStats) => {
+    setOutputBasedStats(calculatedStats);
+  };
+
+  // Reset output-based stats when result changes (new comparison)
+  useEffect(() => {
+    if (result) {
+      setOutputBasedStats(null); // Reset to allow new calculation
+    }
+  }, [result]);
+
   // Define scoped sample loader so it can be passed as a prop and exposed via ref
   const loadSampleData = (originalText: string, revisedText: string, autoRun: boolean = false) => {
     setOriginalText(originalText);
@@ -823,7 +838,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
               >
                 <OutputLayout
                   changes={result.changes}
-                  stats={result.stats}
+                  stats={outputBasedStats || result.stats}
                   USE_CSS_RESIZE={USE_CSS_RESIZE}
                   outputHeight={outputHeight}
                   onCopy={() => { }}
@@ -834,12 +849,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
                   onToggleFullScreen={toggleFullScreen}
                   isFullScreen={isFullScreen}
                   onHeightChangeRequest={handleHeightChangeRequest}
+                  onStatsCalculated={handleStatsCalculated}
                 />
               </StickyResultsPanel>
             ) : (
               <OutputLayout
                 changes={result.changes}
-                stats={result.stats}
+                stats={outputBasedStats || result.stats}
                 USE_CSS_RESIZE={USE_CSS_RESIZE}
                 outputHeight={outputHeight}
                 onCopy={() => { }}
@@ -850,6 +866,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
                 onToggleFullScreen={toggleFullScreen}
                 isFullScreen={isFullScreen}
                 onHeightChangeRequest={handleHeightChangeRequest}
+                onStatsCalculated={handleStatsCalculated}
               />
             )
           )}
