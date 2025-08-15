@@ -49,7 +49,7 @@
 }
 
 .layout-current h3 {
-  font-size: clamp(1rem, 2.5vw, 1.5rem); /* 16px to 24px */
+  font-size: clamp(1rem, 2.5vw, 1.75rem); /* 16px to 28px - allows for larger sizes */
 }
 
 .layout-current .text-sm {

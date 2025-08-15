@@ -220,7 +220,7 @@ export const RdLnMemorySidePanel: React.FC<RdLnMemorySidePanelProps> = ({
         style={{
           top: '3.9rem',
           right: '0px',
-          width: '466.5px', // 423px panel + 43.5px tab
+          width: '471px', // 423px panel + 48px tab
           height: '90px', // Match tab height
           background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 10%, rgba(255,255,255,0.1) 100%)',
           backdropFilter: 'blur(8px)',

@@ -71,11 +71,6 @@ This implementation plan converts the RdLn Memory state synchronization fix into
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
 - [x] 10. Implement Progressive Storage Quota Warning System
-
-
-
-
-
   - Create `StorageQuotaModal` component with glassmorphism design matching RdLn theme
   - Add storage quota monitoring to `RdLnMemoryContext` with progressive warning levels and appropriate theming:
     - **75% capacity** (Gentle Blue): "Storage Getting Full"
@@ -110,15 +105,12 @@ This implementation plan converts the RdLn Memory state synchronization fix into
   - Implement smart file naming: `rdln-full-2025-01-12.json`, `rdln-incremental-2025-01-12.json`
   - Show export preview (e.g., "5 new sessions since last export")
   - Implement automatic JSON export download using enhanced `exportSessions()` function
+  - Create `StorageQuotaManager` component to integrate modal with app
+  - Add `StorageQuotaManager` to `src/App.tsx` for global integration
   - Test modal appears at correct thresholds with appropriate urgency and handles all user choices correctly
   - _Requirements: 3.4, User Experience Enhancement_
 
 - [x] 11. Clean Up and Documentation
-
-
-
-
-
   - Add JSDoc comments to new context provider
   - Update any relevant code comments that reference the old pattern
   - Verify TypeScript compilation with no errors

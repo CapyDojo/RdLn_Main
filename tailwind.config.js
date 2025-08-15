@@ -113,6 +113,10 @@ export default {
       backgroundOpacity: {
         'theme': 'var(--effect-backgroundOpacity, 1)',
       },
+      fontSize: {
+        '2.5xl': ['1.75rem', '2.25rem'], // 28px with line-height
+        '3.5xl': ['2rem', '2.5rem'],     // 32px with line-height
+      },
     },
   },
   plugins: [],

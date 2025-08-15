@@ -61,7 +61,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
             placeholder="TYPE or PASTE your original text here, or..."
             disabled={isProcessing}
             height={panelHeight}
-            iconEmoji="📝"
+            iconEmoji="📄"
           />
         </div>
         

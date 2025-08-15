@@ -49,10 +49,10 @@ export const RdLnMemoryEdgeTab: React.FC<RdLnMemoryEdgeTabProps> = ({
       className={`fixed z-[9999] transition-all duration-500 ease-out ${className || ''}`}
       style={{
         // Position aligned with header card (moved down slightly)
-        top: '3.9rem',
+        top: '4.8rem',
         right: isOpen ? '423px' : '0px', // Slide with panel
-        height: '90px', // Match header card height (nav with padding)
-        width: '43.5px', // Compact edge tab width
+        height: '96px', // Match header card height (nav with padding)
+        width: '48px', // Compact edge tab width
         transform: isHovered ? 'translateY(-2px)' : '',
         ...style
       }}

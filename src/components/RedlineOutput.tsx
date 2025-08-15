@@ -78,7 +78,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     }
   }, [externalBackgroundMode, backgroundMode]);
 
-  
+
 
   // Font size context
   const { fontSize } = useFontSize();
@@ -177,13 +177,13 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       {!hideHeader && (
         <div className={`glass-panel-header-footer px-4 py-3 flex items-center relative ${isInOverlayMode ? 'justify-between' : 'justify-between'}`}>
           <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-theme-neutral-300 to-transparent"></div>
-          
+
           {/* Left side content */}
           <div className="flex items-center gap-2">
             {!isInOverlayMode ? (
               <>
-                <span className="text-5xl" role="img" aria-label="Output panel">🎯</span>
-                <h3 className="text-3xl font-semibold text-theme-primary-900">Compared RdLn</h3>
+                <span className="text-3.5xl" role="img" aria-label="Output panel">✅</span>
+                <h3 className="text-2.5xl font-semibold text-theme-primary-900">Compared RdLn</h3>
               </>
             ) : (
               <FontSizeSelector />
@@ -259,7 +259,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             <div className="relative segmented-control">
               <FullScreenButton
                 isFullScreen={isFullScreen}
-                onToggle={onToggleFullScreen || (() => {})}
+                onToggle={onToggleFullScreen || (() => { })}
                 hasResults={filteredChanges && filteredChanges.length > 0}
               />
             </div>
@@ -386,7 +386,7 @@ const generateHTMLString = (changes: DiffChange[]) => {
         const originalContent = change.originalContent || '';
         const revisedContent = change.revisedContent || '';
         const isPureWhitespaceSubstitution = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
-        
+
         if (isPureWhitespaceSubstitution) {
           // Clean mode: render whitespace substitutions without highlighting
           html += `<span>${escape(revisedContent)}</span>`;
@@ -483,7 +483,7 @@ const renderSingleChange = (change: DiffChange) => {
       const originalContent = change.originalContent || '';
       const revisedContent = change.revisedContent || '';
       const isPureWhitespaceSubstitution = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
-      
+
       if (isPureWhitespaceSubstitution) {
         // Clean mode: render whitespace substitutions without highlighting
         return `<span>${escape(revisedContent)}</span>`;

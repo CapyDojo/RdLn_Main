@@ -330,6 +330,101 @@ function documentRels() {
 
 // --- End of RdLn DOCX Exporter ---
 
+// Top-level: processLayersJson so UI can call it when a .json is uploaded
+async function processLayersJson(file) {
+  const statusDiv = document.getElementById('status');
+  try {
+    console.log('Processing layers JSON:', file?.name);
+    if (statusDiv) statusDiv.textContent = 'Reading layers JSON...';
+    const text = await file.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('Invalid JSON file.', e);
+      if (statusDiv) statusDiv.textContent = 'Invalid JSON file.';
+      return;
+    }
+
+    const pages = Array.isArray(data.pages) ? data.pages : [];
+    if (!pages.length) {
+      if (statusDiv) statusDiv.textContent = 'No pages in layers JSON.';
+      return;
+    }
+
+    // Build tokens from classifiedWords (fallback to words as equal)
+    const tokens = [];
+    const lineJumpFactor = 0.6; // y-gap threshold relative to prev height
+    for (const page of pages) {
+      const words = Array.isArray(page.classifiedWords) ? page.classifiedWords
+                  : (Array.isArray(page.words) ? page.words.map(w => ({ ...w, type: 'equal' })) : []);
+      if (!words.length) continue;
+      // sort by y then x
+      words.sort((a,b) => (a.y === b.y ? a.x - b.x : a.y - b.y));
+      let prevY = null, prevH = null;
+      for (let i = 0; i < words.length; i++) {
+        const w = words[i];
+        const t = (w.type === 'ins' || w.type === 'del') ? w.type : 'equal';
+        const txt = String(w.text || '');
+        if (!txt) continue;
+        if (prevY != null && prevH != null) {
+          const yGap = Math.abs(w.y - prevY);
+          if (yGap > (prevH * lineJumpFactor)) {
+            tokens.push({ type: 'newline' });
+          } else {
+            // space separator on the same line between words
+            if (tokens.length && tokens[tokens.length - 1].type !== 'newline') {
+              tokens.push({ type: t, text: ' ' });
+            }
+          }
+        }
+        tokens.push({ type: t, text: txt });
+        prevY = w.y; prevH = w.h || prevH || 10;
+      }
+      tokens.push({ type: 'newline' });
+    }
+
+    const merged = mergeAdjacent(tokens);
+    const paras = chunkParagraphs(merged);
+
+    const author = 'RdLn';
+    const isoDate = new Date().toISOString();
+    const documentXml = buildDocumentXml(paras, author, isoDate, []);
+
+    const zip = new JSZip();
+    zip.file('[Content_Types].xml', contentTypesXml());
+    zip.folder('_rels')?.file('.rels', relsRels());
+    const docProps = zip.folder('docProps');
+    docProps?.file('core.xml', corePropsXml(author, isoDate));
+    docProps?.file('app.xml', appPropsXml());
+    const word = zip.folder('word');
+    word?.file('document.xml', documentXml);
+    word?.file('styles.xml', stylesXml());
+    word?.file('settings.xml', settingsXml());
+    word?.folder('_rels')?.file('document.xml.rels', documentRels());
+
+    if (statusDiv) statusDiv.textContent = 'Building DOCX...';
+    const content = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+
+    const blob = new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (file.name?.replace(/\.json$/i, '') || 'output') + '.docx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    if (statusDiv) statusDiv.textContent = 'DOCX generated from layers JSON.';
+  } catch (err) {
+    console.error('processLayersJson failed:', err);
+    const statusDiv2 = document.getElementById('status');
+    if (statusDiv2) statusDiv2.textContent = `Conversion failed: ${err?.message || err}`;
+    throw err;
+  }
+}
+
 window.onload = () => {
     const uploadInput = document.getElementById('pdf-upload');
     const convertBtn = document.getElementById('convert-btn');
@@ -363,10 +458,15 @@ window.onload = () => {
         }
 
         convertBtn.disabled = true;
-        statusDiv.textContent = 'Processing PDF...';
+        statusDiv.textContent = 'Processing...';
 
         try {
-            await processPdf(selectedFile);
+            const name = (selectedFile.name || '').toLowerCase();
+            if (name.endsWith('.json')) {
+                await processLayersJson(selectedFile);
+            } else {
+                await processPdf(selectedFile);
+            }
         } catch (error) {
             console.error('Conversion failed:', error);
             statusDiv.textContent = `Conversion failed: ${error.message}`;

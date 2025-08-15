@@ -62,7 +62,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
             placeholder="TYPE or PASTE your original text here, or..."
             disabled={isProcessing}
             height={panelHeight}
-            iconEmoji="📝"
+            iconEmoji="📄"
           />
         </div>
         

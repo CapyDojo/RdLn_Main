@@ -525,11 +525,11 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-theme-neutral-300 to-transparent"></div>
         <div className="flex items-center gap-2">
           {iconEmoji ? (
-            <span className="text-5xl" role="img" aria-label="Input panel">{iconEmoji}</span>
+            <span className="text-3.5xl" role="img" aria-label="Input panel">{iconEmoji}</span>
           ) : (
             <FileText className="w-5 h-5 text-theme-primary-900" />
           )}
-          <h3 className="text-3xl font-semibold text-theme-primary-900">{title}</h3>
+          <h3 className="!text-2.5xl font-semibold text-theme-primary-900">{title}</h3>
           <div className="relative">
             <CustomTooltip
               content={`Enable when pasting broken PDF text. \n\n RdLn will fix it for you!\n`}
@@ -537,7 +537,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
             >
               <button
                 onClick={toggleAutoFormat}
-                className={`flex items-center justify-center w-16 h-14 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
+                className={`flex items-center justify-center w-14 h-10 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${isAutoFormatEnabled
                   ? 'bg-theme-primary-700 border-transparent hover:shadow-lg hover:shadow-theme-accent-200/30 shadow-theme-accent-200/20'
                   : 'bg-theme-neutral-900/20 dark:bg-theme-neutral-100/5 border-theme-neutral-600/50 dark:border-theme-neutral-400/40 hover:border-theme-neutral-500/70 dark:hover:border-theme-neutral-300/60 hover:bg-theme-neutral-800/25 dark:hover:bg-theme-neutral-100/10'}`}
                 aria-pressed={isAutoFormatEnabled}
@@ -594,7 +594,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <div className="flex flex-col items-center gap-0">
             <span className="text-sm font-medium text-theme-neutral-700 hidden sm:block mb-1 text-center">OCR Languages</span>
             <div className="segmented-control relative z-[10001]" ref={segmentedControlRef} role="group" aria-label="OCR Language Detection Mode">
-              <CustomTooltip content="Automatically detect document language" placement="bottom-left">
+              <CustomTooltip content="Automatically detect document language" placement="bottom-left" status={autoDetect ? 'ON' : 'OFF'}>
                 <button
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent event bubbling
@@ -688,8 +688,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           placeholder={isProcessing ? '' : placeholder}
           disabled={disabled || isProcessing}
           className="glass-input-field user-text-area w-full py-6 px-8 resize-none focus:ring-2 focus:ring-theme-primary-500 focus:border-transparent font-serif text-theme-neutral-800 disabled:cursor-not-allowed transition-colors libertinus-math-text border-0 bg-transparent"
-          style={{ 
-            minHeight: '200px', 
+          style={{
+            minHeight: '200px',
             lineHeight: '2',
             height: 'auto', // Allow textarea to grow
             overflow: 'hidden' // Hide textarea scrollbar - container will scroll instead
