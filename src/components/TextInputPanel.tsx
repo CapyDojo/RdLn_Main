@@ -532,7 +532,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <h3 className="!text-2.5xl font-semibold text-theme-primary-900">{title}</h3>
           <div className="relative">
             <CustomTooltip
-              content={`Enable when pasting broken PDF text. \n\n RdLn will fix it for you!\n`}
+              content={`Enable when pasting broken PDF paragraphs. \n\n RdLn will fix them for you!\n`}
               status={isAutoFormatEnabled ? 'ON' : 'OFF'}
             >
               <button
