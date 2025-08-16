@@ -413,7 +413,22 @@ const renderChangedContentWithWhitespaceLogic = (
 ): string => {
   const isPureWhitespaceSubstitution = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
 
-  if (isPureWhitespaceSubstitution) {
+
+
+  // Edge case: single whitespace addition/removal (common line-ending formatting noise)
+  const isSingleWhitespaceChange = (
+    // Pure whitespace differences (empty, spaces, tabs)
+    (/^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent)) ||
+    // Single space addition: "" → " "
+    (originalContent === "" && revisedContent === " ") ||
+    // Single space removal: " " → ""
+    (originalContent === " " && revisedContent === "") ||
+    // Single space substitution: " " → "  " or vice versa (different amounts of spaces)
+    (/^\s+$/.test(originalContent) && /^\s+$/.test(revisedContent) && 
+     Math.abs(originalContent.length - revisedContent.length) <= 2)
+  );
+
+  if (isPureWhitespaceSubstitution || isSingleWhitespaceChange) {
     // Clean mode: render whitespace substitutions without highlighting
     return `<span>${escapeHTML(revisedContent)}</span>`;
   } else {
@@ -441,10 +456,20 @@ const generateHTMLString = (changes: DiffChange[]) => {
 
     switch (change.type) {
       case 'added':
-        html += `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
+        // Clean up single-character whitespace additions
+        if (change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
+          html += `<span>${escapeHTML(change.content)}</span>`;
+        } else {
+          html += `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
+        }
         break;
       case 'removed':
-        html += `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
+        // Clean up single-character whitespace removals
+        if (change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
+          // Render nothing for removed whitespace
+        } else {
+          html += `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
+        }
         break;
       case 'changed':
         const originalContent = change.originalContent || '';
@@ -553,8 +578,16 @@ const renderSingleChange = (change: DiffChange) => {
 
   switch (change.type) {
     case 'added':
+      // Clean up single-character whitespace additions
+      if (change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
+        return `<span>${escapeHTML(change.content)}</span>`;
+      }
       return `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
     case 'removed':
+      // Clean up single-character whitespace removals
+      if (change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
+        return `<span></span>`; // Render nothing for removed whitespace
+      }
       return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
     case 'changed':
       const originalContent = change.originalContent || '';
