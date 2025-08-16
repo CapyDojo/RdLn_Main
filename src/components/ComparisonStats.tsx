@@ -179,7 +179,7 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
               <h3 className="text-2xl font-semibold text-theme-primary-900">Comparison Analysis</h3>
             </div>
             <div className="flex-1 flex justify-center">
-              <Tooltip content={`${impactLevel.charAt(0).toUpperCase() + impactLevel.slice(1)} Impact: ${impactLevel === 'low' ? 'Minor changes (≤10%), routine review expected' : impactLevel === 'medium' ? 'Moderate changes (11-30%), careful review required' : 'Significant changes (>30%), thorough legal analysis needed'}`}>
+              <Tooltip content={`${impactLevel.charAt(0).toUpperCase() + impactLevel.slice(1)} Impact: ${impactLevel === 'low' ? 'Minor changes (≤10%), routine review recommended' : impactLevel === 'medium' ? 'Moderate changes (11-30%), careful review recommended' : 'Significant changes (>30%), thorough analysis recommended'}`}>
                 <div className="glass-panel flex items-center gap-2 px-3 py-2 rounded-lg border border-theme-neutral-300 cursor-help">
                   <ImpactIcon className="w-4 h-4 text-theme-primary-600" />
                   <span className="text-sm font-medium text-theme-primary-900 capitalize">

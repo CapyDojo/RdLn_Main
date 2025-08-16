@@ -1,4 +1,5 @@
 import React from 'react';
+import { Filter } from 'lucide-react';
 import { DiffChange } from '../types';
 import { BaseComponentProps } from '../types/components';
 import { UI_CONFIG, FEATURE_FLAGS, DEV_CONFIG } from '../config/appConfig';
@@ -86,6 +87,9 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   // Font size context
   const { fontSize } = useFontSize();
 
+  // Whitespace cleanup toggle state
+  const [cleanWhitespace, setCleanWhitespace] = React.useState(true);
+
   // Always render changes directly in clean mode
   const filteredChanges = changes;
 
@@ -155,7 +159,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       const result = [{
         id: 'single-chunk',
         changes: filteredChanges,
-        html: generateHTMLString(filteredChanges),
+        html: generateHTMLString(filteredChanges, cleanWhitespace),
       }];
 
       const renderingTime = performance.now() - startTime;
@@ -186,8 +190,8 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       id: `chunk-${index}`,
       changes: chunk,
       html: FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
-        ? generateSemanticHTMLString(chunk)
-        : generateHTMLString(chunk),
+        ? generateSemanticHTMLString(chunk, cleanWhitespace)
+        : generateHTMLString(chunk, cleanWhitespace),
     }));
 
     // Track chunking performance
@@ -221,9 +225,43 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
               <>
                 <span className="text-3.5xl" role="img" aria-label="Output panel">✅</span>
                 <h3 className="text-2.5xl font-semibold text-theme-primary-900">Compared RdLn</h3>
+                
+                {/* Whitespace cleanup toggle - only show when there are results */}
+                {filteredChanges && filteredChanges.length > 0 && (
+                  <button
+                    onClick={() => setCleanWhitespace(!cleanWhitespace)}
+                    className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
+                      cleanWhitespace
+                        ? 'bg-theme-primary-100 text-theme-primary-700 hover:bg-theme-primary-200'
+                        : 'bg-theme-neutral-100 text-theme-neutral-500 hover:bg-theme-neutral-200'
+                    }`}
+                    title={cleanWhitespace ? 'Showing clean output (click for raw)' : 'Showing raw output (click for clean)'}
+                    aria-label={`Toggle whitespace cleanup: ${cleanWhitespace ? 'enabled' : 'disabled'}`}
+                  >
+                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'}`} />
+                  </button>
+                )}
               </>
             ) : (
-              <FontSizeSelector />
+              <div className="flex items-center gap-3">
+                <FontSizeSelector />
+                
+                {/* Whitespace cleanup toggle - also available in overlay mode */}
+                {filteredChanges && filteredChanges.length > 0 && (
+                  <button
+                    onClick={() => setCleanWhitespace(!cleanWhitespace)}
+                    className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
+                      cleanWhitespace
+                        ? 'bg-theme-primary-100 text-theme-primary-700 hover:bg-theme-primary-200'
+                        : 'bg-theme-neutral-100 text-theme-neutral-500 hover:bg-theme-neutral-200'
+                    }`}
+                    title={cleanWhitespace ? 'Showing clean output (click for raw)' : 'Showing raw output (click for clean)'}
+                    aria-label={`Toggle whitespace cleanup: ${cleanWhitespace ? 'enabled' : 'disabled'}`}
+                  >
+                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'}`} />
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
@@ -409,7 +447,8 @@ const Chunk: React.FC<{ html: string, estimatedHeight: number, root: Element | n
 const renderChangedContentWithWhitespaceLogic = (
   originalContent: string, 
   revisedContent: string, 
-  escapeHTML: (str: unknown) => string
+  escapeHTML: (str: unknown) => string,
+  enableCleanup: boolean = true
 ): string => {
   const isPureWhitespaceSubstitution = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
 
@@ -428,7 +467,7 @@ const renderChangedContentWithWhitespaceLogic = (
      Math.abs(originalContent.length - revisedContent.length) <= 2)
   );
 
-  if (isPureWhitespaceSubstitution || isSingleWhitespaceChange) {
+  if (enableCleanup && (isPureWhitespaceSubstitution || isSingleWhitespaceChange)) {
     // Clean mode: render whitespace substitutions without highlighting
     return `<span>${escapeHTML(revisedContent)}</span>`;
   } else {
@@ -438,7 +477,7 @@ const renderChangedContentWithWhitespaceLogic = (
 };
 
 // Helper function to generate static HTML from changes in clean mode
-const generateHTMLString = (changes: DiffChange[]) => {
+const generateHTMLString = (changes: DiffChange[], enableCleanup: boolean = true) => {
   let html = '';
   changes.forEach(change => {
     const escapeHTML = (str: unknown): string => {
@@ -457,7 +496,7 @@ const generateHTMLString = (changes: DiffChange[]) => {
     switch (change.type) {
       case 'added':
         // Clean up single-character whitespace additions
-        if (change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
+        if (enableCleanup && change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
           html += `<span>${escapeHTML(change.content)}</span>`;
         } else {
           html += `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
@@ -465,7 +504,7 @@ const generateHTMLString = (changes: DiffChange[]) => {
         break;
       case 'removed':
         // Clean up single-character whitespace removals
-        if (change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
+        if (enableCleanup && change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
           // Render nothing for removed whitespace
         } else {
           html += `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
@@ -474,7 +513,7 @@ const generateHTMLString = (changes: DiffChange[]) => {
       case 'changed':
         const originalContent = change.originalContent || '';
         const revisedContent = change.revisedContent || '';
-        html += renderChangedContentWithWhitespaceLogic(originalContent, revisedContent, escapeHTML);
+        html += renderChangedContentWithWhitespaceLogic(originalContent, revisedContent, escapeHTML, enableCleanup);
         break;
       default:
         html += `<span>${escapeHTML(change.content)}</span>`;
@@ -529,7 +568,7 @@ const collectConsecutiveChanges = (changes: DiffChange[], startIndex: number, ty
   return group;
 };
 
-const renderChangeGroup = (group: DiffChange[], type: string) => {
+const renderChangeGroup = (group: DiffChange[], type: string, enableCleanup: boolean = true) => {
   const escapeHTML = (str: unknown): string => {
     if (str == null) return '';
     const stringValue = String(str);
@@ -549,7 +588,7 @@ const renderChangeGroup = (group: DiffChange[], type: string) => {
     const combinedRevised = group.map(change => change.revisedContent || '').join('');
 
     // Use shared whitespace logic for consistent behavior
-    return renderChangedContentWithWhitespaceLogic(combinedOriginal, combinedRevised, escapeHTML);
+    return renderChangedContentWithWhitespaceLogic(combinedOriginal, combinedRevised, escapeHTML, enableCleanup);
   } else {
     // For added/removed, combine content
     const combinedContent = group.map(change => change.content || '').join('');
@@ -561,7 +600,7 @@ const renderChangeGroup = (group: DiffChange[], type: string) => {
   }
 };
 
-const renderSingleChange = (change: DiffChange) => {
+const renderSingleChange = (change: DiffChange, enableCleanup: boolean = true) => {
   // Use existing logic for single changes
   const escapeHTML = (str: unknown): string => {
     if (str == null) return '';
@@ -579,30 +618,30 @@ const renderSingleChange = (change: DiffChange) => {
   switch (change.type) {
     case 'added':
       // Clean up single-character whitespace additions
-      if (change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
+      if (enableCleanup && change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
         return `<span>${escapeHTML(change.content)}</span>`;
       }
       return `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
     case 'removed':
       // Clean up single-character whitespace removals
-      if (change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
+      if (enableCleanup && change.content && change.content.length <= 2 && /^\s*$/.test(change.content)) {
         return `<span></span>`; // Render nothing for removed whitespace
       }
       return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
     case 'changed':
       const originalContent = change.originalContent || '';
       const revisedContent = change.revisedContent || '';
-      return renderChangedContentWithWhitespaceLogic(originalContent, revisedContent, escapeHTML);
+      return renderChangedContentWithWhitespaceLogic(originalContent, revisedContent, escapeHTML, enableCleanup);
     default:
       return `<span>${escapeHTML(change.content)}</span>`;
   }
 };
 
 // Semantic-aware HTML generation function
-const generateSemanticHTMLString = (changes: DiffChange[]) => {
+const generateSemanticHTMLString = (changes: DiffChange[], enableCleanup: boolean = true) => {
   // Check feature flag once at the beginning
   if (!FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING) {
-    return generateHTMLString(changes); // Fallback to original
+    return generateHTMLString(changes, enableCleanup); // Fallback to original
   }
 
   if (DEV_CONFIG.DEBUGGING.SEMANTIC_CHUNKING_DEBUG) {
@@ -625,14 +664,14 @@ const generateSemanticHTMLString = (changes: DiffChange[]) => {
       }
 
       if (group.length > 1) {
-        html += renderChangeGroup(group, current.type);
+        html += renderChangeGroup(group, current.type, enableCleanup);
         groupsCreated++;
       } else {
-        html += renderSingleChange(current);
+        html += renderSingleChange(current, enableCleanup);
       }
       i += group.length;
     } else {
-      html += renderSingleChange(current);
+      html += renderSingleChange(current, enableCleanup);
       i++;
     }
   }
