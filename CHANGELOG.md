@@ -4,7 +4,7 @@
 ### 🎯 **Auto-Scroll to Results Feature**
 - **BREAKTHROUGH**: Implemented intelligent auto-scroll that brings users directly to comparison results
 - **SMART POSITIONING**: Scrolls to output section while keeping Quick Demo button visible at top
-- **EXPERIMENTAL FEATURE**: Enabled `autoScrollToResults` feature flag for production use
+- **PRODUCTION FEATURE**: Auto-scroll functionality moved from experimental to standard production feature
 - **LOCALSTORAGE FIX**: Resolved context persistence issue where old localStorage values overrode new defaults
 - **TIMING OPTIMIZATION**: Triggers when results complete (not when processing starts) for better DOM readiness
 

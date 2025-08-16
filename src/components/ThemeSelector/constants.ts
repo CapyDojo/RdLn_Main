@@ -10,8 +10,8 @@ export const PHYSICS_CONFIG = {
 export const ANIMATION_CONFIG = {
   hoverDelay: 300, // Normal hover delay
   postDragDelay: 900, // Longer delay after drag/drop operations
-  cascadeStagger: 60,
-  collapseStagger: 30,
+  cascadeStagger: 35,
+  collapseStagger: 20,
   dragTransition: 120, // Faster for more responsive feel
   normalTransition: 300
 } as const;

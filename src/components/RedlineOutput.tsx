@@ -418,7 +418,8 @@ const generateHTMLString = (changes: DiffChange[]) => {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#x27;')
-        .replace(/`/g, '&#x60;');
+        .replace(/`/g, '&#x60;')
+        .replace(/\n/g, '<br>'); // Convert newlines to <br> tags
     };
 
     switch (change.type) {
@@ -505,7 +506,8 @@ const renderChangeGroup = (group: DiffChange[], type: string) => {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#x27;')
-      .replace(/`/g, '&#x60;');
+      .replace(/`/g, '&#x60;')
+      .replace(/\n/g, '<br>'); // Convert newlines to <br> tags
   };
 
   if (type === 'changed') {
@@ -537,7 +539,8 @@ const renderSingleChange = (change: DiffChange) => {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#x27;')
-      .replace(/`/g, '&#x60;');
+      .replace(/`/g, '&#x60;')
+      .replace(/\n/g, '<br>'); // Convert newlines to <br> tags
   };
 
   switch (change.type) {

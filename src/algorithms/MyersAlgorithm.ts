@@ -50,17 +50,10 @@ export class MyersAlgorithm {
     while (i < text.length) {
       const char = text[i];
 
-      // Skip whitespace but preserve it as tokens, with special handling for paragraph breaks
+      // Handle whitespace character by character for surgical precision
       if (/\s/.test(char)) {
-        let whitespace = '';
-        while (i < text.length && /\s/.test(text[i])) {
-          whitespace += text[i];
-          i++;
-        }
-        // Only push non-empty whitespace tokens
-        if (whitespace.length > 0) {
-          tokens.push(whitespace);
-        }
+        tokens.push(char);
+        i++;
         continue;
       }
 
@@ -95,7 +88,7 @@ export class MyersAlgorithm {
 
     const filteredTokens = tokens.filter(token => token.length > 0);
 
-
+    debugLog('🔧 New tokenization result:', filteredTokens);
     return filteredTokens;
   }
 
@@ -450,8 +443,9 @@ export class MyersAlgorithm {
         } else if (change.type === 'added') {
           addedContent += change.content;
         } else { // unchanged
-          // If the unchanged part is more than just a single space, it's a boundary.
-          if (change.content.length > 1 || change.content.trim().length > 0) {
+          // CRITICAL FIX: Treat line breaks as significant boundaries
+          // Line breaks should never be absorbed into change groups
+          if (change.content.includes('\n') || change.content.length > 1 || change.content.trim().length > 0) {
             break;
           }
           // Otherwise, it's just a space within a phrase, so append it.
@@ -563,6 +557,110 @@ export class MyersAlgorithm {
    */
   private static isPureWhitespace(content: string): boolean {
     return content && /^\s*$/.test(content);
+  }
+
+  /**
+   * NEW: Check for whitespace differences in paragraph separators
+   * Returns true if the paragraph separators (the whitespace between paragraphs) differ
+   * This prevents paragraph trimming from losing important whitespace structure
+   */
+  private static hasWhitespaceDifferencesInSeparators(
+    originalText: string,
+    revisedText: string, 
+    originalParagraphs: string[],
+    revisedParagraphs: string[],
+    prefixParagraphCount: number
+  ): boolean {
+    // Only check if we have enough paragraphs to potentially trim suffixes
+    if (originalParagraphs.length <= prefixParagraphCount + 1 || 
+        revisedParagraphs.length <= prefixParagraphCount + 1) {
+      return false;
+    }
+
+    // Reconstruct text from paragraphs to find separators
+    const originalReconstructed = originalParagraphs.join('\n\n');
+    const revisedReconstructed = revisedParagraphs.join('\n\n');
+    
+    // If the reconstructed text doesn't match the original, there are separator differences
+    const originalDiffers = originalText !== originalReconstructed;
+    const revisedDiffers = revisedText !== revisedReconstructed;
+    
+    if (originalDiffers || revisedDiffers) {
+      debugLog(`📋 Separator differences detected - original: ${originalDiffers}, revised: ${revisedDiffers}`);
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Check for whitespace structure differences that could affect trimming.
+   * This is a simpler version for word-level trimming that detects patterns like \n\n vs \n \n
+   */
+  private static hasWhitespaceStructureDifferences(originalText: string, revisedText: string): boolean {
+    // Extract whitespace patterns from both texts
+    const originalWhitespacePattern = originalText.match(/\s+/g) || [];
+    const revisedWhitespacePattern = revisedText.match(/\s+/g) || [];
+    
+    // If different number of whitespace groups, there are differences
+    if (originalWhitespacePattern.length !== revisedWhitespacePattern.length) {
+      debugLog(`📋 Whitespace pattern count differs: ${originalWhitespacePattern.length} vs ${revisedWhitespacePattern.length}`);
+      return true;
+    }
+    
+    // Check each whitespace group for differences
+    for (let i = 0; i < originalWhitespacePattern.length; i++) {
+      if (originalWhitespacePattern[i] !== revisedWhitespacePattern[i]) {
+        debugLog(`📋 Whitespace pattern differs at position ${i}: "${originalWhitespacePattern[i]}" vs "${revisedWhitespacePattern[i]}"`);
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * NEW: Detect whitespace transition boundaries for surgical precision
+   * Returns true if the changes involve different whitespace patterns that should be kept separate
+   */
+  private static hasWhitespaceTransitionBoundary(
+    removedChanges: Array<{ type: string, content: string }>,
+    addedChanges: Array<{ type: string, content: string }>
+  ): boolean {
+    // Get the whitespace tokens from each side
+    const removedWhitespace = removedChanges.filter(c => this.isPureWhitespace(c.content));
+    const addedWhitespace = addedChanges.filter(c => this.isPureWhitespace(c.content));
+    
+    // If whitespace patterns differ significantly, keep them separate for surgical precision
+    if (removedWhitespace.length !== addedWhitespace.length) {
+      debugLog(`🔍 Whitespace transition: different count (${removedWhitespace.length} vs ${addedWhitespace.length})`);
+      return true;
+    }
+    
+    // Check if whitespace content differs in a way that suggests different formatting
+    for (let i = 0; i < removedWhitespace.length; i++) {
+      const removedWS = removedWhitespace[i].content;
+      const addedWS = addedWhitespace[i].content;
+      
+      // Different whitespace types (e.g., "\n" vs " \n") should be kept separate
+      if (removedWS !== addedWS) {
+        // Special case: if one has line break and other doesn't, it's a boundary
+        const removedHasNewline = removedWS.includes('\n');
+        const addedHasNewline = addedWS.includes('\n');
+        if (removedHasNewline !== addedHasNewline) {
+          debugLog(`🔍 Whitespace transition: newline difference ("${removedWS}" vs "${addedWS}")`);
+          return true;
+        }
+        
+        // Different space counts around line breaks
+        if (removedHasNewline && addedHasNewline && removedWS !== addedWS) {
+          debugLog(`🔍 Whitespace transition: space pattern difference ("${removedWS}" vs "${addedWS}")`);
+          return true;
+        }
+      }
+    }
+    
+    return false;
   }
 
   /**
@@ -1020,10 +1118,17 @@ export class MyersAlgorithm {
    * SSMR: New optimized boundary detection without regex
    */
   private static optimizedBoundaryDetection(content: string): boolean {
+    debugLog(`🔍 optimizedBoundaryDetection checking: ${JSON.stringify(content)}`);
+    
     // Check for paragraph boundaries first (most common)
     if (content.includes('\n\n')) {
+      debugLog(`  ✅ Found paragraph boundary (\\n\\n)`);
       return true;
     }
+
+    // REVERTED: Don't automatically treat single line breaks as boundaries
+    // This was preventing surgical precision for cases like "1\n" vs "2 \n"
+    // Instead, handle this in preciseChunking logic
 
     // Scan character by character for sentence boundaries
     for (let i = 0; i < content.length - 1; i++) {
@@ -1098,16 +1203,25 @@ export class MyersAlgorithm {
       prefixTokenCount++;
     }
 
+    // CRITICAL FIX: Check for whitespace differences that might affect suffix trimming
+    // This prevents losing whitespace structure like \n\n vs \n \n
+    const hasWhitespaceDifferences = this.hasWhitespaceStructureDifferences(originalText, revisedText);
+
     // Find common suffix tokens (from remaining tokens after prefix)
     let suffixTokenCount = 0;
     const originalRemainingTokens = originalTokens.length - prefixTokenCount;
     const revisedRemainingTokens = revisedTokens.length - prefixTokenCount;
     const maxSuffixTokens = Math.min(originalRemainingTokens, revisedRemainingTokens);
 
-    while (suffixTokenCount < maxSuffixTokens &&
-      originalTokens[originalTokens.length - 1 - suffixTokenCount] ===
-      revisedTokens[revisedTokens.length - 1 - suffixTokenCount]) {
-      suffixTokenCount++;
+    // Only perform suffix trimming if there are no whitespace structure differences
+    if (!hasWhitespaceDifferences) {
+      while (suffixTokenCount < maxSuffixTokens &&
+        originalTokens[originalTokens.length - 1 - suffixTokenCount] ===
+        revisedTokens[revisedTokens.length - 1 - suffixTokenCount]) {
+        suffixTokenCount++;
+      }
+    } else {
+      debugLog('📋 Skipping word-level suffix trimming due to whitespace structure differences');
     }
 
     // Reconstruct text from tokens
@@ -1239,16 +1353,27 @@ export class MyersAlgorithm {
       prefixParagraphCount++;
     }
 
+    // CRITICAL FIX: Check for whitespace differences in paragraph separators before suffix trimming
+    // This prevents losing whitespace structure when paragraphs are identical but separators differ
+    const hasWhitespaceSeparatorDifferences = this.hasWhitespaceDifferencesInSeparators(
+      originalText, revisedText, originalParagraphs, revisedParagraphs, prefixParagraphCount
+    );
+
     // Find common suffix paragraphs (from remaining paragraphs after prefix)
     let suffixParagraphCount = 0;
     const originalRemaining = originalParagraphs.length - prefixParagraphCount;
     const revisedRemaining = revisedParagraphs.length - prefixParagraphCount;
     const maxSuffixParagraphs = Math.min(originalRemaining, revisedRemaining);
 
-    while (suffixParagraphCount < maxSuffixParagraphs &&
-      originalParagraphs[originalParagraphs.length - 1 - suffixParagraphCount] ===
-      revisedParagraphs[revisedParagraphs.length - 1 - suffixParagraphCount]) {
-      suffixParagraphCount++;
+    // Only perform suffix trimming if there are no whitespace differences in separators
+    if (!hasWhitespaceSeparatorDifferences) {
+      while (suffixParagraphCount < maxSuffixParagraphs &&
+        originalParagraphs[originalParagraphs.length - 1 - suffixParagraphCount] ===
+        revisedParagraphs[revisedParagraphs.length - 1 - suffixParagraphCount]) {
+        suffixParagraphCount++;
+      }
+    } else {
+      debugLog('📋 Skipping suffix paragraph trimming due to whitespace separator differences');
     }
 
     // Reconstruct text sections

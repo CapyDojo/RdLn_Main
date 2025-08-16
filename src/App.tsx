@@ -21,6 +21,7 @@ import { AboutDialog } from './components/AboutDialog';
 import { useTheme } from './contexts/ThemeContext';
 import { LayoutProvider } from './contexts/LayoutContext';
 import { ExperimentalLayoutProvider, useExperimentalFeatures } from './contexts/ExperimentalLayoutContext';
+import { ScrollLockProvider } from './contexts/ScrollLockContext';
 import { OCRService } from './services/OCRService';
 import { LogoTestPage } from './pages/LogoTestPage';
 import { CuppingTestPage } from './pages/CuppingTestPage';
@@ -392,8 +393,9 @@ function App() {
 
   return (
     <LayoutProvider>
-      <ExperimentalLayoutProvider>
-        <div className="App">
+      <ScrollLockProvider>
+        <ExperimentalLayoutProvider>
+          <div className="App">
             {/* Global style override to fix background stitching issue */}
             <style>{`
               body {
@@ -433,7 +435,8 @@ function App() {
             )}
           </div>
         </ExperimentalLayoutProvider>
-      </LayoutProvider>
+      </ScrollLockProvider>
+    </LayoutProvider>
   );
 }
 

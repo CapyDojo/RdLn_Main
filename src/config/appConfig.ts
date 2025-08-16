@@ -172,6 +172,9 @@ export const FEATURE_FLAGS = {
   ENABLE_LAYOUT_EXPERIMENTS: IS_DEVELOPMENT,
   ENABLE_WORD_OPTIMIZED_COPY: true,
   
+  // Production Features
+  AUTO_SCROLL_ENABLED: IS_PRODUCTION, // Only enabled in production
+  
   // Semantic Chunking Features
   ENABLE_SEMANTIC_CHUNKING: true, // ENABLED to fix contiguous chunk rendering
   

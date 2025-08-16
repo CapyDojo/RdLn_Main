@@ -239,9 +239,8 @@ describe('ExperimentalLayoutContext', () => {
       fireEvent.click(enableButton);
       const features = JSON.parse(featuresElement.textContent || '{}');
       
-      // Should enable resultsSpotlight and autoScrollToResults
+      // Should enable resultsSpotlight
       expect(features.resultsSpotlight).toBe(true);
-      expect(features.autoScrollToResults).toBe(true);
       
       // Other features should remain false
       expect(features.floatingJumpButton).toBe(false);
@@ -263,7 +262,6 @@ describe('ExperimentalLayoutContext', () => {
       
       // Should enable multiple navigation features
       expect(features.resultsSpotlight).toBe(true);
-      expect(features.autoScrollToResults).toBe(true);
       expect(features.floatingJumpButton).toBe(true);
       expect(features.mobileTabInterface).toBe(true);
       

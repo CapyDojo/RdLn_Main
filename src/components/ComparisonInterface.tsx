@@ -37,6 +37,7 @@ import { ExtremeTestSuite } from '../testing/ExtremeTestSuite';
 
 // Experimental features
 import { useExperimentalFeatures, useExperimentalCSSClasses } from '../contexts/ExperimentalLayoutContext';
+import { useScrollLock } from '../contexts/ScrollLockContext';
 import { FloatingJumpButton } from './experimental/FloatingJumpButton';
 import { MobileTabInterface } from './experimental/MobileTabInterface';
 import { StickyResultsPanel } from './experimental/StickyResultsPanel';
@@ -46,6 +47,7 @@ import { useJumpToResults } from '../hooks/useJumpToResults';
 
 import { useMobileTabInterface } from '../hooks/useMobileTabInterface';
 import { useResultsOverlay } from '../hooks/useResultsOverlay';
+import { useAutoScroll } from '../hooks/useAutoScroll';
 
 import { BaseComponentProps } from '../types/components';
 
@@ -182,8 +184,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     }
   }, [originalText, revisedText, onContentChange, canUndo, clearUndoState]);
 
-  // SSMR Step 1: Scroll lock state (Enabled for production)
-  const [isScrollLocked, setIsScrollLocked] = useState(true);
+  // Scroll lock state from dedicated context (production-ready)
+  const { isScrollLocked, toggleScrollLock } = useScrollLock();
 
   // RdLn Memory side panel state
   const [isMemoryPanelOpen, setIsMemoryPanelOpen] = useState(false);
@@ -351,6 +353,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     }
   );
 
+  // Auto scroll hook - production feature
+  useAutoScroll({ result, isProcessing });
+
   // Performance-aware handlers - Define BEFORE useEffect that references them
   const handleSwapContent = usePerformanceAwareHandler(() => {
     const tempOriginal = originalText;
@@ -482,7 +487,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       // Alt+D toggle scroll lock
       if (e.altKey && e.key === 'd') {
         e.preventDefault();
-        setIsScrollLocked(!isScrollLocked);
+        toggleScrollLock();
       }
 
       // Alt+Delete clear/reset (no confirmation - lightning-fast UX)
@@ -530,7 +535,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     return () => {
       window.removeEventListener('keydown', handleKeyDown, eventOptions);
     };
-  }, [handleCompareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible, toggleQuickCompare, handleSwapContent, isScrollLocked, setIsScrollLocked, handleResetComparison, canUndo, handleUndo, originalText, revisedText, handleSaveSession]);
+  }, [handleCompareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible, toggleQuickCompare, handleSwapContent, toggleScrollLock, handleResetComparison, canUndo, handleUndo, originalText, revisedText, handleSaveSession]);
 
   const handleLoadTest = usePerformanceAwareHandler(async (originalText: string, revisedText: string) => {
     // Track load test operation
@@ -571,41 +576,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   // SSMR STEP 5: Mouse handlers now provided by useResizeHandlers hook
 
-  // Auto-scroll to output panel when it appears (Feature #2)
-  useEffect(() => {
-    if (features.autoScrollToResults) {
-      // Scroll when results are completed (better timing for when output actually exists)
-      if (result && !isProcessing) {
-        // Wait for DOM to update, then scroll to output section
-        setTimeout(() => {
-          // Try to find the output section first, then fallback to data-output-panel
-          const outputSection = document.querySelector('.output-section');
-          const outputPanel = document.querySelector('[data-output-panel]');
-          const targetElement = outputSection || outputPanel;
 
-          if (targetElement) {
-            // Get the demo panel height first
-            const demoPanel = document.querySelector('.glass-panel.bg-theme-primary-50\\/80');
-            const demoPanelHeight = demoPanel ? demoPanel.getBoundingClientRect().height + 60 : 140; // 60px margin, 140px fallback
-            
-            // Calculate the target position manually
-            const targetRect = targetElement.getBoundingClientRect();
-            const targetTop = targetRect.top + window.scrollY;
-            
-            // Scroll to position the output section just below the demo panel
-            const scrollToPosition = Math.max(0, targetTop - demoPanelHeight);
-            
-            window.scrollTo({
-              top: scrollToPosition,
-              behavior: 'smooth'
-            });
-            
-            if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🎯 Auto-scrolled to output section (results completed) - Feature #2');
-          }
-        }, 200); // Slightly longer delay to ensure content is rendered
-      }
-    }
-  }, [features.autoScrollToResults, result, isProcessing]);
 
   // Results spotlight animation (Feature #1)
   useEffect(() => {
@@ -775,10 +746,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onCompare={() => handleCompareDocuments()}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
-          onToggleScrollLock={() => {
-            if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) console.log('🔧 SCROLL LOCK DEBUG: Desktop button clicked, toggling from', isScrollLocked, 'to', !isScrollLocked);
-            setIsScrollLocked(!isScrollLocked);
-          }}
+          onToggleScrollLock={toggleScrollLock}
           onToggleSystemProtection={toggleSystemProtection}
           onResetComparison={handleResetComparison}
           canUndo={canUndo}
@@ -796,10 +764,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onCompare={() => handleCompareDocuments()}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
-          onToggleScrollLock={() => {
-            if (DEV_CONFIG.DEBUGGING.SCROLL_SYNC_DEBUG) console.log('🔧 SCROLL LOCK BUTTON: Clicked, toggling from', isScrollLocked, 'to', !isScrollLocked);
-            setIsScrollLocked(!isScrollLocked);
-          }}
+          onToggleScrollLock={toggleScrollLock}
           onResetComparison={handleResetComparison}
           canUndo={canUndo}
           onUndo={handleUndo}

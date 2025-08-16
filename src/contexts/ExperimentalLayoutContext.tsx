@@ -20,7 +20,6 @@ export interface ExperimentalFeatures {
   resultsPeekButton: boolean;            // #15: Floating preview button
   
   // Navigation Enhancement Features (Medium Risk)
-  autoScrollToResults: boolean;          // #2: Automatically scroll to results when generated
   mobileTabInterface: boolean;           // #6: [INPUT] [RESULTS] [BOTH] tabs for mobile
   stickyResultsPanel: boolean;           // #16: Fixed position panel
   
@@ -52,7 +51,6 @@ const defaultFeatures: ExperimentalFeatures = {
   resultsPeekButton: false,
   
   // Navigation Enhancement Features
-  autoScrollToResults: IS_PRODUCTION, // Only enabled in production
   mobileTabInterface: false,
   stickyResultsPanel: false,
   
@@ -71,17 +69,14 @@ const defaultFeatures: ExperimentalFeatures = {
 const testGroups = {
   'visual-only': {
     resultsSpotlight: true,
-    autoScrollToResults: true,
   },
   'navigation-enhanced': {
     resultsSpotlight: true,
-    autoScrollToResults: true,
     floatingJumpButton: true,
     mobileTabInterface: true,
   },
   'results-first': {
     resultsSpotlight: true,
-    autoScrollToResults: true,
     resultsFirstAnimation: true,
   },
   'mobile-optimized': {
@@ -194,7 +189,6 @@ export const useExperimentalCSSClasses = () => {
   if (features.resultsSpotlight) classes.push('experimental-spotlight');
   if (features.floatingJumpButton) classes.push('experimental-floating-jump');
   if (features.resultsPeekButton) classes.push('experimental-peek-button');
-  if (features.autoScrollToResults) classes.push('experimental-auto-scroll');
   if (features.mobileTabInterface) classes.push('experimental-mobile-tabs');
   if (features.stickyResultsPanel) classes.push('experimental-sticky-results');
   if (features.resultsOverlay) classes.push('experimental-overlay');

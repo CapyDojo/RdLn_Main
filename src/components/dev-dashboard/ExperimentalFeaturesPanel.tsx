@@ -24,7 +24,7 @@ export const ExperimentalFeaturesPanel: React.FC<ExperimentalFeaturesPanelProps>
           <span className="text-sm font-medium text-yellow-800">Feature Status</span>
         </div>
         <div className="text-lg font-semibold text-gray-900">
-          {Object.values(features).filter(f => f).length}/13 features active
+          {Object.values(features).filter(f => f).length}/12 features active
         </div>
         <div className="text-xs text-gray-600 mt-1">
           {hasActiveExperimentalFeatures ? 'Experimental features are active' : 'All features disabled'}
@@ -38,15 +38,15 @@ export const ExperimentalFeaturesPanel: React.FC<ExperimentalFeaturesPanelProps>
           <button
             onClick={() => enableTestGroup('visual-only')}
             className="px-3 py-2 text-sm rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition-all"
-            title="Enable: Results Spotlight + Auto-Scroll"
+            title="Enable: Results Spotlight"
           >
             <div className="font-medium">Visual Only</div>
-            <div className="text-xs opacity-75">Spotlight + Auto-Scroll</div>
+            <div className="text-xs opacity-75">Spotlight Effects</div>
           </button>
           <button
             onClick={() => enableTestGroup('navigation-enhanced')}
             className="px-3 py-2 text-sm rounded bg-green-100 text-green-700 hover:bg-green-200 transition-all"
-            title="Enable: Results Spotlight + Auto-Scroll + Jump Button + Mobile Tabs"
+            title="Enable: Results Spotlight + Jump Button + Mobile Tabs"
           >
             <div className="font-medium">Navigation Enhanced</div>
             <div className="text-xs opacity-75">Full Navigation Suite</div>
@@ -54,7 +54,7 @@ export const ExperimentalFeaturesPanel: React.FC<ExperimentalFeaturesPanelProps>
           <button
             onClick={() => enableTestGroup('results-first')}
             className="px-3 py-2 text-sm rounded bg-purple-100 text-purple-700 hover:bg-purple-200 transition-all"
-            title="Enable: Results Spotlight + Auto-Scroll + Results First Animation"
+            title="Enable: Results Spotlight + Results First Animation"
           >
             <div className="font-medium">Results First</div>
             <div className="text-xs opacity-75">Animation Focus</div>
@@ -100,21 +100,7 @@ export const ExperimentalFeaturesPanel: React.FC<ExperimentalFeaturesPanelProps>
             </div>
           </button>
           
-          <button
-            onClick={() => toggleFeature('autoScrollToResults')}
-            className={`px-3 py-2 text-sm rounded transition-all flex items-center gap-2 ${
-              features.autoScrollToResults
-                ? 'bg-green-500 text-white hover:bg-green-600'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-            title="#2: Automatically scroll to results when generated"
-          >
-            <ArrowUp className="w-4 h-4" />
-            <div>
-              <div className="font-medium">#2 Auto-Scroll</div>
-              <div className="text-xs opacity-75">{features.autoScrollToResults ? 'ON' : 'OFF'}</div>
-            </div>
-          </button>
+
           
           <button
             onClick={() => toggleFeature('mobileTabInterface')}
@@ -252,7 +238,7 @@ export const ExperimentalFeaturesPanel: React.FC<ExperimentalFeaturesPanelProps>
         <div className="text-sm text-green-800">
           <div className="font-medium mb-2">🎯 Problem Addressed</div>
           <div className="text-xs space-y-1">
-            <div>• "Can't find results" → Spotlight + Auto-scroll + Jump button</div>
+            <div>• "Can't find results" → Spotlight + Jump button (Auto-scroll now standard)</div>
             <div>• "Panel confusion" → Mobile tabs + Visual differentiation</div>
             <div>• "Results hard to see" → Overlay + Sticky panel + Results-first</div>
             <div>• Settings persist across sessions via localStorage</div>
