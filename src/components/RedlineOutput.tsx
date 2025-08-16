@@ -405,6 +405,23 @@ const Chunk: React.FC<{ html: string, estimatedHeight: number, root: Element | n
   );
 };
 
+// Utility function for consistent whitespace handling across all rendering modes
+const renderChangedContentWithWhitespaceLogic = (
+  originalContent: string, 
+  revisedContent: string, 
+  escapeHTML: (str: unknown) => string
+): string => {
+  const isPureWhitespaceSubstitution = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
+
+  if (isPureWhitespaceSubstitution) {
+    // Clean mode: render whitespace substitutions without highlighting
+    return `<span>${escapeHTML(revisedContent)}</span>`;
+  } else {
+    // For regular substitutions: show full highlighting
+    return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(originalContent)}</span><span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(revisedContent)}</span>`;
+  }
+};
+
 // Helper function to generate static HTML from changes in clean mode
 const generateHTMLString = (changes: DiffChange[]) => {
   let html = '';
@@ -430,18 +447,9 @@ const generateHTMLString = (changes: DiffChange[]) => {
         html += `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
         break;
       case 'changed':
-        // Special case: if both original and revised are pure whitespace, render cleanly
         const originalContent = change.originalContent || '';
         const revisedContent = change.revisedContent || '';
-        const isPureWhitespaceSubstitution = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
-
-        if (isPureWhitespaceSubstitution) {
-          // Clean mode: render whitespace substitutions without highlighting
-          html += `<span>${escapeHTML(revisedContent)}</span>`;
-        } else {
-          // For regular substitutions: show full highlighting
-          html += `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(originalContent)}</span><span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(revisedContent)}</span>`;
-        }
+        html += renderChangedContentWithWhitespaceLogic(originalContent, revisedContent, escapeHTML);
         break;
       default:
         html += `<span>${escapeHTML(change.content)}</span>`;
@@ -515,8 +523,8 @@ const renderChangeGroup = (group: DiffChange[], type: string) => {
     const combinedOriginal = group.map(change => change.originalContent || '').join('');
     const combinedRevised = group.map(change => change.revisedContent || '').join('');
 
-    return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(combinedOriginal)}</span>` +
-      `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(combinedRevised)}</span>`;
+    // Use shared whitespace logic for consistent behavior
+    return renderChangedContentWithWhitespaceLogic(combinedOriginal, combinedRevised, escapeHTML);
   } else {
     // For added/removed, combine content
     const combinedContent = group.map(change => change.content || '').join('');
@@ -549,19 +557,9 @@ const renderSingleChange = (change: DiffChange) => {
     case 'removed':
       return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
     case 'changed':
-      // Apply clean whitespace logic consistently across both rendering paths
       const originalContent = change.originalContent || '';
       const revisedContent = change.revisedContent || '';
-      const isPureWhitespaceSubstitution = /^\s*$/.test(originalContent) && /^\s*$/.test(revisedContent);
-
-      if (isPureWhitespaceSubstitution) {
-        // Clean mode: render whitespace substitutions without highlighting
-        return `<span>${escapeHTML(revisedContent)}</span>`;
-      } else {
-        // For regular substitutions: show full highlighting
-        return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(originalContent)}</span>` +
-          `<span style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); color: #14532d; border: 1px solid #16a34a; border-radius: 10px; text-decoration: underline; text-decoration-color: #15803d; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(revisedContent)}</span>`;
-      }
+      return renderChangedContentWithWhitespaceLogic(originalContent, revisedContent, escapeHTML);
     default:
       return `<span>${escapeHTML(change.content)}</span>`;
   }
