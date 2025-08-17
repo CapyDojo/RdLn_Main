@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, RotateCcw, ArrowLeftRight, Zap, ZapOff, Lock, Undo } from 'lucide-react';
+import { Play, Trash2, ArrowLeftRight, Zap, ZapOff, Lock, Undo } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
 import { CustomTooltip } from './CustomTooltip';
 
@@ -187,7 +187,7 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
             onClick={onResetComparison}
             className="enhanced-button flex items-center justify-center w-14 h-14 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl border-3 border-red-300 hover:border-red-200 active:scale-95"
           >
-            <RotateCcw className="w-6 h-6" />
+            <Trash2 className="w-6 h-6" />
           </button>
         </CustomTooltip>
       </div>

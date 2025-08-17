@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, RotateCcw, ArrowLeftRight, Zap, ZapOff, Lock, Undo } from 'lucide-react';
+import { Play, Trash2, ArrowLeftRight, Zap, ZapOff, Lock, Undo } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
 import { CustomTooltip } from './CustomTooltip';
 
@@ -173,7 +173,7 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
             onClick={onResetComparison}
             className="enhanced-button flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 shadow-lg border-3 border-red-300 hover:border-red-200 active:scale-95 min-h-12"
           >
-            <RotateCcw className="w-5 h-5" />
+            <Trash2 className="w-5 h-5" />
             <span className="font-semibold">⚠️ Clear All</span>
           </button>
         </CustomTooltip>
