@@ -1,23 +1,19 @@
 import React from 'react';
-import { Zap, Image, ExternalLink, TestTube, Flame } from 'lucide-react';
+import { Zap, Image, ExternalLink, TestTube } from 'lucide-react';
 import { BaseComponentProps } from '../../types/components';
 
 interface DevelopmentToolsPanelProps extends BaseComponentProps {
   showAdvancedOcrCard?: boolean;
   showPerformanceDemoCard?: boolean;
-  showExtremeTestSuite?: boolean;
   onToggleAdvancedOcr?: () => void;
   onTogglePerformanceDemo?: () => void;
-  onToggleExtremeTestSuite?: () => void;
 }
 
 export const DevelopmentToolsPanel: React.FC<DevelopmentToolsPanelProps> = ({
   showAdvancedOcrCard = true,
   showPerformanceDemoCard = true,
-  showExtremeTestSuite = false,
   onToggleAdvancedOcr,
   onTogglePerformanceDemo,
-  onToggleExtremeTestSuite,
   style,
   className
 }) => {
@@ -72,27 +68,6 @@ export const DevelopmentToolsPanel: React.FC<DevelopmentToolsPanelProps> = ({
               >
                 <Image className="w-4 h-4" />
                 <span>Demo {showPerformanceDemoCard ? 'ON' : 'OFF'}</span>
-              </button>
-            </div>
-          )}
-          {onToggleExtremeTestSuite && (
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="text-sm font-medium text-theme-neutral-800">Extreme Test Suite</div>
-                <div className="text-xs text-theme-neutral-600">Enable ultra-complex stress testing with massive legal documents</div>
-              </div>
-              <button
-                onClick={onToggleExtremeTestSuite}
-                className={`px-3 py-2 text-sm rounded transition-all flex items-center gap-2 ${
-                  showExtremeTestSuite 
-                    ? 'bg-red-500 text-white hover:bg-red-600' 
-                    : 'bg-gray-500 text-white hover:bg-gray-600'
-                }`}
-                title="Toggle Extreme Test Suite visibility"
-                aria-label={`Toggle Extreme Test Suite visibility ${showExtremeTestSuite ? 'ON' : 'OFF'}`}
-              >
-                <Flame className="w-4 h-4" />
-                <span>Extreme {showExtremeTestSuite ? 'ON' : 'OFF'}</span>
               </button>
             </div>
           )}
