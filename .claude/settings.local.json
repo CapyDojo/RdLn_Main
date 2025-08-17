@@ -42,7 +42,11 @@
       "mcp__playwright__browser_console_messages",
       "mcp__playwright__browser_snapshot",
       "Bash(start index.html)",
-      "Bash(start test-render.html)"
+      "Bash(start test-render.html)",
+      "Bash(timeout 10 npm run dev)",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_close"
     ],
     "deny": []
   }
