@@ -56,9 +56,17 @@ export class LanguageDetectionService {
 
   /**
    * Detects languages in the provided image file with enhanced error handling
+   * SSMR: Enhanced with optional progress callback support
    */
-  public static async detectLanguage(imageFile: File | Blob): Promise<OCRLanguage[]> {
+  public static async detectLanguage(
+    imageFile: File | Blob, 
+    progressCallback?: (progress: number, stage: string) => void
+  ): Promise<OCRLanguage[]> {
     console.log('🔍 Starting language detection...');
+
+    if (progressCallback) {
+      progressCallback(25, 'Detecting language...');
+    }
 
     // OPTIMIZATION: Try quick pre-screening first
     const quickResult = await this.quickPreScreening(imageFile);
@@ -66,6 +74,9 @@ export class LanguageDetectionService {
       console.log('⚡ Quick pre-screening successful, skipping full detection');
       // Cache the quick result
       await OCRCacheManager.storeLanguageCache(imageFile, quickResult);
+      if (progressCallback) {
+        progressCallback(35, 'Language detected');
+      }
       return quickResult;
     }
 
@@ -78,6 +89,9 @@ export class LanguageDetectionService {
     try {
       // Use multi-language detection worker for comprehensive language support
       console.log('🔧 Initializing detection worker...');
+      if (progressCallback) {
+        progressCallback(30, 'Initializing detection...');
+      }
       const worker = await OCRCacheManager.initializeDetectionWorker();
 
       console.log('📖 Running detection OCR...');
@@ -94,12 +108,19 @@ export class LanguageDetectionService {
       const detectionTime = Date.now() - detectionStart;
       console.log(`⏱️ Detection OCR completed in ${detectionTime}ms`);
 
+      if (progressCallback) {
+        progressCallback(35, 'Analyzing text...');
+      }
+
       // Extract text for analysis
       const text = data.text;
       if (!text || text.trim().length === 0) {
         console.warn('⚠️ No text extracted from image, defaulting to English');
         const fallbackLanguages = ['eng'] as OCRLanguage[];
         await OCRCacheManager.storeLanguageCache(imageFile, fallbackLanguages);
+        if (progressCallback) {
+          progressCallback(40, 'Language detected');
+        }
         return fallbackLanguages;
       }
 
@@ -111,6 +132,10 @@ export class LanguageDetectionService {
 
       // Store result in cache
       await OCRCacheManager.storeLanguageCache(imageFile, detectedLanguages);
+
+      if (progressCallback) {
+        progressCallback(40, 'Language detected');
+      }
 
       return detectedLanguages;
     } catch (error) {

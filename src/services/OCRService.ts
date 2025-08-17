@@ -196,11 +196,19 @@ export class OCRService {
     }
   }
 
-  private static createLogger() {
+  private static createLogger(progressCallback?: (progress: number, stage: string) => void) {
     return (m: any) => {
       // Suppress most logging to reduce console noise
       if (m.status === 'recognizing text') {
-        console.log(`OCR progress: ${Math.round(m.progress * 100)}%`);
+        const progress = Math.round(m.progress * 100);
+        console.log(`OCR progress: ${progress}%`);
+        
+        // SSMR: Connect real Tesseract progress to UI (SAFE: optional callback)
+        if (progressCallback) {
+          // Map Tesseract recognition phase to 40-95% range for UI
+          const mappedProgress = Math.min(95, Math.max(40, 40 + (m.progress * 55)));
+          progressCallback(mappedProgress, 'Extracting text...');
+        }
       }
     };
   }
@@ -236,10 +244,13 @@ export class OCRService {
     return worker;
   }
 
-  private static async initializeWorker(languages: OCRLanguage[]): Promise<TesseractWorker> {
+  private static async initializeWorker(
+    languages: OCRLanguage[], 
+    progressCallback?: (progress: number, stage: string) => void
+  ): Promise<TesseractWorker> {
     // PRODUCTION FIX: Use OCRCacheManager's fixed worker creation
     console.log(`🔄 OCRService delegating to OCRCacheManager for languages: ${languages.join(', ')}`);
-    return OCRCacheManager.initializeWorker(languages);
+    return OCRCacheManager.initializeWorker(languages, progressCallback);
 
     this.loadingPromises.set(workerKey, loadingPromise);
 
@@ -268,27 +279,32 @@ export class OCRService {
   /**
    * Language detection - delegated to LanguageDetectionService for modularity
    */
-  public static async detectLanguage(imageFile: File | Blob): Promise<OCRLanguage[]> {
+  public static async detectLanguage(
+    imageFile: File | Blob, 
+    progressCallback?: (progress: number, stage: string) => void
+  ): Promise<OCRLanguage[]> {
     // TAURI INTEGRATION: Route to appropriate language detection provider
     return OCRRouter.routeLanguageDetection(imageFile, (imageFile) => {
-      return LanguageDetectionService.detectLanguage(imageFile);
+      return LanguageDetectionService.detectLanguage(imageFile, progressCallback);
     });
   }
 
   public static async extractTextFromImage(
     imageFile: File | Blob, 
-    options: OCROptions = {}
+    options: OCROptions = {},
+    progressCallback?: (progress: number, stage: string) => void
   ): Promise<string> {
     // TAURI INTEGRATION: Route to appropriate OCR provider
     return OCRRouter.routeOCRRequest(imageFile, options, (imageFile, options) => {
-      return this.extractTextFromImageLegacy(imageFile, options);
+      return this.extractTextFromImageLegacy(imageFile, options, progressCallback);
     });
   }
 
   // TAURI INTEGRATION: Renamed original method to avoid conflicts
   private static async extractTextFromImageLegacy(
     imageFile: File | Blob, 
-    options: OCROptions = {}
+    options: OCROptions = {},
+    progressCallback?: (progress: number, stage: string) => void
   ): Promise<string> {
     // PHASE 3.3: Enhanced workflow using OCR Orchestrator (opt-in)
     if (options.useOrchestrator) {
@@ -328,7 +344,10 @@ export class OCRService {
       if (options.autoDetect !== false) {
         // Auto-detect languages
         console.log('🔍 Detecting document language...');
-        const detectedLanguages = await this.detectLanguage(imageFile);
+        if (progressCallback) {
+          progressCallback(20, 'Detecting language...');
+        }
+        const detectedLanguages = await this.detectLanguage(imageFile, progressCallback);
         languages = detectedLanguages;
         console.log('📝 Detected languages:', detectedLanguages.map(lang => 
           SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
@@ -353,7 +372,11 @@ export class OCRService {
         SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
       ).join(', '));
 
-      const worker = await this.initializeWorker(languages);
+      if (progressCallback) {
+        progressCallback(40, 'Initializing OCR...');
+      }
+
+      const worker = await this.initializeWorker(languages, progressCallback);
       
       console.log('📖 Extracting text from image...');
       const extractionStart = Date.now();
@@ -363,8 +386,16 @@ export class OCRService {
       const extractionTime = Date.now() - extractionStart;
       console.log(`⏱️ Text extraction completed in ${extractionTime}ms`);
       
+      if (progressCallback) {
+        progressCallback(95, 'Finalizing...');
+      }
+      
       // Apply language-specific post-processing
       const processedText = this.multiLanguagePostProcessing(text, languages);
+      
+      if (progressCallback) {
+        progressCallback(100, 'Complete');
+      }
       
       return processedText;
     } catch (error) {

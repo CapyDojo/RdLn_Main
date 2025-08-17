@@ -65,13 +65,16 @@ export const useOCR = (): OCRReturn => {
     }));
 
     try {
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
+      // SSMR: Real progress callback to replace artificial simulation
+      const progressCallback = (progress: number, stage: string) => {
         setState(prev => ({
           ...prev,
-          progress: Math.min(prev.progress + 5, 85)
+          progress: Math.round(progress)
         }));
-      }, 300);
+      };
+
+      // Initial progress
+      progressCallback(5, 'Initializing OCR...');
 
       const options: OCROptions = {
         autoDetect: state.autoDetect,
@@ -82,18 +85,15 @@ export const useOCR = (): OCRReturn => {
       // If auto-detect is enabled, first detect languages
       let detectedLanguages: OCRLanguage[] = [];
       if (state.autoDetect) {
-        setState(prev => ({ ...prev, progress: 20 }));
-        detectedLanguages = await OCRService.detectLanguage(imageFile);
+        progressCallback(10, 'Detecting language...');
+        detectedLanguages = await OCRService.detectLanguage(imageFile, progressCallback);
         setState(prev => ({ 
           ...prev, 
-          progress: 40,
           detectedLanguages 
         }));
       }
 
-      const extractedText = await OCRService.extractTextFromImage(imageFile, options);
-      
-      clearInterval(progressInterval);
+      const extractedText = await OCRService.extractTextFromImage(imageFile, options, progressCallback);
       
       setState(prev => ({
         ...prev,
