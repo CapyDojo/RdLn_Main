@@ -56,9 +56,9 @@ const Tooltip: React.FC<TooltipProps> = ({ children, content, className = '' }) 
   };
 
   const tooltipPortal = isVisible ? createPortal(
-    <div 
-      className="fixed pointer-events-none z-[99999]" 
-      style={{ 
+    <div
+      className="fixed pointer-events-none z-[99999]"
+      style={{
         left: position.x - 144, // Center the 288px wide tooltip (144px offset)
         top: position.y,
         transform: 'translateY(-100%)'
@@ -147,7 +147,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
   );
 };
 
-export const ComparisonStats: React.FC<ComparisonStatsProps> = ({ 
+export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
   stats,
   style,
   className
@@ -156,14 +156,14 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
   const total = stats.additions + stats.deletions + stats.unchanged;
   const additionPercent = total > 0 ? (stats.additions / total) * 100 : 0;
   const deletionPercent = total > 0 ? (stats.deletions / total) * 100 : 0;
-  
+
   // Calculate impact level and colors
-  const impactPercentage = stats.wordStats?.percentageChanged || 
+  const impactPercentage = stats.wordStats?.percentageChanged ||
     (stats.totalChanges > 0 ? ((stats.totalChanges / total) * 100) : 0);
   const impactLevel = getImpactLevel(impactPercentage);
   const impactColors = getImpactColor(impactLevel);
   const ImpactIcon = getImpactIcon(impactLevel);
-  
+
   const reviewWorkload = stats.wordStats?.reviewWorkload || stats.totalChanges;
   const documentSize = stats.wordStats?.totalWords || total;
   const sizeLabel = stats.wordStats ? 'words' : 'elements';
@@ -194,113 +194,113 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
         </div>
         <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-theme-neutral-300 to-transparent mb-4 -mx-6" style={{ width: 'calc(100% + 3.9rem)' }}></div>
         <div className="px-6 pb-6">
-        {/* Quick Action Summary */}
-        <div className="grid grid-cols-3 items-center">
-          <div className="col-start-2 flex justify-center">
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-theme-primary-700 hover:bg-theme-primary-50 rounded-lg transition-colors duration-200"
-            >
-              <TrendingUp className="w-4 h-4" />
-              {isExpanded ? 'Hide Details' : 'View Detailed Analysis'}
-              {isExpanded ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-          
-          <div className="flex justify-end items-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-theme-neutral-600">
-                +{stats.wordStats?.addedWords || stats.additions} added
-              </span>
+          {/* Quick Action Summary */}
+          <div className="grid grid-cols-3 items-center">
+            <div className="col-start-2 flex justify-center">
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-theme-primary-700 hover:bg-theme-primary-50 rounded-lg transition-colors duration-200"
+              >
+                <TrendingUp className="w-4 h-4" />
+                {isExpanded ? 'Hide Details' : 'View Detailed Analysis'}
+                {isExpanded ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </button>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span className="text-theme-neutral-600">
-                -{stats.wordStats?.deletedWords || stats.deletions} removed
-              </span>
-            </div>
-          </div>
-        </div>
 
-        {/* Key Metrics Grid - shown when expanded */}
-        {isExpanded && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-theme-neutral-200">
-            {/* Review Workload */}
-            <div className="text-center">
-              <div className="flex justify-center mb-3">
-                <div className="flex items-center rounded-xl border-2 border-gray-200 overflow-hidden">
-                  <div className="flex items-center gap-2 text-green-700 bg-green-50 px-4 py-4">
-                    <Plus className="w-5 h-5" />
-                    <span className="font-semibold text-base">
-                      {stats.wordStats?.addedWords || stats.additions}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-red-700 bg-red-50 px-4 py-4">
-                    <Minus className="w-5 h-5" />
-                    <span className="font-semibold text-base">
-                      {stats.wordStats?.deletedWords || stats.deletions}
-                    </span>
-                  </div>
-                </div>
+            <div className="flex justify-end items-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-theme-neutral-600">
+                  +{stats.wordStats?.addedWords || stats.additions} added
+                </span>
               </div>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-theme-accent-700">{reviewWorkload}</p>
-                <Tooltip content="The total amount of added / deleted content that requires review.">
-                  <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                    Review Load ({sizeLabel})
-                    <HelpCircle className="w-3 h-3 opacity-60" />
-                  </p>
-                </Tooltip>
-              </div>
-            </div>
-            
-            {/* Document Size */}
-            <div className="text-center">
-              <div className="flex justify-center mb-3">
-                <div className="p-4 bg-theme-primary-50 rounded-full">
-                  <FileText className="w-8 h-8 text-theme-primary-600" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-theme-primary-700">{documentSize}</p>
-                <Tooltip content="The total size of the redlined output content.">
-                  <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                  Total output content volume ({sizeLabel})
-                    <HelpCircle className="w-3 h-3 opacity-60" />
-                  </p>
-                </Tooltip>
-              </div>
-            </div>
-            
-            {/* Change Impact */}
-            <div className="text-center">
-              <div className="flex justify-center mb-3">
-                <CircularProgress 
-                  percentage={impactPercentage} 
-                  color={impactLevel === 'low' ? '#059669' : impactLevel === 'medium' ? '#d97706' : '#dc2626'}
-                  size={80}
-                />
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-theme-primary-700">{impactPercentage.toFixed(1)}%</p>
-                <Tooltip content="The percentage of the total output content that has been modified. Use this to assess overall scope of modifications.">
-                  <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                  Overall modification rate
-                    <HelpCircle className="w-3 h-3 opacity-60" />
-                  </p>
-                </Tooltip>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <span className="text-theme-neutral-600">
+                  -{stats.wordStats?.deletedWords || stats.deletions} removed
+                </span>
               </div>
             </div>
           </div>
-        )}
+
+          {/* Key Metrics Grid - shown when expanded */}
+          {isExpanded && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-theme-neutral-200">
+              {/* Review Workload */}
+              <div className="text-center">
+                <div className="flex justify-center mb-3">
+                  <div className="flex items-center rounded-xl border-2 border-gray-200 overflow-hidden">
+                    <div className="flex items-center gap-2 text-green-700 bg-green-50 px-4 py-4">
+                      <Plus className="w-5 h-5" />
+                      <span className="font-semibold text-base">
+                        {stats.wordStats?.addedWords || stats.additions}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-red-700 bg-red-50 px-4 py-4">
+                      <Minus className="w-5 h-5" />
+                      <span className="font-semibold text-base">
+                        {stats.wordStats?.deletedWords || stats.deletions}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-theme-accent-700">{reviewWorkload}</p>
+                  <Tooltip content="The total amount of added / deleted content that requires review.">
+                    <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
+                      Review Load ({sizeLabel})
+                      <HelpCircle className="w-3 h-3 opacity-60" />
+                    </p>
+                  </Tooltip>
+                </div>
+              </div>
+
+              {/* Document Size */}
+              <div className="text-center">
+                <div className="flex justify-center mb-3">
+                  <div className="p-4 bg-theme-primary-50 rounded-full">
+                    <FileText className="w-8 h-8 text-theme-primary-600" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-theme-primary-700">{documentSize}</p>
+                  <Tooltip content="The total size of the redlined output content.">
+                    <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
+                      Total output content volume ({sizeLabel})
+                      <HelpCircle className="w-3 h-3 opacity-60" />
+                    </p>
+                  </Tooltip>
+                </div>
+              </div>
+
+              {/* Change Impact */}
+              <div className="text-center">
+                <div className="flex justify-center mb-3">
+                  <CircularProgress
+                    percentage={impactPercentage}
+                    color={impactLevel === 'low' ? '#059669' : impactLevel === 'medium' ? '#d97706' : '#dc2626'}
+                    size={80}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-theme-primary-700">{impactPercentage.toFixed(1)}%</p>
+                  <Tooltip content="The percentage of the total output content that has been modified. Use this to assess overall scope of modifications.">
+                    <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
+                      Overall modification rate
+                      <HelpCircle className="w-3 h-3 opacity-60" />
+                    </p>
+                  </Tooltip>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-      
+
       {/* Detailed Analysis Section */}
       {isExpanded && (
         <div className="space-y-4">
@@ -316,7 +316,7 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                   <h4 className="font-semibold text-green-800 text-lg">Additions</h4>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div className="bg-green-100 rounded-lg p-4">
                   <div className="text-2xl font-bold text-green-700">{stats.additions}</div>
@@ -347,7 +347,7 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                   <h4 className="font-semibold text-red-800 text-lg">Deletions</h4>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div className="bg-red-100 rounded-lg p-4">
                   <div className="text-2xl font-bold text-red-700">{stats.deletions}</div>
@@ -378,7 +378,7 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                 <p className="text-xs text-theme-neutral-600">Visual breakdown of changes across all levels</p>
               </div>
             </div>
-            
+
             <div className="space-y-6">
               {/* Blocks Composition */}
               <div>
@@ -389,65 +389,71 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                   </span>
                 </div>
                 <div className="flex rounded-full overflow-hidden h-3 bg-gray-200 shadow-inner mb-2">
-                  <CustomTooltip content={`${additionPercent.toFixed(1)}% additions`}>
-                    <div 
-                      className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500" 
-                      style={{ width: `${additionPercent}%` }}
-                    ></div>
-                  </CustomTooltip>
-                  <CustomTooltip content={`${deletionPercent.toFixed(1)}% deletions`}>
-                    <div 
-                      className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-500" 
-                      style={{ width: `${deletionPercent}%` }}
-                    ></div>
-                  </CustomTooltip>
-                  <CustomTooltip content={`${(100 - additionPercent - deletionPercent).toFixed(1)}% unchanged`}>
-                    <div 
-                      className="bg-gradient-to-r from-gray-300 to-gray-400" 
-                      style={{ width: `${100 - additionPercent - deletionPercent}%` }}
-                    ></div>
-                  </CustomTooltip>
+                  <div
+                    className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500"
+                    style={{ width: `${additionPercent}%` }}
+                    title={`${additionPercent.toFixed(1)}% additions`}
+                  ></div>
+                  <div
+                    className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-500"
+                    style={{ width: `${deletionPercent}%` }}
+                    title={`${deletionPercent.toFixed(1)}% deletions`}
+                  ></div>
+                  <div
+                    className="bg-gradient-to-r from-gray-300 to-gray-400"
+                    style={{ width: `${100 - additionPercent - deletionPercent}%` }}
+                    title={`${(100 - additionPercent - deletionPercent).toFixed(1)}% unchanged`}
+                  ></div>
                 </div>
                 <div className="relative text-xs text-theme-neutral-600" style={{ height: '16px' }}>
                   {(() => {
-                    // Calculate smart positioning to prevent overlaps
-                    const additionWidth = Math.max(additionPercent, 25);
-                    const deletionWidth = Math.max(deletionPercent, 25);
-                    const unchangedWidth = Math.max(100 - additionPercent - deletionPercent, 25);
-                    
-                    // Calculate positions with collision detection
-                    let additionPos = 0;
-                    let deletionPos = Math.max(additionPercent, additionWidth);
-                    let unchangedPos = 100 - unchangedWidth;
-                    
-                    // Ensure deletion doesn't overlap with addition
-                    if (deletionPos < additionWidth) {
-                      deletionPos = additionWidth;
-                    }
-                    
-                    // Ensure unchanged doesn't overlap with deletion
-                    const deletionEnd = deletionPos + deletionWidth;
-                    if (unchangedPos < deletionEnd) {
-                      unchangedPos = deletionEnd;
-                    }
-                    
+                    const unchangedPercent = 100 - additionPercent - deletionPercent;
+
+                    // Calculate actual segment positions
+                    const additionStart = 0;
+                    const additionEnd = additionPercent;
+                    const deletionStart = additionPercent;
+                    const deletionEnd = additionPercent + deletionPercent;
+                    const unchangedStart = additionPercent + deletionPercent;
+                    const unchangedEnd = 100;
+
+                    // Simple sequential positioning - no overlaps
+                    const minWidth = 12; // Minimum readable width
+
+                    // Position labels sequentially from left to right
+                    let currentPos = 0;
+
+                    // Addition label
+                    const additionPos = currentPos;
+                    const additionWidth = Math.max(minWidth, Math.max(additionPercent, 15));
+                    currentPos = additionPos + additionWidth;
+
+                    // Deletion label  
+                    const deletionPos = currentPos;
+                    const deletionWidth = Math.max(minWidth, Math.max(deletionPercent, 15));
+                    currentPos = deletionPos + deletionWidth;
+
+                    // Unchanged label
+                    const unchangedPos = Math.min(currentPos, 100 - minWidth);
+                    const unchangedWidth = 100 - unchangedPos;
+
                     return (
                       <>
                         {stats.additions > 0 && (
                           <div className="absolute left-0" style={{ left: `${additionPos}%`, width: `${additionWidth}%` }}>
-                            <div className="text-left px-1">{stats.additions} added ({additionPercent.toFixed(1)}%)</div>
+                            <div className="text-left px-1 truncate">{stats.additions} added ({additionPercent.toFixed(1)}%)</div>
                           </div>
                         )}
-                        
+
                         {stats.deletions > 0 && (
                           <div className="absolute left-0" style={{ left: `${deletionPos}%`, width: `${deletionWidth}%` }}>
-                            <div className="text-center px-1">{stats.deletions} deleted ({deletionPercent.toFixed(1)}%)</div>
+                            <div className="text-left px-1 truncate">{stats.deletions} deleted ({deletionPercent.toFixed(1)}%)</div>
                           </div>
                         )}
-                        
+
                         {stats.unchanged > 0 && (
                           <div className="absolute left-0" style={{ left: `${unchangedPos}%`, width: `${unchangedWidth}%` }}>
-                            <div className="text-right px-1">{stats.unchanged} unchanged ({(100 - additionPercent - deletionPercent).toFixed(1)}%)</div>
+                            <div className="text-right px-1 truncate">{stats.unchanged} unchanged ({unchangedPercent.toFixed(1)}%)</div>
                           </div>
                         )}
                       </>
@@ -466,16 +472,16 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                     </span>
                   </div>
                   <div className="flex rounded-full overflow-hidden h-3 bg-gray-200 shadow-inner mb-2">
-                    <div 
-                      className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500" 
+                    <div
+                      className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500"
                       style={{ width: `${(stats.wordStats.addedWords / stats.wordStats.totalWords) * 100}%` }}
                     ></div>
-                    <div 
-                      className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-500" 
+                    <div
+                      className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-500"
                       style={{ width: `${(stats.wordStats.deletedWords / stats.wordStats.totalWords) * 100}%` }}
                     ></div>
-                    <div 
-                      className="bg-gradient-to-r from-gray-300 to-gray-400" 
+                    <div
+                      className="bg-gradient-to-r from-gray-300 to-gray-400"
                       style={{ width: `${(stats.wordStats.unchangedWords / stats.wordStats.totalWords) * 100}%` }}
                     ></div>
                   </div>
@@ -485,45 +491,52 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                       const wordAdditionPercent = (stats.wordStats.addedWords / stats.wordStats.totalWords) * 100;
                       const wordDeletionPercent = (stats.wordStats.deletedWords / stats.wordStats.totalWords) * 100;
                       const wordUnchangedPercent = (stats.wordStats.unchangedWords / stats.wordStats.totalWords) * 100;
-                      
-                      // Calculate smart positioning to prevent overlaps
-                      const additionWidth = Math.max(wordAdditionPercent, 25);
-                      const deletionWidth = Math.max(wordDeletionPercent, 25);
-                      const unchangedWidth = Math.max(wordUnchangedPercent, 25);
-                      
-                      // Calculate positions with collision detection
-                      let additionPos = 0;
-                      let deletionPos = Math.max(wordAdditionPercent, additionWidth);
-                      let unchangedPos = 100 - unchangedWidth;
-                      
-                      // Ensure deletion doesn't overlap with addition
-                      if (deletionPos < additionWidth) {
-                        deletionPos = additionWidth;
-                      }
-                      
-                      // Ensure unchanged doesn't overlap with deletion
-                      const deletionEnd = deletionPos + deletionWidth;
-                      if (unchangedPos < deletionEnd) {
-                        unchangedPos = deletionEnd;
-                      }
-                      
+
+                      // Calculate actual segment positions
+                      const additionStart = 0;
+                      const additionEnd = wordAdditionPercent;
+                      const deletionStart = wordAdditionPercent;
+                      const deletionEnd = wordAdditionPercent + wordDeletionPercent;
+                      const unchangedStart = wordAdditionPercent + wordDeletionPercent;
+                      const unchangedEnd = 100;
+
+                      // Simple sequential positioning - no overlaps
+                      const minWidth = 12; // Minimum readable width
+
+                      // Position labels sequentially from left to right
+                      let currentPos = 0;
+
+                      // Addition label
+                      const additionPos = currentPos;
+                      const additionWidth = Math.max(minWidth, Math.max(wordAdditionPercent, 15));
+                      currentPos = additionPos + additionWidth;
+
+                      // Deletion label  
+                      const deletionPos = currentPos;
+                      const deletionWidth = Math.max(minWidth, Math.max(wordDeletionPercent, 15));
+                      currentPos = deletionPos + deletionWidth;
+
+                      // Unchanged label
+                      const unchangedPos = Math.min(currentPos, 100 - minWidth);
+                      const unchangedWidth = 100 - unchangedPos;
+
                       return (
                         <>
                           {stats.wordStats.addedWords > 0 && (
                             <div className="absolute left-0" style={{ left: `${additionPos}%`, width: `${additionWidth}%` }}>
-                              <div className="text-left px-1">{stats.wordStats.addedWords.toLocaleString()} added ({wordAdditionPercent.toFixed(1)}%)</div>
+                              <div className="text-left px-1 truncate">{stats.wordStats.addedWords.toLocaleString()} added ({wordAdditionPercent.toFixed(1)}%)</div>
                             </div>
                           )}
-                          
+
                           {stats.wordStats.deletedWords > 0 && (
                             <div className="absolute left-0" style={{ left: `${deletionPos}%`, width: `${deletionWidth}%` }}>
-                              <div className="text-center px-1">{stats.wordStats.deletedWords.toLocaleString()} deleted ({wordDeletionPercent.toFixed(1)}%)</div>
+                              <div className="text-left px-1 truncate">{stats.wordStats.deletedWords.toLocaleString()} deleted ({wordDeletionPercent.toFixed(1)}%)</div>
                             </div>
                           )}
-                          
+
                           {stats.wordStats.unchangedWords > 0 && (
                             <div className="absolute left-0" style={{ left: `${unchangedPos}%`, width: `${unchangedWidth}%` }}>
-                              <div className="text-right px-1">{stats.wordStats.unchangedWords.toLocaleString()} unchanged ({wordUnchangedPercent.toFixed(1)}%)</div>
+                              <div className="text-right px-1 truncate">{stats.wordStats.unchangedWords.toLocaleString()} unchanged ({wordUnchangedPercent.toFixed(1)}%)</div>
                             </div>
                           )}
                         </>
@@ -543,16 +556,16 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                     </span>
                   </div>
                   <div className="flex rounded-full overflow-hidden h-3 bg-gray-200 shadow-inner mb-2">
-                    <div 
-                      className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500" 
+                    <div
+                      className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500"
                       style={{ width: `${(stats.characterStats.addedCharacters / stats.characterStats.totalCharacters) * 100}%` }}
                     ></div>
-                    <div 
-                      className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-500" 
+                    <div
+                      className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-500"
                       style={{ width: `${(stats.characterStats.deletedCharacters / stats.characterStats.totalCharacters) * 100}%` }}
                     ></div>
-                    <div 
-                      className="bg-gradient-to-r from-gray-300 to-gray-400" 
+                    <div
+                      className="bg-gradient-to-r from-gray-300 to-gray-400"
                       style={{ width: `${(stats.characterStats.unchangedCharacters / stats.characterStats.totalCharacters) * 100}%` }}
                     ></div>
                   </div>
@@ -562,45 +575,52 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                       const charAdditionPercent = (stats.characterStats.addedCharacters / stats.characterStats.totalCharacters) * 100;
                       const charDeletionPercent = (stats.characterStats.deletedCharacters / stats.characterStats.totalCharacters) * 100;
                       const charUnchangedPercent = (stats.characterStats.unchangedCharacters / stats.characterStats.totalCharacters) * 100;
-                      
-                      // Calculate smart positioning to prevent overlaps
-                      const additionWidth = Math.max(charAdditionPercent, 25);
-                      const deletionWidth = Math.max(charDeletionPercent, 25);
-                      const unchangedWidth = Math.max(charUnchangedPercent, 25);
-                      
-                      // Calculate positions with collision detection
-                      let additionPos = 0;
-                      let deletionPos = Math.max(charAdditionPercent, additionWidth);
-                      let unchangedPos = 100 - unchangedWidth;
-                      
-                      // Ensure deletion doesn't overlap with addition
-                      if (deletionPos < additionWidth) {
-                        deletionPos = additionWidth;
-                      }
-                      
-                      // Ensure unchanged doesn't overlap with deletion
-                      const deletionEnd = deletionPos + deletionWidth;
-                      if (unchangedPos < deletionEnd) {
-                        unchangedPos = deletionEnd;
-                      }
-                      
+
+                      // Calculate actual segment positions
+                      const additionStart = 0;
+                      const additionEnd = charAdditionPercent;
+                      const deletionStart = charAdditionPercent;
+                      const deletionEnd = charAdditionPercent + charDeletionPercent;
+                      const unchangedStart = charAdditionPercent + charDeletionPercent;
+                      const unchangedEnd = 100;
+
+                      // Simple sequential positioning - no overlaps
+                      const minWidth = 12; // Minimum readable width
+
+                      // Position labels sequentially from left to right
+                      let currentPos = 0;
+
+                      // Addition label
+                      const additionPos = currentPos;
+                      const additionWidth = Math.max(minWidth, Math.max(charAdditionPercent, 15));
+                      currentPos = additionPos + additionWidth;
+
+                      // Deletion label  
+                      const deletionPos = currentPos;
+                      const deletionWidth = Math.max(minWidth, Math.max(charDeletionPercent, 15));
+                      currentPos = deletionPos + deletionWidth;
+
+                      // Unchanged label
+                      const unchangedPos = Math.min(currentPos, 100 - minWidth);
+                      const unchangedWidth = 100 - unchangedPos;
+
                       return (
                         <>
                           {stats.characterStats.addedCharacters > 0 && (
                             <div className="absolute left-0" style={{ left: `${additionPos}%`, width: `${additionWidth}%` }}>
-                              <div className="text-left px-1">{stats.characterStats.addedCharacters.toLocaleString()} added ({charAdditionPercent.toFixed(1)}%)</div>
+                              <div className="text-left px-1 truncate">{stats.characterStats.addedCharacters.toLocaleString()} added ({charAdditionPercent.toFixed(1)}%)</div>
                             </div>
                           )}
-                          
+
                           {stats.characterStats.deletedCharacters > 0 && (
                             <div className="absolute left-0" style={{ left: `${deletionPos}%`, width: `${deletionWidth}%` }}>
-                              <div className="text-center px-1">{stats.characterStats.deletedCharacters.toLocaleString()} deleted ({charDeletionPercent.toFixed(1)}%)</div>
+                              <div className="text-left px-1 truncate">{stats.characterStats.deletedCharacters.toLocaleString()} deleted ({charDeletionPercent.toFixed(1)}%)</div>
                             </div>
                           )}
-                          
+
                           {stats.characterStats.unchangedCharacters > 0 && (
                             <div className="absolute left-0" style={{ left: `${unchangedPos}%`, width: `${unchangedWidth}%` }}>
-                              <div className="text-right px-1">{stats.characterStats.unchangedCharacters.toLocaleString()} unchanged ({charUnchangedPercent.toFixed(1)}%)</div>
+                              <div className="text-right px-1 truncate">{stats.characterStats.unchangedCharacters.toLocaleString()} unchanged ({charUnchangedPercent.toFixed(1)}%)</div>
                             </div>
                           )}
                         </>
