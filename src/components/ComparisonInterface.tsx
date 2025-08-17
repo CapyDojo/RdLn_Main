@@ -33,7 +33,6 @@ import { RdLnMemoryEdgeTab } from './RdLnMemoryEdgeTab';
 import { RdLnMemorySidePanel } from './RdLnMemorySidePanel';
 import { DesktopInputLayout } from './DesktopInputLayout';
 import { MobileInputLayout } from './MobileInputLayout';
-import { ExtremeTestSuite } from '../testing/ExtremeTestSuite';
 
 // Experimental features
 import { useExperimentalFeatures, useExperimentalCSSClasses } from '../contexts/ExperimentalLayoutContext';
@@ -54,10 +53,8 @@ import { BaseComponentProps } from '../types/components';
 interface ComparisonInterfaceProps extends BaseComponentProps {
   showAdvancedOcrCard?: boolean;
   showPerformanceDemoCard?: boolean;
-  showExtremeTestSuite?: boolean;
   onToggleAdvancedOcr?: () => void;
   onTogglePerformanceDemo?: () => void;
-  onToggleExtremeTestSuite?: () => void;
   onOverlayShow?: () => void;
   onOverlayHide?: () => void;
   onContentChange?: (hasContent: boolean) => void;
@@ -70,10 +67,8 @@ export interface ComparisonInterfaceRef {
 export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, ComparisonInterfaceProps>(({
   showAdvancedOcrCard = true,
   showPerformanceDemoCard = true,
-  showExtremeTestSuite = false,
   onToggleAdvancedOcr,
   onTogglePerformanceDemo,
-  onToggleExtremeTestSuite,
   onOverlayShow,
   onOverlayHide,
   onContentChange,
@@ -206,6 +201,33 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   // DEBUG: Immediate logging to verify component initialization
   // console.log('🔧 SCROLL LOCK DEBUG: Component initialized, isScrollLocked:', isScrollLocked);
+
+  // URL parameter detection for test loading
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldLoadTest = urlParams.get('loadTest') === 'true';
+    const testId = urlParams.get('testId');
+    
+    if (shouldLoadTest && testId) {
+      // Try to load from localStorage first
+      const pendingTestLoad = localStorage.getItem('pendingTestLoad');
+      if (pendingTestLoad) {
+        try {
+          const testData = JSON.parse(pendingTestLoad);
+          if (testData.testId === testId) {
+            console.log('🎯 Loading test from URL parameters:', testData.testName);
+            handleLoadTest(testData.originalText, testData.revisedText);
+            // Clear the stored test data
+            localStorage.removeItem('pendingTestLoad');
+            // Clean up URL parameters
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        } catch (error) {
+          console.error('Failed to parse test data from localStorage:', error);
+        }
+      }
+    }
+  }, []); // Only run once on component mount
 
   // Performance tracking for processing states
   useEffect(() => {
@@ -687,9 +709,6 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
       {/* Advanced Test Suite - Segregated Testing Module - DISABLED FOR PRODUCTION */}
       {/* <AdvancedTestSuite onLoadTest={handleLoadTest} /> */}
-
-      {/* Extreme Test Suite - Ultra-Complex Testing Module - Toggleable via Dev Dashboard */}
-      {showExtremeTestSuite && <ExtremeTestSuite onLoadTest={handleLoadTest} />}
 
       {/* STEP 3b: Background Loading Status - Removed to be placed in App.tsx */}
 

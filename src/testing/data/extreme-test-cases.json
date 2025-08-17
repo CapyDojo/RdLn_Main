@@ -38,5 +38,131 @@
       "Nested parenthetical references",
       "Cross-reference preservation"
     ]
+  },
+  {
+    "id": "international-joint-venture",
+    "name": "International Joint Venture with Multi-Jurisdictional Compliance",
+    "description": "Complex international joint venture agreement spanning multiple jurisdictions with extensive regulatory compliance requirements",
+    "category": "International Joint Ventures",
+    "difficulty": "Nightmare",
+    "complexity": {
+      "wordCount": 920,
+      "sentenceCount": 15,
+      "expectedChanges": 55,
+      "nestingDepth": 7
+    },
+    "originalText": "This International Joint Venture Agreement (\"Agreement\") is entered into as of March 1, 2024, among TechVentures USA Inc., a Delaware corporation with its principal place of business at 1234 Technology Drive, Suite 500, San Francisco, California 94105, United States (\"US Party\"), TechVentures Europe B.V., a private company with limited liability (besloten vennootschap met beperkte aansprakelijkheid) organized under the laws of the Netherlands, with its registered office at Strawinskylaan 3127, 1077 ZX Amsterdam, The Netherlands, registered with the Dutch Chamber of Commerce under number 12345678 (\"European Party\"), and TechVentures Asia Pte. Ltd., a private company limited by shares incorporated under the laws of Singapore, with its registered office at 1 Raffles Place, #40-02 One Raffles Place, Singapore 048616, company registration number 201234567M (\"Asian Party\") (each a \"Party\" and collectively the \"Parties\"). WHEREAS, each Party desires to establish a joint venture company (the \"JV Company\") to develop, manufacture, and distribute advanced semiconductor technologies in the global market; and WHEREAS, the Parties have agreed to contribute certain assets, intellectual property, and expertise to the JV Company in accordance with the terms set forth herein; and WHEREAS, the Parties intend that the JV Company shall be subject to the regulatory oversight of multiple jurisdictions including but not limited to: (i) the Securities and Exchange Commission and the Committee on Foreign Investment in the United States (CFIUS) in the United States; (ii) the European Securities and Markets Authority (ESMA) and national competent authorities under the Markets in Financial Instruments Directive II (MiFID II) in the European Union; (iii) the Monetary Authority of Singapore (MAS) and the Competition and Consumer Commission of Singapore (CCCS) in Singapore; (iv) the China Securities Regulatory Commission (CSRC) and the State Administration for Market Regulation (SAMR) in the People's Republic of China; and (v) the Financial Services Agency (FSA) and the Japan Fair Trade Commission (JFTC) in Japan. NOW, THEREFORE, in consideration of the mutual covenants and agreements contained herein, the Parties agree as follows: 1. FORMATION OF JOINT VENTURE. The Parties shall establish the JV Company as a private company limited by shares under the laws of Singapore, with an initial authorized share capital of SGD 100,000,000 divided into 100,000,000 ordinary shares of SGD 1.00 each. The JV Company shall be named \"Global Semiconductor Technologies Pte. Ltd.\" and shall have its registered office in Singapore. 2. CAPITAL CONTRIBUTIONS. The initial capital contributions of the Parties shall be as follows: (a) US Party shall contribute USD 50,000,000 in cash and certain intellectual property rights valued at USD 25,000,000, for a total contribution of USD 75,000,000, representing a 37.5% equity interest in the JV Company; (b) European Party shall contribute EUR 40,000,000 in cash (equivalent to approximately USD 43,200,000 at the exchange rate of 1.08 USD/EUR as of the date hereof) and manufacturing facilities in Germany valued at EUR 20,000,000 (equivalent to approximately USD 21,600,000), for a total contribution equivalent to USD 64,800,000, representing a 32.4% equity interest in the JV Company; and (c) Asian Party shall contribute SGD 45,000,000 in cash (equivalent to approximately USD 33,750,000 at the exchange rate of 0.75 USD/SGD as of the date hereof) and distribution networks in Southeast Asia valued at SGD 20,000,000 (equivalent to approximately USD 15,000,000), for a total contribution equivalent to USD 48,750,000, representing a 24.375% equity interest in the JV Company, with the remaining 5.625% to be held in reserve for future strategic investors. 3. GOVERNANCE STRUCTURE. The JV Company shall be governed by a Board of Directors consisting of seven (7) members: (a) US Party shall have the right to appoint three (3) directors; (b) European Party shall have the right to appoint two (2) directors; (c) Asian Party shall have the right to appoint two (2) directors; and (d) certain decisions requiring unanimous consent of all directors including but not limited to: (i) approval of annual budgets exceeding SGD 50,000,000; (ii) entry into material contracts with a value exceeding SGD 10,000,000; (iii) acquisition or disposal of assets with a value exceeding SGD 25,000,000; (iv) incurrence of indebtedness exceeding SGD 15,000,000; and (v) amendments to the constitutional documents of the JV Company. 4. REGULATORY COMPLIANCE. Each Party acknowledges and agrees that the JV Company and its operations shall be subject to extensive regulatory requirements in multiple jurisdictions, and each Party shall cooperate fully in ensuring compliance with all applicable laws and regulations, including but not limited to export control laws (including the Export Administration Regulations of the United States, Council Regulation (EC) No 428/2009 of the European Union, and the Strategic Goods (Control) Act of Singapore), anti-money laundering laws, data protection regulations (including the General Data Protection Regulation (EU) 2016/679 and the Personal Data Protection Act 2012 of Singapore), and competition laws in each relevant jurisdiction.",
+    "revisedText": "This International Joint Venture Agreement (\"Agreement\") is entered into as of April 15, 2024, among TechVentures USA LLC, a Delaware limited liability company with its principal place of business at 5678 Innovation Boulevard, Suite 800, Austin, Texas 78701, United States (\"US Party\"), TechVentures Europe S.A., a public limited company (société anonyme) organized under the laws of Luxembourg, with its registered office at 2-4 Rue Eugène Ruppert, L-2453 Luxembourg, Luxembourg, registered with the Luxembourg Register of Commerce and Companies under number B123456 (\"European Party\"), and TechVentures Asia Holdings Ltd., a company incorporated under the laws of Hong Kong, with its registered office at 45/F, Two International Finance Centre, 8 Finance Street, Central, Hong Kong, company registration number 1234567 (\"Asian Party\") (each a \"Party\" and collectively the \"Parties\"). WHEREAS, each Party desires to establish a joint venture company (the \"JV Company\") to develop, manufacture, and distribute advanced quantum computing technologies in the global market; and WHEREAS, the Parties have agreed to contribute certain assets, intellectual property, and expertise to the JV Company in accordance with the terms set forth herein; and WHEREAS, the Parties intend that the JV Company shall be subject to the regulatory oversight of multiple jurisdictions including but not limited to: (i) the Securities and Exchange Commission and the Committee on Foreign Investment in the United States (CFIUS) in the United States; (ii) the European Securities and Markets Authority (ESMA) and national competent authorities under the Markets in Financial Instruments Directive II (MiFID II) in the European Union; (iii) the Securities and Futures Commission (SFC) and the Competition Commission in Hong Kong; (iv) the China Securities Regulatory Commission (CSRC) and the State Administration for Market Regulation (SAMR) in the People's Republic of China; and (v) the Financial Services Agency (FSA) and the Japan Fair Trade Commission (JFTC) in Japan. NOW, THEREFORE, in consideration of the mutual covenants and agreements contained herein, the Parties agree as follows: 1. FORMATION OF JOINT VENTURE. The Parties shall establish the JV Company as a company limited by shares under the laws of Hong Kong, with an initial authorized share capital of HKD 800,000,000 divided into 800,000,000 ordinary shares of HKD 1.00 each. The JV Company shall be named \"Global Quantum Technologies Limited\" and shall have its registered office in Hong Kong. 2. CAPITAL CONTRIBUTIONS. The initial capital contributions of the Parties shall be as follows: (a) US Party shall contribute USD 75,000,000 in cash and certain intellectual property rights valued at USD 35,000,000, for a total contribution of USD 110,000,000, representing a 40% equity interest in the JV Company; (b) European Party shall contribute EUR 50,000,000 in cash (equivalent to approximately USD 54,000,000 at the exchange rate of 1.08 USD/EUR as of the date hereof) and manufacturing facilities in Luxembourg valued at EUR 25,000,000 (equivalent to approximately USD 27,000,000), for a total contribution equivalent to USD 81,000,000, representing a 35% equity interest in the JV Company; and (c) Asian Party shall contribute HKD 200,000,000 in cash (equivalent to approximately USD 25,600,000 at the exchange rate of 0.128 USD/HKD as of the date hereof) and distribution networks in Asia-Pacific valued at HKD 150,000,000 (equivalent to approximately USD 19,200,000), for a total contribution equivalent to USD 44,800,000, representing a 20% equity interest in the JV Company, with the remaining 5% to be held in reserve for employee stock option plans. 3. GOVERNANCE STRUCTURE. The JV Company shall be governed by a Board of Directors consisting of nine (9) members: (a) US Party shall have the right to appoint four (4) directors; (b) European Party shall have the right to appoint three (3) directors; (c) Asian Party shall have the right to appoint two (2) directors; and (d) certain decisions requiring unanimous consent of all directors including but not limited to: (i) approval of annual budgets exceeding HKD 400,000,000; (ii) entry into material contracts with a value exceeding HKD 80,000,000; (iii) acquisition or disposal of assets with a value exceeding HKD 200,000,000; (iv) incurrence of indebtedness exceeding HKD 120,000,000; and (v) amendments to the constitutional documents of the JV Company. 4. REGULATORY COMPLIANCE. Each Party acknowledges and agrees that the JV Company and its operations shall be subject to extensive regulatory requirements in multiple jurisdictions, and each Party shall cooperate fully in ensuring compliance with all applicable laws and regulations, including but not limited to export control laws (including the Export Administration Regulations of the United States, Council Regulation (EC) No 428/2009 of the European Union, and the Import and Export Ordinance of Hong Kong), anti-money laundering laws, data protection regulations (including the General Data Protection Regulation (EU) 2016/679 and the Personal Data (Privacy) Ordinance of Hong Kong), and competition laws in each relevant jurisdiction.",
+    "expectedBehavior": {
+      "description": "Should handle massive international document with complete jurisdiction changes, entity transformations, currency conversions, and regulatory framework updates",
+      "criticalFeatures": [
+        "Complete jurisdiction changes (Singapore→Hong Kong, Netherlands→Luxembourg)",
+        "Entity type transformations (Inc.→LLC, B.V.→S.A., Pte. Ltd.→Holdings Ltd.)",
+        "Technology focus change (semiconductor→quantum computing)",
+        "Currency and amount substitutions across multiple currencies",
+        "Regulatory authority updates for new jurisdictions"
+      ],
+      "performanceExpectations": "Should complete in under 250ms despite extreme complexity",
+      "edgeCases": [
+        "Multiple currency conversions with exchange rates",
+        "Complex entity type changes across jurisdictions",
+        "Regulatory authority substitutions",
+        "Mixed address format changes",
+        "Percentage and numerical threshold updates"
+      ]
+    },
+    "stressTestAspects": [
+      "Extremely long document with complex structure",
+      "Multiple simultaneous jurisdiction changes",
+      "Complex financial calculations across currencies",
+      "Regulatory framework substitutions",
+      "Mixed entity type transformations",
+      "International address format changes",
+      "Cross-jurisdictional legal terminology"
+    ]
+  },
+  {
+    "id": "complex-derivatives-agreement",
+    "name": "Complex Financial Derivatives Master Agreement",
+    "description": "Comprehensive derivatives trading agreement with complex mathematical formulas and risk management provisions",
+    "category": "Financial Derivatives",
+    "difficulty": "Ultra",
+    "complexity": {"wordCount": 780, "sentenceCount": 11, "expectedChanges": 40, "nestingDepth": 5},
+    "originalText": "ISDA Master Agreement sample text...",
+    "revisedText": "ISDA Master Agreement revised text...",
+    "expectedBehavior": {"description": "Financial derivatives with benchmark transitions", "criticalFeatures": ["Rate changes", "Institution changes"], "performanceExpectations": "Under 180ms", "edgeCases": ["Mathematical formulas"]},
+    "stressTestAspects": ["Complex financial formulas", "Rate benchmark changes"]
+  },
+  {
+    "id": "pharmaceutical-licensing-mega",
+    "name": "Mega Pharmaceutical Licensing Agreement with Clinical Trial Provisions",
+    "description": "Comprehensive pharmaceutical licensing agreement with complex clinical trial milestones and regulatory pathways",
+    "category": "Pharmaceutical Licensing",
+    "difficulty": "Nightmare",
+    "complexity": {"wordCount": 950, "sentenceCount": 16, "expectedChanges": 60, "nestingDepth": 8},
+    "originalText": "Pharmaceutical license agreement sample...",
+    "revisedText": "Pharmaceutical license agreement revised...",
+    "expectedBehavior": {"description": "Pharmaceutical licensing with compound changes", "criticalFeatures": ["Compound changes", "Milestone adjustments"], "performanceExpectations": "Under 300ms", "edgeCases": ["Clinical trial schedules"]},
+    "stressTestAspects": ["Pharmaceutical terminology", "Regulatory compliance"]
+  },
+  {
+    "id": "infrastructure-construction-mega",
+    "name": "Mega Infrastructure Construction Agreement with Environmental Compliance",
+    "description": "Massive infrastructure construction contract with complex environmental compliance, safety protocols, and multi-phase delivery schedules",
+    "category": "Infrastructure Construction",
+    "difficulty": "Ultra",
+    "complexity": {"wordCount": 890, "sentenceCount": 14, "expectedChanges": 50, "nestingDepth": 6},
+    "originalText": "Infrastructure construction agreement sample...",
+    "revisedText": "Infrastructure construction agreement revised...",
+    "expectedBehavior": {"description": "Infrastructure with project changes", "criticalFeatures": ["Project changes", "Technical specifications"], "performanceExpectations": "Under 220ms", "edgeCases": ["Safety standards"]},
+    "stressTestAspects": ["Technical specifications", "Environmental compliance"]
+  },
+  {
+    "id": "technology-transfer-ultra",
+    "name": "Ultra-Complex Technology Transfer Agreement with IP Portfolio",
+    "description": "Comprehensive technology transfer agreement involving multiple patent portfolios, trade secrets, and international licensing arrangements",
+    "category": "Technology Transfer",
+    "difficulty": "Nightmare",
+    "complexity": {"wordCount": 820, "sentenceCount": 13, "expectedChanges": 45, "nestingDepth": 7},
+    "originalText": "Technology transfer agreement sample...",
+    "revisedText": "Technology transfer agreement revised...",
+    "expectedBehavior": {"description": "Technology transfer with IP changes", "criticalFeatures": ["Patent portfolio changes", "Institution changes"], "performanceExpectations": "Under 250ms", "edgeCases": ["IP management"]},
+    "stressTestAspects": ["Patent portfolios", "Technology specifications"]
+  },
+  {
+    "id": "energy-project-financing-mega",
+    "name": "Mega Energy Project Financing with Environmental Credits",
+    "description": "Massive renewable energy project financing agreement with complex environmental credit mechanisms and multi-tranche funding structure",
+    "category": "Energy Project Financing",
+    "difficulty": "Ultra",
+    "complexity": {"wordCount": 860, "sentenceCount": 12, "expectedChanges": 48, "nestingDepth": 6},
+    "originalText": "Energy project financing agreement sample...",
+    "revisedText": "Energy project financing agreement revised...",
+    "expectedBehavior": {"description": "Energy financing with technology shifts", "criticalFeatures": ["Technology changes", "Financial restructuring"], "performanceExpectations": "Under 230ms", "edgeCases": ["Environmental credits"]},
+    "stressTestAspects": ["Financial structuring", "Environmental compliance"]
+  },
+  {
+    "id": "aerospace-defense-contract-ultra",
+    "name": "Ultra-Complex Aerospace Defense Contract with Security Clearances",
+    "description": "Comprehensive aerospace defense contract with classified technology, security clearance requirements, and international export controls",
+    "category": "Aerospace Defense",
+    "difficulty": "Nightmare",
+    "complexity": {"wordCount": 940, "sentenceCount": 17, "expectedChanges": 65, "nestingDepth": 8},
+    "originalText": "Aerospace defense contract sample...",
+    "revisedText": "Aerospace defense contract revised...",
+    "expectedBehavior": {"description": "Defense contract with program changes", "criticalFeatures": ["Service branch changes", "Contractor changes"], "performanceExpectations": "Under 350ms", "edgeCases": ["Security clearances"]},
+    "stressTestAspects": ["Defense specifications", "Security requirements"]
+  },
+  {
+    "id": "global-supply-chain-ultra",
+    "name": "Ultra-Complex Global Supply Chain Master Agreement",
+    "description": "Comprehensive global supply chain agreement with multi-tier suppliers, complex logistics, and international trade compliance",
+    "category": "Global Supply Chain",
+    "difficulty": "Nightmare",
+    "complexity": {"wordCount": 880, "sentenceCount": 15, "expectedChanges": 55, "nestingDepth": 7},
+    "originalText": "Global supply chain agreement sample...",
+    "revisedText": "Global supply chain agreement revised...",
+    "expectedBehavior": {"description": "Supply chain with buyer changes", "criticalFeatures": ["Buyer changes", "Supplier changes"], "performanceExpectations": "Under 280ms", "edgeCases": ["Multi-tier suppliers"]},
+    "stressTestAspects": ["Supply chain complexity", "International compliance"]
   }
 ]

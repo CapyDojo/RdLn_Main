@@ -69,23 +69,33 @@ export const RedliningTestsDashboard: React.FC<RedliningTestsDashboardProps> = (
   };
 
   const handleLoadTest = async (test: ExtremeTestCase) => {
-    if (!onLoadTest) {
-      // If no callback provided, redirect to main app with test data
-      // Store test data in localStorage and redirect
-      localStorage.setItem('pendingTestLoad', JSON.stringify({
+    setLoadingTest(test.id);
+    
+    try {
+      // Encode test data for URL parameters
+      const testData = {
         originalText: test.originalText,
         revisedText: test.revisedText,
+        testName: test.name,
+        testId: test.id
+      };
+      
+      // Store in localStorage as backup
+      localStorage.setItem('pendingTestLoad', JSON.stringify(testData));
+      
+      // Create URL with test data as parameters
+      const params = new URLSearchParams({
+        loadTest: 'true',
+        testId: test.id,
         testName: test.name
-      }));
-      window.location.href = '/';
-      return;
-    }
-    
-    setLoadingTest(test.id);
-    try {
-      // Simulate brief loading delay for UX
-      await new Promise(resolve => setTimeout(resolve, 100));
-      onLoadTest(test.originalText, test.revisedText, test.name);
+      });
+      
+      // Open main app in new window/tab with test loading parameters
+      const mainAppUrl = `/?${params.toString()}`;
+      window.open(mainAppUrl, '_blank');
+      
+    } catch (error) {
+      console.error('Failed to load test:', error);
     } finally {
       setLoadingTest(null);
     }
