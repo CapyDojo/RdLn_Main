@@ -215,13 +215,13 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <span className="text-theme-neutral-600">
-                  +{stats.wordStats?.addedWords || stats.additions} added
+                  +{(stats.wordStats?.addedWords || stats.additions).toLocaleString()} added
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                 <span className="text-theme-neutral-600">
-                  -{stats.wordStats?.deletedWords || stats.deletions} removed
+                  -{(stats.wordStats?.deletedWords || stats.deletions).toLocaleString()} removed
                 </span>
               </div>
             </div>
@@ -237,19 +237,19 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                     <div className="flex items-center gap-2 text-green-700 bg-green-50 px-4 py-4">
                       <Plus className="w-5 h-5" />
                       <span className="font-semibold text-base">
-                        {stats.wordStats?.addedWords || stats.additions}
+                        {(stats.wordStats?.addedWords || stats.additions).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-red-700 bg-red-50 px-4 py-4">
                       <Minus className="w-5 h-5" />
                       <span className="font-semibold text-base">
-                        {stats.wordStats?.deletedWords || stats.deletions}
+                        {(stats.wordStats?.deletedWords || stats.deletions).toLocaleString()}
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-2xl font-bold text-theme-accent-700">{reviewWorkload}</p>
+                  <p className="text-2xl font-bold text-theme-accent-700">{reviewWorkload.toLocaleString()}</p>
                   <Tooltip content="The total amount of added / deleted content that requires review.">
                     <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
                       Review Load ({sizeLabel})
@@ -267,7 +267,7 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-2xl font-bold text-theme-primary-700">{documentSize}</p>
+                  <p className="text-2xl font-bold text-theme-primary-700">{documentSize.toLocaleString()}</p>
                   <Tooltip content="The total size of the redlined output content.">
                     <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
                       Total output content volume ({sizeLabel})
@@ -419,41 +419,45 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
 
                     // Simple sequential positioning - no overlaps
                     const minWidth = 12; // Minimum readable width
+                    const unchangedMinWidth = 25; // Larger minimum for unchanged labels
+
+                    // Reserve space for unchanged label first
+                    const maxChangeSpace = 100 - unchangedMinWidth;
 
                     // Position labels sequentially from left to right
                     let currentPos = 0;
 
                     // Addition label
                     const additionPos = currentPos;
-                    const additionWidth = Math.max(minWidth, Math.max(additionPercent, 15));
+                    const additionWidth = Math.min(Math.max(minWidth, Math.max(additionPercent, 15)), maxChangeSpace / 2);
                     currentPos = additionPos + additionWidth;
 
                     // Deletion label  
                     const deletionPos = currentPos;
-                    const deletionWidth = Math.max(minWidth, Math.max(deletionPercent, 15));
+                    const deletionWidth = Math.min(Math.max(minWidth, Math.max(deletionPercent, 15)), maxChangeSpace - additionWidth);
                     currentPos = deletionPos + deletionWidth;
 
-                    // Unchanged label
-                    const unchangedPos = Math.min(currentPos, 100 - minWidth);
+                    // Unchanged label gets remaining space (guaranteed minimum)
+                    const unchangedPos = currentPos;
                     const unchangedWidth = 100 - unchangedPos;
 
                     return (
                       <>
                         {stats.additions > 0 && (
                           <div className="absolute left-0" style={{ left: `${additionPos}%`, width: `${additionWidth}%` }}>
-                            <div className="text-left px-1 truncate">{stats.additions} added ({additionPercent.toFixed(1)}%)</div>
+                            <div className="text-left px-1 truncate">{stats.additions.toLocaleString()} added ({additionPercent.toFixed(1)}%)</div>
                           </div>
                         )}
 
                         {stats.deletions > 0 && (
                           <div className="absolute left-0" style={{ left: `${deletionPos}%`, width: `${deletionWidth}%` }}>
-                            <div className="text-left px-1 truncate">{stats.deletions} deleted ({deletionPercent.toFixed(1)}%)</div>
+                            <div className="text-left px-1 truncate">{stats.deletions.toLocaleString()} deleted ({deletionPercent.toFixed(1)}%)</div>
                           </div>
                         )}
 
                         {stats.unchanged > 0 && (
                           <div className="absolute left-0" style={{ left: `${unchangedPos}%`, width: `${unchangedWidth}%` }}>
-                            <div className="text-right px-1 truncate">{stats.unchanged} unchanged ({unchangedPercent.toFixed(1)}%)</div>
+                            <div className="text-right px-1 truncate">{stats.unchanged.toLocaleString()} unchanged ({unchangedPercent.toFixed(1)}%)</div>
                           </div>
                         )}
                       </>
@@ -502,22 +506,26 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
 
                       // Simple sequential positioning - no overlaps
                       const minWidth = 12; // Minimum readable width
+                      const unchangedMinWidth = 25; // Larger minimum for unchanged labels
+
+                      // Reserve space for unchanged label first
+                      const maxChangeSpace = 100 - unchangedMinWidth;
 
                       // Position labels sequentially from left to right
                       let currentPos = 0;
 
                       // Addition label
                       const additionPos = currentPos;
-                      const additionWidth = Math.max(minWidth, Math.max(wordAdditionPercent, 15));
+                      const additionWidth = Math.min(Math.max(minWidth, Math.max(wordAdditionPercent, 15)), maxChangeSpace / 2);
                       currentPos = additionPos + additionWidth;
 
                       // Deletion label  
                       const deletionPos = currentPos;
-                      const deletionWidth = Math.max(minWidth, Math.max(wordDeletionPercent, 15));
+                      const deletionWidth = Math.min(Math.max(minWidth, Math.max(wordDeletionPercent, 15)), maxChangeSpace - additionWidth);
                       currentPos = deletionPos + deletionWidth;
 
-                      // Unchanged label
-                      const unchangedPos = Math.min(currentPos, 100 - minWidth);
+                      // Unchanged label gets remaining space (guaranteed minimum)
+                      const unchangedPos = currentPos;
                       const unchangedWidth = 100 - unchangedPos;
 
                       return (
@@ -586,22 +594,26 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
 
                       // Simple sequential positioning - no overlaps
                       const minWidth = 12; // Minimum readable width
+                      const unchangedMinWidth = 25; // Larger minimum for unchanged labels
+
+                      // Reserve space for unchanged label first
+                      const maxChangeSpace = 100 - unchangedMinWidth;
 
                       // Position labels sequentially from left to right
                       let currentPos = 0;
 
                       // Addition label
                       const additionPos = currentPos;
-                      const additionWidth = Math.max(minWidth, Math.max(charAdditionPercent, 15));
+                      const additionWidth = Math.min(Math.max(minWidth, Math.max(charAdditionPercent, 15)), maxChangeSpace / 2);
                       currentPos = additionPos + additionWidth;
 
                       // Deletion label  
                       const deletionPos = currentPos;
-                      const deletionWidth = Math.max(minWidth, Math.max(charDeletionPercent, 15));
+                      const deletionWidth = Math.min(Math.max(minWidth, Math.max(charDeletionPercent, 15)), maxChangeSpace - additionWidth);
                       currentPos = deletionPos + deletionWidth;
 
-                      // Unchanged label
-                      const unchangedPos = Math.min(currentPos, 100 - minWidth);
+                      // Unchanged label gets remaining space (guaranteed minimum)
+                      const unchangedPos = currentPos;
                       const unchangedWidth = 100 - unchangedPos;
 
                       return (
