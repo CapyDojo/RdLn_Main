@@ -1,4 +1,4 @@
-import React, { useTransition, useDeferredValue } from 'react';
+import React from 'react';
 import { Filter } from 'lucide-react';
 import { DiffChange } from '../types';
 import { BaseComponentProps } from '../types/components';
@@ -12,6 +12,13 @@ import { WordCopyButton } from './WordCopyButton';
 import { DocxExportButton } from './DocxExportButton';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { FontSizeSelector } from './FontSizeSelector';
+import '../styles/whitespace-toggle.css';
+
+// Type definition for chunk objects - now lightweight without pre-generated HTML
+interface ChunkData {
+  id: string;
+  changes: DiffChange[];
+}
 
 interface RedlineOutputProps extends BaseComponentProps {
   changes: DiffChange[];
@@ -87,48 +94,12 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   // Font size context
   const { fontSize } = useFontSize();
 
-  // Whitespace cleanup toggle state with smooth transitions
+  // Whitespace cleanup toggle state - CSS-based approach
   const [cleanWhitespace, setCleanWhitespace] = React.useState(true);
-  const [isPending, startTransition] = useTransition();
-  const [cleanupTrigger, setCleanupTrigger] = React.useState(0);
-  
-  // Defer the expensive rendering updates
-  const deferredCleanWhitespace = useDeferredValue(cleanWhitespace);
 
-  // Optimized toggle handler with smooth transitions and garbage collection
+  // CSS-based toggle handler - no DOM manipulation, just class toggling
   const handleWhitespaceToggle = React.useCallback(() => {
-    startTransition(() => {
-      setCleanWhitespace(prev => !prev);
-      
-      // Force garbage collection and cleanup after state change
-      setTimeout(() => {
-        // Force chunk re-memoization to clear old HTML strings
-        setCleanupTrigger(Date.now());
-        
-        // Attempt garbage collection if available
-        if (typeof window !== 'undefined') {
-          // Chrome DevTools garbage collection
-          if ('gc' in window && typeof (window as any).gc === 'function') {
-            try {
-              (window as any).gc();
-            } catch (e) {
-              // Silently ignore if gc() fails
-            }
-          }
-          
-          // Alternative: Force memory cleanup using performance API
-          if ('performance' in window && 'measureUserAgentSpecificMemory' in performance) {
-            try {
-              (performance as any).measureUserAgentSpecificMemory().catch(() => {
-                // Silently ignore memory measurement failures
-              });
-            } catch (e) {
-              // Silently ignore if API not available
-            }
-          }
-        }
-      }, 0);
-    });
+    setCleanWhitespace(prev => !prev);
   }, []);
 
   // Always render changes directly in clean mode
@@ -178,7 +149,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
 
 
   // Memoize the generated chunks and their HTML strings with performance tracking
-  const chunks = React.useMemo(() => {
+  const chunks = React.useMemo((): ChunkData[] => {
     const startTime = performance.now();
 
     // Handle undefined or null changes
@@ -196,12 +167,10 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       if (DEV_CONFIG.DEBUGGING.SEMANTIC_CHUNKING_DEBUG) {
         performanceTracker.trackMetric('rendering_without_chunking', { count: filteredChanges.length });
       }
-      // Return single chunk with all changes - generate both clean and raw HTML
+      // Return single chunk with all changes - no pre-generated HTML
       const result = [{
         id: 'single-chunk',
         changes: filteredChanges,
-        cleanHTML: generateHTMLString(filteredChanges, true),
-        rawHTML: generateHTMLString(filteredChanges, false),
       }];
 
       const renderingTime = performance.now() - startTime;
@@ -231,12 +200,6 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     const result = chunkedChanges.map((chunk, index) => ({
       id: `chunk-${index}`,
       changes: chunk,
-      cleanHTML: FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
-        ? generateSemanticHTMLString(chunk, true)
-        : generateHTMLString(chunk, true),
-      rawHTML: FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
-        ? generateSemanticHTMLString(chunk, false)
-        : generateHTMLString(chunk, false),
     }));
 
     // Track chunking performance
@@ -248,12 +211,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     });
 
     return result;
-  }, [filteredChanges, performanceTracker, cleanupTrigger]); // cleanupTrigger forces re-memoization to clear old HTML strings
-
-  // Memoize HTML selection with deferred value for better performance
-  const getChunkHTML = React.useCallback((chunk: any) => {
-    return deferredCleanWhitespace ? chunk.cleanHTML : chunk.rawHTML;
-  }, [deferredCleanWhitespace]);
+  }, [filteredChanges, performanceTracker]);
 
 
 
@@ -279,16 +237,15 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                 {filteredChanges && filteredChanges.length > 0 && (
                   <button
                     onClick={handleWhitespaceToggle}
-                    disabled={isPending}
                     className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
                       cleanWhitespace
                         ? 'bg-theme-primary-100 text-theme-primary-700 hover:bg-theme-primary-200'
                         : 'bg-theme-neutral-100 text-theme-neutral-500 hover:bg-theme-neutral-200'
-                    } ${isPending ? 'opacity-50 cursor-wait' : ''}`}
+                    }`}
                     title={cleanWhitespace ? 'Showing clean output (click for raw)' : 'Showing raw output (click for clean)'}
                     aria-label={`Toggle whitespace cleanup: ${cleanWhitespace ? 'enabled' : 'disabled'}`}
                   >
-                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'} ${isPending ? 'animate-pulse' : ''}`} />
+                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'}`} />
                   </button>
                 )}
               </>
@@ -300,16 +257,15 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                 {filteredChanges && filteredChanges.length > 0 && (
                   <button
                     onClick={handleWhitespaceToggle}
-                    disabled={isPending}
                     className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
                       cleanWhitespace
                         ? 'bg-theme-primary-100 text-theme-primary-700 hover:bg-theme-primary-200'
                         : 'bg-theme-neutral-100 text-theme-neutral-500 hover:bg-theme-neutral-200'
-                    } ${isPending ? 'opacity-50 cursor-wait' : ''}`}
+                    }`}
                     title={cleanWhitespace ? 'Showing clean output (click for raw)' : 'Showing raw output (click for clean)'}
                     aria-label={`Toggle whitespace cleanup: ${cleanWhitespace ? 'enabled' : 'disabled'}`}
                   >
-                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'} ${isPending ? 'animate-pulse' : ''}`} />
+                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'}`} />
                   </button>
                 )}
               </div>
@@ -375,7 +331,9 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
               changes={filteredChanges}
               chunks={chunks.map(chunk => ({
                 ...chunk,
-                html: getChunkHTML(chunk)
+                html: FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
+                  ? generateSemanticHTMLString(chunk.changes, true)
+                  : generateHTMLString(chunk.changes, true)
               }))}
               documentTitle={props.documentTitle}
               originalTitle={props.originalTitle}
@@ -410,7 +368,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
           minHeight: '200px',
         }}
       >
-        <div className="glass-input-field user-text-area font-serif text-theme-neutral-800 whitespace-pre-wrap libertinus-math-output libertinus-math-text py-6 px-8" data-user-font-size={fontSize} style={{ lineHeight: '2' }}>
+        <div className={`glass-input-field user-text-area font-serif text-theme-neutral-800 whitespace-pre-wrap libertinus-math-output libertinus-math-text py-6 px-8 ${cleanWhitespace ? 'whitespace-clean' : 'whitespace-raw'}`} data-user-font-size={fontSize} style={{ lineHeight: '2' }}>
           {isProcessing ? (
             <div className="mt-4 p-3 bg-theme-primary-50 border border-theme-primary-200 rounded-lg">
               <div className="flex items-center gap-2 text-theme-primary-700">
@@ -422,7 +380,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             chunks.map(chunk => (
               <Chunk
                 key={chunk.id}
-                html={getChunkHTML(chunk)}
+                chunk={chunk}
                 estimatedHeight={ESTIMATED_CHUNK_HEIGHT}
                 root={scrollContainerRef.current}
               />
@@ -434,10 +392,23 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   );
 };
 
-// Helper component for a single chunk
-const Chunk: React.FC<{ html: string, estimatedHeight: number, root: Element | null }> = ({ html, estimatedHeight, root }) => {
+// Helper component for a single chunk with CSS-based toggling
+const Chunk: React.FC<{ chunk: ChunkData, estimatedHeight: number, root: Element | null }> = ({ chunk, estimatedHeight, root }) => {
   const [isVisible, setIsVisible] = React.useState(false);
   const placeholderRef = React.useRef<HTMLDivElement>(null);
+
+  // Generate both clean and raw HTML versions once
+  const cleanHTML = React.useMemo(() => {
+    return FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
+      ? generateSemanticHTMLString(chunk.changes, true)
+      : generateHTMLString(chunk.changes, true);
+  }, [chunk.changes]);
+
+  const rawHTML = React.useMemo(() => {
+    return FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
+      ? generateSemanticHTMLString(chunk.changes, false)
+      : generateHTMLString(chunk.changes, false);
+  }, [chunk.changes]);
 
   React.useEffect(() => {
     // Check if we're in a test environment or if IntersectionObserver is not available
@@ -483,8 +454,18 @@ const Chunk: React.FC<{ html: string, estimatedHeight: number, root: Element | n
         ref={placeholderRef}
         className="chunk-container"
         style={{ lineHeight: '2' }}
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      >
+        {/* Clean version - visible when whitespace-clean class is active on parent */}
+        <div 
+          className="chunk-version chunk-clean"
+          dangerouslySetInnerHTML={{ __html: cleanHTML }}
+        />
+        {/* Raw version - visible when whitespace-raw class is active on parent */}
+        <div 
+          className="chunk-version chunk-raw"
+          dangerouslySetInnerHTML={{ __html: rawHTML }}
+        />
+      </div>
     );
   }
 

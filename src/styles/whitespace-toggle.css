@@ -1,0 +1,42 @@
+/* CSS-based whitespace toggle for instant performance */
+
+/* Chunk container setup for overlapping versions */
+.chunk-container {
+  position: relative;
+}
+
+/* Both versions occupy the same space */
+.chunk-version {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* When parent has whitespace-clean class, show clean version */
+.whitespace-clean .chunk-clean {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  position: relative; /* Take up space for layout */
+}
+
+/* When parent has whitespace-raw class, show raw version */
+.whitespace-raw .chunk-raw {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  position: relative; /* Take up space for layout */
+}
+
+/* Hide the inactive version completely */
+.whitespace-clean .chunk-raw {
+  position: absolute; /* Don't take up space */
+}
+
+.whitespace-raw .chunk-clean {
+  position: absolute; /* Don't take up space */
+}
