@@ -153,11 +153,17 @@ export const useComparison = (saveSessionCallback?: (originalText: string, revis
 
   // SSMR: Enhanced cancellation function with same robustness as ESC key
   const cancelComparison = useCallback(() => {
-    // Check if there's any processing to cancel
-    if (!state.isProcessing && !isCancelling) {
+    // Prevent duplicate cancellation attempts (race condition protection)
+    if (isCancelling) {
       return;
     }
     
+    // Check if there's any processing to cancel
+    if (!state.isProcessing) {
+      return;
+    }
+    
+    // Set cancelling state first to prevent race conditions
     setIsCancelling(true);
     
     // Cancel any AbortController
@@ -176,35 +182,38 @@ export const useComparison = (saveSessionCallback?: (originalText: string, revis
       autoCompareTimeoutRef.current = null;
     }
     
-    // Reset processing states immediately
-    setState(prev => ({
-      ...prev,
-      isProcessing: false,
-      error: 'Comparison cancelled by user'
-    }));
-    
-    // Reset chunking progress
-    setChunkingProgress({
-      progress: 0,
-      stage: 'Cancelled',
-      isChunking: false,
-      enabled: true
+    // Use requestAnimationFrame to ensure state updates happen in correct order
+    requestAnimationFrame(() => {
+      // Reset processing states
+      setState(prev => ({
+        ...prev,
+        isProcessing: false,
+        error: 'Comparison cancelled by user'
+      }));
+      
+      // Reset chunking progress
+      setChunkingProgress({
+        progress: 0,
+        stage: 'Cancelled',
+        isChunking: false,
+        enabled: true
+      });
+      
+      // Clear global abort signal
+      try {
+        (globalThis as any).currentAbortSignal = null;
+      } catch (error) {
+        console.warn('Failed to clear global abort signal:', error);
+      }
+      
+      // Reset manual operation flag to allow auto-compare again
+      manualOperationRef.current = false;
+      
+      // Reset cancelling state after a brief delay to show feedback
+      setTimeout(() => {
+        setIsCancelling(false);
+      }, UI_CONFIG.ANIMATION.CANCELLATION_FEEDBACK_DELAY);
     });
-    
-    // Clear global abort signal
-    try {
-      (globalThis as any).currentAbortSignal = null;
-    } catch (error) {
-      console.warn('Failed to clear global abort signal:', error);
-    }
-    
-    // Reset manual operation flag to allow auto-compare again
-    manualOperationRef.current = false;
-    
-    // Reset cancelling state after a brief delay to show feedback
-    setTimeout(() => {
-      setIsCancelling(false);
-    }, UI_CONFIG.ANIMATION.CANCELLATION_FEEDBACK_DELAY);
   }, [state.isProcessing, isCancelling]);
 
   const compareDocuments = useCallback(async (isAutoCompare = false, preserveFocus = true, overrideOriginal?: string, overrideRevised?: string) => {

@@ -70,8 +70,20 @@ export const ProcessingDisplay: React.FC<ProcessingDisplayProps> = ({
     }
   }, [isCancelling, performanceTracker]);
   
-  // Performance-aware cancel handler
-  const handleCancel = usePerformanceAwareHandler(() => {
+  // Performance-aware cancel handler with robust event handling
+  const handleCancel = usePerformanceAwareHandler((e: React.MouseEvent<HTMLButtonElement>) => {
+    console.log('🎯 Cancel button clicked - processing cancellation');
+    
+    // Prevent event conflicts and ensure reliable cancellation
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Additional safety check to prevent race conditions
+    if (isCancelling) {
+      console.log('⚠️ Cancellation already in progress, ignoring duplicate request');
+      return;
+    }
+    
     onCancel();
   }, 'cancel_operation', performanceTracker);
   return (
@@ -103,9 +115,13 @@ export const ProcessingDisplay: React.FC<ProcessingDisplayProps> = ({
               <CustomTooltip content={isCancelling ? "Cancelling comparison..." : "Cancel the current comparison operation (or press ESC)"}>
                 <button
                   data-cancel-button
-                  onClick={onCancel}
-                  disabled={isCancelling}
-                  className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-700 disabled:cursor-not-allowed transition-all duration-200 shadow-lg animate-pulse"
+                  onClick={handleCancel}
+                  disabled={false}
+                  className={`enhanced-button flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 shadow-lg animate-pulse ${
+                    isCancelling 
+                      ? 'bg-red-700 text-white cursor-not-allowed' 
+                      : 'bg-red-600 text-white hover:bg-red-700'
+                  }`}
               >
                 {isCancelling ? (
                   <>
@@ -132,9 +148,13 @@ export const ProcessingDisplay: React.FC<ProcessingDisplayProps> = ({
             <CustomTooltip content={isCancelling ? "Cancelling comparison..." : "Cancel the current comparison operation (or press ESC)"}>
               <button
                 data-cancel-button
-                onClick={onCancel}
-                disabled={isCancelling}
-                className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-700 disabled:cursor-not-allowed transition-all duration-200 shadow-lg animate-pulse"
+                onClick={handleCancel}
+                disabled={false}
+                className={`enhanced-button flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 shadow-lg animate-pulse ${
+                  isCancelling 
+                    ? 'bg-red-700 text-white cursor-not-allowed' 
+                    : 'bg-red-600 text-white hover:bg-red-700'
+                }`}
             >
               {isCancelling ? (
                 <>
