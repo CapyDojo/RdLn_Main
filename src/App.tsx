@@ -40,19 +40,15 @@ import './styles/resize-overrides.css';
 interface AppContentProps {
   showAdvancedOcrCard: boolean;
   showPerformanceDemoCard: boolean;
-  showExtremeTestSuite: boolean;
   onToggleAdvancedOcr: () => void;
   onTogglePerformanceDemo: () => void;
-  onToggleExtremeTestSuite: () => void;
 }
 
 function AppContent({
   showAdvancedOcrCard,
   showPerformanceDemoCard,
-  showExtremeTestSuite,
   onToggleAdvancedOcr,
-  onTogglePerformanceDemo,
-  onToggleExtremeTestSuite
+  onTogglePerformanceDemo
 }: AppContentProps) {
   useTheme(); // For theme context initialization
 
@@ -234,10 +230,8 @@ function AppContent({
           ref={comparisonInterfaceRef}
           showAdvancedOcrCard={showAdvancedOcrCard}
           showPerformanceDemoCard={showPerformanceDemoCard}
-          showExtremeTestSuite={showExtremeTestSuite}
           onToggleAdvancedOcr={onToggleAdvancedOcr}
           onTogglePerformanceDemo={onTogglePerformanceDemo}
-          onToggleExtremeTestSuite={onToggleExtremeTestSuite}
           onOverlayShow={handleOverlayShow}
           onOverlayHide={handleOverlayHide}
           onContentChange={(hasText) => setHasContent(hasText)}
@@ -351,7 +345,6 @@ function App() {
   // State for developer mode toggles with localStorage persistence
   const [showAdvancedOcrCardState, setShowAdvancedOcrCardState] = useState(false);
   const [showPerformanceDemoCardState, setShowPerformanceDemoCardState] = useState(false);
-  const [showExtremeTestSuiteState, setShowExtremeTestSuiteState] = useState(false);
 
   // Load states from localStorage on initial render
   useEffect(() => {
@@ -365,10 +358,6 @@ function App() {
       setShowPerformanceDemoCardState(JSON.parse(savedPerformanceDemo));
     }
 
-    const savedExtremeTestSuite = localStorage.getItem('showExtremeTestSuite');
-    if (savedExtremeTestSuite) {
-      setShowExtremeTestSuiteState(JSON.parse(savedExtremeTestSuite));
-    }
   }, []);
 
   // Handler toggles with localStorage persistence
@@ -384,11 +373,6 @@ function App() {
     localStorage.setItem('showPerformanceDemoCard', JSON.stringify(newState));
   };
 
-  const handleToggleExtremeTestSuite = () => {
-    const newState = !showExtremeTestSuiteState;
-    setShowExtremeTestSuiteState(newState);
-    localStorage.setItem('showExtremeTestSuite', JSON.stringify(newState));
-  };
 
   // const isInProduction = process.env.NODE_ENV === 'production';
 
@@ -413,10 +397,8 @@ function App() {
               <DeveloperDashboard
                 showAdvancedOcrCard={showAdvancedOcrCardState}
                 showPerformanceDemoCard={showPerformanceDemoCardState}
-                showExtremeTestSuite={showExtremeTestSuiteState}
                 onToggleAdvancedOcr={handleToggleAdvancedOcr}
                 onTogglePerformanceDemo={handleTogglePerformanceDemo}
-                onToggleExtremeTestSuite={handleToggleExtremeTestSuite}
               />
             ) : window.location.pathname === '/redlining-tests' ? (
               <RedliningTestsDashboard />
@@ -430,10 +412,8 @@ function App() {
               <AppContent
                 showAdvancedOcrCard={showAdvancedOcrCardState}
                 showPerformanceDemoCard={showPerformanceDemoCardState}
-                showExtremeTestSuite={showExtremeTestSuiteState}
                 onToggleAdvancedOcr={handleToggleAdvancedOcr}
                 onTogglePerformanceDemo={handleTogglePerformanceDemo}
-                onToggleExtremeTestSuite={handleToggleExtremeTestSuite}
               />
             )}
           </div>
