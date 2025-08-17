@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useTransition, useDeferredValue } from 'react';
 import { Filter } from 'lucide-react';
 import { DiffChange } from '../types';
 import { BaseComponentProps } from '../types/components';
@@ -87,8 +87,49 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   // Font size context
   const { fontSize } = useFontSize();
 
-  // Whitespace cleanup toggle state
+  // Whitespace cleanup toggle state with smooth transitions
   const [cleanWhitespace, setCleanWhitespace] = React.useState(true);
+  const [isPending, startTransition] = useTransition();
+  const [cleanupTrigger, setCleanupTrigger] = React.useState(0);
+  
+  // Defer the expensive rendering updates
+  const deferredCleanWhitespace = useDeferredValue(cleanWhitespace);
+
+  // Optimized toggle handler with smooth transitions and garbage collection
+  const handleWhitespaceToggle = React.useCallback(() => {
+    startTransition(() => {
+      setCleanWhitespace(prev => !prev);
+      
+      // Force garbage collection and cleanup after state change
+      setTimeout(() => {
+        // Force chunk re-memoization to clear old HTML strings
+        setCleanupTrigger(Date.now());
+        
+        // Attempt garbage collection if available
+        if (typeof window !== 'undefined') {
+          // Chrome DevTools garbage collection
+          if ('gc' in window && typeof (window as any).gc === 'function') {
+            try {
+              (window as any).gc();
+            } catch (e) {
+              // Silently ignore if gc() fails
+            }
+          }
+          
+          // Alternative: Force memory cleanup using performance API
+          if ('performance' in window && 'measureUserAgentSpecificMemory' in performance) {
+            try {
+              (performance as any).measureUserAgentSpecificMemory().catch(() => {
+                // Silently ignore memory measurement failures
+              });
+            } catch (e) {
+              // Silently ignore if API not available
+            }
+          }
+        }
+      }, 0);
+    });
+  }, []);
 
   // Always render changes directly in clean mode
   const filteredChanges = changes;
@@ -155,11 +196,12 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
       if (DEV_CONFIG.DEBUGGING.SEMANTIC_CHUNKING_DEBUG) {
         performanceTracker.trackMetric('rendering_without_chunking', { count: filteredChanges.length });
       }
-      // Return single chunk with all changes
+      // Return single chunk with all changes - generate both clean and raw HTML
       const result = [{
         id: 'single-chunk',
         changes: filteredChanges,
-        html: generateHTMLString(filteredChanges, cleanWhitespace),
+        cleanHTML: generateHTMLString(filteredChanges, true),
+        rawHTML: generateHTMLString(filteredChanges, false),
       }];
 
       const renderingTime = performance.now() - startTime;
@@ -189,9 +231,12 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     const result = chunkedChanges.map((chunk, index) => ({
       id: `chunk-${index}`,
       changes: chunk,
-      html: FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
-        ? generateSemanticHTMLString(chunk, cleanWhitespace)
-        : generateHTMLString(chunk, cleanWhitespace),
+      cleanHTML: FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
+        ? generateSemanticHTMLString(chunk, true)
+        : generateHTMLString(chunk, true),
+      rawHTML: FEATURE_FLAGS.ENABLE_SEMANTIC_CHUNKING
+        ? generateSemanticHTMLString(chunk, false)
+        : generateHTMLString(chunk, false),
     }));
 
     // Track chunking performance
@@ -203,8 +248,12 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
     });
 
     return result;
-  }, [filteredChanges, performanceTracker]);
+  }, [filteredChanges, performanceTracker, cleanupTrigger]); // cleanupTrigger forces re-memoization to clear old HTML strings
 
+  // Memoize HTML selection with deferred value for better performance
+  const getChunkHTML = React.useCallback((chunk: any) => {
+    return deferredCleanWhitespace ? chunk.cleanHTML : chunk.rawHTML;
+  }, [deferredCleanWhitespace]);
 
 
 
@@ -229,16 +278,17 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                 {/* Whitespace cleanup toggle - only show when there are results */}
                 {filteredChanges && filteredChanges.length > 0 && (
                   <button
-                    onClick={() => setCleanWhitespace(!cleanWhitespace)}
+                    onClick={handleWhitespaceToggle}
+                    disabled={isPending}
                     className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
                       cleanWhitespace
                         ? 'bg-theme-primary-100 text-theme-primary-700 hover:bg-theme-primary-200'
                         : 'bg-theme-neutral-100 text-theme-neutral-500 hover:bg-theme-neutral-200'
-                    }`}
+                    } ${isPending ? 'opacity-50 cursor-wait' : ''}`}
                     title={cleanWhitespace ? 'Showing clean output (click for raw)' : 'Showing raw output (click for clean)'}
                     aria-label={`Toggle whitespace cleanup: ${cleanWhitespace ? 'enabled' : 'disabled'}`}
                   >
-                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'}`} />
+                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'} ${isPending ? 'animate-pulse' : ''}`} />
                   </button>
                 )}
               </>
@@ -249,16 +299,17 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                 {/* Whitespace cleanup toggle - also available in overlay mode */}
                 {filteredChanges && filteredChanges.length > 0 && (
                   <button
-                    onClick={() => setCleanWhitespace(!cleanWhitespace)}
+                    onClick={handleWhitespaceToggle}
+                    disabled={isPending}
                     className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
                       cleanWhitespace
                         ? 'bg-theme-primary-100 text-theme-primary-700 hover:bg-theme-primary-200'
                         : 'bg-theme-neutral-100 text-theme-neutral-500 hover:bg-theme-neutral-200'
-                    }`}
+                    } ${isPending ? 'opacity-50 cursor-wait' : ''}`}
                     title={cleanWhitespace ? 'Showing clean output (click for raw)' : 'Showing raw output (click for clean)'}
                     aria-label={`Toggle whitespace cleanup: ${cleanWhitespace ? 'enabled' : 'disabled'}`}
                   >
-                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'}`} />
+                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'} ${isPending ? 'animate-pulse' : ''}`} />
                   </button>
                 )}
               </div>
@@ -322,7 +373,10 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             {/* Download DOCX Button */}
             <DocxExportButton
               changes={filteredChanges}
-              chunks={chunks}
+              chunks={chunks.map(chunk => ({
+                ...chunk,
+                html: getChunkHTML(chunk)
+              }))}
               documentTitle={props.documentTitle}
               originalTitle={props.originalTitle}
               revisedTitle={props.revisedTitle}
@@ -368,7 +422,7 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
             chunks.map(chunk => (
               <Chunk
                 key={chunk.id}
-                html={chunk.html}
+                html={getChunkHTML(chunk)}
                 estimatedHeight={ESTIMATED_CHUNK_HEIGHT}
                 root={scrollContainerRef.current}
               />
