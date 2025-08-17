@@ -26,6 +26,7 @@ import { OCRService } from './services/OCRService';
 import { LogoTestPage } from './pages/LogoTestPage';
 import { CuppingTestPage } from './pages/CuppingTestPage';
 import { DeveloperDashboard } from './pages/DeveloperDashboard';
+import { RedliningTestsDashboard } from './pages/RedliningTestsDashboard';
 import BoundaryFragmentTest from './pages/BoundaryFragmentTest';
 import BoundaryFixTester from './components/BoundaryFixTester';
 import { SmartPasteTest } from './components/SmartPasteTest';
@@ -417,6 +418,8 @@ function App() {
                 onTogglePerformanceDemo={handleTogglePerformanceDemo}
                 onToggleExtremeTestSuite={handleToggleExtremeTestSuite}
               />
+            ) : window.location.pathname === '/redlining-tests' ? (
+              <RedliningTestsDashboard />
             ) : window.location.pathname === '/boundary-test' ? (
               <BoundaryFragmentTest />
             ) : window.location.pathname === '/test-fix' ? (

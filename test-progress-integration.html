@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Progress Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .progress-bar { width: 100%; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(to right, #4CAF50, #45a049); transition: width 0.3s ease; }
+        .log { background: #f5f5f5; padding: 10px; border-radius: 5px; margin: 10px 0; max-height: 300px; overflow-y: auto; }
+        .test-section { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input[type="file"] { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>OCR Progress Integration Test</h1>
+    
+    <div class="test-section">
+        <h2>Real Progress Test</h2>
+        <p>Upload an image to test the new real progress integration:</p>
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="testRealProgress()">Test Real OCR Progress</button>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div id="progressText">Ready to test...</div>
+        
+        <div class="log" id="progressLog"></div>
+    </div>
+
+    <script type="module">
+        // Import the OCR service (adjust path as needed)
+        import { OCRService } from './src/services/OCRService.js';
+        
+        let progressUpdates = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('progressLog');
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            logElement.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function updateProgress(progress, stage) {
+            progressUpdates.push({ progress, stage, timestamp: Date.now() });
+            
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `${progress}% - ${stage}`;
+            
+            log(`Progress: ${progress}% - ${stage}`, 'info');
+        }
+        
+        window.testRealProgress = async function() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                log('Please select an image file first', 'error');
+                return;
+            }
+            
+            log('Starting OCR with real progress tracking...', 'info');
+            progressUpdates = [];
+            
+            try {
+                const startTime = Date.now();
+                
+                // Test the new progress callback integration
+                const extractedText = await OCRService.extractTextFromImage(
+                    file, 
+                    { autoDetect: true },
+                    updateProgress  // This is the new progress callback
+                );
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                log(`OCR completed in ${duration}ms`, 'success');
+                log(`Extracted text length: ${extractedText.length} characters`, 'success');
+                log(`Total progress updates: ${progressUpdates.length}`, 'info');
+                
+                // Analyze progress updates
+                if (progressUpdates.length > 0) {
+                    const firstUpdate = progressUpdates[0];
+                    const lastUpdate = progressUpdates[progressUpdates.length - 1];
+                    log(`Progress range: ${firstUpdate.progress}% to ${lastUpdate.progress}%`, 'info');
+                    
+                    // Check for the 85% stuck issue
+                    const stuckAt85 = progressUpdates.filter(u => u.progress === 85).length;
+                    if (stuckAt85 > 3) {
+                        log(`⚠️ Still getting stuck at 85% (${stuckAt85} updates)`, 'error');
+                    } else {
+                        log(`✅ Progress flow looks good (no 85% stuck issue)`, 'success');
+                    }
+                } else {
+                    log('⚠️ No progress updates received - callback may not be working', 'error');
+                }
+                
+            } catch (error) {
+                log(`OCR failed: ${error.message}`, 'error');
+                console.error('OCR Error:', error);
+            }
+        };
+        
+        // Make functions available globally for testing
+        window.log = log;
+        window.updateProgress = updateProgress;
+        
+        log('Test page loaded. Ready to test OCR progress integration.', 'info');
+    </script>
+</body>
+</html>

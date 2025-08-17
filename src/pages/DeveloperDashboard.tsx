@@ -1,11 +1,12 @@
 import React from 'react';
-import { Settings, ArrowLeft, Monitor, Activity, Beaker, Layout } from 'lucide-react';
+import { Settings, ArrowLeft, Monitor, Activity, Beaker, Layout, Target } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { BaseComponentProps } from '../types/components';
 import { LayoutControlsPanel } from '../components/dev-dashboard/LayoutControlsPanel';
 import { ExperimentalFeaturesPanel } from '../components/dev-dashboard/ExperimentalFeaturesPanel';
 import { PerformanceMonitoringPanel } from '../components/dev-dashboard/PerformanceMonitoringPanel';
 import { DevelopmentToolsPanel } from '../components/dev-dashboard/DevelopmentToolsPanel';
+import { RedliningTestsPanel } from '../components/dev-dashboard/RedliningTestsPanel';
 
 interface DeveloperDashboardProps extends BaseComponentProps {
   onBackToApp?: () => void;
@@ -15,6 +16,7 @@ interface DeveloperDashboardProps extends BaseComponentProps {
   onToggleAdvancedOcr?: () => void;
   onTogglePerformanceDemo?: () => void;
   onToggleExtremeTestSuite?: () => void;
+  onLoadTest?: (originalText: string, revisedText: string, testName?: string) => void;
 }
 
 export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({ 
@@ -25,6 +27,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
   onToggleAdvancedOcr,
   onTogglePerformanceDemo,
   onToggleExtremeTestSuite,
+  onLoadTest,
   style, 
   className 
 }) => {
@@ -99,6 +102,15 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                 onTogglePerformanceDemo={onTogglePerformanceDemo}
                 onToggleExtremeTestSuite={onToggleExtremeTestSuite}
               />
+            </div>
+
+            {/* Redlining Tests Section */}
+            <div className="glass-panel border border-theme-neutral-300 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-theme-primary-900 mb-4 flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                Redlining Test Suite
+              </h2>
+              <RedliningTestsPanel onLoadTest={onLoadTest} />
             </div>
 
           </div>
