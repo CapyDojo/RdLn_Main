@@ -12,6 +12,7 @@ import { WordCopyButton } from './WordCopyButton';
 import { DocxExportButton } from './DocxExportButton';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { FontSizeSelector } from './FontSizeSelector';
+import { CustomTooltip } from './CustomTooltip';
 import '../styles/whitespace-toggle.css';
 
 // Type definition for chunk objects - now lightweight without pre-generated HTML
@@ -235,18 +236,57 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                 
                 {/* Whitespace cleanup toggle - only show when there are results */}
                 {filteredChanges && filteredChanges.length > 0 && (
-                  <button
-                    onClick={handleWhitespaceToggle}
-                    className={`ml-3 p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
-                      cleanWhitespace
-                        ? 'bg-theme-primary-100 text-theme-primary-700 hover:bg-theme-primary-200'
-                        : 'bg-theme-neutral-100 text-theme-neutral-500 hover:bg-theme-neutral-200'
-                    }`}
-                    title={cleanWhitespace ? 'Showing clean output (click for raw)' : 'Showing raw output (click for clean)'}
-                    aria-label={`Toggle whitespace cleanup: ${cleanWhitespace ? 'enabled' : 'disabled'}`}
-                  >
-                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'}`} />
-                  </button>
+                  <div className="relative ml-3">
+                    <CustomTooltip
+                      content={`Enable this to filter out whitespace-only changes, for a cleaner RdLn \n\n`}
+                      status={cleanWhitespace ? 'ON' : 'OFF'}
+                    >
+                      <button
+                        onClick={handleWhitespaceToggle}
+                        className={`flex items-center justify-center w-14 h-12 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${
+                          cleanWhitespace
+                            ? 'bg-theme-primary-700 border-transparent hover:shadow-lg hover:shadow-theme-accent-200/30 shadow-theme-accent-200/20'
+                            : 'bg-theme-neutral-900/20 dark:bg-theme-neutral-100/5 border-theme-neutral-600/50 dark:border-theme-neutral-400/40 hover:border-theme-neutral-500/70 dark:hover:border-theme-neutral-300/60 hover:bg-theme-neutral-800/25 dark:hover:bg-theme-neutral-100/10'
+                        }`}
+                        aria-label={`Toggle whitespace cleanup: ${cleanWhitespace ? 'enabled' : 'disabled'}`}
+                        aria-pressed={cleanWhitespace}
+                      >
+                        <span className="inline-flex items-center leading-none">
+                          <span
+                            className="mr-0 select-none"
+                            style={{ fontSize: '14px', marginLeft: '-2px' }}
+                            aria-hidden="true"
+                          >
+                            ✨
+                          </span>
+                          <span
+                            className={`select-none transition-all duration-300 transform ${cleanWhitespace
+                              ? 'scale-110 text-white'
+                              : 'scale-90 opacity-30 text-theme-neutral-500'}`}
+                            style={{
+                              fontSize: '16px',
+                              fontWeight: 700,
+                              lineHeight: 1,
+                              marginRight: '2px'
+                            }}
+                          >
+                            🧹
+                          </span>
+                        </span>
+                      </button>
+                    </CustomTooltip>
+                    {cleanWhitespace && (
+                      <span
+                        className="absolute w-2 h-2 rounded-full animate-pulse"
+                        style={{
+                          backgroundColor: 'var(--autoformat-pilcrow-on)',
+                          top: '2px',
+                          right: '2px'
+                        }}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
                 )}
               </>
             ) : (
@@ -255,18 +295,57 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
                 
                 {/* Whitespace cleanup toggle - also available in overlay mode */}
                 {filteredChanges && filteredChanges.length > 0 && (
-                  <button
-                    onClick={handleWhitespaceToggle}
-                    className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
-                      cleanWhitespace
-                        ? 'bg-theme-primary-100 text-theme-primary-700 hover:bg-theme-primary-200'
-                        : 'bg-theme-neutral-100 text-theme-neutral-500 hover:bg-theme-neutral-200'
-                    }`}
-                    title={cleanWhitespace ? 'Showing clean output (click for raw)' : 'Showing raw output (click for clean)'}
-                    aria-label={`Toggle whitespace cleanup: ${cleanWhitespace ? 'enabled' : 'disabled'}`}
-                  >
-                    <Filter className={`w-4 h-4 ${cleanWhitespace ? 'opacity-100' : 'opacity-60'}`} />
-                  </button>
+                  <div className="relative">
+                    <CustomTooltip
+                      content={`Enable this to filter out whitespace-only changes, for a cleaner RdLn \n\n`}
+                      status={cleanWhitespace ? 'ON' : 'OFF'}
+                    >
+                      <button
+                        onClick={handleWhitespaceToggle}
+                        className={`flex items-center justify-center w-14 h-12 rounded-lg border transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] active:shadow-inner active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary-400/60 ${
+                          cleanWhitespace
+                            ? 'bg-theme-primary-700 border-transparent hover:shadow-lg hover:shadow-theme-accent-200/30 shadow-theme-accent-200/20'
+                            : 'bg-theme-neutral-900/20 dark:bg-theme-neutral-100/5 border-theme-neutral-600/50 dark:border-theme-neutral-400/40 hover:border-theme-neutral-500/70 dark:hover:border-theme-neutral-300/60 hover:bg-theme-neutral-800/25 dark:hover:bg-theme-neutral-100/10'
+                        }`}
+                        aria-label={`Toggle whitespace cleanup: ${cleanWhitespace ? 'enabled' : 'disabled'}`}
+                        aria-pressed={cleanWhitespace}
+                      >
+                        <span className="inline-flex items-center leading-none">
+                          <span
+                            className="mr-0 select-none"
+                            style={{ fontSize: '14px', marginLeft: '-2px' }}
+                            aria-hidden="true"
+                          >
+                            ✨
+                          </span>
+                          <span
+                            className={`select-none transition-all duration-300 transform ${cleanWhitespace
+                              ? 'scale-110 text-white'
+                              : 'scale-90 opacity-30 text-theme-neutral-500'}`}
+                            style={{
+                              fontSize: '18px',
+                              fontWeight: 700,
+                              lineHeight: 1,
+                              marginRight: '2px'
+                            }}
+                          >
+                            🧹
+                          </span>
+                        </span>
+                      </button>
+                    </CustomTooltip>
+                    {cleanWhitespace && (
+                      <span
+                        className="absolute w-2 h-2 rounded-full animate-pulse"
+                        style={{
+                          backgroundColor: 'var(--autoformat-pilcrow-on)',
+                          top: '2px',
+                          right: '2px'
+                        }}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -372,7 +451,10 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
           className="glass-input-field user-text-area font-serif text-theme-neutral-800 whitespace-pre-wrap libertinus-math-output libertinus-math-text py-6 px-8" 
           data-user-font-size={fontSize} 
           data-whitespace-mode={cleanWhitespace ? 'clean' : 'raw'}
-          style={{ lineHeight: '2' }}
+          style={{ 
+            lineHeight: '2',
+            '--content-line-height': '2'
+          } as React.CSSProperties}
         >
           {isProcessing ? (
             <div className="mt-4 p-3 bg-theme-primary-50 border border-theme-primary-200 rounded-lg">

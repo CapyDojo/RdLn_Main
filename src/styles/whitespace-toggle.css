@@ -23,6 +23,16 @@
   pointer-events: none;
   /* GPU acceleration for smooth transitions */
   transform: translate3d(0, 0, 0);
+  /* Inherit line-height from parent via CSS custom property */
+  line-height: var(--content-line-height, 2);
+}
+
+/* Ensure all content within chunk versions inherits the line-height - higher specificity to override index.css */
+.chunk-version *,
+.chunk-version span,
+.chunk-version div,
+.chunk-version br {
+  line-height: var(--content-line-height, 2) !important;
 }
 
 /* Data attribute based visibility - more performant than class cascade */
