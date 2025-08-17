@@ -368,7 +368,12 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
           minHeight: '200px',
         }}
       >
-        <div className={`glass-input-field user-text-area font-serif text-theme-neutral-800 whitespace-pre-wrap libertinus-math-output libertinus-math-text py-6 px-8 ${cleanWhitespace ? 'whitespace-clean' : 'whitespace-raw'}`} data-user-font-size={fontSize} style={{ lineHeight: '2' }}>
+        <div 
+          className="glass-input-field user-text-area font-serif text-theme-neutral-800 whitespace-pre-wrap libertinus-math-output libertinus-math-text py-6 px-8" 
+          data-user-font-size={fontSize} 
+          data-whitespace-mode={cleanWhitespace ? 'clean' : 'raw'}
+          style={{ lineHeight: '2' }}
+        >
           {isProcessing ? (
             <div className="mt-4 p-3 bg-theme-primary-50 border border-theme-primary-200 rounded-lg">
               <div className="flex items-center gap-2 text-theme-primary-700">

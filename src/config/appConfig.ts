@@ -26,9 +26,9 @@ export const UI_CONFIG = {
 
   // Rendering and Performance
   RENDERING: {
-    CHUNK_SIZE: 1000, // Changes per render chunk
-    ESTIMATED_CHUNK_HEIGHT: 5000, // Pixels
-    INTERSECTION_MARGIN: '200px', // Preload distance
+    CHUNK_SIZE: 500, // Changes per render chunk - reduced for better performance granularity
+    ESTIMATED_CHUNK_HEIGHT: 2500, // Pixels - reduced for smaller chunks
+    INTERSECTION_MARGIN: '100px', // Reduced preload distance for better performance
     SCROLL_SYNC_THROTTLE: 16, // 60fps
     
     // Semantic Chunking Configuration

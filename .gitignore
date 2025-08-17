@@ -45,3 +45,9 @@ nul
 
 # Python virtual environment
 .venv/
+
+# Playwright test reports
+.playwright-mcp/
+
+# Log files
+mcp.log

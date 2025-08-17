@@ -1,11 +1,18 @@
-/* CSS-based whitespace toggle for instant performance */
+/* High-performance whitespace toggle with data attributes */
 
-/* Chunk container setup for overlapping versions */
+/* Chunk container with performance optimizations */
 .chunk-container {
   position: relative;
+  /* CSS containment for performance isolation */
+  contain: layout style;
+  /* Content visibility for off-screen optimization */
+  content-visibility: auto;
+  /* GPU acceleration hint */
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
 }
 
-/* Both versions occupy the same space */
+/* Both versions occupy the same space - default hidden */
 .chunk-version {
   position: absolute;
   top: 0;
@@ -14,29 +21,30 @@
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
+  /* GPU acceleration for smooth transitions */
+  transform: translate3d(0, 0, 0);
 }
 
-/* When parent has whitespace-clean class, show clean version */
-.whitespace-clean .chunk-clean {
+/* Data attribute based visibility - more performant than class cascade */
+[data-whitespace-mode="clean"] .chunk-clean {
   visibility: visible;
   opacity: 1;
   pointer-events: auto;
   position: relative; /* Take up space for layout */
 }
 
-/* When parent has whitespace-raw class, show raw version */
-.whitespace-raw .chunk-raw {
+[data-whitespace-mode="raw"] .chunk-raw {
   visibility: visible;
   opacity: 1;
   pointer-events: auto;
   position: relative; /* Take up space for layout */
 }
 
-/* Hide the inactive version completely */
-.whitespace-clean .chunk-raw {
+/* Hide inactive versions - using direct attribute selectors */
+[data-whitespace-mode="clean"] .chunk-raw {
   position: absolute; /* Don't take up space */
 }
 
-.whitespace-raw .chunk-clean {
+[data-whitespace-mode="raw"] .chunk-clean {
   position: absolute; /* Don't take up space */
 }
