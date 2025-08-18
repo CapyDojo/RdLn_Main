@@ -113,14 +113,13 @@ export class OCRCacheManager {
    */
   private static async createCDNWorker(
     languages: OCRLanguage[],
-    timeout: number,
-    progressCallback?: (progress: number, stage: string) => void
+    timeout: number
   ): Promise<Tesseract.Worker> {
     try {
       console.log('🔧 Creating CDN worker for optimal web performance');
       const worker = await Promise.race([
         createWorker(languages, 1, {
-          logger: this.createLogger(progressCallback)
+          logger: this.createLogger()
           // No langPath - will use CDN
         }),
         new Promise<never>((_, reject) =>
@@ -142,8 +141,7 @@ export class OCRCacheManager {
    */
   private static async createWorkerWithFallback(
     languages: OCRLanguage[],
-    timeout: number,
-    progressCallback?: (progress: number, stage: string) => void
+    timeout: number
   ): Promise<Tesseract.Worker> {
     console.log('🔧 createWorkerWithFallback called with languages:', languages);
 
@@ -152,7 +150,7 @@ export class OCRCacheManager {
 
     // For Tauri, use a more direct approach with local assets
     if (isTauri) {
-      return this.createTauriWorker(languages, timeout, progressCallback);
+      return this.createTauriWorker(languages, timeout);
     }
 
     // Web environment - detect if we should skip local assets
@@ -163,7 +161,7 @@ export class OCRCacheManager {
 
     if (isWebDeployment) {
       console.log('🔧 Web deployment detected, using CDN directly for optimal performance');
-      return this.createCDNWorker(languages, timeout, progressCallback);
+      return this.createCDNWorker(languages, timeout);
     }
 
     // Local development - try local assets first
@@ -174,7 +172,7 @@ export class OCRCacheManager {
 
       // Based on Tesseract.js docs, try the correct parameter format
       const workerOptions = {
-        logger: this.createLogger(progressCallback),
+        logger: this.createLogger(),
         workerPath: resourcePaths.workerPath,
         corePath: resourcePaths.corePath,
         // The correct parameter might be 'langPath' with trailing slash
@@ -240,7 +238,7 @@ export class OCRCacheManager {
 
           const worker = await Promise.race([
             createWorker(languages, 1, {
-              logger: this.createLogger(progressCallback),
+              logger: this.createLogger(),
               ...config
             }),
             new Promise<never>((_, reject) =>
@@ -260,7 +258,7 @@ export class OCRCacheManager {
 
       // Final attempt: CDN (only for web environment)
       if (!isTauri) {
-        return this.createCDNWorker(languages, timeout, progressCallback);
+        return this.createCDNWorker(languages, timeout);
       } else {
         console.log('🚫 Skipping CDN fallback in Tauri environment (network restricted)');
       }
@@ -275,8 +273,7 @@ export class OCRCacheManager {
    */
   private static async createTauriWorker(
     languages: OCRLanguage[],
-    timeout: number,
-    progressCallback?: (progress: number, stage: string) => void
+    timeout: number
   ): Promise<Tesseract.Worker> {
     console.log('🔧 Creating Tauri-optimized worker for languages:', languages);
 
@@ -366,7 +363,7 @@ export class OCRCacheManager {
 
         const worker = await Promise.race([
           createWorker(languages, 1, {
-            logger: this.createLogger(progressCallback),
+            logger: this.createLogger(),
             ...config
           }),
           new Promise<never>((_, reject) =>
@@ -434,21 +431,12 @@ export class OCRCacheManager {
 
   /**
    * Creates a logger function for Tesseract worker progress
-   * SSMR: Enhanced with optional progress callback support
    */
-  private static createLogger(progressCallback?: (progress: number, stage: string) => void) {
+  private static createLogger() {
     return (m: any) => {
       // Suppress most logging to reduce console noise
       if (m.status === 'recognizing text') {
-        const progress = Math.round(m.progress * 100);
-        console.log(`OCR progress: ${progress}%`);
-        
-        // SSMR: Connect real Tesseract progress to UI (SAFE: optional callback)
-        if (progressCallback) {
-          // Map Tesseract recognition phase to 40-95% range for UI
-          const mappedProgress = Math.min(95, Math.max(40, 40 + (m.progress * 55)));
-          progressCallback(mappedProgress, 'Extracting text...');
-        }
+        console.log(`OCR progress: ${Math.round(m.progress * 100)}%`);
       }
     };
   }
@@ -703,12 +691,8 @@ export class OCRCacheManager {
 
   /**
    * Initializes or retrieves cached extraction worker
-   * SSMR: Enhanced with optional progress callback support
    */
-  public static async initializeWorker(
-    languages: OCRLanguage[], 
-    progressCallback?: (progress: number, stage: string) => void
-  ): Promise<Tesseract.Worker> {
+  public static async initializeWorker(languages: OCRLanguage[]): Promise<Tesseract.Worker> {
     const workerKey = this.getWorkerKey(languages);
 
     // Check cache first
@@ -728,7 +712,7 @@ export class OCRCacheManager {
 
     // Create new worker with basic configuration
     console.log(`🔄 EXTRACTION CACHE MISS: Creating new worker for languages: ${workerKey}`);
-    const loadingPromise = this.createWorkerWithFallback(languages, 30000, progressCallback);
+    const loadingPromise = this.createWorkerWithFallback(languages, 30000);
 
     this.loadingPromises.set(workerKey, loadingPromise);
 
