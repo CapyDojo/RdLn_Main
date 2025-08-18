@@ -46,7 +46,9 @@
       "Bash(timeout 10 npm run dev)",
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_type",
-      "mcp__playwright__browser_close"
+      "mcp__playwright__browser_close",
+      "Bash(start test-smart-detection-debug.html)",
+      "Bash(git log:*)"
     ],
     "deny": []
   }

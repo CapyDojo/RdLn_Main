@@ -63,8 +63,10 @@
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
-      "disabled": false,
-      "autoApprove": []
+      "disabled": true,
+      "autoApprove": [
+        "create_directory"
+      ]
     },
     "sequential-thinking": {
       "command": "npx",
