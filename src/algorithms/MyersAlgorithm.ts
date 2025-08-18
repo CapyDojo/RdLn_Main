@@ -48,6 +48,12 @@ export class MyersAlgorithm {
 
 
     while (i < text.length) {
+      // SSMR: Check for cancellation in tokenization loops every 1000 characters
+      if (i % 1000 === 0 && (globalThis as any).currentAbortSignal?.aborted) {
+        console.log('🚫 CANCELLATION: Tokenization cancelled at character', i, 'of', text.length);
+        throw new Error('Operation cancelled by user');
+      }
+
       const char = text[i];
 
       // Handle whitespace character by character for surgical precision
@@ -322,9 +328,21 @@ export class MyersAlgorithm {
 
     // Forward pass
     for (let d = 0; d <= max; d++) {
+      // SSMR: Check for cancellation every iteration during long computations
+      if ((globalThis as any).currentAbortSignal?.aborted) {
+        console.log('🚫 CANCELLATION: Myers algorithm cancelled at d =', d, '/ max =', max);
+        throw new Error('Operation cancelled by user');
+      }
+
       trace[d] = { ...v };
 
       for (let k = -d; k <= d; k += 2) {
+        // SSMR: Check for cancellation in inner loop every iteration
+        if ((globalThis as any).currentAbortSignal?.aborted) {
+          console.log('🚫 CANCELLATION: Myers inner loop cancelled at d =', d, 'k =', k);
+          throw new Error('Operation cancelled by user');
+        }
+        
         let x: number;
 
         if (k === -d || (k !== d && v[k - 1] < v[k + 1])) {
@@ -335,9 +353,16 @@ export class MyersAlgorithm {
 
         let y = x - k;
 
+        // SSMR: Add cancellation check to potentially long-running while loop
+        let matchCounter = 0;
         while (x < n && y < m && a[x] === b[y]) {
           x++;
           y++;
+          // Check for cancellation every 10 matches for immediate response
+          if (++matchCounter % 10 === 0 && (globalThis as any).currentAbortSignal?.aborted) {
+            console.log('🚫 CANCELLATION: Myers match loop cancelled after', matchCounter, 'matches at d =', d);
+            throw new Error('Operation cancelled by user');
+          }
         }
 
         v[k] = x;
@@ -1746,9 +1771,21 @@ export class MyersAlgorithm {
       progressCallback(5, 'Tokenizing text...');
     }
 
+    // SSMR: Check for cancellation before tokenization
+    if ((globalThis as any).currentAbortSignal?.aborted) {
+      console.log('🚫 CANCELLATION: Compare function cancelled before tokenization');
+      throw new Error('Operation cancelled by user');
+    }
+
     // Tokenize the trimmed core content for efficiency
     const originalTokens = this.tokenize(originalCore);
     const revisedTokens = this.tokenize(revisedCore);
+
+    // SSMR: Check for cancellation after tokenization
+    if ((globalThis as any).currentAbortSignal?.aborted) {
+      console.log('🚫 CANCELLATION: Compare function cancelled after tokenization');
+      throw new Error('Operation cancelled by user');
+    }
 
     debugLog('📝 Original tokens:', originalTokens.length);
     debugLog('📝 Revised tokens:', revisedTokens.length);
@@ -1961,69 +1998,100 @@ export class MyersAlgorithm {
     const chunks: any[] = [];
     const maxLength = Math.max(originalTokens.length, revisedTokens.length);
 
-    // Process in chunks with progress updates
-    for (let i = 0; i < maxLength; i += CHUNK_SIZE) {
-      // SSMR: Check for cancellation at start of each chunk
-      if (abortSignal?.aborted) {
-        throw new Error('Operation cancelled by user');
+    try {
+      // Process in chunks with progress updates
+      for (let i = 0; i < maxLength; i += CHUNK_SIZE) {
+        // SSMR: Check for cancellation at start of each chunk
+        if (abortSignal?.aborted || (globalThis as any).currentAbortSignal?.aborted) {
+          console.log('🚫 CANCELLATION: Streaming Myers cancelled at chunk', Math.floor(i / CHUNK_SIZE) + 1);
+          chunks.length = 0; // Clear chunks array to prevent memory leak
+          throw new Error('Operation cancelled by user');
+        }
+
+        const chunkStartTime = performance.now();
+
+        // Extract chunk from both token arrays
+        const originalChunk = originalTokens.slice(i, Math.min(i + CHUNK_SIZE, originalTokens.length));
+        const revisedChunk = revisedTokens.slice(i, Math.min(i + CHUNK_SIZE, revisedTokens.length));
+
+        // Skip empty chunks
+        if (originalChunk.length === 0 && revisedChunk.length === 0) {
+          continue;
+        }
+
+        // SSMR: Check for cancellation before processing chunk
+        if (abortSignal?.aborted || (globalThis as any).currentAbortSignal?.aborted) {
+          console.log('🚫 CANCELLATION: Streaming Myers cancelled before processing chunk');
+          chunks.length = 0; // Clear chunks array to prevent memory leak
+          throw new Error('Operation cancelled by user');
+        }
+
+        // Process chunk using standard Myers algorithm
+        const chunkResult = this.myers(originalChunk, revisedChunk);
+
+        // SSMR: Check for cancellation after processing chunk
+        if (abortSignal?.aborted || (globalThis as any).currentAbortSignal?.aborted) {
+          console.log('🚫 CANCELLATION: Streaming Myers cancelled after processing chunk');
+          chunks.length = 0; // Clear chunks array to prevent memory leak
+          throw new Error('Operation cancelled by user');
+        }
+        chunks.push({
+          startIndex: i,
+          result: chunkResult,
+          originalLength: originalChunk.length,
+          revisedLength: revisedChunk.length
+        });
+
+        // Calculate and report progress
+        const chunkProgress = Math.min((i + CHUNK_SIZE) / maxLength, 1.0);
+        const overallProgress = BASE_PROGRESS + (chunkProgress * PROGRESS_RANGE);
+        const chunkNumber = Math.floor(i / CHUNK_SIZE) + 1;
+        const totalChunks = Math.ceil(maxLength / CHUNK_SIZE);
+
+        const chunkEndTime = performance.now();
+        debugLog(`🌊 Chunk ${chunkNumber}/${totalChunks} processed in ${(chunkEndTime - chunkStartTime).toFixed(2)}ms`);
+
+        if (progressCallback) {
+          progressCallback(
+            Math.floor(overallProgress),
+            `Processing chunk ${chunkNumber} of ${totalChunks}...`
+          );
+        }
+
+        // SSMR: Check for cancellation before yielding
+        if (abortSignal?.aborted || (globalThis as any).currentAbortSignal?.aborted) {
+          chunks.length = 0; // Clear chunks array to prevent memory leak
+          throw new Error('Operation cancelled by user');
+        }
+
+        // CRITICAL: Yield control to UI (Fraser's key insight) with cancellation check
+        await new Promise(resolve => {
+          setTimeout(() => {
+            // Final cancellation check before continuing
+            if (abortSignal?.aborted || (globalThis as any).currentAbortSignal?.aborted) {
+              chunks.length = 0;
+              throw new Error('Operation cancelled by user');
+            }
+            resolve(undefined);
+          }, YIELD_INTERVAL);
+        });
       }
 
-      const chunkStartTime = performance.now();
-
-      // Extract chunk from both token arrays
-      const originalChunk = originalTokens.slice(i, Math.min(i + CHUNK_SIZE, originalTokens.length));
-      const revisedChunk = revisedTokens.slice(i, Math.min(i + CHUNK_SIZE, revisedTokens.length));
-
-      // Skip empty chunks
-      if (originalChunk.length === 0 && revisedChunk.length === 0) {
-        continue;
-      }
-
-      // SSMR: Check for cancellation before processing chunk
-      if (abortSignal?.aborted) {
-        throw new Error('Operation cancelled by user');
-      }
-
-      // Process chunk using standard Myers algorithm
-      const chunkResult = this.myers(originalChunk, revisedChunk);
-      chunks.push({
-        startIndex: i,
-        result: chunkResult,
-        originalLength: originalChunk.length,
-        revisedLength: revisedChunk.length
-      });
-
-      // Calculate and report progress
-      const chunkProgress = Math.min((i + CHUNK_SIZE) / maxLength, 1.0);
-      const overallProgress = BASE_PROGRESS + (chunkProgress * PROGRESS_RANGE);
-      const chunkNumber = Math.floor(i / CHUNK_SIZE) + 1;
-      const totalChunks = Math.ceil(maxLength / CHUNK_SIZE);
-
-      const chunkEndTime = performance.now();
-      debugLog(`🌊 Chunk ${chunkNumber}/${totalChunks} processed in ${(chunkEndTime - chunkStartTime).toFixed(2)}ms`);
-
+      // Combine chunk results into final result
       if (progressCallback) {
-        progressCallback(
-          Math.floor(overallProgress),
-          `Processing chunk ${chunkNumber} of ${totalChunks}...`
-        );
+        progressCallback(90, 'Combining results...');
       }
 
-      // SSMR: Check for cancellation before yielding
-      if (abortSignal?.aborted) {
-        throw new Error('Operation cancelled by user');
-      }
+      const combinedResult = this.combineChunkResults(chunks, originalTokens.length, revisedTokens.length);
+      
+      const endTime = performance.now();
+      debugLog(`🌊 Streaming Myers completed in ${(endTime - startTime).toFixed(2)}ms for ${totalTokens} tokens`);
 
-      // CRITICAL: Yield control to UI (Fraser's key insight)
-      await new Promise(resolve => setTimeout(resolve, YIELD_INTERVAL));
+      return combinedResult;
+    } finally {
+      // ENSURE MEMORY CLEANUP: Always clear chunks array to prevent memory leaks
+      chunks.length = 0;
     }
-
-    // Combine chunk results into final result
-    if (progressCallback) {
-      progressCallback(90, 'Combining results...');
-    }
-
-    const combinedResult = this.combineChunkResults(chunks, originalTokens.length, revisedTokens.length);
 
     const endTime = performance.now();
     debugLog(`🌊 Streaming Myers completed in ${(endTime - startTime).toFixed(2)}ms for ${totalTokens} tokens`);
@@ -2051,6 +2119,11 @@ export class MyersAlgorithm {
     let currentRevisedIndex = 0;
 
     for (const chunk of chunks) {
+      // SSMR: Check for cancellation during chunk combination
+      if ((globalThis as any).currentAbortSignal?.aborted) {
+        throw new Error('Operation cancelled by user');
+      }
+
       // Adjust indices in chunk results based on position in overall document
       const adjustedChunkResult = chunk.result.map((change: any) => ({
         ...change,

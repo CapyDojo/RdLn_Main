@@ -12,6 +12,20 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(() => null),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(() => null),
+};
+Object.defineProperty(global, 'localStorage', {
+  value: localStorageMock,
+  writable: true,
+});
+
 // Set environment for tests
 process.env.NODE_ENV = 'development';
 
@@ -31,6 +45,27 @@ vi.mock('../src/config/appConfig', () => ({
     },
     ANIMATION: {
       COPY_SUCCESS_DURATION: 2000,
+      CANCELLATION_FEEDBACK_DELAY: 500,
+    },
+  },
+  STORAGE_CONFIG: {
+    KEYS: {
+      AUTO_COMPARE_ENABLED: 'rdln_auto_compare_enabled',
+      SYSTEM_PROTECTION_ENABLED: 'rdln_system_protection_enabled',
+    },
+    DEFAULTS: {
+      AUTO_COMPARE_ENABLED: true,
+      SYSTEM_PROTECTION_ENABLED: true,
+    },
+  },
+  SYSTEM_CONFIG: {
+    LIMITS: {
+      MAX_DOCUMENT_LENGTH: 10000000,
+      COMPLEX_DOCUMENT_THRESHOLD: 1000000,
+      COMPLEX_CHANGES_THRESHOLD: 100000,
+      MIN_AVAILABLE_MEMORY: 100000000,
+      LARGE_OPERATION_THRESHOLD: 5000000,
+      LARGE_OPERATION_COOLDOWN: 5000,
     },
   },
   FEATURE_FLAGS: {
@@ -212,6 +247,16 @@ vi.mock('tesseract.js', () => ({
     terminate: vi.fn(() => Promise.resolve()),
     get  progress() { return 0.5; }, // Mock progress
     set progress(value) { /* do nothing */ },
+  })),
+}));
+
+// Mock usePerformanceMonitor hook
+vi.mock('../src/hooks/usePerformanceMonitor', () => ({
+  usePerformanceMonitor: vi.fn(() => ({
+    trackMetric: vi.fn(),
+    trackOperation: vi.fn((name, operation) => operation()),
+    getRecentMetrics: vi.fn(() => []),
+    getLastMetricValue: vi.fn(() => undefined),
   })),
 }));
 

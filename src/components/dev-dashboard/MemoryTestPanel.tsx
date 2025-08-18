@@ -127,6 +127,7 @@ export const MemoryTestPanel: React.FC = () => {
       const memoryGrowth = afterCancel!.usedJSHeapSize - baseline.usedJSHeapSize;
       const memoryRecovered = afterCancel!.usedJSHeapSize - afterGC!.usedJSHeapSize;
       const recoveryPercentage = memoryGrowth > 0 ? (memoryRecovered / memoryGrowth) * 100 : 0;
+      const isOptimal = recoveryPercentage > 80; // Good if >80% memory recovered
       
       const results = {
         stats: [...statsRef.current],
@@ -138,7 +139,7 @@ export const MemoryTestPanel: React.FC = () => {
           memoryGrowth: formatMemory(memoryGrowth),
           memoryRecovered: formatMemory(memoryRecovered),
           recoveryPercentage: recoveryPercentage.toFixed(1) + '%',
-          isOptimal: recoveryPercentage > 80 // Good if >80% memory recovered
+          isOptimal
         }
       };
       
@@ -150,6 +151,12 @@ export const MemoryTestPanel: React.FC = () => {
     } finally {
       setTestRunning(false);
     }
+  };
+
+  const getStatusColor = (percentage: number) => {
+    if (percentage > 80) return 'text-green-600';
+    if (percentage > 50) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   return (
@@ -192,21 +199,13 @@ export const MemoryTestPanel: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <div className="text-sm font-medium text-gray-600">Memory Recovery</div>
-                <div className={`text-lg font-bold ${
-                  parseFloat(memoryStats.summary.recoveryPercentage) > 80 
-                    ? 'text-green-600' 
-                    : parseFloat(memoryStats.summary.recoveryPercentage) > 50
-                      ? 'text-yellow-600'
-                      : 'text-red-600'
-                }`}>
+                <div className={`text-lg font-bold ${getStatusColor(parseFloat(memoryStats.summary.recoveryPercentage))}`}>
                   {memoryStats.summary.recoveryPercentage}
                 </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-gray-600">Cleanup Status</div>
-                <div className={`text-lg font-bold ${
-                  memoryStats.summary.isOptimal ? 'text-green-600' : 'text-red-600'
-                }`}>
+                <div className={`text-lg font-bold ${memoryStats.summary.isOptimal ? 'text-green-600' : 'text-red-600'}`}>
                   {memoryStats.summary.isOptimal ? '✅ Optimal' : '❌ Needs Work'}
                 </div>
               </div>
@@ -228,8 +227,8 @@ export const MemoryTestPanel: React.FC = () => {
           <ul className="text-sm text-yellow-700 space-y-1 ml-4">
             <li>• <strong>Chrome Flag:</strong> Start Chrome with <code>--enable-precise-memory-info</code></li>
             <li>• <strong>DevTools:</strong> Open Memory tab and take heap snapshots</li>
-            <li>• <strong>Manual GC:</strong> Enable in DevTools > Settings > Console > "Enable custom formatters"</li>
-            <li>• <strong>Good Recovery:</strong> >80% memory recovered indicates optimal cleanup</li>
+            <li>• <strong>Manual GC:</strong> Enable in DevTools Settings Console</li>
+            <li>• <strong>Good Recovery:</strong> Over 80% memory recovered indicates optimal cleanup</li>
           </ul>
         </div>
       </div>

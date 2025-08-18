@@ -188,7 +188,8 @@ export const useComparison = (saveSessionCallback?: (originalText: string, revis
       setState(prev => ({
         ...prev,
         isProcessing: false,
-        error: 'Comparison cancelled by user'
+        error: 'Comparison cancelled by user',
+        result: null
       }));
       
       // Reset chunking progress
@@ -212,6 +213,16 @@ export const useComparison = (saveSessionCallback?: (originalText: string, revis
       // Reset cancelling state after a brief delay to show feedback
       setTimeout(() => {
         setIsCancelling(false);
+        
+        // MEMORY CLEANUP: Force garbage collection after cancellation if available (Chrome DevTools)
+        if (typeof window !== 'undefined' && (window as any).gc) {
+          try {
+            (window as any).gc();
+            console.log('🗑️ Forced garbage collection after cancellation');
+          } catch (error) {
+            console.warn('Garbage collection failed:', error);
+          }
+        }
       }, UI_CONFIG.ANIMATION.CANCELLATION_FEEDBACK_DELAY);
     });
   }, [state.isProcessing, isCancelling]);
@@ -274,6 +285,15 @@ console.warn('⚠️ Auto-compare blocked - manual operation in progress');
       return;
     }
     
+    // SSMR: Clean up previous AbortController before creating new one to prevent accumulation
+    if (abortControllerRef.current) {
+      try {
+        abortControllerRef.current.abort();
+      } catch (error) {
+        console.warn('Cleaning up previous AbortController failed:', error);
+      }
+    }
+    
     // SSMR: Create new AbortController for cancellation
     abortControllerRef.current = new AbortController();
     setIsCancelling(false);
@@ -291,6 +311,10 @@ console.warn('⚠️ Auto-compare blocked - manual operation in progress');
     // Use override texts if provided, otherwise use state
     const actualOriginal = overrideOriginal ?? state.originalText;
     const actualRevised = overrideRevised ?? state.revisedText;
+    
+    // Create mutable references for memory cleanup on cancellation
+    let originalTextRef: string | null = actualOriginal;
+    let revisedTextRef: string | null = actualRevised;
     
     // DEBUG: Critical state validation at start of comparison
     
@@ -369,8 +393,20 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
                 console.warn('Performance tracking failed:', error);
               }
               
+              console.log('🎯 COMPARE: Starting MyersAlgorithm.compare', {
+                originalLength: actualOriginal.length,
+                revisedLength: actualRevised.length,
+                hasAbortSignal: !!(globalThis as any).currentAbortSignal,
+                signalAborted: (globalThis as any).currentAbortSignal?.aborted
+              });
+              
               // Execute the actual algorithm
               const algorithmResult = await MyersAlgorithm.compare(actualOriginal, actualRevised, progressCallback);
+              
+              console.log('🎯 COMPARE: MyersAlgorithm.compare completed', {
+                hasResult: !!algorithmResult,
+                changesCount: algorithmResult?.changes?.length || 0
+              });
               
               // Track algorithm result characteristics
               if (algorithmResult) {
@@ -389,12 +425,41 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
               return algorithmResult;
             });
           } else {
+            console.log('🎯 COMPARE: Starting MyersAlgorithm.compare (fallback)', {
+              originalLength: actualOriginal.length,
+              revisedLength: actualRevised.length,
+              hasAbortSignal: !!(globalThis as any).currentAbortSignal,
+              signalAborted: (globalThis as any).currentAbortSignal?.aborted
+            });
+            
             // Fallback: execute algorithm without performance tracking
-            return await MyersAlgorithm.compare(actualOriginal, actualRevised, progressCallback);
+            const algorithmResult = await MyersAlgorithm.compare(actualOriginal, actualRevised, progressCallback);
+            
+            console.log('🎯 COMPARE: MyersAlgorithm.compare completed (fallback)', {
+              hasResult: !!algorithmResult,
+              changesCount: algorithmResult?.changes?.length || 0
+            });
+            
+            return algorithmResult;
           }
         } catch (error) {
           console.warn('Performance tracking wrapper failed, falling back to direct execution:', error);
-          return await MyersAlgorithm.compare(actualOriginal, actualRevised, progressCallback);
+          
+          console.log('🎯 COMPARE: Starting MyersAlgorithm.compare (error fallback)', {
+            originalLength: actualOriginal.length,
+            revisedLength: actualRevised.length,
+            hasAbortSignal: !!(globalThis as any).currentAbortSignal,
+            signalAborted: (globalThis as any).currentAbortSignal?.aborted
+          });
+          
+          const algorithmResult = await MyersAlgorithm.compare(actualOriginal, actualRevised, progressCallback);
+          
+          console.log('🎯 COMPARE: MyersAlgorithm.compare completed (error fallback)', {
+            hasResult: !!algorithmResult,
+            changesCount: algorithmResult?.changes?.length || 0
+          });
+          
+          return algorithmResult;
         }
       })();
       
@@ -403,6 +468,12 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
         // Valid result with changes
       } else {
         console.warn('Empty or invalid comparison result');
+      }
+      
+      // CRITICAL: Check for cancellation before setting results to prevent race condition
+      if (abortControllerRef.current?.signal?.aborted || isCancelling) {
+        console.log('🚫 Comparison completed but was cancelled - discarding results');
+        return;
       }
       
       // 🎯 CRITICAL PERFORMANCE LOGGING FOR STATE UPDATE THAT CAUSES LAG
@@ -482,6 +553,10 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
       // SSMR: Clear global signal on successful completion
       (globalThis as any).currentAbortSignal = null;
       
+      // MEMORY CLEANUP: Nullify large text variables after successful completion
+      originalTextRef = null;
+      revisedTextRef = null;
+      
       // Auto-save completed comparisons with different thresholds for manual vs live compare
       if (saveSessionCallback && result) {
         setTimeout(() => {
@@ -519,12 +594,29 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
         }, 500); // Give enough time for any pending auto-compare calls to be blocked
       }
     } catch (error) {
+      // MEMORY CLEANUP: Nullify large text variables to prevent closure memory leaks
+      originalTextRef = null;
+      revisedTextRef = null;
+      
       // Use standardized error handling
       let appError: AppError;
       
       if (error instanceof Error) {
+        // Check for cancellation error specifically
+        if (error.message.includes('cancelled by user') || error.message.includes('Operation cancelled')) {
+          appError = ErrorFactory.createAlgorithmError(
+            error.message,
+            'Comparison cancelled by user',
+            {
+              originalLength: actualOriginal.length,
+              revisedLength: actualRevised.length,
+              isAutoCompare,
+              operation: 'compare_documents'
+            }
+          );
+        }
         // Auto-categorize and create appropriate error types
-        if (error.message.includes('exceeds the UI limit')) {
+        else if (error.message.includes('exceeds the UI limit')) {
           appError = ErrorFactory.createAlgorithmError(
             error.message,
             'The documents are too different or contain too many changes to display effectively. This typically happens with documents that have been extensively rewritten or are fundamentally different in structure. Try comparing smaller sections or documents with fewer changes.',
@@ -634,6 +726,7 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
       
       setState(prev => ({
         ...prev,
+        result: null, // CRITICAL FIX: Always explicitly set result to null on error
         error: appError.userMessage,
         isProcessing: false
       }));
@@ -829,11 +922,29 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
   }, [systemProtectionEnabled]);
   
 
-  // Cleanup timeout on unmount
+  // Cleanup timeout on unmount  
   useEffect(() => {
     return () => {
+      // Clear timeouts
       if (autoCompareTimeoutRef.current) {
         clearTimeout(autoCompareTimeoutRef.current);
+      }
+      
+      // MEMORY CLEANUP: Clean up AbortController on unmount
+      if (abortControllerRef.current) {
+        try {
+          abortControllerRef.current.abort();
+          abortControllerRef.current = null;
+        } catch (error) {
+          console.warn('Cleanup AbortController on unmount failed:', error);
+        }
+      }
+      
+      // Clear global abort signal
+      try {
+        (globalThis as any).currentAbortSignal = null;
+      } catch (error) {
+        console.warn('Cleanup global signal on unmount failed:', error);
       }
     };
   }, []);

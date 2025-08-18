@@ -2,6 +2,8 @@ import React from 'react';
 import { Beaker, Target, ArrowUp, Smartphone, Monitor, Layers, Eye, ExternalLink, Cog, Pin, RotateCcw } from 'lucide-react';
 import { useExperimentalFeatures, useHasActiveExperimentalFeatures } from '../../contexts/ExperimentalLayoutContext';
 import { BaseComponentProps } from '../../types/components';
+import { CancellationTestPanel } from './CancellationTestPanel';
+import { MemoryTestPanel } from './MemoryTestPanel';
 
 interface ExperimentalFeaturesPanelProps extends BaseComponentProps {
   // Optional props for future expansion
@@ -30,6 +32,12 @@ export const ExperimentalFeaturesPanel: React.FC<ExperimentalFeaturesPanelProps>
           {hasActiveExperimentalFeatures ? 'Experimental features are active' : 'All features disabled'}
         </div>
       </div>
+
+      {/* Real Cancellation Test Panel */}
+      <CancellationTestPanel />
+
+      {/* Memory Cleanup Test Panel */}
+      <MemoryTestPanel />
 
       {/* Test Group Buttons */}
       <div className="space-y-3">
