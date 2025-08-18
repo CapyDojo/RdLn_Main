@@ -131,7 +131,7 @@ export const ProcessingDisplay: React.FC<ProcessingDisplayProps> = ({
                 ) : (
                   <>
                     <span>✕</span>
-                    <span className="hidden sm:inline">Cancel</span>
+                    <span className="hidden sm:inline">Cancel (Esc)</span>
                   </>
                 )}
                 </button>
@@ -164,7 +164,7 @@ export const ProcessingDisplay: React.FC<ProcessingDisplayProps> = ({
               ) : (
                 <>
                   <span>✕</span>
-                  <span className="hidden sm:inline">Cancel</span>
+                  <span className="hidden sm:inline">Cancel (Esc)</span>
                 </>
               )}
               </button>

@@ -188,7 +188,7 @@ export const useComparison = (saveSessionCallback?: (originalText: string, revis
       setState(prev => ({
         ...prev,
         isProcessing: false,
-        error: 'Comparison cancelled by user',
+        error: '👍 Comparison cancelled successfully',
         result: null
       }));
       
@@ -224,6 +224,16 @@ export const useComparison = (saveSessionCallback?: (originalText: string, revis
           }
         }
       }, UI_CONFIG.ANIMATION.CANCELLATION_FEEDBACK_DELAY);
+      
+      // Clear the cancellation success message after spotlight animation completes
+      setTimeout(() => {
+        setState(prev => {
+          if (prev.error === '👍 Comparison cancelled successfully') {
+            return { ...prev, error: null };
+          }
+          return prev;
+        });
+      }, 3400); // 3.4 seconds to let the spotlight animation complete
     });
   }, [state.isProcessing, isCancelling]);
 

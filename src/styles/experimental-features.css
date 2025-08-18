@@ -29,6 +29,50 @@
 }
 
 /* ==============================================
+   CANCELLATION SUCCESS SPOTLIGHT
+   ============================================== */
+.cancellation-success-message {
+  animation: cancellationSpotlightEntrance 3.3s ease-out forwards;
+  position: relative;
+  background: linear-gradient(135deg, #10b981, #34d399) !important;
+  color: white !important;
+  border: 2px solid rgba(16, 185, 129, 0.6);
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 0 20px 2px rgba(16, 185, 129, 0.3);
+}
+
+@keyframes cancellationSpotlightEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    border-color: transparent;
+  }
+  
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 30px 5px rgba(16, 185, 129, 0.6);
+    border-color: rgba(16, 185, 129, 0.9);
+  }
+  
+  70% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 20px 2px rgba(16, 185, 129, 0.4);
+    border-color: rgba(16, 185, 129, 0.7);
+  }
+  
+  100% {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.98);
+    box-shadow: 0 0 10px 1px rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+}
+
+/* ==============================================
    FEATURE #1: RESULTS SPOTLIGHT
    ============================================== */
 .experimental-results-spotlight [data-output-panel] {

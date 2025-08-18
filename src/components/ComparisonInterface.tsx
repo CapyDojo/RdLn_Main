@@ -274,6 +274,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     return () => clearInterval(memoryInterval);
   }, [isProcessing, performanceTracker]);
 
+
   // SSMR STEP 6: Extracted scroll sync logic into custom hook
   const { updateScrollRefs } = useScrollSync({
     isScrollLocked,
@@ -794,7 +795,11 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
       {/* Error and Success Messages */}
       {error && (
-        <div className="mt-3 flex items-center gap-2 text-red-600 text-sm">
+        <div className={`mt-3 flex items-center gap-2 text-sm ${
+          error.includes('cancelled successfully') 
+            ? 'cancellation-success-message' 
+            : 'text-red-600'
+        }`}>
           <AlertCircle className="w-4 h-4" />
           {error}
         </div>
