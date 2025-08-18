@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Detection Debug Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; white-space: pre-wrap; }
+        button { padding: 10px 20px; margin: 5px; }
+        input[type="file"] { margin: 10px 0; }
+        .note { background: #e6f3ff; padding: 10px; margin: 10px 0; border-left: 4px solid #007acc; }
+    </style>
+</head>
+<body>
+    <h1>Smart Detection Debug Test</h1>
+    
+    <div class="note">
+        <strong>Instructions:</strong> 
+        <ol>
+            <li>Start the dev server: <code>npm run dev</code></li>
+            <li>Open this page via the dev server: <code>http://localhost:5173/test-smart-detection-debug.html</code></li>
+            <li>Do NOT open this file directly (file:// protocol won't work)</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h2>Network Activity Monitor</h2>
+        <button onclick="startNetworkMonitoring()">Start Network Monitor</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+        <div id="networkLog" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Detection Test</h2>
+        <input type="file" id="testImage" accept="image/*">
+        <br>
+        <button onclick="testSmartDetection()">Test Smart Detection</button>
+        <button onclick="testFullDetection()">Test Full Detection</button>
+        <div id="detectionLog" class="log"></div>
+    </div>
+
+    <script type="module">
+        // Check if we're running on dev server
+        if (window.location.protocol === 'file:') {
+            document.body.innerHTML = `
+                <div style="padding: 20px; background: #ffebee; border: 2px solid #f44336; margin: 20px;">
+                    <h2>⚠️ CORS Error</h2>
+                    <p>This test must be run through the dev server, not as a direct file.</p>
+                    <p><strong>To fix:</strong></p>
+                    <ol>
+                        <li>Run: <code>npm run dev</code></li>
+                        <li>Open: <code>http://localhost:5173/test-smart-detection-debug.html</code></li>
+                    </ol>
+                </div>
+            `;
+            throw new Error('Must run through dev server');
+        }
+
+        let LanguageDetectionService;
+        
+        try {
+            const module = await import('./src/services/LanguageDetectionService.ts');
+            LanguageDetectionService = module.LanguageDetectionService;
+            log('detectionLog', '✅ LanguageDetectionService loaded successfully');
+        } catch (error) {
+            log('detectionLog', `❌ Failed to load LanguageDetectionService: ${error.message}`);
+            console.error('Import error:', error);
+        }
+        
+        let networkRequests = [];
+        let originalFetch = window.fetch;
+        
+        // Override fetch to monitor network requests
+        window.fetch = function(...args) {
+            const url = args[0];
+            const startTime = Date.now();
+            
+            log('networkLog', `🌐 FETCH: ${url}`);
+            
+            return originalFetch.apply(this, args).then(response => {
+                const endTime = Date.now();
+                const size = response.headers.get('content-length') || 'unknown';
+                log('networkLog', `✅ RESPONSE: ${url} (${endTime - startTime}ms, ${size} bytes)`);
+                
+                networkRequests.push({
+                    url: url,
+                    duration: endTime - startTime,
+                    size: size,
+                    timestamp: new Date().toISOString()
+                });
+                
+                return response;
+            }).catch(error => {
+                const endTime = Date.now();
+                log('networkLog', `❌ ERROR: ${url} (${endTime - startTime}ms) - ${error.message}`);
+                throw error;
+            });
+        };
+        
+        // Also monitor XMLHttpRequest if used
+        const originalXHROpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url, ...args) {
+            log('networkLog', `🌐 XHR: ${method} ${url}`);
+            return originalXHROpen.apply(this, [method, url, ...args]);
+        };
+        
+        window.startNetworkMonitoring = function() {
+            networkRequests = [];
+            log('networkLog', '🔍 Network monitoring started...\n');
+        };
+        
+        window.clearLogs = function() {
+            document.getElementById('networkLog').textContent = '';
+            document.getElementById('detectionLog').textContent = '';
+            networkRequests = [];
+        };
+        
+        window.testSmartDetection = async function() {
+            const fileInput = document.getElementById('testImage');
+            if (!fileInput.files[0]) {
+                alert('Please select an image first');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            log('detectionLog', `🚀 Testing SMART detection with ${file.name}...\n`);
+            
+            startNetworkMonitoring();
+            const startTime = Date.now();
+            
+            try {
+                // Force smart detection by temporarily setting the config
+                if (window.DETECTION_OPTIMIZATIONS) {
+                    window.DETECTION_OPTIMIZATIONS.enableSmartDefault = true;
+                }
+                
+                const result = await LanguageDetectionService.detectLanguage(file, (progress, stage) => {
+                    log('detectionLog', `📊 ${progress}% - ${stage}`);
+                });
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                log('detectionLog', `\n✅ Smart detection completed in ${duration}ms`);
+                log('detectionLog', `🎯 Detected languages: ${result.join(', ')}`);
+                log('detectionLog', `🌐 Network requests made: ${networkRequests.length}`);
+                
+                networkRequests.forEach(req => {
+                    log('detectionLog', `  - ${req.url} (${req.duration}ms, ${req.size} bytes)`);
+                });
+                
+            } catch (error) {
+                log('detectionLog', `❌ Error: ${error.message}`);
+                console.error('Smart detection error:', error);
+            }
+        };
+        
+        window.testFullDetection = async function() {
+            const fileInput = document.getElementById('testImage');
+            if (!fileInput.files[0]) {
+                alert('Please select an image first');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            log('detectionLog', `🔄 Testing FULL detection with ${file.name}...\n`);
+            
+            startNetworkMonitoring();
+            const startTime = Date.now();
+            
+            try {
+                // Force full detection by temporarily disabling smart detection
+                if (window.DETECTION_OPTIMIZATIONS) {
+                    window.DETECTION_OPTIMIZATIONS.enableSmartDefault = false;
+                }
+                
+                const result = await LanguageDetectionService.detectLanguage(file, (progress, stage) => {
+                    log('detectionLog', `📊 ${progress}% - ${stage}`);
+                });
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                log('detectionLog', `\n✅ Full detection completed in ${duration}ms`);
+                log('detectionLog', `🎯 Detected languages: ${result.join(', ')}`);
+                log('detectionLog', `🌐 Network requests made: ${networkRequests.length}`);
+                
+                networkRequests.forEach(req => {
+                    log('detectionLog', `  - ${req.url} (${req.duration}ms, ${req.size} bytes)`);
+                });
+                
+            } catch (error) {
+                log('detectionLog', `❌ Error: ${error.message}`);
+                console.error('Full detection error:', error);
+            }
+        };
+        
+        function log(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent += message + '\n';
+            element.scrollTop = element.scrollHeight;
+        }
+    </script>
+</body>
+</html>

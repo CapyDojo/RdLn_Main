@@ -79,5 +79,11 @@
     "cleanupIntervalMs": 300000,
     "languageCacheExpiryMs": 1800000,
     "maxLanguageCacheEntries": 50
+  },
+  "detectionOptimizations": {
+    "enableSmartDefault": false,
+    "englishFirstThreshold": 0.7,
+    "minWordLength": 2,
+    "minWordsForConfidence": 3
   }
 }

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Detection Performance Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #4CAF50, #45a049);
+            transition: width 0.3s ease;
+        }
+
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .performance-stats {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            margin: 10px 0;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+
+        .warning {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Smart Detection Performance Test</h1>
+
+    <div class="test-section">
+        <h2>🚀 Smart Detection Test (English-First Strategy)</h2>
+        <p>Upload an English image to test the new smart detection optimization:</p>
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="testSmartDetection()">Test Smart Detection</button>
+        <button onclick="testTraditionalDetection()">Test Traditional Detection (Comparison)</button>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div id="progressText">Ready to test...</div>
+
+        <div class="performance-stats" id="performanceStats" style="display: none;">
+            <h3>Performance Results:</h3>
+            <div id="statsContent"></div>
+        </div>
+
+        <div class="log" id="progressLog"></div>
+    </div>
+
+    <script type="module">
+        // Import the language detection service and performance tracker
+        import { LanguageDetectionService } from './src/services/LanguageDetectionService.js';
+        import { performanceTracker } from './src/utils/PerformanceTracker.js';
+
+        let testResults = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('progressLog');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function updateProgress(progress, stage) {
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `${progress}% - ${stage}`;
+            log(`Progress: ${progress}% - ${stage}`, 'info');
+        }
+
+        function showPerformanceStats(results) {
+            const statsElement = document.getElementById('performanceStats');
+            const contentElement = document.getElementById('statsContent');
+
+            let html = '';
+            results.forEach((result, index) => {
+                const improvement = index > 0 ?
+                    `${Math.round(((results[0].duration - result.duration) / results[0].duration) * 100)}% faster` :
+                    'baseline';
+
+                html += `
+                    <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                        <strong>${result.method}</strong><br>
+                        Duration: ${result.duration}ms<br>
+                        Languages: ${result.languages.join(', ')}<br>
+                        Improvement: ${improvement}<br>
+                        Strategy: ${result.strategy || 'N/A'}
+                    </div>
+                `;
+            });
+
+            contentElement.innerHTML = html;
+            statsElement.style.display = 'block';
+        }
+
+        window.testSmartDetection = async function () {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                log('Please select an image file first', 'error');
+                return;
+            }
+
+            log('🚀 Starting SMART detection test...', 'success');
+
+            try {
+                const startTime = Date.now();
+
+                // Test the new smart detection
+                const detectedLanguages = await LanguageDetectionService.detectLanguage(
+                    file,
+                    updateProgress
+                );
+
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+
+                log(`✅ Smart detection completed in ${duration}ms`, 'success');
+                log(`🎯 Detected languages: ${detectedLanguages.join(', ')}`, 'success');
+
+                // Store result for comparison
+                testResults = [{
+                    method: 'Smart Detection (English-First)',
+                    duration: duration,
+                    languages: detectedLanguages,
+                    strategy: 'English-first with quality assessment'
+                }];
+
+                showPerformanceStats(testResults);
+
+                // Performance analysis
+                if (duration < 10000) {
+                    log(`🎉 EXCELLENT: Detection completed in under 10 seconds!`, 'success');
+                } else if (duration < 20000) {
+                    log(`✅ GOOD: Detection completed in under 20 seconds`, 'success');
+                } else {
+                    log(`⚠️ SLOW: Detection took over 20 seconds - may have fallen back to full detection`, 'warning');
+                }
+
+            } catch (error) {
+                log(`❌ Smart detection failed: ${error.message}`, 'error');
+                console.error('Smart Detection Error:', error);
+            }
+        };
+
+        window.testTraditionalDetection = async function () {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                log('Please select an image file first', 'error');
+                return;
+            }
+
+            log('🔄 Starting TRADITIONAL detection test for comparison...', 'warning');
+
+            try {
+                // Temporarily disable smart detection for comparison
+                const originalConfig = window.DETECTION_OPTIMIZATIONS?.enableSmartDefault;
+                if (window.DETECTION_OPTIMIZATIONS) {
+                    window.DETECTION_OPTIMIZATIONS.enableSmartDefault = false;
+                }
+
+                const startTime = Date.now();
+
+                const detectedLanguages = await LanguageDetectionService.detectLanguage(
+                    file,
+                    updateProgress
+                );
+
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+
+                // Restore original config
+                if (window.DETECTION_OPTIMIZATIONS && originalConfig !== undefined) {
+                    window.DETECTION_OPTIMIZATIONS.enableSmartDefault = originalConfig;
+                }
+
+                log(`✅ Traditional detection completed in ${duration}ms`, 'success');
+                log(`🎯 Detected languages: ${detectedLanguages.join(', ')}`, 'success');
+
+                // Add to results for comparison
+                testResults.push({
+                    method: 'Traditional Detection (Multi-language)',
+                    duration: duration,
+                    languages: detectedLanguages,
+                    strategy: 'Full multi-language detection'
+                });
+
+                showPerformanceStats(testResults);
+
+                // Performance comparison
+                if (testResults.length > 1) {
+                    const smartTime = testResults[0].duration;
+                    const traditionalTime = duration;
+                    const improvement = ((traditionalTime - smartTime) / traditionalTime) * 100;
+
+                    if (improvement > 50) {
+                        log(`🚀 AMAZING: Smart detection is ${Math.round(improvement)}% faster!`, 'success');
+                    } else if (improvement > 20) {
+                        log(`✅ GOOD: Smart detection is ${Math.round(improvement)}% faster`, 'success');
+                    } else if (improvement > 0) {
+                        log(`📈 MINOR: Smart detection is ${Math.round(improvement)}% faster`, 'info');
+                    } else {
+                        log(`⚠️ Smart detection was not faster - may have used fallback`, 'warning');
+                    }
+                }
+
+            } catch (error) {
+                log(`❌ Traditional detection failed: ${error.message}`, 'error');
+                console.error('Traditional Detection Error:', error);
+            }
+        };
+
+        // Make functions available globally for testing
+        window.log = log;
+        window.updateProgress = updateProgress;
+
+        log('🧪 Smart Detection Test Page loaded. Ready to test performance improvements!', 'success');
+        log('📋 Expected behavior for English text:', 'info');
+        log('  - Smart Detection: Should complete in <10 seconds', 'info');
+        log('  - Traditional Detection: May take 20-30+ seconds', 'info');
+        log('  - Progress should show "Trying English detection..." then "English detected"', 'info');
+    </script>
+</body>
+
+</html>
