@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quality Assessment Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        button { padding: 10px 20px; margin: 5px; }
+        .pass { color: green; font-weight: bold; }
+        .fail { color: red; font-weight: bold; }
+        input[type="file"] { margin: 10px 0; }
+        textarea { width: 100%; height: 100px; font-family: monospace; }
+        .threshold-control { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Quality Assessment Test</h1>
+    
+    <div class="test-section">
+        <h2>Threshold Control</h2>
+        <div class="threshold-control">
+            <label>englishFirstThreshold: <input type="number" id="threshold" value="0.7" min="0" max="1" step="0.1" onchange="updateThreshold()"></label>
+            <button onclick="resetThreshold()">Reset to Default (0.7)</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Text Quality Assessment</h2>
+        <textarea id="testText" placeholder="Paste OCR text here to test quality assessment...">This is a sample English document with good quality text. The algorithm should recognize common English words and patterns.</textarea>
+        <br>
+        <label>Confidence (0-100): <input type="number" id="confidence" value="75" min="0" max="100"></label>
+        <br>
+        <button onclick="assessTextQuality()">Assess Quality</button>
+        <div id="qualityLog" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Sample Texts for Testing</h2>
+        <button onclick="loadSampleText('good')">Load Good Quality Sample</button>
+        <button onclick="loadSampleText('medium')">Load Medium Quality Sample</button>
+        <button onclick="loadSampleText('poor')">Load Poor Quality Sample</button>
+        <button onclick="loadSampleText('noisy')">Load Noisy OCR Sample</button>
+    </div>
+
+    <script type="module">
+        // Copy the quality assessment function from LanguageDetectionService
+        const DETECTION_OPTIMIZATIONS = {
+            enableSmartDefault: true,
+            englishFirstThreshold: 0.7,
+            minWordLength: 2,
+            minWordsForConfidence: 3
+        };
+
+        // Make it accessible globally for testing
+        window.DETECTION_OPTIMIZATIONS = DETECTION_OPTIMIZATIONS;
+
+        function assessEnglishOCRQuality(text, confidence) {
+            const reasons = [];
+            let score = 0;
+            const maxScore = 100;
+
+            // 1. Text length check
+            if (!text || text.trim().length < 10) {
+                reasons.push('Text too short or empty');
+                return { isGoodQuality: false, score: 0, reasons };
+            }
+
+            // 2. Confidence score
+            if (confidence !== undefined) {
+                if (confidence > 80) {
+                    score += 30;
+                    reasons.push(`High confidence: ${confidence}%`);
+                } else if (confidence > 60) {
+                    score += 20;
+                    reasons.push(`Medium confidence: ${confidence}%`);
+                } else {
+                    reasons.push(`Low confidence: ${confidence}%`);
+                }
+            }
+
+            // 3. Word-to-character ratio
+            const words = text.split(/\\s+/).filter(word => word.length >= DETECTION_OPTIMIZATIONS.minWordLength);
+            const wordToCharRatio = words.length / text.length;
+            if (wordToCharRatio > 0.1) {
+                score += 20;
+                reasons.push('Good word-to-character ratio');
+            } else if (wordToCharRatio > 0.05) {
+                score += 10;
+                reasons.push('Acceptable word-to-character ratio');
+            } else {
+                reasons.push('Poor word boundaries detected');
+            }
+
+            // 4. English word detection
+            const englishWords = text.match(/\\b(the|and|that|have|for|not|with|you|this|but|his|from|they|she|her|been|than|its|who|did|get|may|him|old|see|now|way|could|people|my|than|first|water|been|call|who|oil|sit|now|find|long|down|day|did|get|come|made|may|part|is|are|was|were|will|would|can|could|should|shall|might|must|do|does|did|has|had|have|having|be|being|been|am|is|are|was|were|will|would|can|could|should|shall|might|must)\\b/gi);
+            const englishWordCount = englishWords ? englishWords.length : 0;
+            if (englishWordCount >= DETECTION_OPTIMIZATIONS.minWordsForConfidence) {
+                score += 25;
+                reasons.push(`Found ${englishWordCount} common English words`);
+            } else if (englishWordCount > 0) {
+                score += 10;
+                reasons.push(`Found ${englishWordCount} English words`);
+            } else {
+                reasons.push('No common English words found');
+            }
+
+            // 5. Latin character ratio
+            const latinChars = text.match(/[a-zA-Z]/g);
+            const latinRatio = latinChars ? latinChars.length / text.replace(/\\s/g, '').length : 0;
+            if (latinRatio > 0.8) {
+                score += 15;
+                reasons.push('High Latin character ratio');
+            } else if (latinRatio > 0.5) {
+                score += 10;
+                reasons.push('Medium Latin character ratio');
+            } else {
+                reasons.push('Low Latin character ratio - may be non-English');
+            }
+
+            // 6. Special character noise check
+            const specialChars = text.match(/[^\\w\\s.,!?;:'"()-]/g);
+            const specialCharRatio = specialChars ? specialChars.length / text.length : 0;
+            if (specialCharRatio < 0.1) {
+                score += 10;
+                reasons.push('Low noise level');
+            } else if (specialCharRatio > 0.3) {
+                reasons.push('High noise level detected');
+                score -= 10;
+            }
+
+            const finalScore = Math.max(0, Math.min(maxScore, score));
+            const isGoodQuality = finalScore >= (DETECTION_OPTIMIZATIONS.englishFirstThreshold * maxScore);
+
+            return {
+                isGoodQuality,
+                score: finalScore,
+                reasons
+            };
+        }
+
+        window.assessTextQuality = function() {
+            const text = document.getElementById('testText').value;
+            const confidence = parseInt(document.getElementById('confidence').value) || undefined;
+            
+            const result = assessEnglishOCRQuality(text, confidence);
+            
+            const log = document.getElementById('qualityLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const threshold = DETECTION_OPTIMIZATIONS.englishFirstThreshold * 100;
+            
+            const passFailClass = result.isGoodQuality ? 'pass' : 'fail';
+            const passFailText = result.isGoodQuality ? 'PASS' : 'FAIL';
+            
+            log.innerHTML = `
+                <div>[${timestamp}] Quality Assessment Results:</div>
+                <div class="${passFailClass}">Result: ${passFailText} (${result.score}/100, threshold: ${threshold})</div>
+                <div>Reasons:</div>
+                ${result.reasons.map(reason => `<div>  - ${reason}</div>`).join('')}
+                <div>
+                <div>Text sample: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"</div>
+                <div>Text length: ${text.length} characters</div>
+                <div>Word count: ${text.split(/\\s+/).length}</div>
+                </div>
+            `;
+        };
+
+        window.updateThreshold = function() {
+            const newThreshold = parseFloat(document.getElementById('threshold').value);
+            DETECTION_OPTIMIZATIONS.englishFirstThreshold = newThreshold;
+            console.log('Updated threshold to:', newThreshold);
+        };
+
+        window.resetThreshold = function() {
+            document.getElementById('threshold').value = '0.7';
+            DETECTION_OPTIMIZATIONS.englishFirstThreshold = 0.7;
+        };
+
+        window.loadSampleText = function(type) {
+            const textArea = document.getElementById('testText');
+            const confidenceInput = document.getElementById('confidence');
+            
+            switch(type) {
+                case 'good':
+                    textArea.value = "This is a well-formatted legal document with clear text. The contract specifies that the parties agree to the terms and conditions outlined herein. All provisions shall be binding and enforceable under applicable law.";
+                    confidenceInput.value = "85";
+                    break;
+                    
+                case 'medium':
+                    textArea.value = "This document contains some good text but may have minor OCR issues. The quality is acceptable for most processing tasks and should be readable by users.";
+                    confidenceInput.value = "65";
+                    break;
+                    
+                case 'poor':
+                    textArea.value = "Th1s d0cum3nt h4s p00r 0CR qu4l1ty w1th m4ny ch4r4ct3r substltut10ns 4nd 3rr0rs th4t m4k3 1t d1ff1cult t0 r34d.";
+                    confidenceInput.value = "35";
+                    break;
+                    
+                case 'noisy':
+                    textArea.value = "Th!s t3xt h@s l0ts 0f n0!s3 @nd sp3c!@l ch@r@ct3rs th@t w0uld c@us3 pr0bl3ms f0r 0CR pr0c3ss!ng ###@@@ !!!";
+                    confidenceInput.value = "25";
+                    break;
+            }
+        };
+    </script>
+</body>
+</html>

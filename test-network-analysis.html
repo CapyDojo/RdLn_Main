@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OCR Network Analysis</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        button { padding: 10px 20px; margin: 5px; }
+        .highlight { background: yellow; font-weight: bold; }
+        .network-request { margin: 5px 0; padding: 5px; border-left: 3px solid #ccc; }
+        .tessdata { border-left-color: red; }
+        .worker { border-left-color: blue; }
+        .wasm { border-left-color: green; }
+    </style>
+</head>
+<body>
+    <h1>OCR Network Analysis</h1>
+    
+    <div class="test-section">
+        <h2>Network Monitoring</h2>
+        <button onclick="clearCache()">Clear All Caches</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+        <div id="networkLog" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Worker Creation Test</h2>
+        <button onclick="testEnglishWorker()">Create English-Only Worker</button>
+        <button onclick="testMultiWorker()">Create Multi-Language Worker</button>
+        <button onclick="testBothSequentially()">Test Both (Sequential)</button>
+        <div id="workerLog" class="log"></div>
+    </div>
+
+    <script type="module">
+        import { createWorker } from 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        
+        let networkRequests = [];
+        let originalFetch = window.fetch;
+        
+        // Enhanced network monitoring
+        window.fetch = function(...args) {
+            const url = args[0];
+            const startTime = Date.now();
+            
+            // Categorize the request
+            let category = 'other';
+            let size = 'unknown';
+            
+            if (url.includes('tessdata') || url.includes('.traineddata')) {
+                category = 'tessdata';
+            } else if (url.includes('worker') || url.includes('.js')) {
+                category = 'worker';
+            } else if (url.includes('wasm') || url.includes('.wasm')) {
+                category = 'wasm';
+            }
+            
+            logNetwork(`🌐 FETCH [${category.toUpperCase()}]: ${url}`);
+            
+            return originalFetch.apply(this, args).then(response => {
+                const endTime = Date.now();
+                const contentLength = response.headers.get('content-length');
+                size = contentLength ? `${(parseInt(contentLength) / 1024 / 1024).toFixed(2)}MB` : 'unknown';
+                
+                const logMessage = `✅ COMPLETE [${category.toUpperCase()}]: ${url} (${endTime - startTime}ms, ${size})`;
+                logNetwork(logMessage);
+                
+                networkRequests.push({
+                    url: url,
+                    duration: endTime - startTime,
+                    size: size,
+                    category: category,
+                    timestamp: new Date().toISOString()
+                });
+                
+                return response;
+            }).catch(error => {
+                const endTime = Date.now();
+                logNetwork(`❌ ERROR [${category.toUpperCase()}]: ${url} (${endTime - startTime}ms) - ${error.message}`);
+                throw error;
+            });
+        };
+        
+        window.clearCache = async function() {
+            try {
+                // Clear various caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                    logWorker('🗑️ Cache storage cleared');
+                }
+                
+                // Clear OCR cache if available
+                if (window.localStorage) {
+                    const keys = Object.keys(localStorage);
+                    const ocrKeys = keys.filter(key => key.includes('ocr') || key.includes('tesseract'));
+                    ocrKeys.forEach(key => localStorage.removeItem(key));
+                    logWorker(`🗑️ Local storage OCR keys cleared: ${ocrKeys.length}`);
+                }
+                
+                networkRequests = [];
+                logWorker('🗑️ Network request log cleared');
+                
+            } catch (error) {
+                logWorker(`❌ Cache clear error: ${error.message}`);
+            }
+        };
+        
+        window.clearLogs = function() {
+            document.getElementById('networkLog').textContent = '';
+            document.getElementById('workerLog').textContent = '';
+            networkRequests = [];
+        };
+        
+        window.testEnglishWorker = async function() {
+            logWorker('🔬 Testing English-only worker creation...');
+            networkRequests = [];
+            
+            const startTime = Date.now();
+            
+            try {
+                logWorker('📦 Creating worker with languages: ["eng"]');
+                
+                const worker = await createWorker(['eng'], 1, {
+                    logger: m => logWorker(`📋 Tesseract: ${m.status} - ${m.progress || 'N/A'}`),
+                    langPath: '/tessdata',
+                    workerPath: '/tesseract/worker.min.js',
+                    corePath: '/tesseract/tesseract-core.wasm.js'
+                });
+                
+                const endTime = Date.now();
+                logWorker(`✅ English worker created in ${endTime - startTime}ms`);
+                
+                // Log network summary
+                logNetworkSummary();
+                
+                // Terminate worker
+                await worker.terminate();
+                logWorker('🔚 Worker terminated');
+                
+            } catch (error) {
+                logWorker(`❌ English worker creation failed: ${error.message}`);
+                console.error('English worker error:', error);
+            }
+        };
+        
+        window.testMultiWorker = async function() {
+            logWorker('🔬 Testing multi-language worker creation...');
+            networkRequests = [];
+            
+            const startTime = Date.now();
+            const languages = ['eng', 'chi_sim', 'spa', 'fra', 'deu'];
+            
+            try {
+                logWorker(`📦 Creating worker with languages: ${JSON.stringify(languages)}`);
+                
+                const worker = await createWorker(languages, 1, {
+                    logger: m => logWorker(`📋 Tesseract: ${m.status} - ${m.progress || 'N/A'}`),
+                    langPath: '/tessdata',
+                    workerPath: '/tesseract/worker.min.js',
+                    corePath: '/tesseract/tesseract-core.wasm.js'
+                });
+                
+                const endTime = Date.now();
+                logWorker(`✅ Multi-language worker created in ${endTime - startTime}ms`);
+                
+                // Log network summary
+                logNetworkSummary();
+                
+                // Terminate worker
+                await worker.terminate();
+                logWorker('🔚 Worker terminated');
+                
+            } catch (error) {
+                logWorker(`❌ Multi-language worker creation failed: ${error.message}`);
+                console.error('Multi-language worker error:', error);
+            }
+        };
+        
+        window.testBothSequentially = async function() {
+            logWorker('🔬 Testing both workers sequentially (English first, then multi)...\n');
+            
+            // Test English first
+            await window.testEnglishWorker();
+            
+            logWorker('\n' + '='.repeat(50) + '\n');
+            
+            // Then test multi-language
+            await window.testMultiWorker();
+            
+            logWorker('\n🏁 Sequential test completed');
+        };
+        
+        function logNetwork(message) {
+            const element = document.getElementById('networkLog');
+            const timestamp = new Date().toLocaleTimeString();
+            element.textContent += `[${timestamp}] ${message}\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+        
+        function logWorker(message) {
+            const element = document.getElementById('workerLog');
+            const timestamp = new Date().toLocaleTimeString();
+            element.textContent += `[${timestamp}] ${message}\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+        
+        function logNetworkSummary() {
+            const tessdataRequests = networkRequests.filter(r => r.category === 'tessdata');
+            const workerRequests = networkRequests.filter(r => r.category === 'worker');
+            const wasmRequests = networkRequests.filter(r => r.category === 'wasm');
+            
+            logWorker(`\n📊 Network Summary:`);
+            logWorker(`  - Tessdata files: ${tessdataRequests.length}`);
+            logWorker(`  - Worker files: ${workerRequests.length}`);
+            logWorker(`  - WASM files: ${wasmRequests.length}`);
+            logWorker(`  - Total requests: ${networkRequests.length}`);
+            
+            if (tessdataRequests.length > 0) {
+                logWorker(`\n📁 Tessdata files downloaded:`);
+                tessdataRequests.forEach(req => {
+                    const filename = req.url.split('/').pop();
+                    logWorker(`  - ${filename} (${req.size})`);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Performance Data Capture</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+        }
+        .progress-bar { 
+            width: 100%; 
+            height: 20px; 
+            background: #f0f0f0; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            margin: 10px 0; 
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(to right, #4CAF50, #45a049); 
+            transition: width 0.3s ease; 
+        }
+        .log { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin: 10px 0; 
+            max-height: 300px; 
+            overflow-y: auto; 
+            font-family: monospace; 
+            font-size: 12px; 
+        }
+        .test-section { 
+            border: 1px solid #ddd; 
+            padding: 20px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            background: #fafafa;
+        }
+        .performance-stats { 
+            background: #e8f5e8; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin: 15px 0; 
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .btn-primary { background: #2196F3; color: white; }
+        .btn-secondary { background: #757575; color: white; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-warning { background: #FF9800; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        
+        input[type="file"] { 
+            margin: 15px 0; 
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            width: 100%;
+        }
+        .success { color: #4CAF50; font-weight: bold; }
+        .warning { color: #FF9800; font-weight: bold; }
+        .error { color: #f44336; font-weight: bold; }
+        .info { color: #2196F3; }
+        
+        .phase-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .phase-item {
+            background: #f0f0f0;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .export-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔬 OCR Performance Data Capture & Analysis</h1>
+    
+    <div class="test-section">
+        <h2>📊 Performance Testing Dashboard</h2>
+        <p>Upload images to test and compare OCR detection performance with detailed metrics capture.</p>
+        
+        <div style="background: #e3f2fd; border: 1px solid #2196F3; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #1976D2;">🎯 Testing Instructions for Accurate Results</h4>
+            <ol style="margin: 0; padding-left: 20px;">
+                <li><strong>Select an image</strong> with English text (preferably business documents)</li>
+                <li><strong>Test Smart Detection first</strong> - should complete in &lt;5 seconds</li>
+                <li><strong>Clear cache manually</strong> or refresh page before next test</li>
+                <li><strong>Test Traditional Detection</strong> - should take 20-30+ seconds</li>
+                <li><strong>Compare results</strong> - Smart should be 80%+ faster</li>
+            </ol>
+            <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
+                <strong>⚠️ Important:</strong> Cache clearing is essential for fair comparison. 
+                If both tests complete in &lt;100ms, the results are cached and not meaningful.
+            </p>
+        </div>
+        
+        <input type="file" id="imageInput" accept="image/*" placeholder="Select an image file for testing">
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="btn-primary" onclick="testSmartDetection()">🚀 Test Smart Detection</button>
+            <button class="btn-secondary" onclick="testTraditionalDetection()">🔄 Test Traditional Detection</button>
+            <button class="btn-warning" onclick="runBenchmarkSuite()">⚡ Run Benchmark Suite</button>
+        </div>
+        
+        <div style="text-align: center; margin: 10px 0; padding: 10px; background: #fff3cd; border-radius: 5px;">
+            <strong>⚠️ Cache Management:</strong> 
+            <button class="btn-warning" onclick="clearCacheManually()" style="margin: 0 5px;">🧹 Clear Cache</button>
+            <button class="btn-secondary" onclick="refreshPage()" style="margin: 0 5px;">🔄 Refresh Page</button>
+            <br><small>Clear cache between tests for accurate performance comparison</small>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div id="progressText" style="text-align: center; margin: 10px 0; font-weight: bold;">Ready to test...</div>
+        
+        <div class="log" id="progressLog"></div>
+    </div>
+
+    <div class="performance-stats" id="performanceStats" style="display: none;">
+        <h3>📈 Performance Analysis Results</h3>
+        <div id="statsContent"></div>
+    </div>
+
+    <div class="export-section" id="exportSection" style="display: none;">
+        <h4>📤 Export Performance Data</h4>
+        <p>Export detailed performance metrics for analysis, reporting, or sharing with the development team.</p>
+        <button class="btn-success" onclick="exportResults('json')">📄 Export JSON</button>
+        <button class="btn-success" onclick="exportResults('csv')">📊 Export CSV</button>
+        <button class="btn-danger" onclick="clearAllResults()">🗑️ Clear All Data</button>
+    </div>
+
+    <script type="module">
+        // Import the language detection service and performance tracker
+        import { LanguageDetectionService } from './src/services/LanguageDetectionService.js';
+        import { performanceTracker } from './src/utils/PerformanceTracker.js';
+        
+        let testResults = [];
+        let currentTestRunning = false;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('progressLog');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function updateProgress(progress, stage) {
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `${progress}% - ${stage}`;
+            log(`Progress: ${progress}% - ${stage}`, 'info');
+        }
+        
+        function resetProgress() {
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressText').textContent = 'Ready to test...';
+        }
+        
+        function showDetailedPerformanceStats() {
+            const statsElement = document.getElementById('performanceStats');
+            const contentElement = document.getElementById('statsContent');
+            const exportSection = document.getElementById('exportSection');
+            
+            // Get detailed performance data from tracker
+            const detailedResults = performanceTracker.getTestResults();
+            const comparison = performanceTracker.compareTests();
+            
+            if (detailedResults.length === 0) {
+                statsElement.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            
+            // Show comparison summary if we have multiple tests
+            if (comparison.summary.averageSmartDetection > 0 || comparison.summary.averageTraditional > 0) {
+                html += `
+                    <div class="comparison-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">${comparison.summary.averageSmartDetection}ms</div>
+                            <div class="metric-label">Average Smart Detection</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${comparison.summary.averageTraditional}ms</div>
+                            <div class="metric-label">Average Traditional Detection</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${comparison.summary.averageImprovement}%</div>
+                            <div class="metric-label">Performance Improvement</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${comparison.summary.resourceSavings}%</div>
+                            <div class="metric-label">Resource Savings</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Show individual test results
+            html += '<h4>🔍 Individual Test Results</h4>';
+            detailedResults.forEach((result, index) => {
+                const phaseBreakdown = Object.entries(result.phases || {})
+                    .map(([phase, duration]) => `<div class="phase-item"><strong>${phase}</strong><br>${duration}ms</div>`)
+                    .join('');
+                
+                html += `
+                    <div style="margin: 15px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: white;">
+                        <h5>Test ${index + 1}: ${result.strategy.toUpperCase()} (${result.testId})</h5>
+                        
+                        <div class="comparison-grid">
+                            <div>
+                                <strong>📊 Performance Metrics</strong><br>
+                                Total Duration: <span class="metric-value" style="font-size: 18px;">${result.totalDuration}ms</span><br>
+                                Strategy: ${result.strategy}<br>
+                                Languages: ${result.detectedLanguages.join(', ')}<br>
+                                Fallback Triggered: ${result.fallbackTriggered ? '⚠️ Yes' : '✅ No'}<br>
+                                Error Occurred: ${result.errorOccurred ? '❌ Yes' : '✅ No'}
+                            </div>
+                            <div>
+                                <strong>📦 Resource Usage</strong><br>
+                                Language Files: ${result.resourcesLoaded.languageFiles.join(', ')}<br>
+                                Download Size: <span class="metric-value" style="font-size: 18px;">${result.resourcesLoaded.estimatedDownloadSize.toFixed(1)}MB</span><br>
+                                Progress Updates: ${result.progressUpdates.length}<br>
+                                ${result.qualityAssessment ? `Quality Score: ${result.qualityAssessment.score}/100` : ''}
+                            </div>
+                        </div>
+                        
+                        ${phaseBreakdown ? `
+                            <details style="margin-top: 15px;">
+                                <summary><strong>⏱️ Phase Breakdown</strong></summary>
+                                <div class="phase-breakdown" style="margin-top: 10px;">
+                                    ${phaseBreakdown}
+                                </div>
+                            </details>
+                        ` : ''}
+                        
+                        ${result.qualityAssessment ? `
+                            <details style="margin-top: 10px;">
+                                <summary><strong>🔍 Quality Assessment Details</strong></summary>
+                                <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                                    <strong>Score:</strong> ${result.qualityAssessment.score}/100<br>
+                                    <strong>Good Quality:</strong> ${result.qualityAssessment.isGoodQuality ? '✅ Yes' : '❌ No'}<br>
+                                    <strong>Reasons:</strong> ${result.qualityAssessment.reasons.join(', ')}
+                                </div>
+                            </details>
+                        ` : ''}
+                        
+                        <details style="margin-top: 10px;">
+                            <summary><strong>📋 Progress Timeline</strong></summary>
+                            <div style="margin-top: 10px; max-height: 200px; overflow-y: auto;">
+                                ${result.progressUpdates.map(update => 
+                                    `<div style="padding: 2px 0; font-size: 12px;">${update.progress}% - ${update.stage}</div>`
+                                ).join('')}
+                            </div>
+                        </details>
+                    </div>
+                `;
+            });
+            
+            contentElement.innerHTML = html;
+            statsElement.style.display = 'block';
+            exportSection.style.display = 'block';
+        }
+        
+        async function clearCacheForFairTesting() {
+            let cacheCleared = false;
+            
+            try {
+                // Method 1: Try to access through window object
+                if (window.OCRCacheManager && window.OCRCacheManager.clearLanguageCache) {
+                    window.OCRCacheManager.clearLanguageCache();
+                    cacheCleared = true;
+                    log('🧹 OCR language cache cleared via window object', 'info');
+                }
+                
+                // Method 2: Try to import and clear
+                try {
+                    const { OCRCacheManager } = await import('./src/services/OCRCacheManager.js');
+                    if (OCRCacheManager && OCRCacheManager.clearLanguageCache) {
+                        OCRCacheManager.clearLanguageCache();
+                        cacheCleared = true;
+                        log('🧹 OCR language cache cleared via import', 'info');
+                    }
+                } catch (importError) {
+                    console.warn('Could not import OCRCacheManager:', importError);
+                }
+                
+                // Method 3: Try to clear through performance tracker
+                if (window.performanceTracker && window.performanceTracker.clearResults) {
+                    window.performanceTracker.clearResults();
+                    log('🧹 Performance tracker cleared', 'info');
+                }
+                
+                if (!cacheCleared) {
+                    log('⚠️ Could not access cache clearing methods. Try refreshing the page.', 'warning');
+                    log('💡 Tip: Refresh the page between tests for guaranteed cache clearing', 'info');
+                }
+                
+            } catch (error) {
+                log('⚠️ Cache clearing failed. Refresh the page for clean tests.', 'warning');
+                console.warn('Cache clearing error:', error);
+            }
+        }
+
+        async function runDetectionTest(strategy, enableSmartDefault, clearCache = true) {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                log('Please select an image file first', 'error');
+                return null;
+            }
+            
+            if (currentTestRunning) {
+                log('Test already running, please wait...', 'warning');
+                return null;
+            }
+            
+            currentTestRunning = true;
+            log(`🧪 Starting ${strategy} detection test...`, 'success');
+            
+            try {
+                // Clear cache for fair testing (unless explicitly disabled)
+                if (clearCache) {
+                    log('🧹 Clearing cache for fair performance comparison...', 'info');
+                    await clearCacheForFairTesting();
+                }
+                
+                // Temporarily modify detection settings if needed
+                const originalSetting = window.DETECTION_OPTIMIZATIONS?.enableSmartDefault;
+                
+                // Ensure DETECTION_OPTIMIZATIONS exists on window
+                if (!window.DETECTION_OPTIMIZATIONS) {
+                    window.DETECTION_OPTIMIZATIONS = { enableSmartDefault: true };
+                    log('⚠️ Created DETECTION_OPTIMIZATIONS on window object', 'warning');
+                }
+                
+                // Set the strategy
+                window.DETECTION_OPTIMIZATIONS.enableSmartDefault = enableSmartDefault;
+                log(`🔧 Detection strategy set to: ${enableSmartDefault ? 'SMART (English-first)' : 'TRADITIONAL (Multi-language)'}`, 'info');
+                log(`🔍 Verification - window.DETECTION_OPTIMIZATIONS.enableSmartDefault = ${window.DETECTION_OPTIMIZATIONS.enableSmartDefault}`, 'info');
+                
+                const startTime = Date.now();
+                
+                const detectedLanguages = await LanguageDetectionService.detectLanguage(
+                    file,
+                    updateProgress
+                );
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                // Restore original setting
+                if (window.DETECTION_OPTIMIZATIONS && originalSetting !== undefined) {
+                    window.DETECTION_OPTIMIZATIONS.enableSmartDefault = originalSetting;
+                }
+                
+                log(`✅ ${strategy} detection completed in ${duration}ms`, 'success');
+                log(`🎯 Detected languages: ${detectedLanguages.join(', ')}`, 'success');
+                
+                // Performance analysis with cache awareness
+                if (duration < 100) {
+                    log(`⚡ CACHED: Result returned from cache (${duration}ms) - not a fair performance test`, 'warning');
+                } else if (duration < 5000) {
+                    log(`🎉 EXCELLENT: Detection completed in under 5 seconds!`, 'success');
+                } else if (duration < 15000) {
+                    log(`✅ GOOD: Detection completed in under 15 seconds`, 'success');
+                } else if (duration < 30000) {
+                    log(`⚠️ ACCEPTABLE: Detection took ${Math.round(duration/1000)} seconds`, 'warning');
+                } else {
+                    log(`🐌 SLOW: Detection took over 30 seconds (${Math.round(duration/1000)}s)`, 'error');
+                }
+                
+                // Get the actual strategy from performance tracker
+                const latestMetrics = performanceTracker.getLatestTest();
+                const actualStrategy = latestMetrics ? latestMetrics.strategy : (enableSmartDefault ? 'smart' : 'traditional');
+                
+                return {
+                    method: strategy,
+                    duration: duration,
+                    languages: detectedLanguages,
+                    strategy: actualStrategy,
+                    wasCached: duration < 100
+                };
+                
+            } catch (error) {
+                log(`❌ ${strategy} detection failed: ${error.message}`, 'error');
+                console.error(`${strategy} Detection Error:`, error);
+                return null;
+            } finally {
+                currentTestRunning = false;
+                resetProgress();
+            }
+        }
+        
+        window.testSmartDetection = async function() {
+            const result = await runDetectionTest('Smart Detection (English-First)', true);
+            if (result) {
+                testResults = [result];
+                showDetailedPerformanceStats();
+            }
+        };
+        
+        window.testTraditionalDetection = async function() {
+            const result = await runDetectionTest('Traditional Detection (Multi-language)', false);
+            if (result) {
+                testResults.push(result);
+                showDetailedPerformanceStats();
+            }
+        };
+        
+        window.runBenchmarkSuite = async function() {
+            log('🏁 Starting comprehensive benchmark suite...', 'success');
+            log('⚠️ This will clear all caches between tests for fair comparison', 'warning');
+            
+            // Clear previous results
+            performanceTracker.clearResults();
+            testResults = [];
+            
+            // Run smart detection test (with cache clearing)
+            log('📊 Test 1/2: Smart Detection (English-first strategy)', 'info');
+            const smartResult = await runDetectionTest('Smart Detection Benchmark', true, true);
+            if (smartResult) testResults.push(smartResult);
+            
+            // Wait a moment between tests and clear cache again
+            log('⏳ Waiting 3 seconds before next test...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            // Run traditional detection test (with cache clearing)
+            log('📊 Test 2/2: Traditional Detection (multi-language strategy)', 'info');
+            const traditionalResult = await runDetectionTest('Traditional Detection Benchmark', false, true);
+            if (traditionalResult) testResults.push(traditionalResult);
+            
+            if (testResults.length > 0) {
+                showDetailedPerformanceStats();
+                
+                // Analyze results for cache interference
+                const cachedResults = testResults.filter(r => r.wasCached);
+                if (cachedResults.length > 0) {
+                    log('⚠️ WARNING: Some results may be cached. Try refreshing the page and running tests again.', 'warning');
+                } else {
+                    log('🏆 Benchmark suite completed with fresh detection runs!', 'success');
+                }
+            }
+        };
+        
+        window.exportResults = function(format) {
+            const data = performanceTracker.exportResults(format);
+            const blob = new Blob([data], { type: format === 'csv' ? 'text/csv' : 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ocr-performance-${new Date().toISOString().split('T')[0]}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            log(`📤 Performance data exported as ${format.toUpperCase()}`, 'success');
+        };
+        
+        window.clearAllResults = function() {
+            if (confirm('Are you sure you want to clear all performance data? This cannot be undone.')) {
+                performanceTracker.clearResults();
+                testResults = [];
+                document.getElementById('performanceStats').style.display = 'none';
+                document.getElementById('exportSection').style.display = 'none';
+                log('🗑️ All performance data cleared', 'info');
+            }
+        };
+        
+        window.clearCacheManually = async function() {
+            log('🧹 Manually clearing OCR cache...', 'info');
+            await clearCacheForFairTesting();
+            log('✅ Cache cleared! You can now run fresh performance tests.', 'success');
+        };
+        
+        window.refreshPage = function() {
+            if (confirm('This will refresh the page and clear all test data. Continue?')) {
+                window.location.reload();
+            }
+        };
+        
+        // Make functions available globally for testing
+        window.log = log;
+        window.updateProgress = updateProgress;
+        
+        log('🔬 Performance Capture System loaded and ready!', 'success');
+        log('📋 Test Instructions:', 'info');
+        log('  1. Select an image file (preferably English text)', 'info');
+        log('  2. Run Smart Detection test first', 'info');
+        log('  3. Run Traditional Detection for comparison', 'info');
+        log('  4. Use Benchmark Suite for comprehensive analysis', 'info');
+        log('  5. Export results for detailed analysis', 'info');
+    </script>
+</body>
+</html>

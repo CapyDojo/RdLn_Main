@@ -1,0 +1,26 @@
+This is a test document for memory cleanup testing. This text will be repeated many times to create a large document for stress testing the memory cleanup functionality.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
+
+At vero eos et accusamus et iusto odio dignissim ducimus qui blanditiis praesentibus voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga.
+
+This content should be copied and pasted multiple times to create documents of 50KB or larger for effective memory testing. The memory cleanup optimization should prevent these large strings from persisting in memory after comparison cancellation.
+
+Test Instructions:
+1. Copy this entire file content
+2. Paste it multiple times (10-20 times) in both Original and Revised panels
+3. Start comparison
+4. Immediately cancel with ESC key
+5. Monitor memory usage in DevTools
+6. Repeat process multiple times
+7. Verify memory returns to baseline levels
+
+Expected Behavior:
+- Memory usage spikes during comparison
+- Memory returns to baseline after cancellation
+- No accumulated memory leaks over multiple test cycles
+- UI remains responsive throughout testing
+
+This test validates that the memory cleanup optimization (originalTextRef = null; revisedTextRef = null;) is working properly to prevent closure memory leaks during comparison cancellations.

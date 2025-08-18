@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Cancellation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-area { margin: 20px 0; }
+        button { margin: 10px 5px; padding: 10px 20px; font-size: 16px; }
+        .start-btn { background: #4CAF50; color: white; border: none; }
+        .cancel-btn { background: #f44336; color: white; border: none; }
+        .status { margin: 10px 0; padding: 10px; border: 1px solid #ccc; min-height: 100px; }
+        .log { background: #f5f5f5; padding: 10px; font-family: monospace; font-size: 12px; }
+        textarea { width: 100%; height: 100px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>Manual Cancellation Test</h1>
+    <p>This test helps verify that comparison cancellation works properly. Open browser DevTools Console to see detailed logs.</p>
+    
+    <div class="test-area">
+        <h3>Test Inputs:</h3>
+        <div>
+            <label>Original Text:</label>
+            <textarea id="originalText">This is a very long document with many repeated sections. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. This pattern repeats many times to make the comparison take longer. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</textarea>
+        </div>
+        <div>
+            <label>Revised Text:</label>
+            <textarea id="revisedText">This is a very long document with many DIFFERENT sections. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. This pattern repeats many times to make the comparison take MUCH longer. Lorem ipsum dolor sit amet, consectetur adipiscing COMPLETELY elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</textarea>
+        </div>
+    </div>
+
+    <div class="test-area">
+        <button id="startBtn" class="start-btn">Start Comparison</button>
+        <button id="cancelBtn" class="cancel-btn" disabled>Cancel Comparison</button>
+        <button id="clearLogsBtn">Clear Logs</button>
+    </div>
+
+    <div class="test-area">
+        <h3>Status:</h3>
+        <div id="status" class="status">Ready to test...</div>
+    </div>
+
+    <div class="test-area">
+        <h3>Console Logs:</h3>
+        <div id="logs" class="log">Console logs will appear here...<br>Also check browser DevTools console for detailed logs.</div>
+    </div>
+
+    <script>
+        // Simple global abort signal simulation
+        let currentAbortController = null;
+        let isProcessing = false;
+
+        // Elements
+        const startBtn = document.getElementById('startBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+        const status = document.getElementById('status');
+        const logs = document.getElementById('logs');
+        const originalText = document.getElementById('originalText');
+        const revisedText = document.getElementById('revisedText');
+
+        // Logging function
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            console.log(logMessage);
+            logs.innerHTML += logMessage + '<br>';
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        // Simulate Myers Algorithm with cancellation points
+        async function simulateMyersAlgorithm(original, revised) {
+            const tokens1 = original.split('');
+            const tokens2 = revised.split('');
+            const maxIterations = Math.min(tokens1.length + tokens2.length, 10000);
+            
+            log(`🎯 Starting Myers algorithm simulation with ${maxIterations} iterations`);
+            
+            for (let i = 0; i < maxIterations; i++) {
+                // Check for cancellation frequently
+                if (currentAbortController && currentAbortController.signal.aborted) {
+                    log(`🚫 CANCELLATION: Algorithm cancelled at iteration ${i}/${maxIterations}`);
+                    throw new Error('Operation cancelled by user');
+                }
+                
+                // Simulate processing work
+                if (i % 100 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 1)); // Small delay
+                    status.textContent = `Processing iteration ${i}/${maxIterations}...`;
+                    
+                    if (i % 500 === 0) {
+                        log(`⚡ Progress: ${i}/${maxIterations} iterations (${((i/maxIterations) * 100).toFixed(1)}%)`);
+                    }
+                }
+                
+                // Additional cancellation check in inner loops
+                if (i % 50 === 0 && currentAbortController && currentAbortController.signal.aborted) {
+                    log(`🚫 CANCELLATION: Algorithm cancelled at frequent check ${i}`);
+                    throw new Error('Operation cancelled by user');
+                }
+            }
+            
+            log(`✅ Algorithm completed successfully after ${maxIterations} iterations`);
+            return { changes: [{ type: 'changed', content: 'Simulated result' }] };
+        }
+
+        // Start comparison
+        async function startComparison() {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            startBtn.disabled = true;
+            cancelBtn.disabled = false;
+            
+            // Create abort controller
+            currentAbortController = new AbortController();
+            globalThis.currentAbortSignal = currentAbortController.signal;
+            
+            log('🎯 COMPARE: Starting comparison');
+            log(`🎯 COMPARE: Abort signal created - aborted: ${currentAbortController.signal.aborted}`);
+            
+            status.textContent = 'Comparison starting...';
+            
+            try {
+                const original = originalText.value;
+                const revised = revisedText.value;
+                
+                log(`📝 Input lengths: Original: ${original.length}, Revised: ${revised.length}`);
+                
+                const result = await simulateMyersAlgorithm(original, revised);
+                
+                log('✅ Comparison completed successfully');
+                status.textContent = `Comparison completed! Found ${result.changes.length} changes.`;
+                
+            } catch (error) {
+                if (error.message.includes('cancelled')) {
+                    log('🚫 Comparison was cancelled by user');
+                    status.textContent = 'Comparison cancelled by user';
+                } else {
+                    log(`❌ Comparison failed: ${error.message}`);
+                    status.textContent = `Comparison failed: ${error.message}`;
+                }
+            } finally {
+                isProcessing = false;
+                startBtn.disabled = false;
+                cancelBtn.disabled = true;
+                currentAbortController = null;
+                globalThis.currentAbortSignal = null;
+            }
+        }
+
+        // Cancel comparison
+        function cancelComparison() {
+            if (!isProcessing || !currentAbortController) {
+                log('⚠️ No active comparison to cancel');
+                return;
+            }
+            
+            log('🚫 CANCEL: cancelComparison called');
+            log(`🚫 CANCEL: Aborting controller - currently aborted: ${currentAbortController.signal.aborted}`);
+            
+            try {
+                currentAbortController.abort();
+                log('🚫 CANCEL: AbortController aborted successfully');
+                log(`🚫 CANCEL: Signal now aborted: ${currentAbortController.signal.aborted}`);
+            } catch (error) {
+                log(`❌ CANCEL: Error aborting: ${error.message}`);
+            }
+            
+            status.textContent = 'Cancelling...';
+        }
+
+        // Clear logs
+        function clearLogs() {
+            logs.innerHTML = 'Logs cleared...<br>';
+            status.textContent = 'Ready to test...';
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startComparison);
+        cancelBtn.addEventListener('click', cancelComparison);
+        clearLogsBtn.addEventListener('click', clearLogs);
+
+        // Initial log
+        log('🔧 Manual cancellation test page loaded');
+        log('📋 Instructions:');
+        log('1. Click "Start Comparison" to begin a simulated long-running comparison');
+        log('2. Click "Cancel Comparison" during processing to test cancellation');
+        log('3. Watch the console logs to see exactly when cancellation occurs');
+        log('4. The test should stop processing within ~100ms of clicking cancel');
+        
+        console.log('🧪 Manual Cancellation Test Ready');
+        console.log('This page simulates the Myers algorithm with frequent cancellation checks.');
+        console.log('Use this to verify that cancellation happens quickly and consistently.');
+    </script>
+</body>
+</html>
