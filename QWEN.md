@@ -132,3 +132,47 @@ npm run electron:build:linux
 - **Error Handling**: Standardized error handling with specific error categories and user messages.
 - **Configuration**: Centralized configuration files (`src/config/`) manage UI, system limits, and feature flags.
 - **Context API**: React Context is used for managing global state like theme, layout, and scroll lock.
+
+## Development Rules and Guidelines
+
+For all development work, please refer to the following documents:
+- `docs/DevRules/Agent_Rules.md` - Contains specific rules for agent behavior and development practices
+- `docs/DevRules/DEVELOPMENT_GUIDELINES.md` - Contains universal development guidelines and safety protocols
+
+## Development Rules and Guidelines
+
+As part of development, the following rules and guidelines must be followed:
+
+### Agent Rules (docs/DevRules/Agent_Rules.md)
+
+1. **Don't be lazy** - Always put in full effort
+2. **Follow Development Guidelines** - Read and apply DEVELOPMENT_GUIDELINES.md at start of session
+3. **CSS Protocol** - Follow systematic CSS debugging to avoid deadends:
+   - Inspect first, code second
+   - Identify the real problem
+   - Verify selector targeting
+   - Use systematic debugging approach
+4. **Ignore .ignore files** - Except for git syncing purposes
+5. **Documentation naming** - Use YYYYMMDD_[Type]_Doc Name convention
+6. **Investigation protocol** - Thoroughly trace code flows before coding
+7. **Single Sprint Documentation** - Maintain one central planning document per sprint
+8. **Documentation location** - Save docs under /Docs folder hierarchy
+9. **No development server** - Don't start dev server in chat
+10. **Collaborative problem-solving** - Follow systematic investigation approach
+11. **SSMR methodology** - 100% Safely, Step-by-step, Modular and Reversible
+
+### Development Guidelines (docs/DevRules/DEVELOPMENT_GUIDELINES.md)
+
+1. **Prime Directive** - First, do no harm. Second, fix the specific issue.
+2. **Core Principles** - Preserve working functionality, incremental over revolutionary
+3. **Pre-Change Protocol** - Impact assessment checklist before any modification
+4. **The "One Thing" Rule** - Do one thing, test it, report results, wait for permission
+5. **Change Hierarchy** - Configuration only → Minimal edits → Function changes → Module changes → Architecture changes
+6. **Anti-Patterns** - Avoid helpful refactors, assumptions, style fixes, and scope creep
+7. **Testing Protocol** - Syntax valid → Unit works → Integration works → No regressions → User flow works
+8. **Error Recovery** - STOP, CAPTURE, LOCATE, MINIMAL FIX, VERIFY, CHECK
+9. **Communication Standards** - Clear status updates and risk communication
+10. **Project-Specific Rules** - Never modify core algorithm files without explicit approval
+11. **Emergency Protocol** - Admit errors, document changes, provide rollback instructions
+12. **Changelog Guidelines** - Document all changes with references
+13. **OCR-Specific Guidelines** - Test with actual images and verify performance
