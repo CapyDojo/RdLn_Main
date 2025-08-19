@@ -15,12 +15,17 @@ import {
   CachedWorker,
   LanguageDetectionCacheEntry,
   OCRLanguage,
-  CacheStats
+  CacheStats,
+  OCRProgressCallback
 } from '../types/ocr-types';
 import { CACHE_CONFIGURATION, DETECTION_LANGUAGES } from '../config/ocrConfig';
 import { DEV_CONFIG } from '../config/appConfig';
 
 export class OCRCacheManager {
+  // PERFORMANCE CONSTANTS
+  private static readonly FAST_INIT_TIMEOUT = 8000; // 8 seconds for fast initialization
+  private static readonly ENHANCED_INIT_TIMEOUT = 15000; // 15 seconds for enhanced initialization
+  private static readonly FALLBACK_TIMEOUT = 10000; // 10 seconds for fallback
   private static workers: Map<string, CachedWorker> = new Map();
   private static loadingPromises: Map<string, Promise<Tesseract.Worker>> = new Map();
   private static detectionWorker: CachedWorker | null = null;
@@ -30,6 +35,10 @@ export class OCRCacheManager {
 
   // Cleanup timer
   private static cleanupTimer: NodeJS.Timeout | null = null;
+
+  // OPTIMIZATION: Language loading strategy cache
+  private static languageLoadingStrategy: Map<string, OCRLanguage[]> = new Map();
+  private static initializationStartTime = Date.now();
 
   /**
    * PRODUCTION FIX: Enhanced Tauri environment detection
@@ -109,25 +118,32 @@ export class OCRCacheManager {
   }
 
   /**
-   * Create worker using Tesseract.js CDN (for web deployments)
+   * Create worker using Tesseract.js CDN (for web deployments) with optimized timeouts
    */
   private static async createCDNWorker(
     languages: OCRLanguage[],
-    timeout: number
+    timeout: number,
+    onProgress?: OCRProgressCallback
   ): Promise<Tesseract.Worker> {
     try {
-      console.log('🔧 Creating CDN worker for optimal web performance');
+      console.log('🔧 Creating optimized CDN worker for web performance');
+      
+      // Use shorter timeout for single language, longer for multiple
+      const optimizedTimeout = languages.length === 1 ? 
+        Math.min(timeout, this.FAST_INIT_TIMEOUT) : 
+        Math.min(timeout, this.ENHANCED_INIT_TIMEOUT);
+        
       const worker = await Promise.race([
         createWorker(languages, 1, {
-          logger: this.createLogger()
+          logger: this.createLogger(onProgress)
           // No langPath - will use CDN
         }),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('CDN worker timeout')), timeout)
+          setTimeout(() => reject(new Error('CDN worker timeout')), optimizedTimeout)
         )
       ]);
 
-      console.log('✅ CDN worker created successfully');
+      console.log('✅ Optimized CDN worker created successfully');
       return worker;
 
     } catch (cdnError) {
@@ -141,7 +157,8 @@ export class OCRCacheManager {
    */
   private static async createWorkerWithFallback(
     languages: OCRLanguage[],
-    timeout: number
+    timeout: number,
+    onProgress?: OCRProgressCallback
   ): Promise<Tesseract.Worker> {
     console.log('🔧 createWorkerWithFallback called with languages:', languages);
 
@@ -150,7 +167,7 @@ export class OCRCacheManager {
 
     // For Tauri, use a more direct approach with local assets
     if (isTauri) {
-      return this.createTauriWorker(languages, timeout);
+      return this.createTauriWorker(languages, timeout, onProgress);
     }
 
     // Web environment - detect if we should skip local assets
@@ -161,7 +178,7 @@ export class OCRCacheManager {
 
     if (isWebDeployment) {
       console.log('🔧 Web deployment detected, using CDN directly for optimal performance');
-      return this.createCDNWorker(languages, timeout);
+      return this.createCDNWorker(languages, timeout, onProgress);
     }
 
     // Local development - try local assets first
@@ -172,7 +189,7 @@ export class OCRCacheManager {
 
       // Based on Tesseract.js docs, try the correct parameter format
       const workerOptions = {
-        logger: this.createLogger(),
+        logger: this.createLogger(onProgress),
         workerPath: resourcePaths.workerPath,
         corePath: resourcePaths.corePath,
         // The correct parameter might be 'langPath' with trailing slash
@@ -238,7 +255,7 @@ export class OCRCacheManager {
 
           const worker = await Promise.race([
             createWorker(languages, 1, {
-              logger: this.createLogger(),
+              logger: this.createLogger(onProgress),
               ...config
             }),
             new Promise<never>((_, reject) =>
@@ -258,7 +275,7 @@ export class OCRCacheManager {
 
       // Final attempt: CDN (only for web environment)
       if (!isTauri) {
-        return this.createCDNWorker(languages, timeout);
+        return this.createCDNWorker(languages, timeout, onProgress);
       } else {
         console.log('🚫 Skipping CDN fallback in Tauri environment (network restricted)');
       }
@@ -273,7 +290,8 @@ export class OCRCacheManager {
    */
   private static async createTauriWorker(
     languages: OCRLanguage[],
-    timeout: number
+    timeout: number,
+    onProgress?: OCRProgressCallback
   ): Promise<Tesseract.Worker> {
     console.log('🔧 Creating Tauri-optimized worker for languages:', languages);
 
@@ -363,7 +381,7 @@ export class OCRCacheManager {
 
         const worker = await Promise.race([
           createWorker(languages, 1, {
-            logger: this.createLogger(),
+            logger: this.createLogger(onProgress),
             ...config
           }),
           new Promise<never>((_, reject) =>
@@ -430,13 +448,81 @@ export class OCRCacheManager {
   }
 
   /**
-   * Creates a logger function for Tesseract worker progress
+   * Creates an enhanced logger function for Tesseract worker progress with detailed phase tracking
+   * @param onProgress Optional callback for real-time progress updates
+   * @param phaseOffset Starting offset for this phase (0.0 to 1.0)
+   * @param phaseWeight Weight of this phase in total progress (0.0 to 1.0)
    */
-  private static createLogger() {
+  private static createLogger(onProgress?: OCRProgressCallback, phaseOffset: number = 0, phaseWeight: number = 1) {
+    let lastReportedProgress = 0;
+    const startTime = Date.now();
+    
     return (m: any) => {
-      // Suppress most logging to reduce console noise
-      if (m.status === 'recognizing text') {
-        console.log(`OCR progress: ${Math.round(m.progress * 100)}%`);
+      const elapsed = Date.now() - startTime;
+      
+      // Enhanced progress reporting with detailed phases
+      if (m.status === 'loading tesseract core' && onProgress) {
+        const phaseProgress = phaseOffset + (0.15 * phaseWeight); // 15% through this phase
+        onProgress(phaseProgress, { 
+          phase: 'core_loading', 
+          description: 'Loading Tesseract processing engine...' 
+        });
+      } else if (m.status === 'initializing tesseract' && onProgress) {
+        const phaseProgress = phaseOffset + (0.35 * phaseWeight); // 35% through this phase
+        onProgress(phaseProgress, { 
+          phase: 'worker_creation', 
+          description: 'Creating OCR worker thread...' 
+        });
+      } else if (m.status === 'loading language traineddata' && onProgress) {
+        const phaseProgress = phaseOffset + (0.65 * phaseWeight); // 65% through this phase
+        onProgress(phaseProgress, { 
+          phase: 'language_loading', 
+          description: 'Loading language recognition data...' 
+        });
+      } else if (m.status === 'initializing api' && onProgress) {
+        const phaseProgress = phaseOffset + (0.85 * phaseWeight); // 85% through this phase
+        onProgress(phaseProgress, { 
+          phase: 'api_init', 
+          description: 'Initializing recognition API...' 
+        });
+      } else if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+        const progressPercent = Math.round(m.progress * 100);
+        
+        // Throttle progress updates to avoid UI flooding
+        if (progressPercent > lastReportedProgress + 3 || m.progress >= 1.0) {
+          console.log(`OCR progress: ${progressPercent}%`);
+          lastReportedProgress = progressPercent;
+          
+          // Call the progress callback with detailed extraction phases
+          if (onProgress) {
+            const extractionProgress = phaseOffset + (m.progress * phaseWeight);
+            const subPhase = m.progress < 0.25 ? 'image_preprocessing' :
+                            m.progress < 0.75 ? 'character_recognition' :
+                            m.progress < 0.95 ? 'text_assembly' : 'post_processing';
+            
+            const description = m.progress < 0.25 ? 'Preprocessing image for OCR...' :
+                               m.progress < 0.75 ? 'Recognizing characters and words...' :
+                               m.progress < 0.95 ? 'Assembling extracted text...' : 'Finalizing text formatting...';
+            
+            onProgress(extractionProgress, { 
+              phase: subPhase, 
+              description 
+            });
+          }
+        }
+      }
+      
+      // Add synthetic progress for long-running operations without specific progress
+      else if (onProgress && elapsed > 2000) {
+        // Synthetic progress based on elapsed time
+        const estimatedDuration = 10000; // 10 seconds estimate
+        const timeProgress = Math.min(0.9, elapsed / estimatedDuration);
+        const syntheticProgress = phaseOffset + (timeProgress * phaseWeight * 0.8); // Cap at 80% for safety
+        
+        onProgress(syntheticProgress, { 
+          phase: 'processing', 
+          description: 'Processing request...' 
+        });
       }
     };
   }
@@ -620,14 +706,14 @@ export class OCRCacheManager {
   }
 
   /**
-   * PRODUCTION FIX: Initializes detection worker with progressive fallback
+   * OPTIMIZED: Fast detection worker initialization with smart language loading
    * 
-   * This method implements a three-tier fallback strategy:
-   * 1. Full language set (ideal for development)
-   * 2. Core languages (English + Chinese + Spanish)
-   * 3. English only (guaranteed to work)
+   * Strategy:
+   * 1. English-only worker first (fastest: <3 seconds)
+   * 2. Lazy load additional languages only when needed
+   * 3. Progressive enhancement without blocking initial OCR
    */
-  public static async initializeDetectionWorker(): Promise<Tesseract.Worker> {
+  public static async initializeDetectionWorker(onProgress?: OCRProgressCallback): Promise<Tesseract.Worker> {
     // Check cache first
     if (this.detectionWorker) {
       this.detectionWorker.lastUsed = Date.now();
@@ -636,63 +722,126 @@ export class OCRCacheManager {
       return this.detectionWorker.worker;
     }
 
-    console.log('🔄 DETECTION CACHE MISS: Creating new detection worker...');
+    console.log('🔄 DETECTION CACHE MISS: Creating fast English-first detection worker...');
 
-    // PRODUCTION FIX: Progressive language loading with fallback
-    let worker: Tesseract.Worker;
-    let actualLanguages: OCRLanguage[];
-
-    try {
-      // PRIORITY FIX: Reorder detection languages to prioritize English over Russian
-      // This helps Tesseract.js make better language detection decisions
-      const prioritizedLanguages = this.getPrioritizedDetectionLanguages(DETECTION_LANGUAGES);
-      
-      // First attempt: Try full language set (works in development)
-      console.log('🌍 Attempting full language detection worker with prioritized order:', prioritizedLanguages);
-      worker = await this.createWorkerWithFallback(prioritizedLanguages, 30000);
-      actualLanguages = prioritizedLanguages;
-      console.log('✅ Full multi-language detection worker created successfully');
-
-    } catch (fullLanguageError) {
-      console.warn('⚠️ Full language worker failed, trying core languages:', fullLanguageError);
-
-      try {
-        // Second attempt: Core languages only (English + Chinese + Spanish)
-        const coreLanguages: OCRLanguage[] = ['eng', 'chi_sim', 'spa'];
-        console.log('🔧 Attempting core language detection worker:', coreLanguages);
-        worker = await this.createWorkerWithFallback(coreLanguages, 20000);
-        actualLanguages = coreLanguages;
-        console.log('✅ Core language detection worker created successfully');
-
-      } catch (coreLanguageError) {
-        console.warn('⚠️ Core language worker failed, falling back to English only:', coreLanguageError);
-
-        // Final fallback: English only (most reliable)
-        const englishOnly: OCRLanguage[] = ['eng'];
-        console.log('🔧 Attempting English-only detection worker:', englishOnly);
-        worker = await this.createWorkerWithFallback(englishOnly, 15000);
-        actualLanguages = englishOnly;
-        console.log('✅ English-only detection worker created as fallback');
-      }
+    // Report progress for worker initialization
+    if (onProgress) {
+      onProgress(0.1); // 10% - Starting worker creation
     }
 
-    // Cache the worker with actual languages used
-    this.detectionWorker = {
-      worker,
-      lastUsed: Date.now(),
-      useCount: 1,
-      languages: actualLanguages
-    };
+    try {
+      // OPTIMIZATION: Start with English only for fastest initialization
+      const fastLanguages: OCRLanguage[] = ['eng'];
+      console.log('⚡ Creating fast English-only detection worker for immediate use');
+      
+      if (onProgress) {
+        onProgress(0.3); // 30% - Creating worker
+      }
+      
+      const worker = await this.createWorkerWithFallback(fastLanguages, 10000, (progress) => {
+        // Scale progress from 30% to 80% during worker creation
+        if (onProgress) {
+          onProgress(0.3 + (progress * 0.5));
+        }
+      });
 
-    this.startCleanupTimer();
-    console.log(`✅ Detection worker cached successfully with languages: ${actualLanguages.join(', ')}`);
-    return worker;
+      if (onProgress) {
+        onProgress(0.8); // 80% - Worker created, caching
+      }
+
+      // Cache the fast worker
+      this.detectionWorker = {
+        worker,
+        lastUsed: Date.now(),
+        useCount: 1,
+        languages: fastLanguages
+      };
+
+      this.startCleanupTimer();
+      
+      if (onProgress) {
+        onProgress(1.0); // 100% - Complete
+      }
+      
+      console.log('✅ Fast English-only detection worker created and cached');
+
+      // ASYNC ENHANCEMENT: Start loading additional languages in background
+      this.enhanceDetectionWorkerAsync()
+        .then(() => console.log('🌍 Background language enhancement completed'))
+        .catch(error => console.warn('⚠️ Background enhancement failed (non-critical):', error));
+
+      return worker;
+
+    } catch (error) {
+      console.error('❌ Fast detection worker creation failed:', error);
+      
+      // Final fallback with CDN
+      if (onProgress) {
+        onProgress(0.5); // 50% - Trying CDN fallback
+      }
+      
+      try {
+        const worker = await this.createCDNWorker(['eng'], 15000, onProgress);
+        
+        this.detectionWorker = {
+          worker,
+          lastUsed: Date.now(),
+          useCount: 1,
+          languages: ['eng']
+        };
+        
+        console.log('✅ CDN fallback detection worker created');
+        return worker;
+      } catch (cdnError) {
+        console.error('❌ All detection worker creation attempts failed');
+        throw new Error(`Detection worker initialization failed: ${error.message}`);
+      }
+    }
   }
 
   /**
-   * Initializes or retrieves cached extraction worker
+   * ASYNC ENHANCEMENT: Load additional languages in background without blocking
    */
-  public static async initializeWorker(languages: OCRLanguage[]): Promise<Tesseract.Worker> {
+  private static async enhanceDetectionWorkerAsync(): Promise<void> {
+    // Wait a bit to let the main OCR operation start
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    try {
+      console.log('🌍 Starting background enhancement with additional languages...');
+      
+      // Load core additional languages progressively
+      const additionalLanguages: OCRLanguage[] = ['chi_sim', 'spa'];
+      
+      // Create enhanced worker with more languages
+      const enhancedWorker = await this.createWorkerWithFallback(
+        ['eng', ...additionalLanguages], 
+        20000
+      );
+      
+      // Terminate old worker and replace with enhanced one
+      if (this.detectionWorker) {
+        await this.detectionWorker.worker.terminate();
+        
+        this.detectionWorker = {
+          worker: enhancedWorker,
+          lastUsed: Date.now(),
+          useCount: this.detectionWorker.useCount,
+          languages: ['eng', ...additionalLanguages]
+        };
+        
+        console.log('✅ Detection worker enhanced with additional languages:', additionalLanguages);
+      }
+    } catch (error) {
+      console.warn('⚠️ Background enhancement failed, keeping fast worker:', error);
+    }
+  }
+
+  /**
+   * OPTIMIZED: Smart worker initialization with reuse and progressive enhancement
+   * @param languages Languages to load in the worker
+   * @param onProgress Optional callback for real-time progress updates
+   */
+  public static async initializeWorker(languages: OCRLanguage[], onProgress?: OCRProgressCallback): Promise<Tesseract.Worker> {
     const workerKey = this.getWorkerKey(languages);
 
     // Check cache first
@@ -704,16 +853,34 @@ export class OCRCacheManager {
       return cached.worker;
     }
 
+    // OPTIMIZATION: Check if detection worker can be reused for compatible languages
+    if (this.canReuseDetectionWorker(languages)) {
+      console.log('⚡ SMART REUSE: Using detection worker for extraction to avoid duplicate initialization');
+      const detectionWorker = this.detectionWorker!.worker;
+      
+      // Cache this reuse for future requests
+      this.workers.set(workerKey, {
+        worker: detectionWorker,
+        lastUsed: Date.now(),
+        useCount: 1,
+        languages: languages,
+        isShared: true // Mark as shared to prevent termination
+      });
+      
+      return detectionWorker;
+    }
+
     // Return existing loading promise if in progress
     if (this.loadingPromises.has(workerKey)) {
       console.log(`⏳ Waiting for existing worker creation: ${workerKey}`);
       return this.loadingPromises.get(workerKey)!;
     }
 
-    // Create new worker with basic configuration
-    console.log(`🔄 EXTRACTION CACHE MISS: Creating new worker for languages: ${workerKey}`);
-    const loadingPromise = this.createWorkerWithFallback(languages, 30000);
-
+    // OPTIMIZATION: Start with fastest possible worker, enhance later
+    console.log(`🔄 EXTRACTION CACHE MISS: Creating optimized worker for languages: ${workerKey}`);
+    
+    // Use progressive creation strategy
+    const loadingPromise = this.createProgressiveWorker(languages, onProgress);
     this.loadingPromises.set(workerKey, loadingPromise);
 
     try {
@@ -730,12 +897,71 @@ export class OCRCacheManager {
       this.loadingPromises.delete(workerKey);
       this.startCleanupTimer();
 
-      console.log(`✅ Extraction worker cached for ${workerKey}`);
+      console.log(`✅ Optimized extraction worker cached for ${workerKey}`);
       return worker;
     } catch (error) {
       this.loadingPromises.delete(workerKey);
       throw error;
     }
+  }
+
+  /**
+   * Check if detection worker can be reused for extraction
+   */
+  private static canReuseDetectionWorker(requestedLanguages: OCRLanguage[]): boolean {
+    if (!this.detectionWorker) return false;
+    
+    const detectionLanguages = this.detectionWorker.languages;
+    
+    // Can reuse if requested languages are subset of detection worker languages
+    return requestedLanguages.every(lang => detectionLanguages.includes(lang));
+  }
+
+  /**
+   * Create worker using progressive enhancement strategy
+   */
+  private static async createProgressiveWorker(
+    languages: OCRLanguage[], 
+    onProgress?: OCRProgressCallback
+  ): Promise<Tesseract.Worker> {
+    // If only English requested, create fast worker
+    if (languages.length === 1 && languages[0] === 'eng') {
+      console.log('⚡ Creating fast English-only worker');
+      return this.createWorkerWithFallback(languages, 10000, onProgress);
+    }
+    
+    // If multiple languages including English, start with English then enhance
+    if (languages.includes('eng')) {
+      console.log('⚡ Creating English-first worker, will enhance with additional languages');
+      
+      // Start with English for immediate functionality
+      const fastWorker = await this.createWorkerWithFallback(['eng'], 10000, (progress) => {
+        if (onProgress) onProgress(progress * 0.5); // First half of progress
+      });
+      
+      // If other languages requested, create full worker and replace
+      if (languages.length > 1) {
+        try {
+          console.log('🔄 Enhancing worker with full language set:', languages);
+          const fullWorker = await this.createWorkerWithFallback(languages, 20000, (progress) => {
+            if (onProgress) onProgress(0.5 + (progress * 0.5)); // Second half of progress
+          });
+          
+          // Terminate fast worker and return full worker
+          await fastWorker.terminate();
+          console.log('✅ Enhanced worker with full language set');
+          return fullWorker;
+        } catch (error) {
+          console.warn('⚠️ Enhancement failed, using fast English worker:', error);
+          return fastWorker;
+        }
+      }
+      
+      return fastWorker;
+    }
+    
+    // For non-English languages, use standard creation
+    return this.createWorkerWithFallback(languages, 25000, onProgress);
   }
 
   /**

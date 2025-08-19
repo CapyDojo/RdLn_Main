@@ -56,8 +56,10 @@ export class LanguageDetectionService {
 
   /**
    * Detects languages in the provided image file with enhanced error handling
+   * @param imageFile Image file to analyze
+   * @param onProgress Optional progress callback for initialization feedback
    */
-  public static async detectLanguage(imageFile: File | Blob): Promise<OCRLanguage[]> {
+  public static async detectLanguage(imageFile: File | Blob, onProgress?: (progress: number) => void): Promise<OCRLanguage[]> {
     console.log('🔍 Starting language detection...');
 
     // OPTIMIZATION: Try quick pre-screening first
@@ -76,20 +78,65 @@ export class LanguageDetectionService {
     }
 
     try {
-      // Use multi-language detection worker for comprehensive language support
-      console.log('🔧 Initializing detection worker...');
-      const worker = await OCRCacheManager.initializeDetectionWorker();
+      // Use optimized detection worker with detailed progress feedback
+      console.log('🔧 Initializing optimized detection worker...');
+      
+      // Report worker initialization progress (0-40% of total)
+      const worker = await OCRCacheManager.initializeDetectionWorker((progress) => {
+        if (onProgress) {
+          const scaledProgress = progress * 0.4; // First 40% is worker initialization
+          onProgress(scaledProgress);
+        }
+      });
+      
+      if (onProgress) {
+        onProgress(0.4);
+      }
 
-      console.log('📖 Running detection OCR...');
+      console.log('📖 Running detection OCR with enhanced progress tracking...');
       const detectionStart = Date.now();
+      
+      if (onProgress) {
+        onProgress(0.45);
+      }
 
-      // PRODUCTION FIX: Add timeout for OCR recognition
+      // PRODUCTION FIX: Add timeout for OCR recognition with enhanced progress simulation
       const recognitionPromise = worker.recognize(imageFile);
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('OCR recognition timeout')), 45000)
+        setTimeout(() => reject(new Error('OCR recognition timeout')), 30000) // Reduced timeout for faster fallback
       );
-
-      const { data } = await Promise.race([recognitionPromise, timeoutPromise]);
+      
+      // Simulate progress updates during recognition (45-80%)
+      const progressSimulator = setInterval(() => {
+        const elapsed = Date.now() - detectionStart;
+        if (elapsed < 25000) { // Only simulate for up to 25 seconds
+          const simulatedProgress = 0.45 + ((elapsed / 25000) * 0.35); // 45% to 80%
+          const phase = simulatedProgress < 0.55 ? 'script_analysis' :
+                       simulatedProgress < 0.65 ? 'pattern_recognition' :
+                       simulatedProgress < 0.75 ? 'confidence_calculation' : 'finalizing';
+          const description = simulatedProgress < 0.55 ? 'Analyzing character scripts and text structure...' :
+                             simulatedProgress < 0.65 ? 'Identifying language-specific patterns...' :
+                             simulatedProgress < 0.75 ? 'Calculating detection confidence scores...' : 'Finalizing language detection results...';
+          
+          if (onProgress) {
+            onProgress(Math.min(0.8, simulatedProgress));
+          }
+        }
+      }, 1000); // Update every second
+      
+      let data: any;
+      try {
+        const result = await Promise.race([recognitionPromise, timeoutPromise]);
+        data = result.data;
+        clearInterval(progressSimulator);
+        
+        if (onProgress) {
+          onProgress(0.8);
+        }
+      } catch (error) {
+        clearInterval(progressSimulator);
+        throw error;
+      }
 
       const detectionTime = Date.now() - detectionStart;
       console.log(`⏱️ Detection OCR completed in ${detectionTime}ms`);
@@ -103,14 +150,26 @@ export class LanguageDetectionService {
         return fallbackLanguages;
       }
 
-      console.log('🔍 Analyzing text for language detection:', text.substring(0, 200) + '...');
+      console.log('🔍 Analyzing extracted text for language patterns:', text.substring(0, 200) + '...');
+      
+      if (onProgress) {
+        onProgress(0.85);
+      }
 
       const detectedLanguages = this.analyzeTextForLanguages(text);
 
       console.log('🎯 Final detected languages:', detectedLanguages);
+      
+      if (onProgress) {
+        onProgress(0.95);
+      }
 
       // Store result in cache
       await OCRCacheManager.storeLanguageCache(imageFile, detectedLanguages);
+      
+      if (onProgress) {
+        onProgress(1.0);
+      }
 
       return detectedLanguages;
     } catch (error) {

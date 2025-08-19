@@ -20,6 +20,15 @@ export interface LanguageOption {
 /** Supported OCR language codes */
 export type OCRLanguage = 'eng' | 'chi_sim' | 'chi_tra' | 'spa' | 'fra' | 'deu' | 'jpn' | 'kor' | 'ara' | 'rus';
 
+/** Phase information for detailed progress tracking */
+export interface OCRPhaseInfo {
+  phase: string;
+  description: string;
+}
+
+/** Progress callback function type for real-time OCR progress updates */
+export type OCRProgressCallback = (progress: number, phaseInfo?: OCRPhaseInfo) => void;
+
 /** OCR processing options */
 export interface OCROptions {
   /** Languages to use for OCR processing */
@@ -30,6 +39,8 @@ export interface OCROptions {
   primaryLanguage?: OCRLanguage;
   /** PHASE 3.3: Use enhanced orchestrator workflow for better coordination (optional) */
   useOrchestrator?: boolean;
+  /** Callback function for real-time progress updates (0.0 to 1.0) */
+  onProgress?: OCRProgressCallback;
 }
 
 /** Cached worker with lifecycle management */
@@ -42,6 +53,8 @@ export interface CachedWorker {
   useCount: number;
   /** Languages this worker supports */
   languages: OCRLanguage[];
+  /** Whether this worker is shared between detection and extraction to prevent termination */
+  isShared?: boolean;
 }
 
 /** Language detection cache entry */
