@@ -1,3 +1,41 @@
+## Version 0.5.25 - "Professional Cancellation UX - Spotlight Effects & Fixed Button Positioning"
+*Released: 2025-08-19*
+
+### 🎉 **Enhanced Cancellation Experience**
+- **SPOTLIGHT SUCCESS MESSAGE**: Beautiful green gradient spotlight effect for cancellation confirmation
+- **POSITIVE MESSAGING**: Changed "Comparison cancelled by user" to "👍 Comparison cancelled successfully"
+- **AUTO FADE-OUT**: 3.3-second animated spotlight with automatic cleanup
+- **PROFESSIONAL STYLING**: Green gradient background with glowing border effects
+
+### 🎯 **Fixed Button Jumping Issue**
+- **CONSISTENT POSITIONING**: Cancel button no longer jumps when progress bar appears
+- **RESERVED LAYOUT SPACE**: Fixed layout structure prevents button position changes
+- **SMOOTH TRANSITIONS**: Progress bar appears within reserved space without affecting button
+- **IMPROVED USABILITY**: Users can reliably click cancel without target moving
+
+### ✨ **UI/UX Polish**
+- **ESC KEY INDICATOR**: Cancel button now shows "Cancel (Esc)" for better discoverability
+- **CONSISTENT LAYOUT**: Single layout structure prevents visual jumping between states
+- **PROFESSIONAL ANIMATIONS**: Smooth entrance, hold, and fade-out timing (3.3s total)
+- **ACHIEVEMENT FEELING**: Cancellation now feels like a positive action rather than an error
+
+### 🔧 **Technical Implementation**
+```css
+.cancellation-success-message {
+  animation: cancellationSpotlightEntrance 3.3s ease-out forwards;
+  background: linear-gradient(135deg, #10b981, #34d399);
+  box-shadow: 0 0 20px 2px rgba(16, 185, 129, 0.3);
+}
+```
+
+### 🏗️ **Layout Architecture Improvements**
+- **FIXED CONTAINER STRUCTURE**: Consistent `max-w-md` container prevents layout shifts
+- **RESERVED PROGRESS SPACE**: `min-h-[60px]` maintains button position
+- **CENTERED POSITIONING**: Button always centered regardless of progress state
+- **SMOOTH STATE TRANSITIONS**: No more jarring layout changes during processing
+
+---
+
 ## Version 0.5.24 - "Ultimate Performance Optimization - From 1-Second Lag to Sub-200ms Excellence"
 *Released: 2025-08-17*
 
