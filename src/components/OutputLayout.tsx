@@ -92,27 +92,48 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
         let deletedCharacters = 0;
         let unchangedCharacters = 0;
         
+        // First, find the container with the whitespace mode setting
+        const modeContainer = outputPanel?.querySelector('.glass-input-field[data-whitespace-mode]');
+        const whitespaceMode = modeContainer?.getAttribute('data-whitespace-mode') || 'raw';
+        const isCleanMode = whitespaceMode === 'clean';
+        
         contentElements.forEach(element => {
-          const textContent = element.textContent || '';
-          totalText += textContent;
+          // Look for chunk versions within this element
+          const cleanChunk = element.querySelector('.chunk-clean');
+          const rawChunk = element.querySelector('.chunk-raw');
           
-          // Count additions (green spans)
-          const addedSpans = element.querySelectorAll('span[style*="background: linear-gradient(135deg, #f0fdf4"]');
-          addedSpans.forEach(span => {
-            const text = span.textContent || '';
-            const spanMetrics = getTextMetrics(text);
-            addedWords += spanMetrics.words;
-            addedCharacters += spanMetrics.characters;
-          });
+          // Determine which chunk to count based on mode
+          let activeChunk = null;
+          if (cleanChunk && rawChunk) {
+            // Both versions exist - use the appropriate one
+            activeChunk = isCleanMode ? cleanChunk : rawChunk;
+          } else {
+            // Legacy fallback - use the entire element if no chunk structure
+            activeChunk = element;
+          }
           
-          // Count deletions (red spans)
-          const deletedSpans = element.querySelectorAll('span[style*="background: linear-gradient(135deg, #fef7f7"]');
-          deletedSpans.forEach(span => {
-            const text = span.textContent || '';
-            const spanMetrics = getTextMetrics(text);
-            deletedWords += spanMetrics.words;
-            deletedCharacters += spanMetrics.characters;
-          });
+          if (activeChunk) {
+            const textContent = activeChunk.textContent || '';
+            totalText += textContent;
+            
+            // Count additions (green spans) in the active chunk only
+            const addedSpans = activeChunk.querySelectorAll('span[style*="background: linear-gradient(135deg, #f0fdf4"]');
+            addedSpans.forEach(span => {
+              const text = span.textContent || '';
+              const spanMetrics = getTextMetrics(text);
+              addedWords += spanMetrics.words;
+              addedCharacters += spanMetrics.characters;
+            });
+            
+            // Count deletions (red spans) in the active chunk only
+            const deletedSpans = activeChunk.querySelectorAll('span[style*="background: linear-gradient(135deg, #fef7f7"]');
+            deletedSpans.forEach(span => {
+              const text = span.textContent || '';
+              const spanMetrics = getTextMetrics(text);
+              deletedWords += spanMetrics.words;
+              deletedCharacters += spanMetrics.characters;
+            });
+          }
         });
         
         const totalMetrics = getTextMetrics(totalText);
@@ -165,7 +186,9 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
       observer.observe(outputPanel, {
         childList: true,
         subtree: true,
-        characterData: true
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['data-whitespace-mode']
       });
       
       return () => observer.disconnect();
