@@ -49,7 +49,9 @@
       "mcp__playwright__browser_close",
       "Bash(start test-smart-detection-debug.html)",
       "Bash(git log:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(start test-counter-fix.html)",
+      "Bash(start test-integration.html)"
     ],
     "deny": []
   }
