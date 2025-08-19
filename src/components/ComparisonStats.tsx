@@ -165,7 +165,10 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
   const ImpactIcon = getImpactIcon(impactLevel);
 
   const reviewWorkload = stats.wordStats?.reviewWorkload || stats.totalChanges;
-  const documentSize = stats.wordStats?.totalWords || total;
+  // The output document size should be unchanged + added (not total from input)
+  const documentSize = stats.wordStats ? 
+    (stats.wordStats.unchangedWords + stats.wordStats.addedWords) : 
+    (stats.unchanged + stats.additions);
   const sizeLabel = stats.wordStats ? 'words' : 'elements';
 
   return (
@@ -250,9 +253,9 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                 </div>
                 <div className="space-y-1">
                   <p className="text-2xl font-bold text-theme-accent-700">{reviewWorkload.toLocaleString()}</p>
-                  <Tooltip content="The total amount of added / deleted content that requires review.">
+                  <Tooltip content="The total amount of content requiring review: all additions and deletions combined.">
                     <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                      Review Load ({sizeLabel})
+                      Review workload ({sizeLabel})
                       <HelpCircle className="w-3 h-3 opacity-60" />
                     </p>
                   </Tooltip>
@@ -268,9 +271,9 @@ export const ComparisonStats: React.FC<ComparisonStatsProps> = ({
                 </div>
                 <div className="space-y-1">
                   <p className="text-2xl font-bold text-theme-primary-700">{documentSize.toLocaleString()}</p>
-                  <Tooltip content="The total size of the redlined output content.">
+                  <Tooltip content="The size of the final document after applying all changes (unchanged content + additions).">
                     <p className="text-sm text-theme-neutral-600 flex items-center gap-1">
-                      Total output content volume ({sizeLabel})
+                      Final document size ({sizeLabel})
                       <HelpCircle className="w-3 h-3 opacity-60" />
                     </p>
                   </Tooltip>

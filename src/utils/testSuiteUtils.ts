@@ -72,8 +72,8 @@ export function validateTestResult(testCase: TestCase, result: ComparisonResult)
   }
   
   const { expectedChanges } = testCase;
-  const actualAdditions = result.stats.added;
-  const actualDeletions = result.stats.deleted;
+  const actualAdditions = result.stats.additions;
+  const actualDeletions = result.stats.deletions;
   
   const additionsMatch = actualAdditions === expectedChanges.additions;
   const deletionsMatch = actualDeletions === expectedChanges.deletions;
@@ -245,8 +245,8 @@ export async function runSingleTest(
       error: error instanceof Error ? error.message : 'Unknown error occurred',
       stats: {
         totalChanges: 0,
-        added: 0,
-        deleted: 0,
+        additions: 0,
+        deletions: 0,
         changed: 0,
         unchanged: 0
       },

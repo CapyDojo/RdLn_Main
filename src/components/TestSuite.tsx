@@ -278,7 +278,7 @@ const TestCaseCard: React.FC<{
           
           {result && (
             <div className="text-xs text-theme-neutral-500 space-y-1">
-              <div>Changes: +{result.stats.added} -{result.stats.deleted} ~{result.stats.changed}</div>
+              <div>Changes: +{result.stats.additions} -{result.stats.deletions} ~{result.stats.changed}</div>
               <div>Duration: {formatDuration(result.duration)}</div>
               {result.error && (
                 <div className="text-red-600">Error: {result.error}</div>

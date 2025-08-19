@@ -27,6 +27,7 @@ import { LogoTestPage } from './pages/LogoTestPage';
 import { CuppingTestPage } from './pages/CuppingTestPage';
 import { DeveloperDashboard } from './pages/DeveloperDashboard';
 import { RedliningTestsDashboard } from './pages/RedliningTestsDashboard';
+import { UnifiedTestDashboard } from './pages/UnifiedTestDashboard';
 import BoundaryFragmentTest from './pages/BoundaryFragmentTest';
 import BoundaryFixTester from './components/BoundaryFixTester';
 import { SmartPasteTest } from './components/SmartPasteTest';
@@ -408,6 +409,8 @@ function App() {
               <BoundaryFixTester />
             ) : window.location.pathname === '/smartpaste-test' ? (
               <SmartPasteTest />
+            ) : window.location.pathname === '/unified-tests' ? (
+              <UnifiedTestDashboard />
             ) : (
               <AppContent
                 showAdvancedOcrCard={showAdvancedOcrCardState}

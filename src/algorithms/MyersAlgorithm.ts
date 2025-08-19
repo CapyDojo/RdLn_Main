@@ -1912,6 +1912,7 @@ export class MyersAlgorithm {
       additions: addedChanges.length + meaningfulChangedChanges.length,
       deletions: deletedChanges.length + meaningfulChangedChanges.length,
       unchanged: unchangedChanges.length + whitespaceChangedChanges.length,
+      changed: meaningfulChangedChanges.length,
       totalChanges: addedChanges.length + deletedChanges.length + (meaningfulChangedChanges.length * 2),
       wordStats: {
         addedWords: totalAddedWords,
@@ -2092,11 +2093,6 @@ export class MyersAlgorithm {
       // ENSURE MEMORY CLEANUP: Always clear chunks array to prevent memory leaks
       chunks.length = 0;
     }
-
-    const endTime = performance.now();
-    debugLog(`🌊 Streaming Myers completed in ${(endTime - startTime).toFixed(2)}ms for ${totalTokens} tokens`);
-
-    return combinedResult;
   }
 
   /**

@@ -67,6 +67,9 @@ export interface ComparisonStats {
   /** Number of text segments that remained unchanged */
   unchanged: number;
   
+  /** Number of text segments that were changed/substituted */
+  changed: number;
+  
   /** Total number of changes (additions + deletions) - legacy field for backward compatibility */
   totalChanges: number;
   

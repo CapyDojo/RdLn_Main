@@ -89,8 +89,20 @@ export function getWordStatsForBlocks(textBlocks: string[]): WordStats {
     };
   }
 
-  const combinedText = textBlocks.join(' ');
-  return getWordStats(combinedText);
+  // Calculate stats for each block individually and sum them
+  // This avoids artificially inflating counts by adding spaces between blocks
+  return textBlocks.reduce((total, block) => {
+    const blockStats = getWordStats(block);
+    return {
+      wordCount: total.wordCount + blockStats.wordCount,
+      characterCount: total.characterCount + blockStats.characterCount,
+      characterCountNoSpaces: total.characterCountNoSpaces + blockStats.characterCountNoSpaces
+    };
+  }, {
+    wordCount: 0,
+    characterCount: 0,
+    characterCountNoSpaces: 0
+  });
 }
 
 /**

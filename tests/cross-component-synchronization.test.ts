@@ -16,7 +16,7 @@ import React from 'react';
 import { RdLnMemoryProvider } from '../src/contexts/RdLnMemoryContext';
 import { ComparisonInterface } from '../src/components/ComparisonInterface';
 import { RdLnMemorySidePanel } from '../src/components/RdLnMemorySidePanel';
-import { RdLnMemoryDropdown } from '../src/components/RdLnMemoryDropdown';
+import { RdLnMemoryDropdown } from '../src/components/archived/RdLnMemoryDropdown';
 
 // Mock localStorage
 const mockLocalStorage = {
