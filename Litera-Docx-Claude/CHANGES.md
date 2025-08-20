@@ -3,51 +3,58 @@
 ## Problem Identified
 
 The original logic was **fundamentally flawed**:
-- ❌ **Wrong assumption**: Looking for graphics lines (underlines/strikethroughs) in PDF drawing operations  
-- ❌ **Missing the real markup**: Litera uses text formatting attributes, not graphics primitives
+- ❌ **Wrong assumption**: Tried text-based detection assuming PDF.js textContent contained visual formatting
+- ❌ **Missing the real markup**: PDF.js text items don't contain underline/strikethrough visual markup
 - ❌ **Annotations mixed in**: Comments were being parsed into document body instead of separate table
+- ❌ **Poor coordinate handling**: No proper viewport coordinate conversion
+- ❌ **Inadequate tolerances**: Text-to-line matching algorithm too strict
 
 ## Solution Implemented
 
-### 1. **New Text-Based Detection** 🔧
+### 1. **Fixed Graphics Line Detection** 🔧
 
-**Old approach** (`parseLinesFromOperators`):
+**Broken text-based approach**:
 ```javascript
-// Look for horizontal lines in PDF graphics operations
-if (fn === pdfjsLib.OPS.constructPath) {
-    // Try to find underline/strikethrough lines
+// WRONG: PDF.js textContent.items don't contain visual markup
+analyzeTextFormatting() // Font names, colors - unreliable for Litera
+```
+
+**Working graphics line approach** (from proven reference code):
+```javascript
+parseLinesFromOps(operatorList, viewport) {
+    // Track stroke color and line width
+    if (fn === pdfjsLib.OPS.constructPath) {
+        // Extract horizontal lines with viewport.convertToViewportPoint()
+        // Classify colors: red=deletions, green=insertions
+    }
 }
 ```
 
-**New approach** (`analyzeTextFormatting`):
-```javascript
-// Analyze text properties and formatting attributes
-- Track font changes (setFont operations)  
-- Track fill/stroke colors (setFillRGBColor)
-- Analyze font names for markup indicators
-- Look for text content patterns
-- Check style variations
-```
+### 2. **Proper Text-to-Line Matching Algorithm** 🎯
 
-### 2. **Multi-Layer Detection Strategy** 🎯
+Now using **proven matching strategy** from working reference:
 
-Now using **4 detection methods** in priority order:
-
-1. **Font-based detection**: Look for special fonts indicating markup
+1. **Horizontal Overlap Check**: Require minimum 35% overlap between text and line
    ```javascript
-   isStrikethroughFont() // "strike", "crossed", "deleted" 
-   isUnderlineFont()     // "underline", "inserted", "added"
+   const overlapFraction = overlap / Math.max(1, width);
+   if (overlapFraction < 0.35) continue; // Skip insufficient overlap
    ```
 
-2. **Color-based detection**: Analyze text colors for red (deletions) / green-blue (insertions)
+2. **Vertical Position Analysis**: Different tolerances for underlines vs strikethroughs
+   ```javascript
+   const baselineY = y + height * 0.06;  // Underline position
+   const midlineY = y + height * 0.52;   // Strikethrough position
+   ```
    
-3. **Content analysis**: Heuristics for common insertion patterns
+3. **Color-Aware Scoring**: Bonus points for matching line colors
    ```javascript
-   // Small connector words often indicate insertions
-   commonInsertions = ['and', 'or', 'the', 'a', 'to', 'of', 'in']
+   classifyLineColor(r, g, b) {
+     const isRed = rDom >= 0.18 && r > 0.4;    // Deletions
+     const isGreen = gDom >= 0.18 && g > 0.4;  // Insertions
+   }
    ```
 
-4. **Style variations**: Font size/style changes (extensible for future enhancement)
+4. **Best Match Selection**: Score-based selection of highest confidence match
 
 ### 3. **Separate Annotations Processing** 📝
 

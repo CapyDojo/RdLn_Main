@@ -31,10 +31,11 @@ export class OCRService {
   private static readonly LANGUAGE_CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
   private static readonly MAX_LANGUAGE_CACHE_ENTRIES = 50; // Memory limit
   
-  // Cache configuration
-  private static readonly CACHE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
-  private static readonly MAX_CACHED_WORKERS = 5; // Prevent memory bloat
-  private static readonly CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+  // Cache configuration - TUNED: 30min expiry, adaptive cleanup, LRU eviction
+  private static readonly CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes (tuned from 10min)
+  private static readonly MAX_CACHED_WORKERS = 8; // Increased from 5 for better reuse
+  private static readonly CLEANUP_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes (more frequent cleanup)
+  private static readonly MEMORY_PRESSURE_THRESHOLD = 100 * 1024 * 1024; // 100MB threshold for adaptive cleanup
 
   // Start cleanup timer on first use
   private static cleanupTimer: NodeJS.Timeout | null = null;
@@ -90,39 +91,51 @@ export class OCRService {
     }
   }
 
-  // Language cache cleanup
+  // Language cache cleanup - TUNED: 30min expiry, adaptive cleanup, LRU eviction
   private static cleanupLanguageCache() {
     const now = Date.now();
     const expiredKeys: string[] = [];
+    let totalCacheSize = 0;
 
-    // Find expired language cache entries
+    // Find expired language cache entries and calculate cache statistics
     for (const [key, entry] of this.languageCache.entries()) {
-      if (now - entry.timestamp > this.LANGUAGE_CACHE_EXPIRY_MS) {
+      const age = now - entry.timestamp;
+      if (age > this.LANGUAGE_CACHE_EXPIRY_MS) {
         expiredKeys.push(key);
       }
+      totalCacheSize++;
+    }
+
+    // Adaptive cleanup based on cache pressure
+    const cachePressure = totalCacheSize > this.MAX_LANGUAGE_CACHE_ENTRIES * 0.8;
+    const shouldAggressiveCleanup = cachePressure || expiredKeys.length > 5;
+
+    if (shouldAggressiveCleanup) {
+      console.log(`🧹 LANGUAGE CACHE ADAPTIVE CLEANUP: Size=${totalCacheSize}, Expired=${expiredKeys.length}, Pressure=${cachePressure}`);
     }
 
     // Remove expired entries
     for (const key of expiredKeys) {
       this.languageCache.delete(key);
-      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log(`🧹 Cleaned up expired language detection cache entry`);
+      console.log(`🧹 Cleaned up expired language detection cache entry: ${key.substring(0, 20)}...`);
     }
 
-    // If cache is too large, remove least recently used (by hitCount and timestamp)
+    // LRU eviction - more sophisticated scoring
     if (this.languageCache.size > this.MAX_LANGUAGE_CACHE_ENTRIES) {
       const sortedEntries = Array.from(this.languageCache.entries())
         .sort(([,a], [,b]) => {
-          // Sort by hit count first, then by timestamp
-          if (a.hitCount !== b.hitCount) {
-            return a.hitCount - b.hitCount;
-          }
-          return a.timestamp - b.timestamp;
+          // Enhanced scoring: prioritize by hitCount, recency, and usage
+          const scoreA = (a.hitCount * 10) - (now - a.timestamp) / 1000;
+          const scoreB = (b.hitCount * 10) - (now - b.timestamp) / 1000;
+          return scoreA - scoreB; // Lower score = less valuable
         });
       
-      const toRemove = sortedEntries.slice(0, this.languageCache.size - this.MAX_LANGUAGE_CACHE_ENTRIES);
-      for (const [key] of toRemove) {
+      const maxEntries = cachePressure ? Math.floor(this.MAX_LANGUAGE_CACHE_ENTRIES * 0.7) : this.MAX_LANGUAGE_CACHE_ENTRIES;
+      const toRemove = sortedEntries.slice(0, this.languageCache.size - maxEntries);
+      
+      for (const [key, entry] of toRemove) {
         this.languageCache.delete(key);
-        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log(`🧹 Removed LRU language detection cache entry`);
+        console.log(`🧹 LRU eviction: Removing language cache entry: ${key.substring(0, 20)}... (hits: ${entry.hitCount}, age: ${Math.round((now - entry.timestamp)/1000)}s)`);
       }
     }
   }
@@ -299,56 +312,148 @@ export class OCRService {
       }
     }
     
-    // Legacy OCR implementation (default behavior - fully backward compatible)
+    // UNIFIED WORKER PIPELINE - OPTIMIZED FOR WORKER REUSE
     try {
-      let languages: OCRLanguage[];
+      let finalLanguages: OCRLanguage[];
+      let progressiveLanguages: OCRLanguage[] = [];
 
       if (options.autoDetect !== false) {
-        // Auto-detect languages
-        console.log('🔍 Detecting document language...');
-        const detectedLanguages = await this.detectLanguage(imageFile);
-        languages = detectedLanguages;
-        console.log('📝 Detected languages:', detectedLanguages.map(lang => 
+        // UNIFIED WORKER: Use single worker for both detection and extraction
+        console.log('🔍 Using unified worker pipeline - detection and extraction with single worker...');
+        
+        // Start with English worker for unified pipeline
+        const workerStart = Date.now();
+        const unifiedWorker = await this.initializeWorker(['eng'], options.onProgress);
+        const workerInitTime = Date.now() - workerStart;
+        console.log(`⏱️ Unified worker initialized in ${workerInitTime}ms`);
+
+        // PHASE 1: OSD Detection with the same worker
+        const detectionStart = Date.now();
+        const { data: { script } } = await unifiedWorker.detect(imageFile);
+        const detectionTime = Date.now() - detectionStart;
+        console.log(`⏱️ OSD detection completed in ${detectionTime}ms`);
+
+        // Map detected script to languages
+        const detectedLanguages = this.mapScriptToLanguages(script);
+        progressiveLanguages = detectedLanguages;
+        console.log('📝 Detected languages from OSD:', detectedLanguages.map(lang => 
           SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
         ).join(', '));
+
+        // PHASE 2: Progressive extraction with unified worker
+        if (detectedLanguages.length > 1 || (detectedLanguages[0] && detectedLanguages[0] !== 'eng')) {
+          console.log('🔄 Adding detected languages to unified worker...');
+          
+          // Reuse the same worker by adding languages
+          const additionalLanguages = detectedLanguages.filter(lang => lang !== 'eng');
+          const enhancedLanguages = ['eng', ...additionalLanguages];
+          
+          // Update worker with new languages without re-initialization
+          const updateStart = Date.now();
+          await unifiedWorker.loadLanguage(enhancedLanguages);
+          await unifiedWorker.initialize(enhancedLanguages.join('+'));
+          const updateTime = Date.now() - updateStart;
+          console.log(`⏱️ Worker updated with ${additionalLanguages.length} additional languages in ${updateTime}ms`);
+
+          finalLanguages = enhancedLanguages;
+        } else {
+          finalLanguages = ['eng'];
+        }
+
+        // PHASE 3: Final extraction with unified worker
+        const extractionStart = Date.now();
+        const { data: { text: finalText } } = await unifiedWorker.recognize(imageFile);
+        const extractionTime = Date.now() - extractionStart;
+        console.log(`⏱️ Final extraction completed in ${extractionTime}ms`);
+
+        // Use final text with all detected languages
+        const processedText = this.multiLanguagePostProcessing(finalText, finalLanguages);
+        return processedText;
+
       } else if (options.languages && options.languages.length > 0) {
-        // Use specified languages
-        languages = options.languages;
+        // Use specified languages - single worker approach
+        progressiveLanguages = options.languages;
+        finalLanguages = options.languages;
+        
+        console.log('🚀 Using unified worker for specified languages...');
+        
+        const workerStart = Date.now();
+        const unifiedWorker = await this.initializeWorker(finalLanguages, options.onProgress);
+        const workerInitTime = Date.now() - workerStart;
+        console.log(`⏱️ Unified worker initialized in ${workerInitTime}ms`);
+
+        const extractionStart = Date.now();
+        const { data: { text } } = await unifiedWorker.recognize(imageFile);
+        const extractionTime = Date.now() - extractionStart;
+        console.log(`⏱️ Extraction completed in ${extractionTime}ms`);
+
+        const processedText = this.multiLanguagePostProcessing(text, finalLanguages);
+        return processedText;
+
       } else {
-        // Default to English
-        languages = ['eng'];
+        // Default to English - single worker
+        finalLanguages = ['eng'];
+        
+        console.log('🚀 Using unified worker for English extraction...');
+        
+        const workerStart = Date.now();
+        const unifiedWorker = await this.initializeWorker(['eng'], options.onProgress);
+        const workerInitTime = Date.now() - workerStart;
+        console.log(`⏱️ Unified worker initialized in ${workerInitTime}ms`);
+
+        const extractionStart = Date.now();
+        const { data: { text } } = await unifiedWorker.recognize(imageFile);
+        const extractionTime = Date.now() - extractionStart;
+        console.log(`⏱️ English extraction completed in ${extractionTime}ms`);
+
+        const processedText = this.multiLanguagePostProcessing(text, ['eng']);
+        return processedText;
       }
 
-      // Ensure primary language is first if specified
-      if (options.primaryLanguage && languages.includes(options.primaryLanguage)) {
-        languages = [
-          options.primaryLanguage,
-          ...languages.filter(lang => lang !== options.primaryLanguage)
-        ];
-      }
-
-      console.log('🚀 Getting extraction worker for languages:', languages.map(lang => 
-        SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
-      ).join(', '));
-
-      const worker = await this.initializeWorker(languages, options.onProgress);
-      
-      console.log('📖 Extracting text from image...');
-      const extractionStart = Date.now();
-      
-      const { data: { text } } = await worker.recognize(imageFile);
-      
-      const extractionTime = Date.now() - extractionStart;
-      console.log(`⏱️ Text extraction completed in ${extractionTime}ms`);
-      
-      // Apply language-specific post-processing
-      const processedText = this.multiLanguagePostProcessing(text, languages);
-      
-      return processedText;
     } catch (error) {
       console.error('OCR extraction failed:', error);
       throw new Error(`Failed to extract text from image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  // UNIFIED WORKER: Map OSD script detection to language codes
+  private static mapScriptToLanguages(script: any): OCRLanguage[] {
+    if (!script || !script.script) {
+      console.log('⚠️ No script detected, defaulting to English');
+      return ['eng'];
+    }
+
+    const confidence = script.confidence || 0;
+    const detectedScript = script.script;
+
+    if (confidence < 30) {
+      console.log(`⚠️ Low confidence (${confidence}%), defaulting to English`);
+      return ['eng'];
+    }
+
+    console.log(`📊 Detected script: ${detectedScript} with confidence: ${confidence}%`);
+
+    // Map Tesseract.js script codes to OCR language codes
+    const scriptToLanguageMap: Record<string, OCRLanguage[]> = {
+      'Han': ['chi_sim', 'chi_tra'],
+      'Hani': ['chi_sim', 'chi_tra'],
+      'Japanese': ['jpn'],
+      'Hiragana': ['jpn'],
+      'Katakana': ['jpn'],
+      'Korean': ['kor'],
+      'Hangul': ['kor'],
+      'Arabic': ['ara'],
+      'Hebrew': ['eng'], // Fallback for Hebrew
+      'Cyrillic': ['rus'],
+      'Latin': ['eng', 'spa', 'fra', 'deu'],
+      'Devanagari': ['eng'], // Fallback for Devanagari
+      'Thai': ['eng'], // Fallback for Thai
+      'Tamil': ['eng'], // Fallback for Tamil
+    };
+
+    const languages = scriptToLanguageMap[detectedScript] || ['eng'];
+    console.log(`🗣️ Mapped script to languages: ${languages.join(', ')}`);
+    return languages;
   }
 
   // STAGE 2: Safe primary language selection (capability-based priority)

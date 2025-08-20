@@ -137,7 +137,7 @@ class PdfAnalyzer {
     }
 
     /**
-     * Extract styled text from all pages using new text-based approach
+     * Extract styled text from all pages using graphics line detection
      */
     async extractStyledText(pdf) {
         const allStyledText = [];
@@ -150,8 +150,9 @@ class PdfAnalyzer {
                 const operatorList = await page.getOperatorList();
                 const viewport = page.getViewport({ scale: 1.0 });
                 
-                // Use new text formatting analysis instead of graphics lines
-                const textAnalysis = this.analyzeTextFormatting(textContent, operatorList, viewport);
+                // Use proven graphics line detection approach
+                const lines = this.parseLinesFromOps(operatorList, viewport);
+                const textAnalysis = this.analyzeTextWithLines(textContent, lines);
                 
                 // Add page number to each text item
                 const pageStyledText = textAnalysis.map(item => ({
@@ -165,23 +166,37 @@ class PdfAnalyzer {
                 try {
                     const annotations = await page.getAnnotations();
                     
-                    // DEBUG: Show all annotations found
+                    // DEBUG: Show all annotations found - ENHANCED DEBUGGING
+                    console.log(`=== PAGE ${i} ANNOTATION EXTRACTION ===`);
+                    console.log(`Raw annotations found: ${annotations.length}`);
+                    
+                    // Show ALL annotations with full debugging details
                     if (annotations.length > 0) {
-                        console.log(`=== PAGE ${i} ANNOTATIONS ===`);
-                        console.log(`Found ${annotations.length} annotations on page ${i}`);
-                        for (let j = 0; j < Math.min(3, annotations.length); j++) {
+                        for (let j = 0; j < annotations.length; j++) {
                             const ann = annotations[j];
-                            console.log(`Annotation ${j}:`, {
+                            console.log(`Annotation ${j} (page ${i}):`, {
                                 subtype: ann.subtype,
+                                annotationType: ann.annotationType,
                                 contents: ann.contents,
                                 title: ann.title,
                                 user: ann.user,
                                 richText: ann.richText,
+                                rect: ann.rect,
+                                hasPopup: ann.hasPopup,
+                                parentId: ann.parentId,
+                                parentType: ann.parentType,
+                                flags: ann.flags,
+                                color: ann.color,
                                 allProps: Object.keys(ann)
                             });
                         }
-                        console.log('=== END ANNOTATION DEBUG ===');
+                    } else {
+                        // Even if no annotations, show what getAnnotations() returns
+                        console.log(`No annotations found on page ${i}. Type of result:`, typeof annotations);
+                        console.log(`Is array?`, Array.isArray(annotations));
                     }
+                    
+                    console.log('=== END ANNOTATION DEBUG ===');
                     
                     for (const annotation of annotations) {
                         if (this.isCommentAnnotation(annotation)) {
@@ -238,252 +253,233 @@ class PdfAnalyzer {
     }
 
     /**
-     * Check if an annotation should be treated as a comment
+     * Check if an annotation should be treated as a comment - ENHANCED VERSION
      */
     isCommentAnnotation(annotation) {
         if (!annotation) return false;
+        
+        console.log('Checking annotation for comment status:', {
+            subtype: annotation.subtype,
+            annotationType: annotation.annotationType,
+            contents: annotation.contents,
+            title: annotation.title,
+            hasContent: !!(annotation.contents && annotation.contents.trim())
+        });
         
         // Check if annotation has meaningful content
         const hasContent = (annotation.contents && annotation.contents.trim()) || 
                           (annotation.richText && String(annotation.richText).trim());
         
-        if (!hasContent) return false;
+        if (!hasContent) {
+            console.log('-> Rejected: No meaningful content');
+            return false;
+        }
         
-        // Include common comment annotation types
-        const commentTypes = ['Text', 'FreeText', 'Note', 'Comment', 'Highlight', 'StrikeOut', 'Underline'];
+        // Include common comment annotation types - EXPANDED LIST
+        const commentTypes = [
+            'Text', 'FreeText', 'Note', 'Comment', 'Highlight', 
+            'StrikeOut', 'Underline', 'Popup', 'Widget',
+            'Ink', 'Line', 'Square', 'Circle', 'Polygon',
+            'PolyLine', 'Squiggly', 'Caret', 'FileAttachment'
+        ];
+        
         const subtype = annotation.subtype || annotation.annotationType || '';
         
-        return commentTypes.includes(subtype) || subtype.includes('Comment');
+        const isCommentType = commentTypes.includes(subtype) || subtype.includes('Comment');
+        
+        console.log(`-> ${isCommentType ? 'ACCEPTED' : 'REJECTED'} as comment (subtype: ${subtype})`);
+        
+        return isCommentType;
     }
 
     /**
-     * Analyze PDF text styling and formatting to detect track changes
-     * Litera uses text properties rather than graphics lines for markup
+     * Parse graphics operations to extract horizontal lines (underlines/strikethroughs)
+     * Based on proven working implementation from reference code
      */
-    analyzeTextFormatting(textContent, operatorList, viewport) {
-        const textAnalysis = [];
+    parseLinesFromOps(opList, viewport) {
+        const lines = [];
+        const H_TOL = 1.0; // Tolerance for horizontal lines
         
-        // DEBUG: Show what PDF.js actually gives us
-        if (textContent.items.length > 0) {
-            console.log('=== RAW PDF.JS TEXT ITEMS ===');
-            const sample = textContent.items.slice(0, 3);
-            for (let i = 0; i < sample.length; i++) {
-                const item = sample[i];
-                console.log(`Raw item ${i}:`, {
-                    str: item.str,
-                    fontName: item.fontName,
-                    fontSize: item.fontSize,
-                    transform: item.transform,
-                    width: item.width,
-                    height: item.height,
-                    allProps: Object.keys(item)
-                });
+        // Track graphics state
+        let strokeRGB = [0, 0, 0]; // Default black
+        let lineWidth = 1;
+        
+        console.log(`=== PARSING LINES FROM ${opList.fnArray.length} OPERATIONS ===`);
+        
+        for (let i = 0; i < opList.fnArray.length; i++) {
+            const fn = opList.fnArray[i];
+            const args = opList.argsArray[i];
+            
+            // Track stroke color changes
+            if (fn === this.pdfjsLib.OPS.setStrokeRGBColor && args.length >= 3) {
+                strokeRGB = [args[0], args[1], args[2]];
             }
-            console.log('=== END RAW DEBUG ===');
+            
+            // Track line width
+            if (fn === this.pdfjsLib.OPS.setLineWidth && args.length >= 1) {
+                lineWidth = args[0];
+            }
+            
+            // Look for path construction operations
+            if (fn === this.pdfjsLib.OPS.constructPath && args.length >= 2) {
+                const pathOps = args[0];
+                const pathArgs = args[1];
+                
+                // Look for moveTo -> lineTo sequences (simple lines)
+                if (pathOps.length === 2 && 
+                    pathOps[0] === this.pdfjsLib.OPS.moveTo && 
+                    pathOps[1] === this.pdfjsLib.OPS.lineTo) {
+                    
+                    // Get start and end points
+                    const start = viewport.convertToViewportPoint(pathArgs[0], pathArgs[1]);
+                    const end = viewport.convertToViewportPoint(pathArgs[2], pathArgs[3]);
+                    
+                    const startY = start[1];
+                    const endY = end[1];
+                    
+                    // Check if this is approximately horizontal
+                    if (Math.abs(startY - endY) <= H_TOL) {
+                        const lineColor = this.classifyLineColor(strokeRGB[0], strokeRGB[1], strokeRGB[2]);
+                        
+                        lines.push({
+                            x1: start[0],
+                            y1: start[1], 
+                            x2: end[0],
+                            y2: end[1],
+                            r: strokeRGB[0],
+                            g: strokeRGB[1], 
+                            b: strokeRGB[2],
+                            width: lineWidth,
+                            typeHint: lineColor
+                        });
+                    }
+                }
+            }
         }
         
-        try {
-            // Track graphics state for color/font information
-            let currentFont = null;
-            let currentFillColor = [0, 0, 0]; // RGB 0-1
-            let currentStrokeColor = [0, 0, 0];
+        console.log(`Found ${lines.length} horizontal lines`);
+        if (lines.length > 0) {
+            console.log('Sample lines:', lines.slice(0, 3).map(line => ({
+                coords: `(${line.x1.toFixed(1)}, ${line.y1.toFixed(1)}) -> (${line.x2.toFixed(1)}, ${line.y2.toFixed(1)})`,
+                color: `rgb(${line.r.toFixed(2)}, ${line.g.toFixed(2)}, ${line.b.toFixed(2)})`,
+                typeHint: line.typeHint
+            })));
+        }
+        
+        return lines;
+    }
+    
+    /**
+     * Classify line color to determine if it's insertion (green) or deletion (red)
+     */
+    classifyLineColor(r, g, b) {
+        // Based on working reference code color classification
+        const rDom = Math.max(0, r - Math.max(g, b));
+        const gDom = Math.max(0, g - Math.max(r, b));
+        
+        const isRed = rDom >= 0.18 && r > 0.4;
+        const isGreen = gDom >= 0.18 && g > 0.4;
+        
+        if (isRed) return 'del';
+        if (isGreen) return 'ins'; 
+        return 'unknown';
+    }
+    
+    /**
+     * Match text items with detected lines to determine track change styling
+     */
+    analyzeTextWithLines(textContent, lines) {
+        const textAnalysis = [];
+        
+        console.log(`=== MATCHING ${textContent.items.length} TEXT ITEMS WITH ${lines.length} LINES ===`);
+        
+        for (const item of textContent.items) {
+            const style = this.checkStyle(item, lines);
             
-            // Parse graphics operations to track state changes
-            const stateMap = new Map();
-            
-            for (let i = 0; i < operatorList.fnArray.length; i++) {
-                const fn = operatorList.fnArray[i];
-                const args = operatorList.argsArray[i];
-                
-                // Track font changes
-                if (fn === this.pdfjsLib.OPS.setFont && args.length >= 2) {
-                    currentFont = {
-                        name: args[0],
-                        size: args[1]
-                    };
-                }
-                
-                // Track fill color (text color)
-                if (fn === this.pdfjsLib.OPS.setFillRGBColor && args.length >= 3) {
-                    currentFillColor = [args[0], args[1], args[2]];
-                }
-                
-                // Track stroke color
-                if (fn === this.pdfjsLib.OPS.setStrokeRGBColor && args.length >= 3) {
-                    currentStrokeColor = [args[0], args[1], args[2]];
-                }
-                
-                // When we encounter text operations, record the current state
-                if (fn === this.pdfjsLib.OPS.showText || fn === this.pdfjsLib.OPS.showSpacedText) {
-                    stateMap.set(i, {
-                        font: currentFont ? {...currentFont} : null,
-                        fillColor: [...currentFillColor],
-                        strokeColor: [...currentStrokeColor]
-                    });
-                }
-            }
-            
-            // Analyze each text item with its formatting context
-            for (let i = 0; i < textContent.items.length; i++) {
-                const item = textContent.items[i];
-                
-                // Get the text styling
-                const style = this.analyzeTextItemStyle(item, stateMap);
-                
-                textAnalysis.push({
-                    text: item.str,
-                    style: style,
-                    transform: item.transform,
-                    fontName: item.fontName || '',
-                    fontSize: item.fontSize || 0,
-                    width: item.width || 0,
-                    height: item.height || 0
-                });
-            }
-            
-        } catch (error) {
-            console.warn('Error analyzing text formatting:', error);
-            
-            // Fallback: analyze without graphics state
-            for (const item of textContent.items) {
-                textAnalysis.push({
-                    text: item.str,
-                    style: this.analyzeTextItemStyle(item, new Map()),
-                    transform: item.transform,
-                    fontName: item.fontName || '',
-                    fontSize: item.fontSize || 0,
-                    width: item.width || 0,
-                    height: item.height || 0
-                });
-            }
+            textAnalysis.push({
+                text: item.str,
+                style: style,
+                transform: item.transform,
+                fontName: item.fontName || '',
+                fontSize: item.fontSize || 0,
+                width: item.width || 0,
+                height: item.height || 0
+            });
         }
         
         return textAnalysis;
     }
-
+    
     /**
-     * Analyze individual text item for track change styling
-     * Uses text properties, font names, and colors instead of graphics lines
+     * Check if text item matches any lines (underline/strikethrough)
+     * Based on proven working algorithm with proper tolerances
      */
-    analyzeTextItemStyle(textItem, stateMap) {
-        try {
-            const text = textItem.str || '';
-            const fontName = textItem.fontName || '';
-            
-            // 1. Font-based detection - Litera often uses specific fonts for markup
-            if (this.isStrikethroughFont(fontName)) {
-                return 'del';
-            }
-            
-            if (this.isUnderlineFont(fontName)) {
-                return 'ins';
-            }
-            
-            // 2. Color-based detection - Look for red (deletion) or green/blue (insertion) text
-            const colorStyle = this.analyzeTextColor(textItem, stateMap);
-            if (colorStyle !== 'equal') {
-                return colorStyle;
-            }
-            
-            // 3. Text content analysis - Look for patterns in the text itself
-            const contentStyle = this.analyzeTextContent(text);
-            if (contentStyle !== 'equal') {
-                return contentStyle;
-            }
-            
-            // 4. Font size/style variations might indicate changes
-            const styleVariation = this.analyzeStyleVariations(textItem);
-            if (styleVariation !== 'equal') {
-                return styleVariation;
-            }
-            
-            return 'equal';
-            
-        } catch (error) {
-            console.warn('Error analyzing text item style:', error);
-            return 'equal';
-        }
-    }
-
-    /**
-     * Check if font name indicates strikethrough (deletion) formatting
-     */
-    isStrikethroughFont(fontName) {
-        if (!fontName) return false;
-        const name = fontName.toLowerCase();
+    checkStyle(textItem, lines) {
+        if (!lines || lines.length === 0) return 'equal';
         
-        // Common patterns for strikethrough fonts in PDFs
-        return name.includes('strike') ||
-               name.includes('crossed') ||
-               name.includes('deleted') ||
-               name.includes('removed');
-    }
-
-    /**
-     * Check if font name indicates underline (insertion) formatting  
-     */
-    isUnderlineFont(fontName) {
-        if (!fontName) return false;
-        const name = fontName.toLowerCase();
+        const transform = textItem.transform;
+        const x = transform[4];
+        const y = transform[5];
+        const width = textItem.width || 0;
+        const height = textItem.height || 0;
         
-        // Common patterns for underline fonts in PDFs
-        return name.includes('underline') ||
-               name.includes('inserted') ||
-               name.includes('added') ||
-               name.includes('new');
-    }
-
-    /**
-     * Analyze text color to detect track changes
-     */
-    analyzeTextColor(textItem, stateMap) {
-        // This is a simplified color analysis
-        // In a real implementation, you'd need to correlate text items with graphics state
+        if (width <= 0 || height <= 0) return 'equal';
         
-        // Look for color hints in font name or other properties
-        const fontName = (textItem.fontName || '').toLowerCase();
+        // Calculate baseline and midline positions based on working code
+        const baselineY = y + height * 0.06;  // Underline position
+        const midlineY = y + height * 0.52;   // Strikethrough position
         
-        // Some PDFs embed color information in font names
-        if (fontName.includes('red') || fontName.includes('delete')) {
-            return 'del';
+        let bestMatch = null;
+        let bestScore = 0;
+        
+        for (const line of lines) {
+            // Check horizontal overlap - require minimum 35% overlap
+            const overlapStart = Math.max(x, line.x1);
+            const overlapEnd = Math.min(x + width, line.x2);
+            const overlap = Math.max(0, overlapEnd - overlapStart);
+            const overlapFraction = overlap / Math.max(1, width);
+            
+            if (overlapFraction < 0.35) continue; // Minimum overlap requirement
+            
+            // Check vertical alignment for underline (insertion)
+            const underlineDist = Math.abs(line.y1 - baselineY);
+            const underlineTolerance = Math.max(2.0, height * 0.3);
+            
+            // Check vertical alignment for strikethrough (deletion) 
+            const strikethroughDist = Math.abs(line.y1 - midlineY);
+            const strikethroughTolerance = Math.max(2.0, height * 0.4);
+            
+            // Score this line match
+            let score = overlapFraction;
+            let matchType = 'equal';
+            
+            if (underlineDist <= underlineTolerance) {
+                score += 1.0 - (underlineDist / underlineTolerance);
+                matchType = 'ins';
+                
+                // Color bonus for green lines
+                if (line.typeHint === 'ins') {
+                    score += 0.5;
+                }
+            } else if (strikethroughDist <= strikethroughTolerance) {
+                score += 1.0 - (strikethroughDist / strikethroughTolerance);
+                matchType = 'del';
+                
+                // Color bonus for red lines
+                if (line.typeHint === 'del') {
+                    score += 0.5;
+                }
+            }
+            
+            if (score > bestScore && matchType !== 'equal') {
+                bestScore = score;
+                bestMatch = matchType;
+            }
         }
         
-        if (fontName.includes('blue') || fontName.includes('green') || fontName.includes('insert')) {
-            return 'ins';
-        }
-        
-        return 'equal';
+        return bestMatch || 'equal';
     }
 
-    /**
-     * Analyze text content for markup patterns
-     */
-    analyzeTextContent(text) {
-        if (!text || text.trim().length === 0) return 'equal';
-        
-        // Look for common track change text patterns
-        // This is heuristic-based and may need refinement
-        
-        // Very short connector words that are often insertions
-        const commonInsertions = ['and', 'or', 'the', 'a', 'an', 'to', 'of', 'in', 'on', 'at', 'by', 'for'];
-        const trimmedText = text.trim().toLowerCase();
-        
-        if (commonInsertions.includes(trimmedText) && text.length <= 4) {
-            // Small words are more likely to be insertions
-            return 'ins';
-        }
-        
-        return 'equal';
-    }
-
-    /**
-     * Look for style variations that might indicate changes
-     */
-    analyzeStyleVariations(textItem) {
-        // This would analyze font size changes, bold/italic variations, etc.
-        // For now, return equal - this can be enhanced based on actual PDF patterns
-        return 'equal';
-    }
 
     /**
      * Generate HTML diff from styled text for further processing

@@ -55,17 +55,17 @@ export class LanguageDetectionService {
   }
 
   /**
-   * Detects languages in the provided image file with enhanced error handling
+   * Detects languages in the provided image file using OSD (Orientation & Script Detection)
    * @param imageFile Image file to analyze
    * @param onProgress Optional progress callback for initialization feedback
    */
   public static async detectLanguage(imageFile: File | Blob, onProgress?: (progress: number) => void): Promise<OCRLanguage[]> {
-    console.log('🔍 Starting language detection...');
+    console.log('🔍 Starting OSD-based language detection...');
 
     // OPTIMIZATION: Try quick pre-screening first
     const quickResult = await this.quickPreScreening(imageFile);
     if (quickResult) {
-      console.log('⚡ Quick pre-screening successful, skipping full detection');
+      console.log('⚡ Quick pre-screening successful, skipping OSD detection');
       // Cache the quick result
       await OCRCacheManager.storeLanguageCache(imageFile, quickResult);
       return quickResult;
@@ -78,87 +78,63 @@ export class LanguageDetectionService {
     }
 
     try {
-      // Use optimized detection worker with detailed progress feedback
-      console.log('🔧 Initializing optimized detection worker...');
+      // Use OSD detection worker with detailed progress feedback
+      console.log('🔧 Initializing OSD detection worker...');
       
-      // Report worker initialization progress (0-40% of total)
+      // Report worker initialization progress (0-60% of total)
       const worker = await OCRCacheManager.initializeDetectionWorker((progress) => {
         if (onProgress) {
-          const scaledProgress = progress * 0.4; // First 40% is worker initialization
+          const scaledProgress = progress * 0.6; // First 60% is worker initialization
           onProgress(scaledProgress);
         }
       });
       
       if (onProgress) {
-        onProgress(0.4);
+        onProgress(0.6);
       }
 
-      console.log('📖 Running detection OCR with enhanced progress tracking...');
+      console.log('📖 Running OSD detection...');
       const detectionStart = Date.now();
       
       if (onProgress) {
-        onProgress(0.45);
+        onProgress(0.65);
       }
 
-      // PRODUCTION FIX: Add timeout for OCR recognition with enhanced progress simulation
-      const recognitionPromise = worker.recognize(imageFile);
+      // CRITICAL OPTIMIZATION: Use OSD (Orientation & Script Detection) instead of full OCR
+      // OSD is 10x faster than full OCR for language detection
+      const osdPromise = worker.detect(imageFile);
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('OCR recognition timeout')), 30000) // Reduced timeout for faster fallback
+        setTimeout(() => reject(new Error('OSD detection timeout')), 10000) // Much shorter timeout for OSD
       );
       
-      // Simulate progress updates during recognition (45-80%)
-      const progressSimulator = setInterval(() => {
-        const elapsed = Date.now() - detectionStart;
-        if (elapsed < 25000) { // Only simulate for up to 25 seconds
-          const simulatedProgress = 0.45 + ((elapsed / 25000) * 0.35); // 45% to 80%
-          const phase = simulatedProgress < 0.55 ? 'script_analysis' :
-                       simulatedProgress < 0.65 ? 'pattern_recognition' :
-                       simulatedProgress < 0.75 ? 'confidence_calculation' : 'finalizing';
-          const description = simulatedProgress < 0.55 ? 'Analyzing character scripts and text structure...' :
-                             simulatedProgress < 0.65 ? 'Identifying language-specific patterns...' :
-                             simulatedProgress < 0.75 ? 'Calculating detection confidence scores...' : 'Finalizing language detection results...';
-          
-          if (onProgress) {
-            onProgress(Math.min(0.8, simulatedProgress));
-          }
-        }
-      }, 1000); // Update every second
-      
-      let data: any;
+      let osdResult: any;
       try {
-        const result = await Promise.race([recognitionPromise, timeoutPromise]);
-        data = result.data;
-        clearInterval(progressSimulator);
+        osdResult = await Promise.race([osdPromise, timeoutPromise]);
         
         if (onProgress) {
-          onProgress(0.8);
+          onProgress(0.9);
         }
       } catch (error) {
-        clearInterval(progressSimulator);
         throw error;
       }
 
       const detectionTime = Date.now() - detectionStart;
-      console.log(`⏱️ Detection OCR completed in ${detectionTime}ms`);
+      console.log(`⏱️ OSD detection completed in ${detectionTime}ms`);
 
-      // Extract text for analysis
-      const text = data.text;
-      if (!text || text.trim().length === 0) {
-        console.warn('⚠️ No text extracted from image, defaulting to English');
+      // Extract script information from OSD result
+      const scriptData = osdResult.data;
+      if (!scriptData || !scriptData.script) {
+        console.warn('⚠️ No script data extracted from OSD, defaulting to English');
         const fallbackLanguages = ['eng'] as OCRLanguage[];
         await OCRCacheManager.storeLanguageCache(imageFile, fallbackLanguages);
         return fallbackLanguages;
       }
 
-      console.log('🔍 Analyzing extracted text for language patterns:', text.substring(0, 200) + '...');
+      console.log('🔍 Analyzing OSD script data:', scriptData);
       
-      if (onProgress) {
-        onProgress(0.85);
-      }
+      const detectedLanguages = this.mapScriptToLanguages(scriptData);
 
-      const detectedLanguages = this.analyzeTextForLanguages(text);
-
-      console.log('🎯 Final detected languages:', detectedLanguages);
+      console.log('🎯 Final detected languages from OSD:', detectedLanguages);
       
       if (onProgress) {
         onProgress(0.95);
@@ -174,7 +150,7 @@ export class LanguageDetectionService {
       return detectedLanguages;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.warn('⚠️ Language detection failed:', errorMessage);
+      console.warn('⚠️ OSD language detection failed:', errorMessage);
 
       // PRODUCTION DEBUG: Log environment details
       const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
@@ -206,6 +182,87 @@ export class LanguageDetectionService {
 
       return fallbackLanguages;
     }
+  }
+
+  /**
+   * Maps OSD script detection results to OCR language codes
+   * @param scriptData OSD script detection data from Tesseract.js
+   * @returns Array of detected language codes based on script
+   */
+  private static mapScriptToLanguages(scriptData: any): OCRLanguage[] {
+    const languages: OCRLanguage[] = [];
+    
+    if (!scriptData || !scriptData.script) {
+      return ['eng'] as OCRLanguage[];
+    }
+
+    // Map Tesseract.js script codes to our OCR language codes
+    const script = scriptData.script.toLowerCase();
+    const confidence = scriptData.confidence || 0;
+    
+    // Skip low confidence detections
+    if (confidence < 30) {
+      console.warn(`⚠️ Low confidence OSD detection (${confidence}%), defaulting to English`);
+      return ['eng'] as OCRLanguage[];
+    }
+
+    console.log(`🔤 OSD Script detected: ${script} (confidence: ${confidence}%)`);
+
+    // Map common script codes to language codes
+    const scriptToLanguageMap: Record<string, OCRLanguage[]> = {
+      'Han': ['chi_sim', 'chi_tra', 'jpn', 'kor'],
+      'Hani': ['chi_sim', 'chi_tra', 'jpn', 'kor'],
+      'HanS': ['chi_sim'],
+      'HanT': ['chi_tra'],
+      'Hiragana': ['jpn'],
+      'Katakana': ['jpn'],
+      'Hangul': ['kor'],
+      'Latin': ['eng', 'spa', 'fra', 'deu'],
+      'Cyrillic': ['rus'],
+      'Arabic': ['ara'],
+      'Devanagari': ['hin'],
+      'Thai': ['tha'],
+      'Greek': ['ell'],
+      'Hebrew': ['heb']
+    };
+
+    // Handle specific script patterns
+    if (script.includes('han') || script.includes('chinese')) {
+      // For Han script, we need to determine simplified vs traditional
+      // Default to both for better OCR coverage
+      languages.push('chi_sim', 'chi_tra');
+    } else if (script.includes('japanese') || script.includes('hiragana') || script.includes('katakana')) {
+      languages.push('jpn');
+    } else if (script.includes('korean') || script.includes('hangul')) {
+      languages.push('kor');
+    } else if (script.includes('arabic')) {
+      languages.push('ara');
+    } else if (script.includes('cyrillic')) {
+      languages.push('rus');
+    } else if (script.includes('latin')) {
+      // For Latin script, include common European languages
+      languages.push('eng', 'spa', 'fra', 'deu');
+    } else if (script.includes('devanagari')) {
+      languages.push('hin');
+    } else if (script.includes('thai')) {
+      languages.push('tha');
+    } else if (script.includes('greek')) {
+      languages.push('ell');
+    } else if (script.includes('hebrew')) {
+      languages.push('heb');
+    } else {
+      // Fallback to English for unknown scripts
+      console.warn(`⚠️ Unknown script: ${script}, defaulting to English`);
+      languages.push('eng');
+    }
+
+    // Remove duplicates and ensure we have at least English
+    const uniqueLanguages = [...new Set(languages)];
+    if (uniqueLanguages.length === 0) {
+      uniqueLanguages.push('eng');
+    }
+
+    return uniqueLanguages;
   }
 
   /**
