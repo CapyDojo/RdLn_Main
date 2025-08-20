@@ -701,7 +701,13 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
         {/* Revolutionary OCR Progress Modal - Full Implementation */}
         {isProcessing && currentPhase && (
-          <div className="glass-floating-modal top-2 left-2 right-2 bg-theme-neutral-50/95 border border-theme-neutral-200/50 rounded-lg shadow-xl backdrop-blur-md p-5">
+          <div className="glass-floating-modal top-2 left-2 right-2 rounded-lg p-5" style={{
+            background: 'rgba(var(--theme-glass-bg, var(--glass-bg, 255, 255, 255)), 0.95)',
+            border: '1px solid rgba(var(--theme-glass-border, var(--glass-border, 255, 255, 255)), 0.5)',
+            backdropFilter: 'blur(var(--glass-blur, 10px))',
+            WebkitBackdropFilter: 'blur(var(--glass-blur, 10px))',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }}>
             {/* Smart Phase Header */}
             <div className="flex items-start gap-4 mb-4">
               {/* Adaptive Phase Icon */}
