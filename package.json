@@ -52,7 +52,8 @@
     "download:all": "npm run download:fonts && npm run download:tesseract",
     "prepare:tauri": "npm run copy:tesseract && npm run build",
     "prepare:electron": "npm run download:all && npm run build",
-    "setup:electron": "node scripts/setup-electron.js"
+    "setup:electron": "node scripts/setup-electron.js",
+    "mcp": "npx @playwright/mcp@latest"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.0.0",
@@ -72,6 +73,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@playwright/mcp": "^0.0.34",
     "@playwright/test": "^1.54.2",
     "@tauri-apps/api": "^2.7.0",
     "@tauri-apps/cli": "^2.7.1",
