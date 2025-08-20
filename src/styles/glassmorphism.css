@@ -193,30 +193,6 @@
   -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.15)) saturate(calc(var(--glass-saturate) * 1.05));
 }
 
-/* Floating modal glassmorphism - inherits all glass-panel styling with proper stacking */
-.glass-floating-modal {
-  /* Inherit all glass-panel base styles */
-  background: rgba(var(--glass-bg), var(--glass-panel));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  border: 1px solid rgba(var(--glass-border), var(--glass-focus));
-  box-shadow: 0 8px 32px 0 rgba(var(--glass-shadow), var(--glass-subtle));
-  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  
-  /* Floating modal specific properties */
-  position: absolute;
-  z-index: 50; /* High z-index to float above content */
-  pointer-events: all; /* Ensure modal can receive clicks */
-}
-
-/* Enhanced floating modal hover effects */
-.glass-floating-modal:hover {
-  background: rgba(var(--glass-bg), var(--glass-focus));
-  border-color: rgba(var(--glass-border), var(--glass-strong));
-  box-shadow: 0 16px 48px 0 rgba(var(--glass-shadow), var(--glass-panel));
-  transform: translateY(-1px); /* Subtle lift effect */
-  transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
-}
 
 /* Prevent chunk containers from inheriting glass effects */
 .glass-content-panel .chunk-container {

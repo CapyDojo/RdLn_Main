@@ -1,4 +1,5 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FileText, Image, AlertCircle, Loader, ChevronDown, Languages } from 'lucide-react';
 import { useOCR } from '../hooks/useOCR';
 import { OCRLanguage } from '../types/ocr-types';
@@ -42,9 +43,12 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     autoTrackInteractions: true
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [isAutoFormatEnabled, setIsAutoFormatEnabled] = useState(true);
   // Pilcrow now styled purely via theme classes (no runtime reads)
   const { fontSize } = useFontSize();
+  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0, width: 0, initialTop: 0, initialLeft: 0 });
+  const [modalAnimated, setModalAnimated] = useState(false);
 
   const toggleAutoFormat = () => setIsAutoFormatEnabled(prev => !prev);
 
@@ -516,8 +520,105 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     return abbreviations.join(', ');
   };
 
+  // Calculate modal position relative to this panel (getBoundingClientRect handles zoom/scroll automatically)
+  const calculateModalPosition = useCallback(() => {
+    if (!panelRef.current || !textareaRef.current) return { top: 100, left: 20, width: 400, initialTop: 100, initialLeft: 20 };
+    
+    // getBoundingClientRect() automatically accounts for zoom and scroll
+    const panelRect = panelRef.current.getBoundingClientRect();
+    const textareaRect = textareaRef.current.getBoundingClientRect();
+    
+    return {
+      // Final position: below the header
+      top: panelRect.top + 80,
+      left: panelRect.left + 10,
+      width: panelRect.width - 20,
+      // Initial position: center of textarea for animation
+      initialTop: textareaRect.top + textareaRect.height / 2,
+      initialLeft: textareaRect.left + textareaRect.width / 2
+    };
+  }, []);
+
+  // Update modal position (for scroll/zoom events) - like tooltip's updateTooltipPosition
+  const updateModalPosition = useCallback(() => {
+    if (!isProcessing) return;
+
+    const position = calculateModalPosition();
+    setModalPosition(position);
+  }, [isProcessing, calculateModalPosition]);
+
+  // Update modal position when OCR starts
+  useEffect(() => {
+    if (isProcessing && panelRef.current && textareaRef.current) {
+      const position = calculateModalPosition();
+      setModalPosition(position);
+      setModalAnimated(false);
+      
+      // Trigger animation to final position after a short delay
+      setTimeout(() => {
+        setModalAnimated(true);
+      }, 100);
+    } else {
+      setModalAnimated(false);
+    }
+  }, [isProcessing, calculateModalPosition]);
+
+  // Handle scroll/zoom/resize events to maintain proper positioning (like CustomTooltip)
+  useEffect(() => {
+    const handleScrollOrResize = () => {
+      updateModalPosition();
+    };
+
+    // Add event listeners when modal is visible
+    if (isProcessing) {
+      // For fixed positioning, we need to track when elements move in viewport
+      // This happens during window scroll, resize, or internal container scroll
+
+      window.addEventListener('scroll', handleScrollOrResize, { passive: true });
+      window.addEventListener('resize', handleScrollOrResize, { passive: true });
+
+      // Find and listen to all scrollable containers in the app (same as tooltip)
+      const scrollableContainers: HTMLElement[] = [];
+
+      // App-specific scroll containers based on useScrollSync patterns
+      const containerSelectors = [
+        '[data-panel-id] .glass-panel-inner-content', // Desktop Option C layout
+        '[data-panel-id][data-input-panel]',          // Mobile layout wrapper
+        '[data-panel-id] textarea',                   // Textarea scroll
+        '.scroll-container',                          // General scroll containers
+        '[data-testid="scroll-container"]'            // Test scroll containers
+      ];
+
+      containerSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector) as NodeListOf<HTMLElement>;
+        elements.forEach(element => {
+          // Only add if it's actually scrollable
+          if (element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth) {
+            scrollableContainers.push(element);
+          }
+        });
+      });
+
+      // Add scroll listeners to all detected scrollable containers
+      scrollableContainers.forEach(container => {
+        container.addEventListener('scroll', handleScrollOrResize, { passive: true });
+      });
+
+      return () => {
+        window.removeEventListener('scroll', handleScrollOrResize);
+        window.removeEventListener('resize', handleScrollOrResize);
+
+        // Clean up container scroll listeners
+        scrollableContainers.forEach(container => {
+          container.removeEventListener('scroll', handleScrollOrResize);
+        });
+      };
+    }
+  }, [isProcessing, updateModalPosition]);
+
   return (
     <div
+      ref={panelRef}
       className="glass-panel glass-content-panel overflow-hidden transition-all duration-300"
       style={style}
       data-text-input-panel
@@ -699,193 +800,6 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           }}
         />
 
-        {/* Revolutionary OCR Progress Modal - Full Implementation */}
-        {isProcessing && currentPhase && (
-          <div className="glass-floating-modal top-2 left-2 right-2 rounded-lg p-5" style={{
-            background: 'rgba(var(--theme-glass-bg, var(--glass-bg, 255, 255, 255)), 0.95)',
-            border: '1px solid rgba(var(--theme-glass-border, var(--glass-border, 255, 255, 255)), 0.5)',
-            backdropFilter: 'blur(var(--glass-blur, 10px))',
-            WebkitBackdropFilter: 'blur(var(--glass-blur, 10px))',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-          }}>
-            {/* Smart Phase Header */}
-            <div className="flex items-start gap-4 mb-4">
-              {/* Adaptive Phase Icon */}
-              <div className="relative flex-shrink-0 mt-1">
-                {currentPhase.phase === 'initialization' && (
-                  <div className="relative">
-                    <div className="w-7 h-7 border-2 border-theme-primary-500 border-t-transparent rounded-full animate-spin" />
-                    <div className="absolute inset-0 border-2 border-theme-primary-300/30 rounded-full" />
-                  </div>
-                )}
-                {currentPhase.phase === 'language_detection' && (
-                  <div className="relative">
-                    <div className="w-7 h-7 bg-gradient-to-r from-theme-secondary-500 to-theme-secondary-600 rounded-full animate-pulse flex items-center justify-center shadow-lg">
-                      <span className="text-white text-sm">🔍</span>
-                    </div>
-                    <div className="absolute -inset-1 bg-theme-secondary-400/30 rounded-full animate-ping" />
-                  </div>
-                )}
-                {currentPhase.phase === 'text_extraction' && (
-                  <div className="relative">
-                    <div className="w-7 h-7 bg-gradient-to-r from-theme-primary-500 to-theme-primary-600 rounded-full flex items-center justify-center animate-bounce shadow-lg">
-                      <Image className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="absolute -inset-1 bg-theme-primary-400/30 rounded-full animate-pulse" />
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                {/* Phase Information */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="text-sm font-semibold text-theme-neutral-800 capitalize">
-                      {currentPhase.phase.replace('_', ' ')}
-                    </h4>
-                    <span className="text-xs bg-gradient-to-r from-theme-primary-100 to-theme-primary-50 text-theme-primary-700 px-2.5 py-1 rounded-full font-medium border border-theme-primary-200">
-                      {currentPhase.subPhase.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-theme-neutral-700 font-mono font-semibold">
-                      {progress}%
-                    </span>
-                    {currentPhase.cancellable && (
-                      <button
-                        onClick={cancelOperation}
-                        className="text-xs text-theme-neutral-400 hover:text-red-600 px-2.5 py-1.5 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium border border-transparent hover:border-red-200"
-                        title="Cancel OCR operation"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Live Description with Time */}
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <p className="text-xs text-theme-neutral-600 leading-relaxed flex-1">
-                    {currentPhase.description}
-                  </p>
-                  {currentPhase.estimatedTimeRemaining && currentPhase.estimatedTimeRemaining > 1000 && (
-                    <div className="flex items-center gap-1.5 bg-theme-neutral-100 px-2 py-1 rounded-md">
-                      <div className="w-1.5 h-1.5 bg-theme-primary-500 rounded-full animate-pulse" />
-                      <span className="text-xs text-theme-neutral-600 font-mono whitespace-nowrap">
-                        {currentPhase.estimatedTimeRemaining > 60000 ? 
-                          `~${Math.ceil(currentPhase.estimatedTimeRemaining / 60000)}m` :
-                          `~${Math.ceil(currentPhase.estimatedTimeRemaining / 1000)}s`
-                        }
-                      </span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Next-Gen Progress Bar */}
-                <div className="relative">
-                  {/* Phase Segments Background */}
-                  <div className="relative w-full h-4 bg-theme-neutral-100 rounded-full overflow-hidden shadow-inner border border-theme-neutral-200">
-                    {/* Segment Dividers */}
-                    <div className="absolute inset-0 flex">
-                      <div className="w-2/5 border-r border-theme-neutral-300/50" />
-                      <div className="w-1/5 border-r border-theme-neutral-300/50" />
-                      <div className="w-2/5" />
-                    </div>
-                    
-                    {/* Dynamic Progress Fill with Gradient */}
-                    <div
-                      className="absolute left-0 top-0 h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-theme-primary-500 via-theme-primary-600 to-theme-secondary-500 shadow-sm"
-                      style={{ width: `${progress}%` }}
-                    >
-                      {/* Animated Shimmer Effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-[shimmer_2s_ease-in-out_infinite] rounded-full" />
-                      
-                      {/* Progress Highlight */}
-                      <div className="absolute right-0 top-0 w-3 h-full bg-white/40 rounded-r-full" />
-                    </div>
-                    
-                    {/* Phase Milestone Indicators */}
-                    <div className="absolute inset-0 flex items-center pointer-events-none">
-                      <div className="w-2/5 flex justify-center">
-                        <div className={`w-2 h-2 rounded-full transition-all duration-300 ${progress >= 40 ? 'bg-white shadow-md scale-110' : 'bg-theme-neutral-400'}`} />
-                      </div>
-                      <div className="w-1/5 flex justify-center">
-                        <div className={`w-2 h-2 rounded-full transition-all duration-300 ${progress >= 60 ? 'bg-white shadow-md scale-110' : 'bg-theme-neutral-400'}`} />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Phase Labels */}
-                  <div className="flex justify-between mt-2 text-xs text-theme-neutral-500">
-                    <span className={progress >= 40 ? 'text-theme-primary-600 font-medium' : ''}>
-                      Init
-                    </span>
-                    <span className={progress >= 60 ? 'text-theme-primary-600 font-medium' : ''}>
-                      Detect
-                    </span>
-                    <span className={progress >= 100 ? 'text-theme-primary-600 font-medium' : ''}>
-                      Extract
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Enhanced Language Detection Results */}
-            {detectedLanguages.length > 0 && (
-              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-theme-secondary-50 to-theme-secondary-25 border border-theme-secondary-200 rounded-lg mt-3">
-                <div className="flex items-center gap-2">
-                  <Languages className="w-4 h-4 text-theme-secondary-600" />
-                  <span className="text-sm font-medium text-theme-secondary-800">
-                    Detected Languages:
-                  </span>
-                  <div className="flex items-center gap-1">
-                    {detectedLanguages.slice(0, 3).map((lang, i) => (
-                      <span key={lang} className="text-sm bg-white px-2 py-0.5 rounded-md border border-theme-secondary-200 font-medium">
-                        {getLanguageShortName(lang)}
-                      </span>
-                    ))}
-                    {detectedLanguages.length > 3 && (
-                      <span className="text-xs text-theme-secondary-600">
-                        +{detectedLanguages.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-xs text-theme-secondary-600 font-medium">High Confidence</span>
-                </div>
-              </div>
-            )}
-            
-            {/* Smart Performance Dashboard */}
-            {startTime && (
-              <div className="flex items-center justify-between pt-3 border-t border-theme-neutral-200/50 mt-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-theme-neutral-600">
-                    ⏱️ {Math.ceil((Date.now() - startTime) / 1000)}s elapsed
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                      (Date.now() - startTime) < 10000 ? 'bg-green-400' :
-                      (Date.now() - startTime) < 20000 ? 'bg-yellow-400' : 'bg-orange-400'
-                    }`} />
-                    <span className="text-xs text-theme-neutral-600 font-medium">
-                      {(Date.now() - startTime) < 10000 ? 'Fast' :
-                       (Date.now() - startTime) < 20000 ? 'Normal' : 'Slower than usual'}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Live Processing Rate */}
-                <div className="text-xs text-theme-neutral-500">
-                  📈 {((progress / 100) / ((Date.now() - startTime) / 1000)).toFixed(1)}% per sec
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* OCR Error */}
         {error && (
@@ -961,6 +875,203 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         onSetSelectedLanguages={setSelectedLanguages}
         getLanguageDisplayName={getLanguageDisplayName}
       />
+
+      {/* OCR Progress Modal - Rendered as Portal like tooltips */}
+      {isProcessing && currentPhase && createPortal(
+        <div 
+          className="glass-panel py-1.5 rounded-lg text-xs font-medium bg-theme-neutral-50/95 text-theme-primary-800 shadow-xl backdrop-blur-md border border-theme-neutral-200/50 shadow-theme-primary-900/20 p-5"
+          style={{
+            position: 'fixed',
+            top: modalAnimated ? `${modalPosition.top}px` : `${modalPosition.initialTop}px`,
+            left: modalAnimated ? `${modalPosition.left}px` : `${modalPosition.initialLeft}px`,
+            width: modalAnimated ? `${modalPosition.width}px` : '0px',
+            transform: modalAnimated ? 'scale(1)' : 'scale(0)',
+            transformOrigin: 'center',
+            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            opacity: modalAnimated ? 1 : 0,
+            zIndex: 2147483647,
+            pointerEvents: 'all'
+          }}
+        >
+          {/* Smart Phase Header */}
+          <div className="flex items-start gap-4 mb-4">
+            {/* Adaptive Phase Icon */}
+            <div className="relative flex-shrink-0 mt-1">
+              {currentPhase.phase === 'initialization' && (
+                <div className="relative">
+                  <div className="w-7 h-7 border-2 border-theme-primary-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="absolute inset-0 border-2 border-theme-primary-300/30 rounded-full" />
+                </div>
+              )}
+              {currentPhase.phase === 'language_detection' && (
+                <div className="relative">
+                  <div className="w-7 h-7 bg-gradient-to-r from-theme-secondary-500 to-theme-secondary-600 rounded-full animate-pulse flex items-center justify-center shadow-lg">
+                    <span className="text-white text-sm">🔍</span>
+                  </div>
+                  <div className="absolute -inset-1 bg-theme-secondary-400/30 rounded-full animate-ping" />
+                </div>
+              )}
+              {currentPhase.phase === 'text_extraction' && (
+                <div className="relative">
+                  <div className="w-7 h-7 bg-gradient-to-r from-theme-primary-500 to-theme-primary-600 rounded-full flex items-center justify-center animate-bounce shadow-lg">
+                    <Image className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="absolute -inset-1 bg-theme-primary-400/30 rounded-full animate-pulse" />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              {/* Phase Information */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-sm font-semibold text-theme-neutral-800 capitalize">
+                    {currentPhase.phase.replace('_', ' ')}
+                  </h4>
+                  <span className="text-xs bg-gradient-to-r from-theme-primary-100 to-theme-primary-50 text-theme-primary-700 px-2.5 py-1 rounded-full font-medium border border-theme-primary-200">
+                    {currentPhase.subPhase.replace('_', ' ')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-theme-neutral-700 font-mono font-semibold">
+                    {progress}%
+                  </span>
+                  {currentPhase.cancellable && (
+                    <button
+                      onClick={cancelOperation}
+                      className="text-xs text-theme-neutral-400 hover:text-red-600 px-2.5 py-1.5 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium border border-transparent hover:border-red-200"
+                      title="Cancel OCR operation"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Live Description with Time */}
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <p className="text-xs text-theme-neutral-600 leading-relaxed flex-1">
+                  {currentPhase.description}
+                </p>
+                {currentPhase.estimatedTimeRemaining && currentPhase.estimatedTimeRemaining > 1000 && (
+                  <div className="flex items-center gap-1.5 bg-theme-neutral-100 px-2 py-1 rounded-md">
+                    <div className="w-1.5 h-1.5 bg-theme-primary-500 rounded-full animate-pulse" />
+                    <span className="text-xs text-theme-neutral-600 font-mono whitespace-nowrap">
+                      {currentPhase.estimatedTimeRemaining > 60000 ? 
+                        `~${Math.ceil(currentPhase.estimatedTimeRemaining / 60000)}m` :
+                        `~${Math.ceil(currentPhase.estimatedTimeRemaining / 1000)}s`
+                      }
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Next-Gen Progress Bar */}
+              <div className="relative">
+                {/* Phase Segments Background */}
+                <div className="relative w-full h-4 bg-theme-neutral-100 rounded-full overflow-hidden shadow-inner border border-theme-neutral-200">
+                  {/* Segment Dividers */}
+                  <div className="absolute inset-0 flex">
+                    <div className="w-2/5 border-r border-theme-neutral-300/50" />
+                    <div className="w-1/5 border-r border-theme-neutral-300/50" />
+                    <div className="w-2/5" />
+                  </div>
+                  
+                  {/* Dynamic Progress Fill with Gradient */}
+                  <div
+                    className="absolute left-0 top-0 h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-theme-primary-500 via-theme-primary-600 to-theme-secondary-500 shadow-sm"
+                    style={{ width: `${progress}%` }}
+                  >
+                    {/* Animated Shimmer Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-[shimmer_2s_ease-in-out_infinite] rounded-full" />
+                    
+                    {/* Progress Highlight */}
+                    <div className="absolute right-0 top-0 w-3 h-full bg-white/40 rounded-r-full" />
+                  </div>
+                  
+                  {/* Phase Milestone Indicators */}
+                  <div className="absolute inset-0 flex items-center pointer-events-none">
+                    <div className="w-2/5 flex justify-center">
+                      <div className={`w-2 h-2 rounded-full transition-all duration-300 ${progress >= 40 ? 'bg-white shadow-md scale-110' : 'bg-theme-neutral-400'}`} />
+                    </div>
+                    <div className="w-1/5 flex justify-center">
+                      <div className={`w-2 h-2 rounded-full transition-all duration-300 ${progress >= 60 ? 'bg-white shadow-md scale-110' : 'bg-theme-neutral-400'}`} />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Phase Labels */}
+                <div className="flex justify-between mt-2 text-xs text-theme-neutral-500">
+                  <span className={progress >= 40 ? 'text-theme-primary-600 font-medium' : ''}>
+                    Init
+                  </span>
+                  <span className={progress >= 60 ? 'text-theme-primary-600 font-medium' : ''}>
+                    Detect
+                  </span>
+                  <span className={progress >= 100 ? 'text-theme-primary-600 font-medium' : ''}>
+                    Extract
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Enhanced Language Detection Results */}
+          {detectedLanguages.length > 0 && (
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-theme-secondary-50 to-theme-secondary-25 border border-theme-secondary-200 rounded-lg mt-3">
+              <div className="flex items-center gap-2">
+                <Languages className="w-4 h-4 text-theme-secondary-600" />
+                <span className="text-sm font-medium text-theme-secondary-800">
+                  Detected Languages:
+                </span>
+                <div className="flex items-center gap-1">
+                  {detectedLanguages.slice(0, 3).map((lang, i) => (
+                    <span key={lang} className="text-sm bg-white px-2 py-0.5 rounded-md border border-theme-secondary-200 font-medium">
+                      {getLanguageShortName(lang)}
+                    </span>
+                  ))}
+                  {detectedLanguages.length > 3 && (
+                    <span className="text-xs text-theme-secondary-600">
+                      +{detectedLanguages.length - 3} more
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <span className="text-xs text-theme-secondary-600 font-medium">High Confidence</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Smart Performance Dashboard */}
+          {startTime && (
+            <div className="flex items-center justify-between pt-3 border-t border-theme-neutral-200/50 mt-3">
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-theme-neutral-600">
+                  ⏱️ {Math.ceil((Date.now() - startTime) / 1000)}s elapsed
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                    (Date.now() - startTime) < 10000 ? 'bg-green-400' :
+                    (Date.now() - startTime) < 20000 ? 'bg-yellow-400' : 'bg-orange-400'
+                  }`} />
+                  <span className="text-xs text-theme-neutral-600 font-medium">
+                    {(Date.now() - startTime) < 10000 ? 'Fast' :
+                     (Date.now() - startTime) < 20000 ? 'Normal' : 'Slower than usual'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Live Processing Rate */}
+              <div className="text-xs text-theme-neutral-500">
+                📈 {((progress / 100) / ((Date.now() - startTime) / 1000)).toFixed(1)}% per sec
+              </div>
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
