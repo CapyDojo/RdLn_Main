@@ -49,6 +49,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   const { fontSize } = useFontSize();
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0, width: 0, initialTop: 0, initialLeft: 0 });
   const [modalAnimated, setModalAnimated] = useState(false);
+  const [isZoomUpdate, setIsZoomUpdate] = useState(false);
+  const lastWindowSize = useRef({ width: window.innerWidth, height: window.innerHeight });
 
   const toggleAutoFormat = () => setIsAutoFormatEnabled(prev => !prev);
 
@@ -565,8 +567,28 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
   // Handle scroll/zoom/resize events to maintain proper positioning (like CustomTooltip)
   useEffect(() => {
-    const handleScrollOrResize = () => {
+    const handleScroll = () => {
+      setIsZoomUpdate(false); // Scroll = bouncy animation
       updateModalPosition();
+    };
+
+    const handleResize = () => {
+      // Detect if this is a zoom (window size changed) vs window resize
+      const currentSize = { width: window.innerWidth, height: window.innerHeight };
+      const sizeChanged = currentSize.width !== lastWindowSize.current.width || 
+                         currentSize.height !== lastWindowSize.current.height;
+      
+      if (sizeChanged) {
+        setIsZoomUpdate(true); // Zoom = no animation
+        lastWindowSize.current = currentSize;
+      } else {
+        setIsZoomUpdate(false); // Regular resize = bouncy animation
+      }
+      
+      updateModalPosition();
+      
+      // Reset zoom flag after update
+      setTimeout(() => setIsZoomUpdate(false), 50);
     };
 
     // Add event listeners when modal is visible
@@ -574,8 +596,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       // For fixed positioning, we need to track when elements move in viewport
       // This happens during window scroll, resize, or internal container scroll
 
-      window.addEventListener('scroll', handleScrollOrResize, { passive: true });
-      window.addEventListener('resize', handleScrollOrResize, { passive: true });
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      window.addEventListener('resize', handleResize, { passive: true });
 
       // Find and listen to all scrollable containers in the app (same as tooltip)
       const scrollableContainers: HTMLElement[] = [];
@@ -601,16 +623,16 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
       // Add scroll listeners to all detected scrollable containers
       scrollableContainers.forEach(container => {
-        container.addEventListener('scroll', handleScrollOrResize, { passive: true });
+        container.addEventListener('scroll', handleScroll, { passive: true });
       });
 
       return () => {
-        window.removeEventListener('scroll', handleScrollOrResize);
-        window.removeEventListener('resize', handleScrollOrResize);
+        window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('resize', handleResize);
 
         // Clean up container scroll listeners
         scrollableContainers.forEach(container => {
-          container.removeEventListener('scroll', handleScrollOrResize);
+          container.removeEventListener('scroll', handleScroll);
         });
       };
     }
@@ -887,9 +909,10 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
             width: modalAnimated ? `${modalPosition.width}px` : '0px',
             transform: modalAnimated ? 'scale(1)' : 'scale(0)',
             transformOrigin: 'center',
-            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            // Slightly reduced bounce for scroll/initial spawn, no transition for zoom
+            transition: isZoomUpdate ? 'none' : 'all 0.4s cubic-bezier(0.34, 1.2, 0.64, 1)',
             opacity: modalAnimated ? 1 : 0,
-            zIndex: 2147483647,
+            zIndex: 9000, // Under RdLnMemorySidePanel (9999) and ThemeSelector (10000)
             pointerEvents: 'all'
           }}
         >
