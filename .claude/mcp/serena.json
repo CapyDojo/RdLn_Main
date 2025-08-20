@@ -1,0 +1,42 @@
+{
+  "mcpServers": {
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--project",
+        ".",
+        "--context",
+        "desktop-app",
+        "--mode",
+        "interactive",
+        "--mode",
+        "editing",
+        "--transport",
+        "sse",
+        "--port",
+        "8000"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "find_symbol",
+        "find_referencing_symbols",
+        "replace_symbol_body",
+        "read_file",
+        "create_text_file",
+        "execute_shell_command",
+        "list_dir",
+        "search_for_pattern",
+        "get_symbols_overview",
+        "replace_lines",
+        "insert_at_line",
+        "delete_lines",
+        "onboarding",
+        "initial_instructions"
+      ]
+    }
+  }
+}

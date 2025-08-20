@@ -51,8 +51,29 @@
       "Bash(git log:*)",
       "Bash(git push:*)",
       "Bash(start test-counter-fix.html)",
-      "Bash(start test-integration.html)"
+      "Bash(start test-integration.html)",
+      "Bash(start test-smooth-progress.html)",
+      "Bash(start test-ocr-optimization-validation.html)",
+      "mcp__serena__find_symbol",
+      "mcp__serena__find_referencing_symbols",
+      "mcp__serena__replace_symbol_body",
+      "mcp__serena__read_file",
+      "mcp__serena__create_text_file",
+      "mcp__serena__execute_shell_command",
+      "mcp__serena__list_dir",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__replace_lines",
+      "mcp__serena__insert_at_line",
+      "mcp__serena__delete_lines",
+      "mcp__serena__onboarding",
+      "mcp__serena__initial_instructions",
+      "Bash(sed:*)",
+      "Bash(git checkout:*)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "C:\\temp"
+    ]
   }
 }

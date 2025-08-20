@@ -1,0 +1,8 @@
+{
+  "tools": {
+    "playwright": {
+      "enabled": true,
+      "package": "@playwright/mcp@latest"
+    }
+  }
+}
