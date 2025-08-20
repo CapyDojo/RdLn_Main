@@ -117,6 +117,21 @@ export default {
         '2.5xl': ['1.75rem', '2.25rem'], // 28px with line-height
         '3.5xl': ['2rem', '2.5rem'],     // 32px with line-height
       },
+      animation: {
+        'shimmer': 'shimmer 2s ease-in-out infinite',
+        'progress-pulse': 'progress-pulse 1.5s ease-in-out infinite',
+      },
+      keyframes: {
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '50%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'progress-pulse': {
+          '0%, 100%': { opacity: 0.3 },
+          '50%': { opacity: 1 },
+        },
+      },
     },
   },
   plugins: [],
