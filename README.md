@@ -76,6 +76,18 @@ npm run build
 - **Performance First**: Optimize for large document handling
 - **TypeScript**: Full type safety throughout the codebase
 
+### AI-Assisted Development with Serena MCP
+
+This project is configured to work with Serena MCP, an AI coding agent that provides semantic understanding of the codebase.
+
+#### Quick Setup:
+1. Ensure you have Python 3.12+ and uv installed
+2. Run the configuration test: `python test-serena-config.py`
+3. Start the server: `start-serena-server.bat`
+4. Connect your MCP client to the server
+
+See `SERENA-README.md` for detailed instructions and `SERENA-USAGE.md` for examples.
+
 ## 📚 Documentation
 
 - `GLASS_PANEL_VISUAL_CONSISTENCY_FIX.md` - Detailed technical handoff
