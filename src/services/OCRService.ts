@@ -329,12 +329,34 @@ export class OCRService {
 
         // PHASE 1: OSD Detection with the same worker
         const detectionStart = Date.now();
-        const { data: { script } } = await unifiedWorker.detect(imageFile);
+        let scriptData;
+        try {
+          // CRITICAL FIX: Validate worker before calling detect
+          if (!unifiedWorker || typeof unifiedWorker.detect !== 'function') {
+            throw new Error('Worker is invalid or does not support detect method');
+          }
+          
+          const { data } = await unifiedWorker.detect(imageFile);
+          scriptData = data.script;
+        } catch (error) {
+          console.warn('⚠️ OSD detection failed:', error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (errorMessage.includes('legacy') || 
+              errorMessage.includes('detect requires Legacy model') ||
+              errorMessage.includes('postMessage') ||
+              errorMessage.includes('null') ||
+              errorMessage.includes('invalid')) {
+            console.log('🔄 Falling back to English due to worker/legacy issue');
+            scriptData = { script: 'Latin', confidence: 100 };
+          } else {
+            throw error;
+          }
+        }
         const detectionTime = Date.now() - detectionStart;
         console.log(`⏱️ OSD detection completed in ${detectionTime}ms`);
 
         // Map detected script to languages
-        const detectedLanguages = this.mapScriptToLanguages(script);
+        const detectedLanguages = this.mapScriptToLanguages(scriptData);
         progressiveLanguages = detectedLanguages;
         console.log('📝 Detected languages from OSD:', detectedLanguages.map(lang => 
           SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
@@ -1261,6 +1283,13 @@ export class OCRService {
         totalCacheHits: legacyStats.totalCacheHits + (orchestratorStats?.cacheStats?.totalCacheHits || 0)
       }
     };
+  }
+
+  /**
+   * EMERGENCY: Force clear all workers due to configuration changes
+   */
+  public static async forceClearWorkers(): Promise<void> {
+    await OCRCacheManager.forceClearAllWorkers();
   }
 
   public static async terminate(): Promise<void> {
