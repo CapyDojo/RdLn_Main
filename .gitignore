@@ -53,4 +53,5 @@ nul
 mcp.log
 
 # Serena cache
-.serena/
+.serena/"# Claude settings"  
+".claude/" 
