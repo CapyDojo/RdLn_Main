@@ -164,6 +164,14 @@ export class LanguageDetectionService {
 
       console.log('🔍 Analyzing OSD script data:', scriptData);
       
+      // DEBUG: Check all confidence values available
+      console.log('🔍 DEBUG OSD Confidence Values:', {
+        script_confidence: scriptData.script_confidence,
+        orientation_confidence: scriptData.orientation_confidence,
+        script: scriptData.script,
+        orientation_degrees: scriptData.orientation_degrees
+      });
+      
       const detectedLanguages = this.mapScriptToLanguages(scriptData);
 
       console.log('🎯 Final detected languages from OSD:', detectedLanguages);
@@ -218,7 +226,7 @@ export class LanguageDetectionService {
 
     // Map Tesseract.js script codes to our OCR language codes
     const script = scriptData.script.toLowerCase();
-    const confidence = scriptData.confidence || 0;
+    const confidence = scriptData.script_confidence || 0;
     
     // IMPROVED: More flexible confidence handling
     if (confidence < 10) {

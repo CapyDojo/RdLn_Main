@@ -3,6 +3,10 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { ExperimentalLayoutProvider } from '../src/contexts/ExperimentalLayoutContext';
 
+vi.mock('../src/utils/env', () => ({
+  isTauri: false,
+}));
+
 // RedlineOutput mock removed - tests should use actual component
 
 // Mock IntersectionObserver globally
@@ -257,6 +261,29 @@ vi.mock('../src/hooks/usePerformanceMonitor', () => ({
     trackOperation: vi.fn((name, operation) => operation()),
     getRecentMetrics: vi.fn(() => []),
     getLastMetricValue: vi.fn(() => undefined),
+    recordMetric: vi.fn(),
+    timeFunction: vi.fn((name, operation) => operation()),
+    startTiming: vi.fn(() => () => {}),
+    trackRender: vi.fn(),
+    trackMount: vi.fn(),
+    trackUpdate: vi.fn(),
+    getCurrentMetric: vi.fn(),
+    getComponentStats: vi.fn(() => []),
+    isEnabled: true,
+    config: {},
+  })),
+  useInteractionTracking: vi.fn(() => ({
+    trackInteraction: vi.fn(() => () => {}),
+    trackClick: vi.fn(() => () => {}),
+    trackScroll: vi.fn(() => () => {}),
+    trackInput: vi.fn(() => () => {}),
+    trackDrag: vi.fn(() => () => {}),
+    trackResize: vi.fn(() => () => {}),
+  })),
+  usePerformanceDebugger: vi.fn(() => ({
+    isEnabled: false,
+    logMetric: vi.fn(),
+    logPerformanceWarning: vi.fn(),
   })),
 }));
 

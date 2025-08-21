@@ -599,16 +599,21 @@ export class OCRTextCleanupService {
     // Don't join if current line looks like a new paragraph
     if (this.isDefiniteNewParagraph(line)) return false;
 
-    // Only join if there's very clear evidence lines should be joined
-    const clearJoinIndicators = [
-      /-$/,                               // Previous line ends with hyphen
-      /,$/,                               // Previous line ends with comma
-      /\sand$/,                           // Previous line ends with "and"
-      /\sor$/,                            // Previous line ends with "or"
+    const trimmedParagraph = currentParagraph.trim();
+
+    // Join on hyphen, "and", "or"
+    const highConfidenceJoinIndicators = [
+      /-$/,
+      /\sand$/,
+      /\sor$/,
     ];
 
-    // Check if previous line has clear join indicator
-    if (clearJoinIndicators.some(pattern => pattern.test(currentParagraph.trim()))) {
+    if (highConfidenceJoinIndicators.some(pattern => pattern.test(trimmedParagraph))) {
+      return true;
+    }
+
+    // Join on comma, but only if the next line doesn't start with a capital letter
+    if (trimmedParagraph.endsWith(',') && !/^[A-Z]/.test(line)) {
       return true;
     }
 

@@ -18,7 +18,7 @@ export interface LanguageOption {
 }
 
 /** Supported OCR language codes */
-export type OCRLanguage = 'eng' | 'chi_sim' | 'chi_tra' | 'spa' | 'fra' | 'deu' | 'jpn' | 'kor' | 'ara' | 'rus';
+export type OCRLanguage = 'eng' | 'chi_sim' | 'chi_tra' | 'spa' | 'fra' | 'deu' | 'jpn' | 'kor' | 'ara' | 'rus' | 'osd';
 
 /** Phase information for detailed progress tracking */
 export interface OCRPhaseInfo {
