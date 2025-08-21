@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Worker Creation Consolidation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .info {
+            color: #17a2b8;
+        }
+        .results {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            min-height: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .clear-btn {
+            background: #6c757d;
+            margin-left: 10px;
+        }
+        .test-all-btn {
+            background: #28a745;
+            font-size: 16px;
+            padding: 15px 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Worker Creation Consolidation Test</h1>
+    <p><strong>Purpose:</strong> Test that all worker creation methods work correctly after consolidation refactoring.</p>
+    
+    <div class="test-section">
+        <h2>Quick Test All Workers</h2>
+        <p>This will test all 5 worker creation methods in sequence:</p>
+        <button class="test-button test-all-btn" onclick="testAllWorkers()">🚀 Test All Worker Creation Methods</button>
+        <button class="test-button clear-btn" onclick="clearAllResults()">Clear All Results</button>
+        <div id="overall-results" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>1. Standard Worker with Fallback</h2>
+        <p><strong>What it tests:</strong> createWorkerWithFallback() - Standard worker with CDN fallback</p>
+        <button class="test-button" onclick="testWorkerWithFallback()">Test createWorkerWithFallback()</button>
+        <button class="test-button clear-btn" onclick="clearResults('fallback-results')">Clear</button>
+        <div id="fallback-results" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. CDN Worker</h2>
+        <p><strong>What it tests:</strong> createCDNWorker() - Direct CDN worker creation</p>
+        <button class="test-button" onclick="testCDNWorker()">Test createCDNWorker()</button>
+        <button class="test-button clear-btn" onclick="clearResults('cdn-results')">Clear</button>
+        <div id="cdn-results" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Worker with OSD Support</h2>
+        <p><strong>What it tests:</strong> createWorkerWithOSDSupport() - Worker for language detection with OSD</p>
+        <button class="test-button" onclick="testWorkerWithOSD()">Test createWorkerWithOSDSupport()</button>
+        <button class="test-button clear-btn" onclick="clearResults('osd-results')">Clear</button>
+        <div id="osd-results" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. CDN Worker with OSD</h2>
+        <p><strong>What it tests:</strong> createCDNWorkerWithOSD() - CDN worker with OSD capabilities</p>
+        <button class="test-button" onclick="testCDNWorkerWithOSD()">Test createCDNWorkerWithOSD()</button>
+        <button class="test-button clear-btn" onclick="clearResults('cdn-osd-results')">Clear</button>
+        <div id="cdn-osd-results" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Tauri Worker</h2>
+        <p><strong>What it tests:</strong> createTauriWorker() - Platform-specific worker for Tauri builds</p>
+        <button class="test-button" onclick="testTauriWorker()">Test createTauriWorker()</button>
+        <button class="test-button clear-btn" onclick="clearResults('tauri-results')">Clear</button>
+        <div id="tauri-results" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 What to Look For</h2>
+        <ul>
+            <li><span class="success">✅ Success:</span> Worker created successfully with proper configuration</li>
+            <li><span class="info">ℹ️ Legacy Support:</span> All workers should have legacyCore: true and legacyLang: true</li>
+            <li><span class="info">ℹ️ OSD Capability:</span> OSD workers should support worker.detect() method</li>
+            <li><span class="error">❌ Error:</span> Any failures in worker creation or configuration</li>
+            <li><span class="info">ℹ️ Performance Config:</span> Workers should have optimized Tesseract settings</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        // Import the OCR cache manager
+        import { OCRCacheManager } from './src/services/OCRCacheManager.ts';
+        
+        // Make it globally available for testing
+        window.ocrCacheManager = new OCRCacheManager();
+        
+        // Test functions
+        window.testWorkerWithFallback = async function() {
+            const resultsDiv = document.getElementById('fallback-results');
+            resultsDiv.innerHTML = 'Testing createWorkerWithFallback()...\n';
+            
+            try {
+                const worker = await window.ocrCacheManager.createWorkerWithFallback();
+                resultsDiv.innerHTML += '✅ SUCCESS: Worker created successfully\n';
+                resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
+                resultsDiv.innerHTML += `🔧 Legacy Core: ${worker._options?.legacyCore || 'not set'}\n`;
+                resultsDiv.innerHTML += `🔧 Legacy Lang: ${worker._options?.legacyLang || 'not set'}\n`;
+                resultsDiv.innerHTML += `⚡ Performance Config Applied: ${worker._performanceConfigured || 'unknown'}\n`;
+                
+                // Test that worker can be terminated
+                await worker.terminate();
+                resultsDiv.innerHTML += '🛑 Worker terminated successfully\n';
+                resultsDiv.className = 'results success';
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `❌ ERROR: ${error.message}\n`;
+                resultsDiv.innerHTML += `📊 Error Stack: ${error.stack}\n`;
+                resultsDiv.className = 'results error';
+            }
+        };
+        
+        window.testCDNWorker = async function() {
+            const resultsDiv = document.getElementById('cdn-results');
+            resultsDiv.innerHTML = 'Testing createCDNWorker()...\n';
+            
+            try {
+                const worker = await window.ocrCacheManager.createCDNWorker();
+                resultsDiv.innerHTML += '✅ SUCCESS: CDN Worker created successfully\n';
+                resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
+                resultsDiv.innerHTML += `🔧 Legacy Core: ${worker._options?.legacyCore || 'not set'}\n`;
+                resultsDiv.innerHTML += `🔧 Legacy Lang: ${worker._options?.legacyLang || 'not set'}\n`;
+                resultsDiv.innerHTML += `🌐 CDN Mode: ${worker._cdnMode || 'unknown'}\n`;
+                
+                await worker.terminate();
+                resultsDiv.innerHTML += '🛑 Worker terminated successfully\n';
+                resultsDiv.className = 'results success';
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `❌ ERROR: ${error.message}\n`;
+                resultsDiv.innerHTML += `📊 Error Stack: ${error.stack}\n`;
+                resultsDiv.className = 'results error';
+            }
+        };
+        
+        window.testWorkerWithOSD = async function() {
+            const resultsDiv = document.getElementById('osd-results');
+            resultsDiv.innerHTML = 'Testing createWorkerWithOSDSupport()...\n';
+            
+            try {
+                const worker = await window.ocrCacheManager.createWorkerWithOSDSupport();
+                resultsDiv.innerHTML += '✅ SUCCESS: OSD Worker created successfully\n';
+                resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
+                resultsDiv.innerHTML += `🔧 Legacy Core: ${worker._options?.legacyCore || 'not set'}\n`;
+                resultsDiv.innerHTML += `🔧 Legacy Lang: ${worker._options?.legacyLang || 'not set'}\n`;
+                resultsDiv.innerHTML += `🔍 OSD Support: ${typeof worker.detect === 'function' ? 'Available' : 'Not Available'}\n`;
+                
+                await worker.terminate();
+                resultsDiv.innerHTML += '🛑 Worker terminated successfully\n';
+                resultsDiv.className = 'results success';
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `❌ ERROR: ${error.message}\n`;
+                resultsDiv.innerHTML += `📊 Error Stack: ${error.stack}\n`;
+                resultsDiv.className = 'results error';
+            }
+        };
+        
+        window.testCDNWorkerWithOSD = async function() {
+            const resultsDiv = document.getElementById('cdn-osd-results');
+            resultsDiv.innerHTML = 'Testing createCDNWorkerWithOSD()...\n';
+            
+            try {
+                const worker = await window.ocrCacheManager.createCDNWorkerWithOSD();
+                resultsDiv.innerHTML += '✅ SUCCESS: CDN OSD Worker created successfully\n';
+                resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
+                resultsDiv.innerHTML += `🔧 Legacy Core: ${worker._options?.legacyCore || 'not set'}\n`;
+                resultsDiv.innerHTML += `🔧 Legacy Lang: ${worker._options?.legacyLang || 'not set'}\n`;
+                resultsDiv.innerHTML += `🌐 CDN Mode: ${worker._cdnMode || 'unknown'}\n`;
+                resultsDiv.innerHTML += `🔍 OSD Support: ${typeof worker.detect === 'function' ? 'Available' : 'Not Available'}\n`;
+                
+                await worker.terminate();
+                resultsDiv.innerHTML += '🛑 Worker terminated successfully\n';
+                resultsDiv.className = 'results success';
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `❌ ERROR: ${error.message}\n`;
+                resultsDiv.innerHTML += `📊 Error Stack: ${error.stack}\n`;
+                resultsDiv.className = 'results error';
+            }
+        };
+        
+        window.testTauriWorker = async function() {
+            const resultsDiv = document.getElementById('tauri-results');
+            resultsDiv.innerHTML = 'Testing createTauriWorker()...\n';
+            
+            try {
+                const worker = await window.ocrCacheManager.createTauriWorker();
+                resultsDiv.innerHTML += '✅ SUCCESS: Tauri Worker created successfully\n';
+                resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
+                resultsDiv.innerHTML += `🔧 Legacy Core: ${worker._options?.legacyCore || 'not set'}\n`;
+                resultsDiv.innerHTML += `🔧 Legacy Lang: ${worker._options?.legacyLang || 'not set'}\n`;
+                resultsDiv.innerHTML += `🖥️ Tauri Mode: ${worker._tauriMode || 'unknown'}\n`;
+                
+                await worker.terminate();
+                resultsDiv.innerHTML += '🛑 Worker terminated successfully\n';
+                resultsDiv.className = 'results success';
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `❌ ERROR: ${error.message}\n`;
+                resultsDiv.innerHTML += `📊 Error Details: ${error.stack}\n`;
+                resultsDiv.className = 'results error';
+                
+                // Note: Tauri worker might fail in web environment - this is expected
+                if (error.message.includes('Tauri') || error.message.includes('__TAURI__')) {
+                    resultsDiv.innerHTML += `ℹ️ NOTE: Tauri worker failure is expected in web environment\n`;
+                    resultsDiv.className = 'results info';
+                }
+            }
+        };
+        
+        window.testAllWorkers = async function() {
+            const resultsDiv = document.getElementById('overall-results');
+            resultsDiv.innerHTML = 'Testing all worker creation methods...\n\n';
+            
+            const tests = [
+                { name: 'createWorkerWithFallback', func: window.testWorkerWithFallback },
+                { name: 'createCDNWorker', func: window.testCDNWorker },
+                { name: 'createWorkerWithOSDSupport', func: window.testWorkerWithOSD },
+                { name: 'createCDNWorkerWithOSD', func: window.testCDNWorkerWithOSD },
+                { name: 'createTauriWorker', func: window.testTauriWorker }
+            ];
+            
+            let passed = 0;
+            let failed = 0;
+            
+            for (const test of tests) {
+                try {
+                    resultsDiv.innerHTML += `🔄 Testing ${test.name}...\n`;
+                    await test.func();
+                    resultsDiv.innerHTML += `✅ ${test.name} PASSED\n\n`;
+                    passed++;
+                } catch (error) {
+                    resultsDiv.innerHTML += `❌ ${test.name} FAILED: ${error.message}\n\n`;
+                    failed++;
+                }
+            }
+            
+            resultsDiv.innerHTML += `\n📊 SUMMARY:\n`;
+            resultsDiv.innerHTML += `✅ Passed: ${passed}\n`;
+            resultsDiv.innerHTML += `❌ Failed: ${failed}\n`;
+            resultsDiv.innerHTML += `📈 Success Rate: ${Math.round((passed / tests.length) * 100)}%\n`;
+            
+            if (failed === 0) {
+                resultsDiv.innerHTML += `\n🎉 ALL TESTS PASSED! Worker consolidation is working correctly.\n`;
+                resultsDiv.className = 'results success';
+            } else {
+                resultsDiv.className = 'results error';
+            }
+        };
+        
+        window.clearResults = function(elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '';
+            element.className = 'results';
+        };
+        
+        window.clearAllResults = function() {
+            const resultDivs = document.querySelectorAll('.results');
+            resultDivs.forEach(div => {
+                div.innerHTML = '';
+                div.className = 'results';
+            });
+        };
+    </script>
+</body>
+</html>

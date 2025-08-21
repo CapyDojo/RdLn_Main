@@ -194,13 +194,6 @@ export async function getTesseractConfig(onProgress?: (progress: number) => void
     };
   }
 
-  if (env.isLocalDevelopment) {
-    return {
-      ...baseConfig,
-      gzip: false
-    };
-  }
-
   return baseConfig;
 }
 
