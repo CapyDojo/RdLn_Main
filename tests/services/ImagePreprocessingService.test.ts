@@ -1,4 +1,4 @@
-import { ImagePreprocessingService } from '../services/ImagePreprocessingService';
+import { ImagePreprocessingService } from '../../src/services/ImagePreprocessingService';
 import { PreprocessingConfig } from '../types/ocr-types';
 
 describe('ImagePreprocessingService', () => {
