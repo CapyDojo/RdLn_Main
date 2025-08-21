@@ -2,6 +2,14 @@ User preferences
 
 User is INTJ and Capricorn and aspergers.  20+ years corporate M&A and PE lawyer,  first time founder with 0 coding knowledge but keen to learn.  Needs handholding with technical coding stuff.  Has strong preference of optimised, beautiful and dopaminergic UI/UX and architectural solutions
 
+General reminders
+
+```markdown
+- Always prioritize using native Windows command line commands (e.g., 'md', 'del') when operating on a Windows system, and only fall back to Python or other methods if native commands fail or are insufficient.
+- Always use Windows commands for shell operations.
+- User instructed me to never use the `git clean -fdx` command again as it is too destructive and can remove important untracked files and directories like `node_modules` or build outputs.
+```
+
 ## Rule #1
 
 don't be lazy
@@ -244,3 +252,24 @@ when I say do something in SSMR - that means adhering to the following tennets:
 - 100% Safely
 - Step-by-step
 - Modular and Reversible
+
+
+## Rule #12
+
+Rule: "Save Chat" Protocol
+
+When the user says "Save Chat" or similar, this means:
+
+1. Save relevant context in current session and lastest status to a markdown file in "chat contexts" directory
+2. Use YYYYMMDD prefix format for the filename: YYYYMMDD-[descriptive-name].md
+3. Include comprehensive session summary with:
+    - Current status and problems identified
+    - All technical work completed
+    - Files modified with key code changes
+    - Next steps/pending tasks
+    - Relevant file paths and test results
+4. Use today's actual date from environment info, not dates mentioned in
+conversation
+5. Make it easy for another agent to resume - another session should be able to continue the work from this context
+
+Example format: 20250820-litera-docx-converter-session.md
