@@ -51,3 +51,6 @@ nul
 
 # Log files
 mcp.log
+
+# Serena cache
+.serena/
