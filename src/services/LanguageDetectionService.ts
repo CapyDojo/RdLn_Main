@@ -102,19 +102,48 @@ export class LanguageDetectionService {
 
       // CRITICAL OPTIMIZATION: Use OSD (Orientation & Script Detection) instead of full OCR
       // OSD is 10x faster than full OCR for language detection
-      const osdPromise = worker.detect(imageFile);
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('OSD detection timeout')), 10000) // Much shorter timeout for OSD
-      );
-      
       let osdResult: any;
       try {
+        console.log('🔍 Attempting OSD detection...');
+        
+        // CRITICAL FIX: Validate worker before calling detect
+        if (!worker || typeof worker.detect !== 'function') {
+          throw new Error('Worker is invalid or does not support detect method');
+        }
+        
+        const osdPromise = worker.detect(imageFile);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('OSD detection timeout')), 10000) // Much shorter timeout for OSD
+        );
+        
         osdResult = await Promise.race([osdPromise, timeoutPromise]);
         
         if (onProgress) {
           onProgress(0.9);
         }
+        console.log('✅ OSD detection successful');
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.warn('⚠️ OSD detection failed:', errorMessage);
+        
+        // ENHANCED FALLBACK: Handle various error types
+        if (errorMessage.includes('legacy') || 
+            errorMessage.includes('detect') || 
+            errorMessage.includes('requires') ||
+            errorMessage.includes('postMessage') ||
+            errorMessage.includes('null') ||
+            errorMessage.includes('invalid')) {
+          console.log('🔄 OSD detection issue (worker/legacy problem), falling back to English-only detection');
+          const fallbackLanguages = ['eng'] as OCRLanguage[];
+          await OCRCacheManager.storeLanguageCache(imageFile, fallbackLanguages);
+          
+          if (onProgress) {
+            onProgress(1.0); // Complete the progress
+          }
+          
+          return fallbackLanguages;
+        }
+        
         throw error;
       }
 
@@ -200,10 +229,13 @@ export class LanguageDetectionService {
     const script = scriptData.script.toLowerCase();
     const confidence = scriptData.confidence || 0;
     
-    // Skip low confidence detections
-    if (confidence < 30) {
-      console.warn(`⚠️ Low confidence OSD detection (${confidence}%), defaulting to English`);
+    // IMPROVED: More flexible confidence handling
+    if (confidence < 10) {
+      console.warn(`⚠️ Very low confidence OSD detection (${confidence}%), defaulting to English`);
       return ['eng'] as OCRLanguage[];
+    } else if (confidence < 30) {
+      console.warn(`⚠️ Low confidence OSD detection (${confidence}%), but proceeding with detected script`);
+      // Continue with detection but add English as fallback
     }
 
     console.log(`🔤 OSD Script detected: ${script} (confidence: ${confidence}%)`);
@@ -260,6 +292,12 @@ export class LanguageDetectionService {
     const uniqueLanguages = [...new Set(languages)];
     if (uniqueLanguages.length === 0) {
       uniqueLanguages.push('eng');
+    }
+
+    // IMPROVED: For low confidence detections, always include English as primary fallback
+    if (confidence < 30 && !uniqueLanguages.includes('eng')) {
+      uniqueLanguages.unshift('eng'); // Add English as first language for better reliability
+      console.log('🔄 Added English as primary language due to low confidence detection');
     }
 
     return uniqueLanguages;
