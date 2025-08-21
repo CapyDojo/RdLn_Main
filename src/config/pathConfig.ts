@@ -10,7 +10,6 @@ import { DEV_CONFIG } from './appConfig';
 
 // Cached environment detection results
 let cachedEnvironment: {
-  isTauri: boolean;
   isElectron: boolean;
   isWebDeployment: boolean;
   isLocalDevelopment: boolean;
@@ -33,21 +32,12 @@ async function detectEnvironment(): Promise<typeof cachedEnvironment> {
   }
 
   const checks = {
-    isTauri: false,
     isElectron: false,
     isWebDeployment: false,
     isLocalDevelopment: false
   };
 
   try {
-    // Tauri detection
-    checks.isTauri = typeof window !== 'undefined' && (
-      (window as any).__TAURI__ ||
-      (window as any).__TAURI_INTERNALS__ ||
-      window.location.protocol === 'tauri:' ||
-      (typeof navigator !== 'undefined' && navigator.userAgent.includes('Tauri'))
-    );
-
     // Electron detection
     checks.isElectron = typeof window !== 'undefined' && (window as any).isElectron === true;
 
@@ -73,7 +63,6 @@ async function detectEnvironment(): Promise<typeof cachedEnvironment> {
   } catch (error) {
     console.warn('Environment detection failed, using web defaults:', error);
     cachedEnvironment = {
-      isTauri: false,
       isElectron: false,
       isWebDeployment: true,
       isLocalDevelopment: false
@@ -94,7 +83,6 @@ export async function getResourcePaths() {
 
   // Base URLs for different environments
   const baseUrls = {
-    tauri: '', // Tauri uses asset protocol
     electron: '', // Electron uses file protocol
     web: '', // Web uses relative/absolute paths
     cdn: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist' // CDN fallback
@@ -103,14 +91,7 @@ export async function getResourcePaths() {
   // Resource paths by environment
   let resourcePaths: typeof cachedResourcePaths;
 
-  if (env.isTauri) {
-    resourcePaths = {
-      langPath: '/tessdata',
-      workerPath: '/tesseract/worker.min.js',
-      corePath: '/tesseract/tesseract-core.wasm.js',
-      baseUrl: baseUrls.tauri
-    };
-  } else if (env.isElectron) {
+  if (env.isElectron) {
     resourcePaths = {
       langPath: './tessdata',
       workerPath: './tesseract/worker.min.js',
@@ -126,12 +107,12 @@ export async function getResourcePaths() {
       baseUrl: baseUrls.cdn
     };
   } else {
-    // Local development - use local assets
+    // TEMPORARY: Local development - use CDN assets to fix path issues
     resourcePaths = {
-      langPath: '/tessdata',
-      workerPath: '/tesseract/worker.min.js',
-      corePath: '/tesseract/tesseract-core.wasm.js',
-      baseUrl: baseUrls.web
+      langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+      workerPath: `${baseUrls.cdn}/worker.min.js`,
+      corePath: `${baseUrls.cdn}/tesseract-core.wasm.js`,
+      baseUrl: baseUrls.cdn
     };
   }
 
@@ -166,26 +147,6 @@ export async function getTesseractConfig(onProgress?: (progress: number) => void
   };
 
   // Environment-specific optimizations
-  if (env.isTauri) {
-    return {
-      ...baseConfig,
-      // Tauri-specific optimizations
-      workerBlobURL: false,
-      gzip: false,
-      cacheMethod: 'none',
-      // Use locateFile for complete path control
-      locateFile: (path: string, prefix: string) => {
-        if (path.includes('tesseract-core') || path.includes('simd') || path.includes('lstm')) {
-          return paths.corePath;
-        }
-        if (path.includes('worker')) {
-          return paths.workerPath;
-        }
-        return prefix + path;
-      }
-    };
-  }
-
   if (env.isElectron) {
     return {
       ...baseConfig,
