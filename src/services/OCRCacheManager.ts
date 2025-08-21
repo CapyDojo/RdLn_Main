@@ -48,7 +48,7 @@ export class OCRCacheManager {
   /**
    * Create worker using centralized path configuration
    */
-  private static async createWorkerWithFallback(
+  public static async createWorkerWithFallback(
     languages: OCRLanguage[],
     timeout: number,
     onProgress?: OCRProgressCallback,
@@ -125,7 +125,7 @@ export class OCRCacheManager {
   /**
    * Create worker using CDN as fallback when local paths fail
    */
-  private static async createCDNWorker(
+  public static async createCDNWorker(
     languages: OCRLanguage[],
     timeout: number,
     onProgress?: OCRProgressCallback,
@@ -188,7 +188,7 @@ export class OCRCacheManager {
   /**
    * Create worker using centralized path configuration for Tauri environment
    */
-  private static async createTauriWorker(
+  public static async createTauriWorker(
     languages: OCRLanguage[],
     timeout: number,
     onProgress?: OCRProgressCallback,
@@ -302,7 +302,7 @@ export class OCRCacheManager {
    * Create worker with OSD (Orientation & Script Detection) support
    * This requires legacy core and language support for worker.detect() functionality
    */
-  private static async createWorkerWithOSDSupport(
+  public static async createWorkerWithOSDSupport(
     languages: OCRLanguage[],
     timeout: number,
     onProgress?: OCRProgressCallback,
@@ -379,7 +379,7 @@ export class OCRCacheManager {
   /**
    * Create CDN worker with OSD support as fallback when local paths fail
    */
-  private static async createCDNWorkerWithOSD(
+  public static async createCDNWorkerWithOSD(
     languages: OCRLanguage[],
     timeout: number,
     onProgress?: OCRProgressCallback,

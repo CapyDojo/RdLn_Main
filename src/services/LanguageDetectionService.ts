@@ -114,7 +114,7 @@ export class LanguageDetectionService {
         
         const osdPromise = worker.detect(imageFile);
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('OSD detection timeout')), 10000) // Much shorter timeout for OSD
+          setTimeout(() => reject(new Error('OSD detection timeout')), 60000) // Increased timeout to 60 seconds
         );
         
         osdResult = await Promise.race([osdPromise, timeoutPromise]);
