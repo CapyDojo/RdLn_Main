@@ -145,7 +145,7 @@ export const DEV_CONFIG = {
     SCROLL_SYNC_DEBUG: false, // Fixed view transition issues
     RESIZE_DEBUG: false, // Disabled to reduce console noise
     COMPARISON_DEBUG: false, // Disabled to reduce console noise
-    OCR_DEBUG: false, // Disabled to reduce console noise
+    OCR_DEBUG: true, // Enabled for OSD debugging
     SHOW_PERFORMANCE_DEBUG: false, // Disabled to reduce console noise
     SEMANTIC_CHUNKING_DEBUG: false, // Disabled to reduce console noise
   }

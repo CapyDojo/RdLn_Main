@@ -69,8 +69,9 @@
     </style>
 </head>
 <body>
-    <h1>🔧 Worker Creation Consolidation Test</h1>
-    <p><strong>Purpose:</strong> Test that all worker creation methods work correctly after consolidation refactoring.</p>
+    <h1>🏭 OCR Worker Factory Test Suite</h1>
+    <p><strong>Purpose:</strong> Test the new unified OCRWorkerFactory and legacy compatibility after architecture refactoring.</p>
+    <p><strong>New Architecture:</strong> Deployment-focused factory with Web (CDN) and Electron (local) support, OSD as optional feature.</p>
     
     <div class="test-section">
         <h2>Quick Test All Workers</h2>
@@ -113,11 +114,27 @@
     </div>
 
     <div class="test-section">
-        <h2>5. Tauri Worker</h2>
-        <p><strong>What it tests:</strong> createTauriWorker() - Platform-specific worker for Tauri builds</p>
-        <button class="test-button" onclick="testTauriWorker()">Test createTauriWorker()</button>
-        <button class="test-button clear-btn" onclick="clearResults('tauri-results')">Clear</button>
-        <div id="tauri-results" class="results"></div>
+        <h2>5. New OCRWorkerFactory</h2>
+        <p><strong>What it tests:</strong> OCRWorkerFactory.createWorker() - New unified factory method</p>
+        <button class="test-button" onclick="testWorkerFactory()">Test OCRWorkerFactory.createWorker()</button>
+        <button class="test-button clear-btn" onclick="clearResults('factory-results')">Clear</button>
+        <div id="factory-results" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>6. Factory Web Deployment</h2>
+        <p><strong>What it tests:</strong> OCRWorkerFactory with explicit web deployment</p>
+        <button class="test-button" onclick="testFactoryWeb()">Test Factory Web Mode</button>
+        <button class="test-button clear-btn" onclick="clearResults('factory-web-results')">Clear</button>
+        <div id="factory-web-results" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>7. Factory Electron Deployment</h2>
+        <p><strong>What it tests:</strong> OCRWorkerFactory with explicit electron deployment</p>
+        <button class="test-button" onclick="testFactoryElectron()">Test Factory Electron Mode</button>
+        <button class="test-button clear-btn" onclick="clearResults('factory-electron-results')">Clear</button>
+        <div id="factory-electron-results" class="results"></div>
     </div>
 
     <div class="test-section">
@@ -132,11 +149,12 @@
     </div>
 
     <script type="module">
-        // Import the OCR cache manager
-        import { OCRCacheManager } from './src/services/OCRCacheManager.ts';
+        // Import the OCR cache manager and worker factory
+        import { OCRCacheManager, OCRWorkerFactory } from './src/services/OCRCacheManager.ts';
         
-        // Make it globally available for testing
-        window.ocrCacheManager = new OCRCacheManager();
+        // Make it globally available for testing (it's a static class)
+        window.ocrCacheManager = OCRCacheManager;
+        window.ocrWorkerFactory = OCRWorkerFactory;
         
         // Test functions
         window.testWorkerWithFallback = async function() {
@@ -144,7 +162,7 @@
             resultsDiv.innerHTML = 'Testing createWorkerWithFallback()...\n';
             
             try {
-                const worker = await window.ocrCacheManager.createWorkerWithFallback();
+                const worker = await window.ocrCacheManager.createWorkerWithFallback(['eng'], 10000);
                 resultsDiv.innerHTML += '✅ SUCCESS: Worker created successfully\n';
                 resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
                 resultsDiv.innerHTML += `🔧 Legacy Core: ${worker._options?.legacyCore || 'not set'}\n`;
@@ -168,7 +186,7 @@
             resultsDiv.innerHTML = 'Testing createCDNWorker()...\n';
             
             try {
-                const worker = await window.ocrCacheManager.createCDNWorker();
+                const worker = await window.ocrCacheManager.createCDNWorker(['eng'], 10000);
                 resultsDiv.innerHTML += '✅ SUCCESS: CDN Worker created successfully\n';
                 resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
                 resultsDiv.innerHTML += `🔧 Legacy Core: ${worker._options?.legacyCore || 'not set'}\n`;
@@ -191,7 +209,7 @@
             resultsDiv.innerHTML = 'Testing createWorkerWithOSDSupport()...\n';
             
             try {
-                const worker = await window.ocrCacheManager.createWorkerWithOSDSupport();
+                const worker = await window.ocrCacheManager.createWorkerWithOSDSupport(['eng'], 10000);
                 resultsDiv.innerHTML += '✅ SUCCESS: OSD Worker created successfully\n';
                 resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
                 resultsDiv.innerHTML += `🔧 Legacy Core: ${worker._options?.legacyCore || 'not set'}\n`;
@@ -214,7 +232,7 @@
             resultsDiv.innerHTML = 'Testing createCDNWorkerWithOSD()...\n';
             
             try {
-                const worker = await window.ocrCacheManager.createCDNWorkerWithOSD();
+                const worker = await window.ocrCacheManager.createCDNWorkerWithOSD(['eng'], 10000);
                 resultsDiv.innerHTML += '✅ SUCCESS: CDN OSD Worker created successfully\n';
                 resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
                 resultsDiv.innerHTML += `🔧 Legacy Core: ${worker._options?.legacyCore || 'not set'}\n`;
@@ -233,17 +251,23 @@
             }
         };
         
-        window.testTauriWorker = async function() {
-            const resultsDiv = document.getElementById('tauri-results');
-            resultsDiv.innerHTML = 'Testing createTauriWorker()...\n';
+        window.testWorkerFactory = async function() {
+            const resultsDiv = document.getElementById('factory-results');
+            resultsDiv.innerHTML = 'Testing OCRWorkerFactory.createWorker()...\n';
             
             try {
-                const worker = await window.ocrCacheManager.createTauriWorker();
-                resultsDiv.innerHTML += '✅ SUCCESS: Tauri Worker created successfully\n';
+                const worker = await window.ocrWorkerFactory.createWorker({
+                    languages: ['eng'],
+                    deployment: 'auto',
+                    enableOSD: false,
+                    performanceMode: 'BALANCED',
+                    timeout: 10000
+                });
+                resultsDiv.innerHTML += '✅ SUCCESS: Factory Worker created successfully\n';
                 resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
                 resultsDiv.innerHTML += `🔧 Legacy Core: ${worker._options?.legacyCore || 'not set'}\n`;
                 resultsDiv.innerHTML += `🔧 Legacy Lang: ${worker._options?.legacyLang || 'not set'}\n`;
-                resultsDiv.innerHTML += `🖥️ Tauri Mode: ${worker._tauriMode || 'unknown'}\n`;
+                resultsDiv.innerHTML += `🏭 Factory Method: New unified approach\n`;
                 
                 await worker.terminate();
                 resultsDiv.innerHTML += '🛑 Worker terminated successfully\n';
@@ -251,12 +275,68 @@
                 
             } catch (error) {
                 resultsDiv.innerHTML += `❌ ERROR: ${error.message}\n`;
-                resultsDiv.innerHTML += `📊 Error Details: ${error.stack}\n`;
+                resultsDiv.innerHTML += `📊 Error Stack: ${error.stack}\n`;
+                resultsDiv.className = 'results error';
+            }
+        };
+
+        window.testFactoryWeb = async function() {
+            const resultsDiv = document.getElementById('factory-web-results');
+            resultsDiv.innerHTML = 'Testing Factory Web Deployment...\n';
+            
+            try {
+                const worker = await window.ocrWorkerFactory.createWorker({
+                    languages: ['eng'],
+                    deployment: 'web',
+                    enableOSD: true,
+                    performanceMode: 'FAST',
+                    timeout: 10000
+                });
+                resultsDiv.innerHTML += '✅ SUCCESS: Web deployment worker created\n';
+                resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
+                resultsDiv.innerHTML += `🌐 Deployment: Web (CDN resources)\n`;
+                resultsDiv.innerHTML += `🔍 OSD Enabled: ${typeof worker.detect === 'function' ? 'Yes' : 'No'}\n`;
+                
+                await worker.terminate();
+                resultsDiv.innerHTML += '🛑 Worker terminated successfully\n';
+                resultsDiv.className = 'results success';
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `❌ ERROR: ${error.message}\n`;
+                resultsDiv.innerHTML += `📊 Error Stack: ${error.stack}\n`;
+                resultsDiv.className = 'results error';
+            }
+        };
+
+        window.testFactoryElectron = async function() {
+            const resultsDiv = document.getElementById('factory-electron-results');
+            resultsDiv.innerHTML = 'Testing Factory Electron Deployment...\n';
+            
+            try {
+                const worker = await window.ocrWorkerFactory.createWorker({
+                    languages: ['eng'],
+                    deployment: 'electron',
+                    enableOSD: false,
+                    performanceMode: 'ACCURATE',
+                    timeout: 10000
+                });
+                resultsDiv.innerHTML += '✅ SUCCESS: Electron deployment worker created\n';
+                resultsDiv.innerHTML += `📋 Worker ID: ${worker.id || 'undefined'}\n`;
+                resultsDiv.innerHTML += `⚡ Deployment: Electron (local resources)\n`;
+                resultsDiv.innerHTML += `🎯 Performance: Accurate mode\n`;
+                
+                await worker.terminate();
+                resultsDiv.innerHTML += '🛑 Worker terminated successfully\n';
+                resultsDiv.className = 'results success';
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `❌ ERROR: ${error.message}\n`;
+                resultsDiv.innerHTML += `📊 Error Stack: ${error.stack}\n`;
                 resultsDiv.className = 'results error';
                 
-                // Note: Tauri worker might fail in web environment - this is expected
-                if (error.message.includes('Tauri') || error.message.includes('__TAURI__')) {
-                    resultsDiv.innerHTML += `ℹ️ NOTE: Tauri worker failure is expected in web environment\n`;
+                // Note: Electron worker might fallback to web in browser environment
+                if (error.message.includes('Web Worker Creation') || error.message.includes('CDN')) {
+                    resultsDiv.innerHTML += `ℹ️ NOTE: Electron worker fell back to web deployment (expected in browser)\n`;
                     resultsDiv.className = 'results info';
                 }
             }
@@ -271,7 +351,9 @@
                 { name: 'createCDNWorker', func: window.testCDNWorker },
                 { name: 'createWorkerWithOSDSupport', func: window.testWorkerWithOSD },
                 { name: 'createCDNWorkerWithOSD', func: window.testCDNWorkerWithOSD },
-                { name: 'createTauriWorker', func: window.testTauriWorker }
+                { name: 'OCRWorkerFactory.createWorker', func: window.testWorkerFactory },
+                { name: 'Factory Web Deployment', func: window.testFactoryWeb },
+                { name: 'Factory Electron Deployment', func: window.testFactoryElectron }
             ];
             
             let passed = 0;
