@@ -29,6 +29,22 @@ export interface OCRPhaseInfo {
 /** Progress callback function type for real-time OCR progress updates */
 export type OCRProgressCallback = (progress: number, phaseInfo?: OCRPhaseInfo) => void;
 
+/** Preprocessing configuration for image enhancement */
+export interface PreprocessingConfig {
+  /** Enable grayscale conversion */
+  grayscale?: boolean;
+  /** Enable noise reduction */
+  denoise?: boolean;
+  /** Enable contrast enhancement */
+  contrast?: boolean;
+  /** Enable sharpening */
+  sharpen?: boolean;
+  /** Resize scale factor (e.g., 1.5 for 150%) */
+  resize?: number;
+  /** Rotation angle in degrees */
+  rotate?: number;
+}
+
 /** OCR processing options */
 export interface OCROptions {
   /** Languages to use for OCR processing */
@@ -41,6 +57,8 @@ export interface OCROptions {
   useOrchestrator?: boolean;
   /** Callback function for real-time progress updates (0.0 to 1.0) */
   onProgress?: OCRProgressCallback;
+  /** Image preprocessing configuration */
+  preprocessing?: boolean | PreprocessingConfig;
 }
 
 /** Cached worker with lifecycle management */

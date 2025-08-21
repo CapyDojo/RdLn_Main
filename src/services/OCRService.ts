@@ -17,6 +17,8 @@ import { LanguageDetectionService } from '../services/LanguageDetectionService';
 import { OCRCacheManager } from '../services/OCRCacheManager';
 // TAURI INTEGRATION: Import OCR router for Tauri-specific OCR handling
 import { OCRRouter } from './OCRRouter';
+// Import Image Preprocessing Service for legacy pipeline
+import { ImagePreprocessingService } from './ocr/utils/ImagePreprocessingService';
 import { DEV_CONFIG } from '../config/appConfig';
 import { OCRErrorDetection, OCRErrorHandler, OCRErrorUtils } from '../utils/ocrErrorHandling';
 
@@ -268,53 +270,81 @@ export class OCRService {
   }
 
   public static async extractTextFromImage(
-    imageFile: File | Blob, 
+    imageFile: File | Blob,
     options: OCROptions = {}
   ): Promise<string> {
-    // TAURI INTEGRATION: Route to appropriate OCR provider
-    return OCRRouter.routeOCRRequest(imageFile, options, (imageFile, options) => {
-      return this.extractTextFromImageLegacy(imageFile, options);
-    });
+    // Inverted logic: OCROrchestrator is now the default
+    // The legacy path is used only if useOrchestrator is explicitly false
+    if (options.useOrchestrator === false) {
+      console.log('Legacy OCR path explicitly requested.');
+      return OCRRouter.routeOCRRequest(imageFile, options, (imageFile, options) => {
+        return this.extractTextFromImageUnifiedWorker(imageFile, options);
+      });
+    }
+
+    console.log('🎼 Using enhanced OCR Orchestrator workflow by default...');
+    try {
+      const orchestrationOptions: OrchestrationOptions = {
+        languages: options.languages,
+        autoDetect: options.autoDetect,
+        primaryLanguage: options.primaryLanguage,
+        useBackgroundLoader: true,
+        performanceTracking: true,
+        textProcessing: {
+          preserveParagraphs: true,
+          applyLegalTermFixes: true,
+          enhancedPunctuation: true,
+        },
+      };
+      const result = await OCROrchestrator.extractText(imageFile, orchestrationOptions);
+      return result.text;
+    } catch (error) {
+      console.warn('⚠️ Orchestrator failed, falling back to legacy OCR:', error);
+      return this.extractTextFromImageUnifiedWorker(imageFile, options);
+    }
   }
 
-  // TAURI INTEGRATION: Renamed original method to avoid conflicts
-  private static async extractTextFromImageLegacy(
-    imageFile: File | Blob, 
+  /**
+   * @deprecated This method uses a legacy unified worker pipeline.
+   * It is preserved for fallback purposes.
+   * The default path is now the OCROrchestrator.
+   */
+  private static async extractTextFromImageUnifiedWorker(
+    imageFile: File | Blob,
     options: OCROptions = {}
   ): Promise<string> {
-    // PHASE 3.3: Enhanced workflow using OCR Orchestrator (opt-in)
-    if (options.useOrchestrator) {
-      console.log('🎼 Using enhanced OCR Orchestrator workflow...');
-      
-      try {
-        // Convert OCROptions to OrchestrationOptions
-        const orchestrationOptions: OrchestrationOptions = {
-          languages: options.languages,
-          autoDetect: options.autoDetect,
-          primaryLanguage: options.primaryLanguage,
-          // Enable enhanced features in orchestrator
-          useBackgroundLoader: true,
-          performanceTracking: true,
-          textProcessing: {
-            preserveParagraphs: true,
-            applyLegalTermFixes: true,
-            enhancedPunctuation: true
-          }
-        };
-        
-        const result = await OCROrchestrator.extractText(imageFile, orchestrationOptions);
-        
-        // Enhanced OCR completed with orchestrator
-        
-        return result.text;
-      } catch (error) {
-        console.warn('⚠️ Orchestrator failed, falling back to legacy OCR:', error);
-        // Fall through to legacy implementation
-      }
-    }
-    
     // UNIFIED WORKER PIPELINE - OPTIMIZED FOR WORKER REUSE
     try {
+      // Optional image preprocessing for legacy pipeline
+      let preprocessedImage = imageFile;
+      if (options.preprocessing !== false) {
+        try {
+          console.log('🖼️ Applying image preprocessing in legacy pipeline...');
+          
+          // Import the preprocessing config
+          const { DEFAULT_PREPROCESSING_CONFIG } = await import('../config/ocrConfig');
+          
+          // Determine preprocessing options
+          let preprocessingOptions;
+          if (typeof options.preprocessing === 'object') {
+            // Use provided preprocessing config
+            preprocessingOptions = options.preprocessing;
+          } else {
+            // Use default preprocessing config
+            preprocessingOptions = DEFAULT_PREPROCESSING_CONFIG;
+          }
+          
+          const preprocessingResult = await ImagePreprocessingService.preprocessImage(
+            imageFile,
+            preprocessingOptions
+          );
+          preprocessedImage = preprocessingResult.processedImage;
+          console.log('🔧 Applied preprocessing filters:', preprocessingResult.appliedFilters.join(', '));
+        } catch (error) {
+          console.warn('⚠️ Image preprocessing failed in legacy pipeline, continuing with original:', error);
+          preprocessedImage = imageFile;
+        }
+      }
       let finalLanguages: OCRLanguage[];
       let progressiveLanguages: OCRLanguage[] = [];
 
@@ -329,17 +359,12 @@ export class OCRService {
         console.log(`⏱️ Unified worker initialized in ${workerInitTime}ms`);
 
         // PHASE 1: OSD Detection with the same worker
-        const { data: { script } } = await unifiedWorker.detect(imageFile);
-            scriptData = { script: 'Latin', confidence: 100 };
-          } else {
-            throw error;
-          }
-        const detectedLanguages = this.mapScriptToLanguages(script);
+        const detectionStart = Date.now();
+        const { data: { script } } = await unifiedWorker.detect(preprocessedImage);
+        const scriptData = { script: script || 'Latin', confidence: 100 };
+        const detectedLanguages = this.mapScriptToLanguages(scriptData);
         const detectionTime = Date.now() - detectionStart;
         console.log(`⏱️ OSD detection completed in ${detectionTime}ms`);
-
-        // Map detected script to languages
-        const detectedLanguages = this.mapScriptToLanguages(scriptData);
         progressiveLanguages = detectedLanguages;
         console.log('📝 Detected languages from OSD:', detectedLanguages.map(lang => 
           SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
@@ -367,7 +392,7 @@ export class OCRService {
 
         // PHASE 3: Final extraction with unified worker
         const extractionStart = Date.now();
-        const { data: { text: finalText } } = await unifiedWorker.recognize(imageFile);
+        const { data: { text: finalText } } = await unifiedWorker.recognize(preprocessedImage);
         const extractionTime = Date.now() - extractionStart;
         console.log(`⏱️ Final extraction completed in ${extractionTime}ms`);
 
@@ -388,7 +413,7 @@ export class OCRService {
         console.log(`⏱️ Unified worker initialized in ${workerInitTime}ms`);
 
         const extractionStart = Date.now();
-        const { data: { text } } = await unifiedWorker.recognize(imageFile);
+        const { data: { text } } = await unifiedWorker.recognize(preprocessedImage);
         const extractionTime = Date.now() - extractionStart;
         console.log(`⏱️ Extraction completed in ${extractionTime}ms`);
 
@@ -407,7 +432,7 @@ export class OCRService {
         console.log(`⏱️ Unified worker initialized in ${workerInitTime}ms`);
 
         const extractionStart = Date.now();
-        const { data: { text } } = await unifiedWorker.recognize(imageFile);
+        const { data: { text } } = await unifiedWorker.recognize(preprocessedImage);
         const extractionTime = Date.now() - extractionStart;
         console.log(`⏱️ English extraction completed in ${extractionTime}ms`);
 

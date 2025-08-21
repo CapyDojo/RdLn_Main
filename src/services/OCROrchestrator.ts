@@ -23,6 +23,7 @@ import { OCRTextCleanupService, TextProcessingOptions } from './OCRTextCleanupSe
 import { LanguageDetectionService } from './LanguageDetectionService';
 import { OCRCacheManager } from './OCRCacheManager';
 import { BackgroundLanguageLoader } from './BackgroundLanguageLoader';
+import { ImagePreprocessingService, PreprocessingOptions } from './ocr/utils/ImagePreprocessingService';
 import { DEV_CONFIG } from '../config/appConfig';
 
 // Import error handling
@@ -46,13 +47,16 @@ export interface OrchestrationResult {
   totalTime: number;
   cacheHit: boolean;
   backgroundLoaderUsed: boolean;
+  preprocessingUsed: boolean;
   appliedProcessors: string[];
+  preprocessingFilters: string[];
   performanceMetrics: {
     languageDetectionMs: number;
     workerInitializationMs: number;
     ocrExtractionMs: number;
     textProcessingMs: number;
     paragraphFormattingMs: number;
+    preprocessingMs: number;
   };
 }
 
@@ -60,6 +64,9 @@ export interface OrchestrationOptions extends OCROptions {
   textProcessing?: TextProcessingOptions;
   useBackgroundLoader?: boolean;
   performanceTracking?: boolean;
+  preprocessing?: PreprocessingOptions & {
+    enabled?: boolean;
+  };
 }
 
 export class OCROrchestrator {
@@ -164,6 +171,68 @@ export class OCROrchestrator {
         console.log('🎯 Primary language prioritized:', detectedLanguages.join(', '));
       }
 
+      // Phase 1.5: Image Preprocessing
+      let preprocessedImage = imageFile;
+      let preprocessingFilters: string[] = [];
+      
+      // Check if preprocessing should be applied
+      const shouldPreprocess = options.preprocessing === true || 
+                           (typeof options.preprocessing === 'object' && options.preprocessing?.enabled !== false);
+      
+      if (shouldPreprocess) {
+        const preprocessingStart = performance.now();
+        console.log('🖼️ Starting image preprocessing...');
+        
+        try {
+          // Import the preprocessing config
+          const { DEFAULT_PREPROCESSING_CONFIG } = await import('../config/ocrConfig');
+          
+          // Determine preprocessing options
+          let preprocessingOptions;
+          if (typeof options.preprocessing === 'object') {
+            // Merge with default config
+            preprocessingOptions = { ...DEFAULT_PREPROCESSING_CONFIG, ...options.preprocessing };
+          } else {
+            // Use default preprocessing config
+            preprocessingOptions = DEFAULT_PREPROCESSING_CONFIG;
+          }
+          
+          const preprocessingResult = await ImagePreprocessingService.preprocessImage(
+            imageFile,
+            preprocessingOptions
+          );
+          
+          preprocessedImage = preprocessingResult.processedImage;
+          preprocessingFilters = preprocessingResult.appliedFilters;
+          
+          performanceMetrics.preprocessingMs = performance.now() - preprocessingStart;
+          
+          this.performanceMonitor.recordMetric(
+            'ocr_preprocessing',
+            performanceMetrics.preprocessingMs,
+            'ocr' as MetricCategory,
+            {
+              operationId,
+              duration: performanceMetrics.preprocessingMs,
+              filters: preprocessingFilters,
+              originalSize: preprocessingResult.originalSize,
+              processedSize: preprocessingResult.processedSize,
+              processingTime: preprocessingResult.processingTime
+            }
+          );
+          
+          console.log(`⏱️ Image preprocessing completed in ${performanceMetrics.preprocessingMs}ms`);
+          console.log('🔧 Applied filters:', preprocessingFilters.join(', '));
+          
+        } catch (error) {
+          console.warn('⚠️ Image preprocessing failed, continuing with original image:', error);
+          performanceMetrics.preprocessingMs = 0;
+        }
+      } else {
+        performanceMetrics.preprocessingMs = 0;
+        console.log('⏭️ Image preprocessing disabled');
+      }
+
       // Phase 2: Worker Initialization with Background Loader Integration
       const workerInitStart = performance.now();
       const worker = await this.initializeOptimalWorker(detectedLanguages, options);
@@ -199,7 +268,7 @@ export class OCROrchestrator {
       console.log('📖 Extracting text from image...');
       
       const extractionResult = await safeAsync(
-        () => worker.tesseractWorker.recognize(imageFile),
+        () => worker.tesseractWorker.recognize(preprocessedImage),
         ErrorCategory.OCR,
         'OCR text extraction failed'
       );
@@ -314,7 +383,9 @@ export class OCROrchestrator {
         totalTime,
         cacheHit,
         backgroundLoaderUsed,
+        preprocessingUsed: options.preprocessing?.enabled !== false,
         appliedProcessors,
+        preprocessingFilters,
         performanceMetrics
       };
 
