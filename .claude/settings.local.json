@@ -79,7 +79,10 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:tesseract-ocr.github.io)",
       "WebSearch",
-      "mcp__serena__insert_after_symbol"
+      "mcp__serena__insert_after_symbol",
+      "Bash(ren:*)",
+      "mcp__serena__find_file",
+      "mcp__serena__think_about_collected_information"
     ],
     "deny": [],
     "additionalDirectories": [
