@@ -7,6 +7,7 @@
 
 import { OCRLanguage } from '../types/ocr-types';
 import { OCRCacheManager } from './OCRCacheManager';
+import { OCRErrorDetection, OCRErrorHandler, OCRErrorUtils } from '../utils/ocrErrorHandling';
 
 export class LanguageDetectionService {
 
@@ -106,8 +107,8 @@ export class LanguageDetectionService {
       try {
         console.log('🔍 Attempting OSD detection...');
         
-        // CRITICAL FIX: Validate worker before calling detect
-        if (!worker || typeof worker.detect !== 'function') {
+        // STANDARDIZED: Validate worker using standardized error handling
+        if (!OCRErrorHandler.validateWorker(worker, ['detect'])) {
           throw new Error('Worker is invalid or does not support detect method');
         }
         
@@ -123,18 +124,20 @@ export class LanguageDetectionService {
         }
         console.log('✅ OSD detection successful');
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.warn('⚠️ OSD detection failed:', errorMessage);
+        OCRErrorHandler.logError('OSD detection', error, { 
+          imageFileSize: imageFile.size,
+          imageFileType: imageFile.type || 'unknown'
+        });
         
-        // ENHANCED FALLBACK: Handle various error types
-        if (errorMessage.includes('legacy') || 
-            errorMessage.includes('detect') || 
-            errorMessage.includes('requires') ||
-            errorMessage.includes('postMessage') ||
-            errorMessage.includes('null') ||
-            errorMessage.includes('invalid')) {
-          console.log('🔄 OSD detection issue (worker/legacy problem), falling back to English-only detection');
-          const fallbackLanguages = ['eng'] as OCRLanguage[];
+        // STANDARDIZED FALLBACK: Handle errors using categorized error handling
+        const errorCategory = OCRErrorDetection.categorizeError(error);
+        
+        if (errorCategory.isRecoverable && (
+            OCRErrorDetection.isLegacyError(error) ||
+            OCRErrorDetection.isWorkerValidationError(error)
+        )) {
+          console.log(`🔄 ${errorCategory.recommendedAction}`);
+          const fallbackLanguages = OCRErrorUtils.createFallbackLanguages() as OCRLanguage[];
           await OCRCacheManager.storeLanguageCache(imageFile, fallbackLanguages);
           
           if (onProgress) {
@@ -181,30 +184,18 @@ export class LanguageDetectionService {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.warn('⚠️ OSD language detection failed:', errorMessage);
 
-      // PRODUCTION DEBUG: Log environment details
-      const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
-      const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
-      const currentUrl = typeof window !== 'undefined' ? window.location.href : 'unknown';
-
-      console.warn('🔍 Environment Debug Info:', {
-        isTauri,
-        userAgent,
-        currentUrl,
-        errorStack: error instanceof Error ? error.stack : 'no stack'
+      // STANDARDIZED ERROR HANDLING: Use centralized error categorization and logging
+      const errorCategory = OCRErrorDetection.categorizeError(error);
+      
+      OCRErrorHandler.logError('language detection', error, {
+        imageFileSize: imageFile.size,
+        imageFileType: imageFile.type || 'unknown',
+        isTauri: typeof window !== 'undefined' && (window as any).__TAURI__,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+        currentUrl: typeof window !== 'undefined' ? window.location.href : 'unknown'
       });
 
-      // Provide more specific error information
-      if (errorMessage.includes('timeout')) {
-        console.warn('🕐 Detection timed out - this may indicate missing language files in production build');
-      } else if (errorMessage.includes('Worker')) {
-        console.warn('🔧 Worker initialization failed - falling back to English-only OCR');
-      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        console.warn('🌐 Network error loading language files - check if .traineddata files are accessible');
-      } else if (errorMessage.includes('path')) {
-        console.warn('📁 Path resolution error - language files not found at expected location');
-      }
-
-      const fallbackLanguages = ['eng'] as OCRLanguage[];
+      const fallbackLanguages = OCRErrorUtils.createFallbackLanguages() as OCRLanguage[];
 
       // Store fallback result in cache to avoid repeated failures
       await OCRCacheManager.storeLanguageCache(imageFile, fallbackLanguages);

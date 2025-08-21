@@ -18,6 +18,7 @@ import { OCRCacheManager } from '../services/OCRCacheManager';
 // TAURI INTEGRATION: Import OCR router for Tauri-specific OCR handling
 import { OCRRouter } from './OCRRouter';
 import { DEV_CONFIG } from '../config/appConfig';
+import { OCRErrorDetection, OCRErrorHandler, OCRErrorUtils } from '../utils/ocrErrorHandling';
 
 // Note: Re-exports removed to avoid module resolution conflicts
 
@@ -328,30 +329,12 @@ export class OCRService {
         console.log(`⏱️ Unified worker initialized in ${workerInitTime}ms`);
 
         // PHASE 1: OSD Detection with the same worker
-        const detectionStart = Date.now();
-        let scriptData;
-        try {
-          // CRITICAL FIX: Validate worker before calling detect
-          if (!unifiedWorker || typeof unifiedWorker.detect !== 'function') {
-            throw new Error('Worker is invalid or does not support detect method');
-          }
-          
-          const { data } = await unifiedWorker.detect(imageFile);
-          scriptData = data.script;
-        } catch (error) {
-          console.warn('⚠️ OSD detection failed:', error);
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          if (errorMessage.includes('legacy') || 
-              errorMessage.includes('detect requires Legacy model') ||
-              errorMessage.includes('postMessage') ||
-              errorMessage.includes('null') ||
-              errorMessage.includes('invalid')) {
-            console.log('🔄 Falling back to English due to worker/legacy issue');
+        const { data: { script } } = await unifiedWorker.detect(imageFile);
             scriptData = { script: 'Latin', confidence: 100 };
           } else {
             throw error;
           }
-        }
+        const detectedLanguages = this.mapScriptToLanguages(script);
         const detectionTime = Date.now() - detectionStart;
         console.log(`⏱️ OSD detection completed in ${detectionTime}ms`);
 
@@ -433,8 +416,25 @@ export class OCRService {
       }
 
     } catch (error) {
-      console.error('OCR extraction failed:', error);
-      throw new Error(`Failed to extract text from image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      OCRErrorHandler.logError('OCR text extraction', error, {
+        autoDetect: options.autoDetect,
+        specifiedLanguages: options.languages,
+        imageFileSize: imageFile.size,
+        imageFileType: imageFile.type || 'unknown'
+      });
+      
+      const errorCategory = OCRErrorDetection.categorizeError(error);
+      const standardizedMessage = OCRErrorHandler.createStandardizedErrorMessage(
+        'text extraction',
+        error,
+        { 
+          operation: 'extractTextFromImageLegacy',
+          category: errorCategory.category,
+          isRecoverable: errorCategory.isRecoverable
+        }
+      );
+      
+      throw new Error(standardizedMessage);
     }
   }
 
