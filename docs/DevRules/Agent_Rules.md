@@ -16,7 +16,7 @@ don't be lazy
 
 ## Rule #2
 
-At the start of a chat session, read through DEVELOPMENT_GUIDELINES.md once, remember it, and follow it to the extent practicable in that session's work. no need to re-read once commited to context memory. DO NOT modify this document without my approval.
+At the start of a chat session, locate and read through DEVELOPMENT_GUIDELINES.md, remember it, and follow it to the extent practicable in that session's work. no need to re-read once commited to context memory. DO NOT modify this document without my approval.
 
 ## Rule #3
 
@@ -181,14 +181,21 @@ When creating files, git commits, branches, tags etc, follow the naming protocol
     - `20250715_TAG_F_Desktop_mobile_view_switch_fix`
     - `20250715_COMMIT_B_Fixed_database_integration`
 
-## Rule #6: "INP"
+## Rule #6: "INP" Workflow
 
-when i ask you to investigate and plan (or shorthand "INP"), please:
+When you are asked to "INP" an issue / problem, please initiate the following workflow:
 
-- investigate thoroughly tracing through all relevant code flows, variables and dependencies;
-- if helpful, check relevant git history;
-- create a few fix solutions, prioritising the simplest and most elegant ones and avoid overthinking or overengineering unless that is the optimal path
-- don't code yet.
+6.1. investigate the issue / problem thoroughly, including tracing through all relevant user flows code flows, variables and dependencies;
+6.2. if helpful, check relevant git history;
+6.3. provide an accurate and grounded diagnosis of the fundamental root cause(s) of the issue / problem;
+6.4. launch an independent expert code-review architect sub-agent to review the diagnoses;
+6.5. summarise the reviewed (and, if necessary, corrected) diagnosis for me in concise, low-technical terms;
+6.6. propose fix plans that are targeted, minimal, surgical and non-regressive.  ALWAYS prioritise simplest and most elegant solutions. Keep the big picture in mind.  Avoid overthinking or overengineering unless unavoidable.;
+6.7. launch an independent expert code-review architect sub-agent to review the plans;
+6.8. summarise the reviewed (and, if necessary, corrected) fix plans for me in concise, low-technical terms;
+6.9. draft the diagnosis and fix plans into a task list that a coding agent can work against and update, export it in a .md in "\docs\Sprint_Plans_WIP”, following the YYYYMMDD-[descriptive-name].md convention.
+6.10. DON’T CODE YET.
+6.11. DON’T BREAK ANYTHING.
 
 ## Rule #7
 
