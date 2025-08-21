@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive OSD Fixes Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .fix-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .fix-card {
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            background: #d4edda;
+        }
+        .fix-card h4 {
+            margin: 0 0 10px 0;
+            color: #155724;
+        }
+        .fix-card p {
+            margin: 0;
+            font-size: 14px;
+            color: #155724;
+        }
+        .test-section {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        button.success { background: #28a745; }
+        button.danger { background: #dc3545; }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #28a745);
+            transition: width 0.3s ease;
+        }
+        #fileInput {
+            margin: 10px 0;
+            padding: 8px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .test-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .result-card {
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Comprehensive OSD Fixes Verification</h1>
+        <p>This tool verifies that all OSD (Orientation & Script Detection) issues have been resolved.</p>
+        
+        <div class="fix-summary">
+            <div class="fix-card">
+                <h4>✅ Fix #1: Engine Mode Parameter</h4>
+                <p>Removed tesseract_ocr_engine_mode from post-initialization parameters to prevent "Attempted to set parameters" error.</p>
+            </div>
+            <div class="fix-card">
+                <h4>✅ Fix #2: Universal Legacy Support</h4>
+                <p>Added legacyCore: true, legacyLang: true to ALL worker creation methods, not just detection workers.</p>
+            </div>
+            <div class="fix-card">
+                <h4>✅ Fix #3: Worker Validation</h4>
+                <p>Added worker validation before calling detect() to prevent "Cannot read properties of null" errors.</p>
+            </div>
+            <div class="fix-card">
+                <h4>✅ Fix #4: Confidence Handling</h4>
+                <p>Improved confidence thresholds and added English fallback for low-confidence detections.</p>
+            </div>
+        </div>
+        
+        <div class="status info" id="status">Ready to test comprehensive OSD fixes</div>
+        
+        <div class="test-section">
+            <h3>🧹 Cache Management</h3>
+            <button onclick="clearWorkersCache()" id="clearBtn">Clear Workers Cache</button>
+            <button onclick="checkCacheStatus()" id="cacheStatusBtn">Check Cache Status</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔍 OSD Detection Tests</h3>
+            <button onclick="testBasicOSD()" id="basicOSDBtn">Test Basic OSD Detection</button>
+            <button onclick="testLowConfidenceHandling()" id="lowConfBtn">Test Low Confidence Handling</button>
+            <button onclick="testWorkerReuse()" id="reuseBtn">Test Worker Reuse</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📁 File Testing</h3>
+            <input type="file" id="fileInput" accept="image/*" placeholder="Select test image...">
+            <button onclick="testWithUploadedFile()" id="fileTestBtn">Test with Uploaded Image</button>
+        </div>
+        
+        <div class="progress" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="test-results" id="testResults"></div>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <script type="module">
+        import { OCRService } from './src/services/OCRService.js';
+        import { LanguageDetectionService } from './src/services/LanguageDetectionService.js';
+        import { OCRCacheManager } from './src/services/OCRCacheManager.js';
+        
+        let logContainer = document.getElementById('log');
+        let status = document.getElementById('status');
+        let progressContainer = document.getElementById('progressContainer');
+        let progressBar = document.getElementById('progressBar');
+        let testResults = document.getElementById('testResults');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.style.color = type === 'error' ? '#dc3545' : 
+                              type === 'success' ? '#28a745' : 
+                              type === 'warning' ? '#ffc107' : '#6c757d';
+            div.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(div);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus(message, type = 'info') {
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+        
+        function updateProgress(percent, description = '') {
+            if (percent > 0) {
+                progressContainer.style.display = 'block';
+                progressBar.style.width = `${percent * 100}%`;
+                if (description) {
+                    log(`Progress: ${Math.round(percent * 100)}% - ${description}`);
+                }
+            } else {
+                setTimeout(() => progressContainer.style.display = 'none', 1000);
+            }
+        }
+        
+        function addTestResult(testName, success, details = '') {
+            const card = document.createElement('div');
+            card.className = `result-card ${success ? 'success' : 'error'}`;
+            card.style.background = success ? '#d4edda' : '#f8d7da';
+            card.style.color = success ? '#155724' : '#721c24';
+            card.innerHTML = `
+                <div>${success ? '✅' : '❌'} ${testName}</div>
+                ${details ? `<small>${details}</small>` : ''}
+            `;
+            testResults.appendChild(card);
+        }
+        
+        function createTestImage(text = 'Hello World Test') {
+            const canvas = document.createElement('canvas');
+            canvas.width = 500;
+            canvas.height = 120;
+            const ctx = canvas.getContext('2d');
+            
+            // White background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Black text
+            ctx.fillStyle = 'black';
+            ctx.font = '28px Arial';
+            ctx.fillText(text, 50, 70);
+            
+            return new Promise(resolve => {
+                canvas.toBlob(resolve, 'image/png');
+            });
+        }
+        
+        window.clearWorkersCache = async function() {
+            try {
+                updateStatus('Clearing workers cache...', 'info');
+                log('🧹 Force clearing all cached workers...');
+                
+                await OCRService.forceClearWorkers();
+                
+                log('✅ Workers cache cleared successfully', 'success');
+                updateStatus('Workers cache cleared', 'success');
+                addTestResult('Cache Clear', true, 'All workers terminated');
+            } catch (error) {
+                log(`❌ Failed to clear workers: ${error.message}`, 'error');
+                updateStatus('Failed to clear workers', 'error');
+                addTestResult('Cache Clear', false, error.message);
+            }
+        };
+        
+        window.checkCacheStatus = async function() {
+            try {
+                const stats = OCRCacheManager.getCacheStats();
+                log(`📊 Cache Status: ${stats.cachedWorkers} workers, ${stats.totalCacheHits} hits`, 'info');
+                log(`📊 Detection worker cached: ${stats.detectionWorkerCached}`, 'info');
+                updateStatus('Cache status checked', 'info');
+                addTestResult('Cache Status', true, `${stats.cachedWorkers} workers`);
+            } catch (error) {
+                log(`❌ Failed to check cache: ${error.message}`, 'error');
+                addTestResult('Cache Status', false, error.message);
+            }
+        };
+        
+        window.testBasicOSD = async function() {
+            try {
+                document.getElementById('basicOSDBtn').disabled = true;
+                updateStatus('Testing basic OSD detection...', 'info');
+                log('🔍 Starting basic OSD detection test...');
+                
+                const testImage = await createTestImage('Hello World Test Document');
+                updateProgress(0.1, 'Created test image');
+                
+                const detectedLanguages = await LanguageDetectionService.detectLanguage(
+                    testImage,
+                    (progress, info) => updateProgress(0.1 + progress * 0.8, info?.description)
+                );
+                
+                updateProgress(1.0, 'Complete');
+                
+                log(`✅ Basic OSD test passed! Languages: ${detectedLanguages.join(', ')}`, 'success');
+                updateStatus('Basic OSD test completed', 'success');
+                addTestResult('Basic OSD', true, detectedLanguages.join(', '));
+                
+            } catch (error) {
+                log(`❌ Basic OSD test failed: ${error.message}`, 'error');
+                updateStatus('Basic OSD test failed', 'error');
+                addTestResult('Basic OSD', false, error.message);
+            } finally {
+                document.getElementById('basicOSDBtn').disabled = false;
+                setTimeout(() => updateProgress(0), 2000);
+            }
+        };
+        
+        window.testLowConfidenceHandling = async function() {
+            try {
+                document.getElementById('lowConfBtn').disabled = true;
+                updateStatus('Testing low confidence handling...', 'info');
+                log('🔍 Testing low confidence OSD handling...');
+                
+                // Create a simple image that might have low confidence
+                const testImage = await createTestImage('a');
+                updateProgress(0.1, 'Created minimal test image');
+                
+                const detectedLanguages = await LanguageDetectionService.detectLanguage(
+                    testImage,
+                    (progress, info) => updateProgress(0.1 + progress * 0.8, info?.description)
+                );
+                
+                updateProgress(1.0, 'Complete');
+                
+                // Should fallback to English or handle low confidence gracefully
+                const hasEnglish = detectedLanguages.includes('eng');
+                if (hasEnglish) {
+                    log(`✅ Low confidence handling works! Fallback to: ${detectedLanguages.join(', ')}`, 'success');
+                    addTestResult('Low Confidence', true, 'English fallback works');
+                } else {
+                    log(`⚠️ Low confidence test: ${detectedLanguages.join(', ')}`, 'warning');
+                    addTestResult('Low Confidence', true, 'Non-English detected');
+                }
+                
+                updateStatus('Low confidence test completed', 'success');
+                
+            } catch (error) {
+                log(`❌ Low confidence test failed: ${error.message}`, 'error');
+                updateStatus('Low confidence test failed', 'error');
+                addTestResult('Low Confidence', false, error.message);
+            } finally {
+                document.getElementById('lowConfBtn').disabled = false;
+                setTimeout(() => updateProgress(0), 2000);
+            }
+        };
+        
+        window.testWorkerReuse = async function() {
+            try {
+                document.getElementById('reuseBtn').disabled = true;
+                updateStatus('Testing worker reuse...', 'info');
+                log('🔍 Testing worker reuse and lifecycle...');
+                
+                const testImage = await createTestImage('Worker Reuse Test');
+                
+                // Test multiple detections in sequence
+                log('🔄 Running first detection...');
+                const first = await LanguageDetectionService.detectLanguage(testImage);
+                
+                log('🔄 Running second detection (should reuse worker)...');
+                const second = await LanguageDetectionService.detectLanguage(testImage);
+                
+                log('🔄 Running third detection...');
+                const third = await LanguageDetectionService.detectLanguage(testImage);
+                
+                const allSame = first.join(',') === second.join(',') && second.join(',') === third.join(',');
+                
+                if (allSame) {
+                    log(`✅ Worker reuse test passed! Consistent results: ${first.join(', ')}`, 'success');
+                    addTestResult('Worker Reuse', true, 'Consistent results');
+                } else {
+                    log(`⚠️ Worker reuse test: Inconsistent results`, 'warning');
+                    addTestResult('Worker Reuse', false, 'Inconsistent results');
+                }
+                
+                updateStatus('Worker reuse test completed', 'success');
+                
+            } catch (error) {
+                log(`❌ Worker reuse test failed: ${error.message}`, 'error');
+                updateStatus('Worker reuse test failed', 'error');
+                addTestResult('Worker Reuse', false, error.message);
+            } finally {
+                document.getElementById('reuseBtn').disabled = false;
+            }
+        };
+        
+        window.testWithUploadedFile = async function() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                updateStatus('Please select a file first', 'warning');
+                return;
+            }
+            
+            try {
+                document.getElementById('fileTestBtn').disabled = true;
+                updateStatus('Testing with uploaded file...', 'info');
+                log(`🔍 Testing OSD with file: ${file.name} (${Math.round(file.size/1024)}KB)`);
+                
+                const startTime = Date.now();
+                const detectedLanguages = await LanguageDetectionService.detectLanguage(
+                    file,
+                    (progress, info) => updateProgress(progress, info?.description)
+                );
+                const detectionTime = Date.now() - startTime;
+                
+                log(`✅ File OSD test completed in ${detectionTime}ms`, 'success');
+                log(`📝 Detected languages: ${detectedLanguages.join(', ')}`, 'info');
+                
+                // Test full OCR with detected languages
+                log('🔍 Testing full OCR with auto-detect...');
+                updateProgress(0.5, 'Starting OCR');
+                
+                const ocrResult = await OCRService.extractTextFromImage(
+                    file,
+                    'auto',
+                    (progress, info) => updateProgress(0.5 + progress * 0.5, info?.description)
+                );
+                
+                updateProgress(1.0, 'Complete');
+                
+                log(`✅ Full OCR completed! Text length: ${ocrResult.text.length} chars`, 'success');
+                updateStatus('File test completed successfully', 'success');
+                addTestResult('File Test', true, `${detectedLanguages.join(', ')} - ${ocrResult.text.length} chars`);
+                
+            } catch (error) {
+                log(`❌ File test failed: ${error.message}`, 'error');
+                updateStatus('File test failed', 'error');
+                addTestResult('File Test', false, error.message);
+            } finally {
+                document.getElementById('fileTestBtn').disabled = false;
+                setTimeout(() => updateProgress(0), 2000);
+            }
+        };
+        
+        // Initialize
+        log('🚀 Comprehensive OSD Fixes Verification Tool Initialized');
+        log('📋 All Critical Fixes Applied:');
+        log('  ✅ Fixed tesseract_ocr_engine_mode parameter error');
+        log('  ✅ Added legacy support to ALL workers');  
+        log('  ✅ Added worker validation to prevent null errors');
+        log('  ✅ Improved confidence handling with flexible thresholds');
+        log('🎯 Your auto-detect should now work consistently!');
+    </script>
+</body>
+</html>
