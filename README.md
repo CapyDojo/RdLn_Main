@@ -58,6 +58,23 @@ RdLn™ is a sophisticated document comparison tool designed for legal professio
 
 ## 🛠️ Development
 
+### First Clone Setup (Windows)
+```powershell
+# From the repository root
+npm ci
+npm run download:all
+npm run copy:tesseract
+
+# Start web development
+npm run dev
+
+# Or start Electron desktop development
+npm run electron:dev
+
+# Optional: install browsers for e2e tests
+npx playwright install
+```
+
 ### Quick Start
 ```bash
 # Install dependencies
@@ -70,11 +87,19 @@ npm run dev
 npm run build
 ```
 
+### Windows / Electron Notes
+- Prefer native Windows commands (PowerShell/Batch) for local tasks.
+- Desktop development: `npm run electron:dev`.
+- Windows packaging: `npm run electron:build:win`; app at `dist-electron-new/win-unpacked/RdLn.exe`.
+- Tauri is on hold — avoid `npm run tauri:*` until re-enabled.
+
 ### Development Guidelines
 - **SSMR Approach**: Safe, Step-by-step, Modular, Reversible changes
 - **Visual Consistency**: Maintain DOM structure parity between components
 - **Performance First**: Optimize for large document handling
 - **TypeScript**: Full type safety throughout the codebase
+- **Tauri Status**: On hold. Use Electron paths for desktop development/builds.
+- **Definition of Done**: See `AGENTS.md` → Definition of Done.
 
 ### AI-Assisted Development with Serena MCP
 
@@ -94,6 +119,9 @@ See `SERENA-README.md` for detailed instructions and `SERENA-USAGE.md` for examp
 - `DEVELOPMENT_GUIDELINES.md` - Comprehensive development standards
 - `CHANGELOG.md` - Complete version history
 - `TESTING_README.md` - Testing procedures and frameworks
+- `AGENTS.md` - Repository Guidelines (contributor guide)
+- `docs/DevRules/Agent_Rules.md` - Agent rules (mandatory)
+- `docs/DevRules/DEVELOPMENT_GUIDELINES.md` - Dev rules (mandatory)
 
 ## 🎯 Production Ready
 
