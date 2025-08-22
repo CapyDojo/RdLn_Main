@@ -57,3 +57,7 @@ mcp.log
 ".claude/" 
 "# Serena cache"  
 ".serena/" 
+""  
+"# Test/prototype HTML files"  
+"tesseract-osd-prototype*.html"  
+"test-osd-first-principles.html" 
