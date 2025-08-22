@@ -7,6 +7,9 @@
   "author": "RdLn Team",
   "copyright": "Copyright (c) 2025 RdLn Team. All rights reserved.",
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20 <21"
+  },
   "main": "src-electron/main.cjs",
   "scripts": {
     "dev": "vite",
@@ -53,7 +56,11 @@
     "prepare:tauri": "npm run copy:tesseract && npm run build",
     "prepare:electron": "npm run download:all && npm run build",
     "setup:electron": "node scripts/setup-electron.js",
-    "mcp": "npx @playwright/mcp@latest"
+    "mcp": "npx @playwright/mcp@latest",
+    "check": "npm run lint && npm run test:run",
+    "check:strict": "npm run lint -- --max-warnings=0 && npm run test:run",
+    "smoke": "vitest run tests/pages tests/services --reporter=verbose",
+    "pack:win": "npm run electron:build:win"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.0.0",
