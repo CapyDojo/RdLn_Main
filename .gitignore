@@ -61,3 +61,7 @@ mcp.log
 "# Test/prototype HTML files"  
 "tesseract-osd-prototype*.html"  
 "test-osd-first-principles.html" 
+  
+# Test/prototype HTML files  
+tesseract-osd-prototype*.html  
+test-osd-first-principles.html 
