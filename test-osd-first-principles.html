@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSD First Principles Test</title>
+    <script src="https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #007acc;
+            background: #f8f9fa;
+        }
+        .result {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffe8e8;
+            border: 1px solid #f44336;
+            color: #d32f2f;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005fa3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        .script-mapping {
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+        }
+        #imagePreview {
+            max-width: 300px;
+            max-height: 200px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #007acc;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 OSD First Principles Test</h1>
+        <p><strong>Workflow:</strong> Upload Image → OSD Script Detection → Map Script to Languages → OCR with Detected Languages</p>
+        
+        <input type="file" id="imageInput" accept="image/*">
+        <div id="imageContainer"></div>
+        
+        <button id="startTest" onclick="runFirstPrinciplesTest()">🚀 Run OSD → OCR Pipeline</button>
+        <button id="resetTest" onclick="resetTest()">🔄 Reset</button>
+    </div>
+
+    <div class="container">
+        <h2>📋 Pipeline Steps</h2>
+        
+        <div class="step">
+            <h3>Step 1: OSD (Orientation & Script Detection)</h3>
+            <div id="osdResult" class="result">Waiting for image...</div>
+            <div class="progress">
+                <div id="osdProgress" class="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Script to Language Mapping</h3>
+            <div class="script-mapping">
+                <strong>Script Mapping Rules:</strong><br>
+                • Latin → eng, spa, fra, deu<br>
+                • Han → chi_sim, chi_tra<br>
+                • Hiragana/Katakana → jpn<br>
+                • Hangul → kor<br>
+                • Arabic → ara<br>
+                • Cyrillic → rus
+            </div>
+            <div id="mappingResult" class="result">Waiting for OSD...</div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: OCR with Detected Languages</h3>
+            <div id="ocrResult" class="result">Waiting for language mapping...</div>
+            <div class="progress">
+                <div id="ocrProgress" class="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📄 Full OCR Output</h2>
+        <div id="fullOcrOutput" class="result" style="max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; background: #f8f9fa; border: 1px solid #ddd;">
+            No OCR output yet...
+        </div>
+        
+        <h3>🔍 OCR Analysis</h3>
+        <div id="ocrAnalysis" class="result" style="background: #fff3cd; border: 1px solid #ffc107;">
+            <strong>Text Analysis:</strong><br>
+            • Character Count: <span id="charCount">0</span><br>
+            • Word Count: <span id="wordCount">0</span><br>
+            • Line Count: <span id="lineCount">0</span><br>
+            • Detected Script: <span id="detectedScript">None</span><br>
+            • Confidence: <span id="ocrConfidence">0%</span><br>
+            • Languages Used: <span id="languagesUsed">None</span>
+        </div>
+    </div>
+
+    <script>
+        // Script to Language Mapping
+        const SCRIPT_LANGUAGE_MAP = {
+            'Latin': ['eng', 'spa', 'fra', 'deu'],
+            'Han': ['chi_sim', 'chi_tra'],
+            'Hiragana': ['jpn'],
+            'Katakana': ['jpn'],
+            'Hangul': ['kor'],
+            'Arabic': ['ara'],
+            'Cyrillic': ['rus'],
+            // Fallbacks
+            'Common': ['eng'], // Default to English for common/unknown scripts
+            'Unknown': ['eng']
+        };
+
+        let currentImage = null;
+        let osdWorker = null;
+        let ocrWorker = null;
+
+        // Script inference from OCR text content
+        function inferScriptFromText(text) {
+            if (!text || text.length === 0) return 'Unknown';
+            
+            // Count characters by script type
+            const scriptCounts = {
+                Latin: 0,
+                Han: 0,
+                Arabic: 0,
+                Cyrillic: 0,
+                Hiragana: 0,
+                Katakana: 0,
+                Hangul: 0
+            };
+
+            for (const char of text) {
+                const code = char.charCodeAt(0);
+                
+                if ((code >= 0x0041 && code <= 0x005A) || // A-Z
+                    (code >= 0x0061 && code <= 0x007A) || // a-z
+                    (code >= 0x00C0 && code <= 0x017F)) { // Latin Extended
+                    scriptCounts.Latin++;
+                } else if (code >= 0x4E00 && code <= 0x9FFF) { // CJK Unified Ideographs
+                    scriptCounts.Han++;
+                } else if (code >= 0x0600 && code <= 0x06FF) { // Arabic
+                    scriptCounts.Arabic++;
+                } else if (code >= 0x0400 && code <= 0x04FF) { // Cyrillic
+                    scriptCounts.Cyrillic++;
+                } else if (code >= 0x3040 && code <= 0x309F) { // Hiragana
+                    scriptCounts.Hiragana++;
+                } else if (code >= 0x30A0 && code <= 0x30FF) { // Katakana
+                    scriptCounts.Katakana++;
+                } else if (code >= 0xAC00 && code <= 0xD7AF) { // Hangul
+                    scriptCounts.Hangul++;
+                }
+            }
+
+            // Find the script with the highest count
+            let maxScript = 'Latin';
+            let maxCount = scriptCounts.Latin;
+            
+            for (const [script, count] of Object.entries(scriptCounts)) {
+                if (count > maxCount) {
+                    maxScript = script;
+                    maxCount = count;
+                }
+            }
+
+            console.log('Script inference:', scriptCounts, 'Winner:', maxScript);
+            return maxScript;
+        }
+
+        // Handle image upload
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                currentImage = file;
+                displayImage(file);
+                resetResults();
+            }
+        });
+
+        function displayImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const container = document.getElementById('imageContainer');
+                container.innerHTML = `<img id="imagePreview" src="${e.target.result}" alt="Preview">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetResults() {
+            document.getElementById('osdResult').textContent = 'Ready for OSD detection...';
+            document.getElementById('osdResult').className = 'result';
+            document.getElementById('mappingResult').textContent = 'Waiting for OSD...';
+            document.getElementById('mappingResult').className = 'result';
+            document.getElementById('ocrResult').textContent = 'Waiting for language mapping...';
+            document.getElementById('ocrResult').className = 'result';
+            document.getElementById('osdProgress').style.width = '0%';
+            document.getElementById('ocrProgress').style.width = '0%';
+            
+            // Reset OCR output display
+            document.getElementById('fullOcrOutput').textContent = 'No OCR output yet...';
+            document.getElementById('charCount').textContent = '0';
+            document.getElementById('wordCount').textContent = '0';
+            document.getElementById('lineCount').textContent = '0';
+            document.getElementById('detectedScript').textContent = 'None';
+            document.getElementById('ocrConfidence').textContent = '0%';
+            document.getElementById('languagesUsed').textContent = 'None';
+        }
+
+        function resetTest() {
+            currentImage = null;
+            document.getElementById('imageContainer').innerHTML = '';
+            document.getElementById('imageInput').value = '';
+            resetResults();
+            
+            // Clean up workers
+            if (osdWorker) {
+                osdWorker.terminate();
+                osdWorker = null;
+            }
+            if (ocrWorker) {
+                ocrWorker.terminate();
+                ocrWorker = null;
+            }
+        }
+
+        function updateProgress(elementId, progress) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.style.width = `${progress * 100}%`;
+            }
+        }
+
+        // Simple progress simulation for UI feedback
+        function simulateProgress(elementId, duration = 2000) {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 0.1;
+                updateProgress(elementId, progress);
+                if (progress >= 1) {
+                    clearInterval(interval);
+                }
+            }, duration / 10);
+        }
+
+        async function runFirstPrinciplesTest() {
+            if (!currentImage) {
+                alert('Please upload an image first');
+                return;
+            }
+
+            document.getElementById('startTest').disabled = true;
+            
+            try {
+                // Step 1: OSD Detection
+                await runOSDDetection();
+                
+                // Step 2: Script to Language Mapping (done synchronously after OSD)
+                
+                // Step 3: OCR with detected languages (done after mapping)
+                
+            } catch (error) {
+                console.error('Pipeline failed:', error);
+                showError('pipelineError', `Pipeline failed: ${error.message}`);
+            } finally {
+                document.getElementById('startTest').disabled = false;
+            }
+        }
+
+        async function runOSDDetection() {
+            updateOSDResult('🔄 Attempting OSD Fix Strategy 1: Legacy Engine Init...');
+            
+            try {
+                // STRATEGY 1: Create with explicit Legacy engine
+                osdWorker = await Tesseract.createWorker('osd', {
+                    langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+                    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+                    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract-core.wasm.js'
+                });
+
+                // Reinitialize with Legacy engine
+                await osdWorker.reinitialize('osd', Tesseract.OEM.TESSERACT_ONLY); // Force OEM 0
+
+                updateOSDResult('⚙️ Strategy 1: Testing Legacy Engine OSD...');
+                
+                await osdWorker.setParameters({
+                    tessedit_pageseg_mode: Tesseract.PSM.OSD_ONLY
+                });
+
+                simulateProgress('osdProgress', 2000);
+                let result = await osdWorker.recognize(currentImage);
+                
+                if (result.data.osd && result.data.osd.script) {
+                    return await handleOSDSuccess(result, 'Strategy 1: Legacy Engine');
+                }
+
+                updateOSDResult('⚙️ Strategy 1 failed, trying Strategy 2: Different traineddata...');
+                await osdWorker.terminate();
+
+            } catch (error) {
+                console.log('Strategy 1 failed:', error);
+                updateOSDResult('⚙️ Strategy 1 failed, trying Strategy 2...');
+            }
+
+            try {
+                // STRATEGY 2: Use different traineddata source
+                osdWorker = await Tesseract.createWorker('osd', {
+                    langPath: 'https://raw.githubusercontent.com/naptha/tessdata/gh-pages/4.0.0',
+                    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+                    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract-core.wasm.js'
+                });
+
+                await osdWorker.reinitialize('osd', Tesseract.OEM.TESSERACT_LSTM_COMBINED); // Try OEM 2
+
+                updateOSDResult('⚙️ Strategy 2: Testing alternate traineddata source...');
+                
+                await osdWorker.setParameters({
+                    tessedit_pageseg_mode: Tesseract.PSM.OSD_ONLY
+                });
+
+                let result = await osdWorker.recognize(currentImage);
+                
+                if (result.data.osd && result.data.osd.script) {
+                    return await handleOSDSuccess(result, 'Strategy 2: Alt traineddata');
+                }
+
+                updateOSDResult('⚙️ Strategy 2 failed, trying Strategy 3: Auto with OSD...');
+                await osdWorker.terminate();
+
+            } catch (error) {
+                console.log('Strategy 2 failed:', error);
+                updateOSDResult('⚙️ Strategy 2 failed, trying Strategy 3...');
+            }
+
+            try {
+                // STRATEGY 3: Use PSM_AUTO_OSD instead of OSD_ONLY
+                osdWorker = await Tesseract.createWorker(['eng', 'osd'], {
+                    langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+                    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+                    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract-core.wasm.js'
+                });
+
+                // Reinitialize with combined mode
+                await osdWorker.reinitialize('eng+osd', Tesseract.OEM.TESSERACT_LSTM_COMBINED);
+
+                updateOSDResult('⚙️ Strategy 3: Testing PSM_AUTO_OSD with eng+osd...');
+                
+                await osdWorker.setParameters({
+                    tessedit_pageseg_mode: Tesseract.PSM.AUTO_OSD // PSM 1 - Auto with OSD
+                });
+
+                simulateProgress('osdProgress', 3000);
+                let result = await osdWorker.recognize(currentImage);
+                
+                console.log('Strategy 3 result:', result);
+                
+                // Check if orientation/script info is in the main data
+                if (result.data.rotate !== undefined || result.data.orientation_degrees !== undefined) {
+                    return await handleOSDSuccess(result, 'Strategy 3: Auto OSD');
+                }
+
+                updateOSDResult('⚙️ Strategy 3 failed, trying Strategy 4: Raw binary...');
+                await osdWorker.terminate();
+
+            } catch (error) {
+                console.log('Strategy 3 failed:', error);
+                updateOSDResult('⚙️ Strategy 3 failed, trying Strategy 4...');
+            }
+
+            try {
+                // STRATEGY 4: Try to force OSD by preprocessing image
+                osdWorker = await Tesseract.createWorker('osd', {
+                    langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+                    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+                    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract-core.wasm.js'
+                });
+
+                updateOSDResult('⚙️ Strategy 4: Testing with image preprocessing...');
+                
+                // Try different PSM modes that might work better
+                const psmModes = [
+                    { mode: Tesseract.PSM.OSD_ONLY, name: 'OSD_ONLY' },
+                    { mode: Tesseract.PSM.AUTO_OSD, name: 'AUTO_OSD' },
+                    { mode: Tesseract.PSM.SINGLE_BLOCK, name: 'SINGLE_BLOCK' }
+                ];
+
+                for (const psm of psmModes) {
+                    updateOSDResult(`⚙️ Strategy 4: Testing PSM ${psm.name}...`);
+                    
+                    await osdWorker.setParameters({
+                        tessedit_pageseg_mode: psm.mode,
+                        // Force OSD-specific parameters
+                        tessedit_do_invert: '0',
+                        textord_tabfind_find_tables: '0'
+                    });
+
+                    let result = await osdWorker.recognize(currentImage);
+                    console.log(`PSM ${psm.name} result:`, result.data);
+                    
+                    // Check multiple possible OSD data locations
+                    if (result.data.osd || 
+                        result.data.rotate !== undefined || 
+                        result.data.orientation_degrees !== undefined ||
+                        result.data.script ||
+                        result.data.text.length > 0) { // Text detection means we can infer script
+                        
+                        // If we have text but no explicit script detection, infer script from text
+                        if (!result.data.osd && !result.data.script && result.data.text.length > 0) {
+                            result.data.inferredScript = inferScriptFromText(result.data.text);
+                            result.data.script = result.data.inferredScript;
+                            result.data.script_confidence = result.data.confidence || 0;
+                        }
+                        
+                        return await handleOSDSuccess(result, `Strategy 4: PSM ${psm.name}`);
+                    }
+                }
+
+            } catch (error) {
+                console.log('Strategy 4 failed:', error);
+            }
+
+            // All strategies failed
+            updateOSDResult('❌ All OSD strategies failed. OSD may not be supported in this environment.');
+            throw new Error('All OSD detection strategies failed');
+        }
+
+        async function handleOSDSuccess(result, strategy) {
+            console.log(`${strategy} SUCCESS:`, result);
+            updateProgress('osdProgress', 1.0);
+            
+            // Extract OSD information from various possible locations
+            let osdData = result.data.osd || result.data;
+            
+            const script = osdData.script || osdData.inferredScript || 'Unknown';
+            const scriptConfidence = osdData.script_confidence || osdData.confidence || 0;
+            const orientation = osdData.orientation_degrees || osdData.rotate || 0;
+            const orientationConfidence = osdData.orientation_confidence || 0;
+            const isInferred = !!osdData.inferredScript;
+
+            const resultText = `✅ OSD Detection Success (${strategy}):
+Script: ${script} ${isInferred ? '(inferred from text)' : '(direct detection)'}
+Script Confidence: ${scriptConfidence.toFixed(1)}%
+Orientation: ${orientation}°
+Orientation Confidence: ${orientationConfidence.toFixed(1)}%
+Method: ${strategy}
+Text Sample: "${result.data.text.substring(0, 50)}${result.data.text.length > 50 ? '...' : ''}"`;
+
+            updateOSDResult(resultText);
+            
+            // Update OCR output display with OSD results
+            updateOCROutput(result.data.text, script, scriptConfidence, 'OSD Detection Phase');
+            
+            // Step 2: Map script to languages
+            await mapScriptToLanguages(script, scriptConfidence);
+            
+            // Clean up OSD worker
+            await osdWorker.terminate();
+            osdWorker = null;
+        }
+
+        async function mapScriptToLanguages(detectedScript, confidence) {
+            updateMappingResult('🗺️ Mapping script to languages...');
+            
+            // Get languages for detected script
+            const languages = SCRIPT_LANGUAGE_MAP[detectedScript] || SCRIPT_LANGUAGE_MAP['Unknown'];
+            
+            const mappingText = `✅ Script Mapping Complete:
+Detected Script: ${detectedScript}
+Script Confidence: ${confidence?.toFixed(1) || 0}%
+Mapped Languages: ${languages.join(', ')}
+Language Count: ${languages.length}`;
+
+            updateMappingResult(mappingText);
+            
+            // Step 3: Run OCR with mapped languages
+            await runOCRWithLanguages(languages);
+        }
+
+        async function runOCRWithLanguages(languages) {
+            updateOCRResult('🔄 Starting OCR worker...');
+            
+            // Use primary language for worker creation (first in list)
+            const primaryLanguage = languages[0];
+            const languageString = languages.join('+');
+            
+            updateOCRResult(`⚙️ Creating OCR worker for: ${languageString}`);
+            
+            ocrWorker = await Tesseract.createWorker(primaryLanguage, {
+                // Use CDN paths
+                workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+                langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+                corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract-core.wasm.js'
+            });
+
+            // Load additional languages if multiple detected
+            if (languages.length > 1) {
+                updateOCRResult(`📚 Loading additional languages: ${languages.slice(1).join(', ')}`);
+                for (const lang of languages.slice(1)) {
+                    await ocrWorker.loadLanguage(lang);
+                }
+                await ocrWorker.initialize(languageString);
+            }
+
+            updateOCRResult('📝 Running OCR recognition...');
+            simulateProgress('ocrProgress', 4000);
+
+            // Run OCR without logger (causes clone error)
+            const ocrResult = await ocrWorker.recognize(currentImage);
+            updateProgress('ocrProgress', 1.0);
+
+            console.log('OCR Full Result:', ocrResult);
+            
+            const confidence = ocrResult.data.confidence || 0;
+            const text = ocrResult.data.text.trim();
+            
+            const resultText = `✅ OCR Complete:
+Languages Used: ${languageString}
+Text Confidence: ${confidence.toFixed(1)}%
+Text Length: ${text.length} characters
+Detected Text:
+"${text.substring(0, 200)}${text.length > 200 ? '...' : ''}"`;
+
+            updateOCRResult(resultText);
+            
+            // Update OCR output display with final results
+            updateOCROutput(text, 'Final OCR', confidence, languageString);
+
+            // Clean up OCR worker
+            await ocrWorker.terminate();
+            ocrWorker = null;
+        }
+
+        function updateOSDResult(text) {
+            const element = document.getElementById('osdResult');
+            element.textContent = text;
+            element.className = text.includes('❌') ? 'result error' : 'result';
+        }
+
+        function updateMappingResult(text) {
+            const element = document.getElementById('mappingResult');
+            element.textContent = text;
+            element.className = text.includes('❌') ? 'result error' : 'result';
+        }
+
+        function updateOCRResult(text) {
+            const element = document.getElementById('ocrResult');
+            element.textContent = text;
+            element.className = text.includes('❌') ? 'result error' : 'result';
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = `❌ ${message}`;
+                element.className = 'result error';
+            }
+        }
+
+        // Update OCR output display
+        function updateOCROutput(text, detectedScript, confidence, languagesUsed) {
+            // Update full OCR output
+            document.getElementById('fullOcrOutput').textContent = text || 'No text detected';
+            
+            // Calculate text statistics
+            const charCount = text ? text.length : 0;
+            const wordCount = text ? text.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
+            const lineCount = text ? text.split('\n').length : 0;
+            
+            // Update analysis display
+            document.getElementById('charCount').textContent = charCount;
+            document.getElementById('wordCount').textContent = wordCount;
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('detectedScript').textContent = detectedScript || 'Unknown';
+            document.getElementById('ocrConfidence').textContent = `${(confidence || 0).toFixed(1)}%`;
+            document.getElementById('languagesUsed').textContent = languagesUsed || 'None';
+            
+            // Scroll to OCR output section for visibility
+            document.getElementById('fullOcrOutput').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest' 
+            });
+        }
+
+        // Initialize
+        resetResults();
+    </script>
+</body>
+</html>

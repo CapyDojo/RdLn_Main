@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract OCR with OSD Prototype v11</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .language-option {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f8f9fa;
+        }
+        .language-option.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .hidden {
+            display: none;
+        }
+        .highlight {
+            background-color: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .confidence-high {
+            background-color: #d4edda;
+        }
+        .confidence-low {
+            background-color: #f8d7da;
+        }
+        .toggle-container {
+            margin: 10px 0;
+        }
+        .toggle-label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RdLn™ Tesseract OCR with OSD Prototype v11</h1>
+        <p>This prototype demonstrates Tesseract.js with Orientation and Script Detection (OSD) for 10 supported languages.</p>
+        <p><strong>Note:</strong> For OSD functionality, the <code>osd.traineddata</code> model must be available. Tesseract.js will automatically download it when needed.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="detectBtn" class="btn">1. Detect Script & Orientation</button>
+            <button id="ocrBtn" class="btn" disabled>2. Run OCR</button>
+            <button id="resetBtn" class="btn">Reset</button>
+            
+            <div class="toggle-container">
+                <span class="toggle-label">Bias toward Simplified:</span>
+                <input type="checkbox" id="biasToggle" checked>
+                <label for="biasToggle">Enable (5% boost to Simplified confidence)</label>
+            </div>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Detecting Script...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="result-box">
+                <h3>OSD Results</h3>
+                <pre id="osdResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>OCR Results</h3>
+                <pre id="ocrResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>Chinese Analysis</h3>
+                <div id="chineseAnalysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supported languages configuration
+        const SUPPORTED_LANGUAGES = [
+            { code: "eng", name: "English", flag: "🇪🇳" },
+            { code: "chi_sim", name: "Chinese (Simplified)", flag: "🇨🇳" },
+            { code: "deu", name: "German", flag: "🇩🇪" },
+            { code: "chi_tra", name: "Chinese (Traditional)", flag: "🇹🇼" },
+            { code: "fra", name: "French", flag: "🇫🇷" },
+            { code: "jpn", name: "Japanese", flag: "🇯🇵" },
+            { code: "spa", name: "Spanish", flag: "🇪🇸" },
+            { code: "kor", name: "Korean", flag: "🇰🇷" },
+            { code: "ara", name: "Arabic", flag: "🇸🇦" },
+            { code: "rus", name: "Russian", flag: "🇷🇺" }
+        ];
+
+        // Map script names to language codes
+        // Based on actual Tesseract OSD detection output and common script names
+        const SCRIPT_TO_LANGUAGES = {
+            // Latin-based scripts
+            'Latin': ['eng', 'deu', 'fra', 'spa'],
+            
+            // Chinese scripts
+            'Han': ['chi_sim', 'chi_tra'], // Generic Chinese characters
+            'HanS': ['chi_sim'], // Simplified Chinese
+            'HanT': ['chi_tra'], // Traditional Chinese
+            'Chinese': ['chi_sim', 'chi_tra'], // Generic Chinese
+            
+            // Other major scripts
+            'Japanese': ['jpn'],
+            'Korean': ['kor'],
+            'Arabic': ['ara'],
+            'Cyrillic': ['rus'],
+            'Devanagari': ['hin'],
+            'Thai': ['tha'],
+            'Hebrew': ['heb'],
+            
+            // Fallback for unknown scripts
+            'Unknown': ['eng'],
+            'Common': ['eng'] // Common script often defaults to English
+        };
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const detectBtn = document.getElementById('detectBtn');
+        const ocrBtn = document.getElementById('ocrBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const biasToggle = document.getElementById('biasToggle');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const osdResults = document.getElementById('osdResults');
+        const ocrResults = document.getElementById('ocrResults');
+        const chineseAnalysis = document.getElementById('chineseAnalysis');
+
+        // State variables
+        let currentImage = null;
+        let detectedScript = null;
+        let detectedOrientation = null;
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        detectBtn.addEventListener('click', detectScriptAndOrientation);
+        ocrBtn.addEventListener('click', runOCR);
+        resetBtn.addEventListener('click', resetPrototype);
+
+        // Functions
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                    ocrBtn.disabled = true;
+                    detectedScript = null;
+                    detectedOrientation = null;
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function detectScriptAndOrientation() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Detecting Script & Orientation...', 0, 'Initializing OSD...');
+                
+                // Use Tesseract.detect for OSD
+                const result = await Tesseract.detect(currentImage);
+                
+                // Extract script and orientation
+                detectedScript = result.data.script || 'Unknown';
+                detectedOrientation = result.data.orientation || 0;
+                
+                // Debug output
+                console.log('Detected script:', detectedScript);
+                console.log('Script confidence:', result.data.script_confidence || 'N/A');
+                console.log('Available scripts in mapping:', Object.keys(SCRIPT_TO_LANGUAGES));
+                console.log('Mapping found:', SCRIPT_TO_LANGUAGES[detectedScript] || 'No mapping found');
+                
+                // Display OSD results
+                osdResults.textContent = JSON.stringify({
+                    script: detectedScript,
+                    orientation: detectedOrientation,
+                    script_confidence: result.data.script_confidence || 'N/A',
+                    orientation_confidence: result.data.orientation_confidence || 'N/A',
+                    deskewAngle: result.data.angle,
+                    confidence: result.data.confidence,
+                    unicharset: result.data.unicharset
+                }, null, 2);
+                
+                updateProgress(100, 'OSD detection complete!');
+                
+                // Enable OCR button
+                ocrBtn.disabled = false;
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('OSD Error:', error);
+                alert('Error during OSD detection: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        // Function to align and compare paragraph results from both models
+        function alignAndCompareResults(resultSim, resultTra) {
+            // Get paragraph-level data from both results (preserves line breaks)
+            const paragraphsSim = resultSim.data.paragraphs || [];
+            const paragraphsTra = resultTra.data.paragraphs || [];
+            
+            console.log('Simplified paragraphs count:', paragraphsSim.length);
+            console.log('Traditional paragraphs count:', paragraphsTra.length);
+            
+            // For each paragraph, we'll compare at word level
+            const maxLength = Math.max(paragraphsSim.length, paragraphsTra.length);
+            const alignment = [];
+            
+            // Process each paragraph
+            for (let i = 0; i < maxLength; i++) {
+                const paraSim = paragraphsSim[i];
+                const paraTra = paragraphsTra[i];
+                
+                // Get text and words for each paragraph
+                const textSim = paraSim ? (paraSim.text || '') : '';
+                const textTra = paraTra ? (paraTra.text || '') : '';
+                
+                // Get word-level data for detailed comparison
+                const wordsSim = paraSim ? (paraSim.words || []) : [];
+                const wordsTra = paraTra ? (paraTra.words || []) : [];
+                
+                // Get confidence values (default to 0 if not available)
+                const confSim = paraSim ? (paraSim.confidence || 0) : 0;
+                const confTra = paraTra ? (paraTra.confidence || 0) : 0;
+                
+                // Decide which paragraph text to use based on confidence
+                let chosenText, chosenConf, chosenModel;
+                
+                if (biasToggle.checked) {
+                    // Apply bias toward Simplified (5% boost)
+                    const biasedConfSim = confSim * 1.05;
+                    if (biasedConfSim >= confTra) {
+                        chosenText = textSim;
+                        chosenConf = confSim;
+                        chosenModel = 'Simplified';
+                    } else {
+                        chosenText = textTra;
+                        chosenConf = confTra;
+                        chosenModel = 'Traditional';
+                    }
+                } else {
+                    // No bias - pure confidence comparison
+                    if (confSim >= confTra) {
+                        chosenText = textSim;
+                        chosenConf = confSim;
+                        chosenModel = 'Simplified';
+                    } else {
+                        chosenText = textTra;
+                        chosenConf = confTra;
+                        chosenModel = 'Traditional';
+                    }
+                }
+                
+                alignment.push({
+                    position: i,
+                    simplified: {
+                        text: textSim,
+                        confidence: confSim,
+                        words: wordsSim
+                    },
+                    traditional: {
+                        text: textTra,
+                        confidence: confTra,
+                        words: wordsTra
+                    },
+                    chosen: {
+                        text: chosenText,
+                        confidence: chosenConf,
+                        model: chosenModel
+                    }
+                });
+            }
+            
+            return alignment;
+        }
+
+        // Function to reconstruct final text from alignment while preserving line breaks
+        function reconstructText(alignment) {
+            return alignment.map(item => item.chosen.text).join('\n');
+        }
+
+        // Function to display detailed Chinese analysis results
+        function displayDetailedChineseAnalysis(alignment, finalText) {
+            let html = `<h4>Per-Paragraph Comparison and Selection</h4>`;
+            html += `<table>
+                <thead>
+                    <tr>
+                        <th>Paragraph</th>
+                        <th>Simplified Text</th>
+                        <th>Simplified Confidence</th>
+                        <th>Traditional Text</th>
+                        <th>Traditional Confidence</th>
+                        <th>Chosen Text</th>
+                        <th>Chosen Model</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
+            alignment.forEach(item => {
+                const simConfClass = item.simplified.confidence > item.traditional.confidence ? 'confidence-high' : 'confidence-low';
+                const traConfClass = item.traditional.confidence > item.simplified.confidence ? 'confidence-high' : 'confidence-low';
+                
+                // Truncate long text for display
+                const displaySimText = item.simplified.text.length > 50 ? 
+                    item.simplified.text.substring(0, 50) + '...' : item.simplified.text;
+                const displayTraText = item.traditional.text.length > 50 ? 
+                    item.traditional.text.substring(0, 50) + '...' : item.traditional.text;
+                const displayChosenText = item.chosen.text.length > 50 ? 
+                    item.chosen.text.substring(0, 50) + '...' : item.chosen.text;
+                
+                html += `<tr>
+                    <td>${item.position}</td>
+                    <td class="${simConfClass}">${displaySimText || '(empty)'}</td>
+                    <td class="${simConfClass}">${item.simplified.confidence.toFixed(2)}</td>
+                    <td class="${traConfClass}">${displayTraText || '(empty)'}</td>
+                    <td class="${traConfClass}">${item.traditional.confidence.toFixed(2)}</td>
+                    <td><strong>${displayChosenText || '(empty)'}</strong></td>
+                    <td>${item.chosen.model}</td>
+                </tr>`;
+            });
+            
+            html += `</tbody></table>`;
+            
+            html += `<h4>Final Reconstructed Output (with line breaks preserved)</h4>`;
+            html += `<pre>${finalText}</pre>`;
+            
+            if (biasToggle.checked) {
+                html += `<p><em>Bias toward Simplified is enabled (5% boost)</em></p>`;
+            } else {
+                html += `<p><em>Bias toward Simplified is disabled</em></p>`;
+            }
+            
+            chineseAnalysis.innerHTML = html;
+        }
+
+        async function runOCR() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Running OCR...', 0, 'Initializing OCR...');
+                
+                // Determine which languages to use based on detected script
+                let languagesToUse = ['eng']; // Default to English
+                if (detectedScript && SCRIPT_TO_LANGUAGES[detectedScript]) {
+                    languagesToUse = SCRIPT_TO_LANGUAGES[detectedScript];
+                }
+                
+                console.log('Detected script:', detectedScript);
+                console.log('Languages to use:', languagesToUse);
+                
+                // Special handling for Chinese - run both models and compare at paragraph level
+                if (detectedScript === 'Han' && languagesToUse.includes('chi_sim') && languagesToUse.includes('chi_tra')) {
+                    console.log('Chinese detected - running both Simplified and Traditional models...');
+                    
+                    // Run OCR with Simplified Chinese model
+                    showProgress('Running OCR...', 20, 'Processing with Simplified Chinese model...');
+                    const workerSim = await Tesseract.createWorker(['chi_sim']);
+                    await workerSim.setParameters({
+                        classify_enable_learning: '0'
+                    });
+                    const resultSim = await workerSim.recognize(currentImage);
+                    await workerSim.terminate();
+                    console.log('Simplified Chinese result paragraphs:', resultSim.data.paragraphs?.length || 0);
+                    
+                    // Run OCR with Traditional Chinese model
+                    showProgress('Running OCR...', 60, 'Processing with Traditional Chinese model...');
+                    const workerTra = await Tesseract.createWorker(['chi_tra']);
+                    await workerTra.setParameters({
+                        classify_enable_learning: '0'
+                    });
+                    const resultTra = await workerTra.recognize(currentImage);
+                    await workerTra.terminate();
+                    console.log('Traditional Chinese result paragraphs:', resultTra.data.paragraphs?.length || 0);
+                    
+                    // Align and compare results at paragraph level to preserve line breaks
+                    const alignment = alignAndCompareResults(resultSim, resultTra);
+                    
+                    // Reconstruct final text while preserving line breaks
+                    const finalText = reconstructText(alignment);
+                    
+                    // Display the final OCR result
+                    ocrResults.textContent = finalText;
+                    
+                    // Display detailed analysis
+                    displayDetailedChineseAnalysis(alignment, finalText);
+                    
+                    updateProgress(100, 'OCR complete with per-paragraph arbitration');
+                } else {
+                    // Create a worker with the appropriate languages
+                    const worker = await Tesseract.createWorker(languagesToUse);
+                    
+                    // Set parameters
+                    await worker.setParameters({
+                        classify_enable_learning: '0' // Disable learning for consistent results
+                    });
+                    
+                    // Run OCR
+                    const { data } = await worker.recognize(currentImage);
+                    
+                    // Display OCR results
+                    ocrResults.textContent = data.text;
+                    
+                    updateProgress(100, 'OCR complete!');
+                    
+                    // Terminate worker
+                    await worker.terminate();
+                    
+                    // Clear Chinese analysis for non-Chinese text
+                    chineseAnalysis.innerHTML = '<p>Not Chinese text - no character analysis performed.</p>';
+                }
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('OCR Error:', error);
+                alert('Error during OCR: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function resetPrototype() {
+            // Reset all state
+            currentImage = null;
+            detectedScript = null;
+            detectedOrientation = null;
+            
+            // Reset UI
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            controls.classList.add('hidden');
+            results.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            ocrBtn.disabled = true;
+            
+            // Clear results
+            osdResults.textContent = '';
+            ocrResults.textContent = '';
+            chineseAnalysis.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
