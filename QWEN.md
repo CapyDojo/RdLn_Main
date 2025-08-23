@@ -4,6 +4,10 @@
 
 This is the **RdLn™ Document Comparison Tool**, a professional-grade application for comparing documents with advanced features like OCR (Optical Character Recognition) and a modern glassmorphism UI. It's built using React, TypeScript, and Vite.
 
+### Repo Primer (Read First)
+- Source of truth: `AGENTS.md` (architecture, flows, Definition of Done). Follow `docs/DevRules/Agent_Rules.md` and `docs/DevRules/DEVELOPMENT_GUIDELINES.md`.
+- Platform status: Tauri builds are on hold — do not run `npm run tauri:*`. Use Electron for desktop (`npm run electron:dev`, `npm run electron:build:win`). Prefer Windows-native commands.
+
 ### Key Features
 
 - **Document Comparison**: Uses a custom implementation of the Myers diff algorithm to compare text documents, optimized for legal and professional documents.

@@ -18,6 +18,36 @@
 - Desktop: Electron active (`src-electron/**`, `ELECTRON_BUILD` flag in scripts); Tauri paused.
 - OCR: `tesseract.js`; assets managed by `scripts/download-*` and `scripts/copy-*`.
 
+## Core Components & Flow
+- `src/App.tsx`: Initializes providers (Layout, ScrollLock, ExperimentalLayout, Theme), renders `Header`, `StatusBar`, and `ComparisonInterface`. Cleans up OCR workers on unmount; exposes optional dev/test pages.
+- `src/components/ComparisonInterface.tsx`: Central orchestrator. Uses `src/hooks/useComparison.ts` for the compare lifecycle (resource guardrails, cancellation via `AbortController`, progress/chunking, performance metrics). Chooses `src/components/DesktopInputLayout.tsx` / `src/components/MobileInputLayout.tsx`, manages side panels/overlays, and passes `result` to output.
+- `src/components/TextInputPanel.tsx`: Two panels (Original/Revised). Handles typing, paste, and drag/drop. If an image is pasted/dropped, calls `src/hooks/useOCR.ts` to `extractTextFromImage` and inserts extracted text. Applies intelligent paste formatting (PDF/RTF/HTML) and provides language selection/auto‑detect controls.
+- OCR services (`src/services/*.ts`):
+  - `src/services/OCRService.ts` / `src/services/OCROrchestrator.ts`: Manage `tesseract.js` workers, queueing, termination.
+  - `src/services/LanguageDetectionService.ts` + `src/services/BackgroundLanguageLoader.ts`: Detect languages and preload assets.
+  - `src/services/OCRCacheManager.ts` / `src/services/OCRTextCleanupService.ts` / `src/services/OCRRouter.ts`: Cache, normalize, and route OCR flows.
+- Diff engine (`src/algorithms/MyersAlgorithm.ts`): Core comparison algorithm; accepts a progress callback and respects a global abort signal for fast cancellation.
+- Output (`src/components/OutputLayout.tsx` + `src/components/RedlineOutput.tsx`): Renders diffs with chunked strategy; reports stats back to `ComparisonInterface`.
+- Controls & Stats: `src/components/DesktopControlsPanel.tsx` / `src/components/MobileControlsPanel.tsx`, `src/components/ProcessingDisplay.tsx`, `src/components/ComparisonStats.tsx`, `src/components/StatusBar.tsx` manage actions and display state.
+- Contexts: `src/contexts/RdLnMemoryContext.tsx` (save/load sessions), `src/contexts/LayoutContext.tsx`, `src/contexts/ScrollLockContext.tsx` (scroll sync), `src/contexts/ThemeContext.tsx`, `src/contexts/FontSizeContext.tsx`, performance utilities.
+
+Data flow summary
+1) User types/pastes or pastes an image → `TextInputPanel` may run OCR → updates input state.
+2) `ComparisonInterface` triggers `useComparison.compareDocuments()` (auto/manual).
+3) Guardrails pass → `MyersAlgorithm.compare()` runs with progress and cancellation.
+4) `result` set → `OutputLayout/RedlineOutput` render → stats emitted → controls/status/overlays update.
+
+Key hooks
+- `src/hooks/useComparison.ts`: Orchestrates compare lifecycle, guardrails, cancellation, progress.
+- `src/hooks/useOCR.ts`: Wraps tesseract.js; extractTextFromImage + language/auto-detect state.
+- `src/hooks/useResizeHandlers.ts`: CSS-first panel/output resizing with min/max constraints.
+- `src/hooks/useScrollSync.ts`: Scroll lock and synchronized scrolling across panes.
+- `src/hooks/useAutoScroll.ts`: Gentle auto-scroll of results during processing/display.
+- `src/hooks/useResultsOverlay.ts` + `src/hooks/useJumpToResults.ts`: Overlay lifecycle and jump helpers.
+- `src/hooks/usePerformanceMonitor.ts`: Operation/metric timing with safe fallbacks.
+- `src/hooks/useUndoHistory.ts`: Undo stack for cleared inputs.
+- `src/hooks/useMobileTabInterface.ts`: Mobile/desktop detection and panel visibility.
+
 ## Build, Test, and Development Commands
 - `npm run dev`: Start Vite dev server for web.
 - `npm run build` | `npm run build:web`: Production build to `dist/`.

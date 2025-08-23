@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Repo Primer (Read First)
+- Source of truth: see `AGENTS.md` for architecture, flows, and Definition of Done. Follow `docs/DevRules/Agent_Rules.md` and `docs/DevRules/DEVELOPMENT_GUIDELINES.md` at all times.
+- Platform status: Tauri builds are on hold — do not run `npm run tauri:*`. Use Electron paths for desktop (`npm run electron:dev`, `npm run electron:build:win`). Prefer Windows-native commands.
+
 ## Development Commands
 
 ```bash

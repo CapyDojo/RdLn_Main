@@ -4,6 +4,10 @@
 
 RdLn™ is a professional-grade document comparison tool designed for legal professionals and organizations requiring precise document analysis. It provides a modern, glassmorphism UI and features client-side document processing for complete confidentiality.
 
+### Repo Primer (Read First)
+- Source of truth: see `AGENTS.md` for architecture, flows, and Definition of Done. Follow `docs/DevRules/Agent_Rules.md` and `docs/DevRules/DEVELOPMENT_GUIDELINES.md`.
+- Platform status: Tauri builds are on hold — avoid `npm run tauri:*`. Use Electron for desktop work (`npm run electron:dev`, `npm run electron:build:win`). Prefer Windows-native commands.
+
 **Key Features:**
 
 *   **Professional Document Comparison:** Utilizes the Myers algorithm for an optimized diff engine.
