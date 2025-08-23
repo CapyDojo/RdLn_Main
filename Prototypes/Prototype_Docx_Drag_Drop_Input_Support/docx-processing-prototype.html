@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Processing Prototype</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #3498db;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .drop-zone.dragover {
+            background-color: #e3f2fd;
+            border-color: #2980b9;
+        }
+        
+        .drop-zone-icon {
+            font-size: 48px;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+        
+        .drop-zone-text {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .file-input-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .file-input {
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .file-input:hover {
+            background-color: #2980b9;
+        }
+        
+        .file-input:active {
+            background-color: #21618c;
+        }
+        
+        .file-info {
+            background-color: #e8f4fc;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .file-info.visible {
+            display: block;
+        }
+        
+        .processing {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .processing.visible {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .output {
+            margin-top: 30px;
+        }
+        
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .output-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .copy-button {
+            padding: 8px 16px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .copy-button:hover {
+            background-color: #229954;
+        }
+        
+        .output-content {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #fafafa;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .error {
+            background-color: #fadbd8;
+            border: 1px solid #f1948a;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .error.visible {
+            display: block;
+        }
+        
+        .error-title {
+            font-weight: bold;
+            color: #c0392b;
+            margin-bottom: 5px;
+        }
+        
+        .instructions {
+            background-color: #fef9e7;
+            border-left: 4px solid #f1c40f;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #7d6608;
+        }
+        
+        .instructions ul {
+            margin-bottom: 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DOCX Processing Prototype</h1>
+        
+        <div class="instructions">
+            <h3>Testing Instructions</h3>
+            <ul>
+                <li>Drag and drop a DOCX file onto the drop zone, or click "Select DOCX File" to choose one</li>
+                <li>The prototype will extract text content from the DOCX file</li>
+                <li><strong>Note:</strong> Legacy DOC files are not supported. Please use DOCX format.</li>
+                <li>Check the output area to see the extracted text</li>
+                <li>Test with various DOCX files to validate accuracy and performance</li>
+            </ul>
+        </div>
+        
+        <div class="drop-zone" id="drop-zone">
+            <div class="drop-zone-icon">📄</div>
+            <div class="drop-zone-text">Drag and drop a DOCX file here</div>
+            <div class="drop-zone-text">(DOC files not supported)</div>
+            <div class="drop-zone-text">or</div>
+        </div>
+        
+        <div class="file-input-container">
+            <input type="file" id="file-input" class="file-input" accept=".docx" />
+            <div class="drop-zone-text" style="font-size: 14px; color: #7f8c8d; margin-top: 10px;">
+                (DOC files not supported - please use DOCX format)
+            </div>
+        </div>
+        
+        <div class="file-info" id="file-info">
+            <strong>Selected File:</strong> <span id="file-name"></span> 
+            (<span id="file-size"></span>)
+        </div>
+        
+        <div class="processing" id="processing">
+            <div class="spinner"></div>
+            <p>Processing DOCX file... This may take a moment for large files.</p>
+        </div>
+        
+        <div class="error" id="error">
+            <div class="error-title">Error Processing File</div>
+            <div id="error-message"></div>
+        </div>
+        
+        <div class="output">
+            <div class="output-header">
+                <div class="output-title">Extracted Text Content</div>
+                <button class="copy-button" id="copy-button">Copy Text</button>
+            </div>
+            <div class="output-content" id="output-content">
+                Extracted text will appear here...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mammoth.js will be available globally after loading
+        let mammoth;
+        
+        // Load mammoth.js dynamically
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/mammoth@1.10.0/mammoth.browser.min.js';
+        script.onload = function() {
+            mammoth = window.mammoth;
+            console.log('Mammoth.js loaded successfully');
+            console.log('Available mammoth functions:', mammoth ? Object.keys(mammoth) : 'Not available');
+        };
+        script.onerror = function() {
+            console.error('Failed to load mammoth.js');
+            document.getElementById('error-message').textContent = 'Failed to load DOCX processing library. Please refresh the page to try again.';
+            document.getElementById('error').classList.add('visible');
+        };
+        document.head.appendChild(script);
+        
+        // DOM Elements
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const processing = document.getElementById('processing');
+        const outputContent = document.getElementById('output-content');
+        const error = document.getElementById('error');
+        const errorMessage = document.getElementById('error-message');
+        const copyButton = document.getElementById('copy-button');
+        
+        // Format file size for display
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Check if file is a DOCX file
+        function isDocxFile(file) {
+            return file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                   file.name.toLowerCase().endsWith('.docx');
+        }
+        
+        // Check if file is a legacy DOC file
+        function isDocFile(file) {
+            return file.type === 'application/msword' ||
+                   file.name.toLowerCase().endsWith('.doc');
+        }
+        
+        // Process DOCX file
+        async function processDocxFile(file) {
+            // Show processing state
+            processing.classList.add('visible');
+            error.classList.remove('visible');
+            outputContent.textContent = 'Extracting text from DOCX file...';
+            
+            try {
+                // Check if file is a legacy DOC file
+                if (isDocFile(file)) {
+                    throw new Error('Legacy DOC files are not supported. Please save your document as DOCX format and try again.');
+                }
+                
+                // Validate file type
+                if (!isDocxFile(file)) {
+                    throw new Error('Selected file is not a DOCX file. Please select a valid .docx file.');
+                }
+                
+                // Check if mammoth is loaded
+                if (!mammoth) {
+                    throw new Error('DOCX processing library not loaded yet. Please wait a moment and try again.');
+                }
+                
+                // Check if extractRawText function exists
+                if (typeof mammoth.extractRawText !== 'function') {
+                    throw new Error('mammoth.extractRawText is not a function. Available functions: ' + Object.keys(mammoth).join(', '));
+                }
+                
+                // Convert file to array buffer
+                const arrayBuffer = await file.arrayBuffer();
+                
+                // Process with mammoth
+                const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                
+                // Display results
+                if (result.value.trim()) {
+                    outputContent.textContent = result.value;
+                } else {
+                    outputContent.textContent = 'No text content found in the DOCX file.';
+                }
+                
+                // Show any messages (warnings, etc.)
+                if (result.messages.length > 0) {
+                    console.log('Processing messages:', result.messages);
+                }
+                
+            } catch (err) {
+                // Display error
+                errorMessage.textContent = err.message;
+                error.classList.add('visible');
+                outputContent.textContent = 'Error processing file. Please try another file.';
+                console.error('File processing error:', err);
+            } finally {
+                // Hide processing state
+                processing.classList.remove('visible');
+            }
+        }
+        
+        // Handle file selection
+        function handleFileSelection(file) {
+            // Display file info
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.add('visible');
+            
+            // Process the file
+            processDocxFile(file);
+        }
+        
+        // Event Listeners
+        // File input change
+        fileInput.addEventListener('change', (event) => {
+            if (event.target.files.length > 0) {
+                handleFileSelection(event.target.files[0]);
+            }
+        });
+        
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            if (event.dataTransfer.files.length > 0) {
+                handleFileSelection(event.dataTransfer.files[0]);
+            }
+        });
+        
+        // Click on drop zone to trigger file input
+        dropZone.addEventListener('click', () => {
+            // Only trigger if mammoth is loaded
+            if (!mammoth) {
+                errorMessage.textContent = 'DOCX processing library is still loading. Please wait a moment and try again.';
+                error.classList.add('visible');
+                return;
+            }
+            fileInput.click();
+        });
+        
+        // Copy button
+        copyButton.addEventListener('click', () => {
+            if (outputContent.textContent && outputContent.textContent !== 'Extracted text will appear here...') {
+                navigator.clipboard.writeText(outputContent.textContent)
+                    .then(() => {
+                        // Visual feedback
+                        const originalText = copyButton.textContent;
+                        copyButton.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyButton.textContent = originalText;
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+            }
+        });
+        
+        // Initialize
+        console.log('DOCX Processing Prototype initialized');
+    </script>
+</body>
+</html>

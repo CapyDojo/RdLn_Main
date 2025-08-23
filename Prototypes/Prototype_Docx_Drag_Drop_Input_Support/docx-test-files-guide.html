@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Test Files Creation Guide</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .instructions {
+            background-color: #e8f4fc;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h2 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        
+        .steps {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .steps li {
+            counter-increment: step-counter;
+            margin-bottom: 20px;
+            padding-left: 40px;
+            position: relative;
+        }
+        
+        .steps li:before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: #3498db;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .sample-content {
+            background-color: #fef9e7;
+            border-left: 4px solid #f1c40f;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .sample-content pre {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .tip {
+            background-color: #d5f5e3;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            border-radius: 0 4px 4px 0;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DOCX Test Files Creation Guide</h1>
+        
+        <div class="instructions">
+            <h2>How to Create Test DOCX Files</h2>
+            <p>Follow these steps to create DOCX files for testing the prototype:</p>
+            
+            <div class="tip" style="margin-bottom: 20px;">
+                <strong>Note:</strong> Legacy DOC files are not supported. Please save your documents in DOCX format.
+            </div>
+            
+            <ol class="steps">
+                <li>
+                    <strong>Open Microsoft Word</strong> or any word processor that can save files in DOCX format
+                </li>
+                
+                <li>
+                    <strong>Create sample content</strong> with various formatting elements:
+                    <div class="sample-content">
+                        <pre>Document Title
+
+This is a paragraph with some **bold text** and some *italic text*.
+
+Here's a list:
+• First item
+• Second item
+• Third item
+
+And a numbered list:
+1. First numbered item
+2. Second numbered item
+3. Third numbered item
+
+Table:
+| Column 1 | Column 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |</pre>
+                    </div>
+                </li>
+                
+                <li>
+                    <strong>Save the document</strong> as "test-document.docx" in the Prototypes folder
+                    <div class="tip">
+                        <strong>Important:</strong> When saving, choose "Word Document (*.docx)" format, not "Word 97-2003 Document (*.doc)" format.
+                    </div>
+                </li>
+                
+                <li>
+                    <strong>Test with various file sizes</strong>:
+                    <ul>
+                        <li>Small file: Simple text (1-2 paragraphs)</li>
+                        <li>Medium file: Text with formatting, lists, and a table</li>
+                        <li>Large file: Multiple pages of content</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <div class="tip">
+            <strong>Tip:</strong> You can also download sample DOCX files from various online sources for testing with different content types and formatting.
+        </div>
+    </div>
+</body>
+</html>
