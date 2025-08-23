@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RdLn™ Tesseract OCR with OSD Prototype v28B-CC</title>
+    <title>RdLn™ Tesseract OCR with OSD Prototype v29A-CC</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body {
@@ -262,14 +262,34 @@
             background-color: #f44336;
             color: white;
         }
+        .similarity-match {
+            background-color: #e8f5e8;
+            border-left: 4px solid #4caf50;
+        }
+        .exact-match {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+        .position-fallback {
+            background-color: #fce4ec;
+            border-left: 4px solid #e91e63;
+        }
+        .levenshtein-debug {
+            background-color: #f3e5f5;
+            border: 1px solid #ce93d8;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>RdLn™ Tesseract OCR with OSD Prototype v28B-CC</h1>
-        <p>This prototype demonstrates Tesseract.js with enhanced character-level analysis for Chinese Traditional vs Simplified OCR models.</p>
+        <h1>RdLn™ Tesseract OCR with OSD Prototype v29A-CC</h1>
+        <p>This prototype demonstrates <strong>Option A: Text-based fuzzy matching</strong> using Levenshtein distance to align words by text similarity rather than position.</p>
         <p><strong>Note:</strong> For OSD functionality, the <code>osd.traineddata</code> model must be available. Tesseract.js will automatically download it when needed.</p>
-        <p><strong>v28B-CC Changes:</strong> Fixed paragraph-specific statistics by properly filtering global alignment data to paragraph boundaries.</p>
+        <p><strong>v29A-CC Changes:</strong> Implemented text-based fuzzy matching with Levenshtein distance (>80% similarity threshold) to solve word mis-alignment issues between Simplified and Traditional Chinese models.</p>
         
         <div class="upload-area" id="uploadArea">
             <p>Drag & drop an image here or click to select</p>
@@ -441,6 +461,186 @@
         detectBtn.addEventListener('click', detectScriptAndOrientation);
         ocrBtn.addEventListener('click', runOCR);
         resetBtn.addEventListener('click', resetPrototype);
+
+        // NEW v29A-CC: Levenshtein distance calculation for text similarity
+        function calculateLevenshteinDistance(str1, str2) {
+            const len1 = str1.length;
+            const len2 = str2.length;
+            
+            if (len1 === 0) return len2;
+            if (len2 === 0) return len1;
+            
+            const matrix = Array.from({ length: len1 + 1 }, () => Array(len2 + 1).fill(0));
+            
+            // Initialize first row and column
+            for (let i = 0; i <= len1; i++) matrix[i][0] = i;
+            for (let j = 0; j <= len2; j++) matrix[0][j] = j;
+            
+            // Fill the matrix
+            for (let i = 1; i <= len1; i++) {
+                for (let j = 1; j <= len2; j++) {
+                    const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j] + 1,     // deletion
+                        matrix[i][j - 1] + 1,     // insertion
+                        matrix[i - 1][j - 1] + cost // substitution
+                    );
+                }
+            }
+            
+            return matrix[len1][len2];
+        }
+
+        // NEW v29A-CC: Calculate text similarity percentage using Levenshtein distance
+        function calculateTextSimilarity(str1, str2) {
+            if (!str1 && !str2) return 100; // Both empty = perfect match
+            if (!str1 || !str2) return 0;   // One empty = no match
+            if (str1 === str2) return 100;  // Exact match
+            
+            const maxLen = Math.max(str1.length, str2.length);
+            if (maxLen === 0) return 100;
+            
+            const distance = calculateLevenshteinDistance(str1, str2);
+            return Math.max(0, ((maxLen - distance) / maxLen) * 100);
+        }
+
+        // NEW v29A-CC: Text-based fuzzy matching algorithm
+        function performTextBasedAlignment(wordsSim, wordsTra) {
+            console.log('=== v29A-CC: Starting text-based fuzzy matching ===');
+            console.log('Simplified words:', wordsSim.length, 'Traditional words:', wordsTra.length);
+            
+            const alignment = [];
+            const usedSimIndices = new Set();
+            const usedTraIndices = new Set();
+            const matchingDebug = [];
+            
+            const SIMILARITY_THRESHOLD = 80; // 80% similarity threshold
+            
+            // Phase 1: Find exact text matches first
+            console.log('Phase 1: Finding exact matches...');
+            for (let i = 0; i < wordsSim.length; i++) {
+                if (usedSimIndices.has(i)) continue;
+                
+                const simText = wordsSim[i]?.text?.trim() || '';
+                if (!simText) continue;
+                
+                for (let j = 0; j < wordsTra.length; j++) {
+                    if (usedTraIndices.has(j)) continue;
+                    
+                    const traText = wordsTra[j]?.text?.trim() || '';
+                    if (!traText) continue;
+                    
+                    if (simText === traText) {
+                        usedSimIndices.add(i);
+                        usedTraIndices.add(j);
+                        
+                        alignment.push({
+                            simIndex: i,
+                            traIndex: j,
+                            similarity: 100,
+                            matchType: 'exact',
+                            debug: `Exact match: "${simText}"`
+                        });
+                        
+                        matchingDebug.push(`EXACT: S[${i}]"${simText}" ↔ T[${j}]"${traText}" (100%)`);
+                        break;
+                    }
+                }
+            }
+            
+            console.log(`Phase 1 complete: ${alignment.length} exact matches found`);
+            
+            // Phase 2: Find fuzzy matches with >80% similarity
+            console.log('Phase 2: Finding fuzzy matches (>80% similarity)...');
+            for (let i = 0; i < wordsSim.length; i++) {
+                if (usedSimIndices.has(i)) continue;
+                
+                const simText = wordsSim[i]?.text?.trim() || '';
+                if (!simText) continue;
+                
+                let bestMatch = -1;
+                let bestSimilarity = 0;
+                let bestTraText = '';
+                
+                for (let j = 0; j < wordsTra.length; j++) {
+                    if (usedTraIndices.has(j)) continue;
+                    
+                    const traText = wordsTra[j]?.text?.trim() || '';
+                    if (!traText) continue;
+                    
+                    const similarity = calculateTextSimilarity(simText, traText);
+                    
+                    if (similarity > bestSimilarity && similarity > SIMILARITY_THRESHOLD) {
+                        bestSimilarity = similarity;
+                        bestMatch = j;
+                        bestTraText = traText;
+                    }
+                }
+                
+                if (bestMatch !== -1) {
+                    usedSimIndices.add(i);
+                    usedTraIndices.add(bestMatch);
+                    
+                    alignment.push({
+                        simIndex: i,
+                        traIndex: bestMatch,
+                        similarity: bestSimilarity,
+                        matchType: 'fuzzy',
+                        debug: `Fuzzy match: "${simText}" ↔ "${bestTraText}" (${bestSimilarity.toFixed(1)}%)`
+                    });
+                    
+                    matchingDebug.push(`FUZZY: S[${i}]"${simText}" ↔ T[${bestMatch}]"${bestTraText}" (${bestSimilarity.toFixed(1)}%)`);
+                }
+            }
+            
+            console.log(`Phase 2 complete: ${alignment.filter(a => a.matchType === 'fuzzy').length} fuzzy matches found`);
+            
+            // Phase 3: Position-based fallback for unmatched words
+            console.log('Phase 3: Position-based fallback for remaining words...');
+            const maxWords = Math.max(wordsSim.length, wordsTra.length);
+            
+            for (let i = 0; i < maxWords; i++) {
+                // Check if this position hasn't been matched yet
+                const simExists = i < wordsSim.length;
+                const traExists = i < wordsTra.length;
+                const simUsed = usedSimIndices.has(i);
+                const traUsed = usedTraIndices.has(i);
+                
+                if ((simExists && !simUsed) || (traExists && !traUsed)) {
+                    const simText = simExists ? (wordsSim[i]?.text?.trim() || '') : '';
+                    const traText = traExists ? (wordsTra[i]?.text?.trim() || '') : '';
+                    
+                    alignment.push({
+                        simIndex: simExists ? i : -1,
+                        traIndex: traExists ? i : -1,
+                        similarity: simText === traText && simText !== '' ? 100 : 0,
+                        matchType: 'position',
+                        debug: `Position fallback: [${i}] "${simText}" ↔ "${traText}"`
+                    });
+                    
+                    matchingDebug.push(`POSITION: [${i}] "${simText}" ↔ "${traText}" (fallback)`);
+                    
+                    if (simExists) usedSimIndices.add(i);
+                    if (traExists) usedTraIndices.add(i);
+                }
+            }
+            
+            console.log(`Phase 3 complete: ${alignment.filter(a => a.matchType === 'position').length} position fallbacks added`);
+            console.log(`Total alignments: ${alignment.length}`);
+            
+            // Sort alignments by original simplified index for consistent processing
+            alignment.sort((a, b) => {
+                const aIndex = a.simIndex !== -1 ? a.simIndex : a.traIndex;
+                const bIndex = b.simIndex !== -1 ? b.simIndex : b.traIndex;
+                return aIndex - bIndex;
+            });
+            
+            // Store debug info for display
+            window.alignmentDebug = matchingDebug;
+            
+            console.log('=== Text-based alignment complete ===');
+            return alignment;
+        }
 
         // Functions
         function handleFileSelect(e) {
@@ -620,41 +820,9 @@
             };
         }
 
-        // Function to calculate position-based overlap tolerance for word alignment
-        function calculateWordOverlap(wordA, wordB, tolerance = 10) {
-            if (!wordA || !wordB || !wordA.bbox || !wordB.bbox) return 0;
-            
-            const boxA = wordA.bbox;
-            const boxB = wordB.bbox;
-            
-            // Calculate overlap area with tolerance
-            const leftA = boxA.x0 - tolerance;
-            const rightA = boxA.x1 + tolerance;
-            const topA = boxA.y0 - tolerance;
-            const bottomA = boxA.y1 + tolerance;
-            
-            const leftB = boxB.x0;
-            const rightB = boxB.x1;
-            const topB = boxB.y0;
-            const bottomB = boxB.y1;
-            
-            const overlapLeft = Math.max(leftA, leftB);
-            const overlapRight = Math.min(rightA, rightB);
-            const overlapTop = Math.max(topA, topB);
-            const overlapBottom = Math.min(bottomA, bottomB);
-            
-            if (overlapLeft < overlapRight && overlapTop < overlapBottom) {
-                const overlapArea = (overlapRight - overlapLeft) * (overlapBottom - overlapTop);
-                const areaA = (rightA - leftA) * (bottomA - topA);
-                const areaB = (rightB - leftB) * (bottomB - topB);
-                return overlapArea / Math.max(areaA, areaB);
-            }
-            return 0;
-        }
-
-        // Enhanced word-level comparison with position-based alignment and character analysis
+        // MODIFIED v29A-CC: Enhanced word-level comparison with text-based fuzzy matching
         async function compareWordLevelResults() {
-            console.log('Starting enhanced word-level comparison with character analysis (v28B-CC)...');
+            console.log('Starting enhanced word-level comparison with text-based fuzzy matching (v29A-CC)...');
             
             // Get word-level data from both models for comparison
             showProgress('Word-Level Analysis...', 20, 'Processing with Simplified Chinese model...');
@@ -680,11 +848,9 @@
             console.log('Simplified words count:', wordsSim.length);
             console.log('Traditional words count:', wordsTra.length);
             
-            // Position-based alignment with intelligent matching
-            showProgress('Word-Level Analysis...', 60, 'Performing position-based word alignment...');
-            const wordAlignment = [];
-            const usedSimIndices = new Set();
-            const usedTraIndices = new Set();
+            // NEW v29A-CC: Text-based fuzzy matching with Levenshtein distance
+            showProgress('Word-Level Analysis...', 60, 'Performing text-based fuzzy matching with Levenshtein distance...');
+            const textAlignment = performTextBasedAlignment(wordsSim, wordsTra);
             
             // Statistics
             let totalWords = 0;
@@ -692,158 +858,30 @@
             let traditionalWords = 0;
             let ties = 0;
             let identicalWords = 0;
+            let exactMatches = 0;
+            let fuzzyMatches = 0;
+            let positionFallbacks = 0;
             let totalPreservationScore = 0;
             let totalAppropriateness = 0;
             let totalCompleteness = 0;
             let totalConsistency = 0;
             
-            // First pass: Match words with high position overlap
-            for (let i = 0; i < wordsSim.length; i++) {
-                if (usedSimIndices.has(i)) continue;
-                
-                let bestMatch = -1;
-                let bestOverlap = 0;
-                
-                for (let j = 0; j < wordsTra.length; j++) {
-                    if (usedTraIndices.has(j)) continue;
-                    
-                    const overlap = calculateWordOverlap(wordsSim[i], wordsTra[j]);
-                    if (overlap > bestOverlap && overlap > 0.3) { // 30% overlap threshold
-                        bestOverlap = overlap;
-                        bestMatch = j;
-                    }
-                }
-                
-                if (bestMatch !== -1) {
-                    usedSimIndices.add(i);
-                    usedTraIndices.add(bestMatch);
-                    
-                    const wordSim = wordsSim[i];
-                    const wordTra = wordsTra[bestMatch];
-                    const wordTextSim = wordSim.text || '';
-                    const wordTextTra = wordTra.text || '';
-                    const wordConfSim = wordSim.confidence || 0;
-                    const wordConfTra = wordTra.confidence || 0;
-                    
-                    // Check if words are identical - if so, don't count in voting
-                    const wordsAreIdentical = wordTextSim === wordTextTra && wordTextSim !== '';
-                    
-                    // Character-level analysis
-                    const charAnalysis = analyzeCharacterDifferences(wordTextSim, wordTextTra);
-                    
-                    // Decision based on strategy
-                    let chosenWordText, chosenWordConf, chosenWordModel;
-                    const strategy = decisionStrategy.value;
-                    
-                    if (wordsAreIdentical) {
-                        // Words are identical - don't count in voting, just use either one
-                        chosenWordText = wordTextSim; // Could be either since they're the same
-                        chosenWordConf = Math.max(wordConfSim, wordConfTra);
-                        chosenWordModel = 'Identical (No Vote)';
-                        identicalWords++; // Count identical words separately
-                    } else if (strategy === 'character-appropriateness') {
-                        // NEW: Decision based on character appropriateness
-                        if (charAnalysis.appropriatenessScore > 50) {
-                            // High appropriateness - choose based on preservation
-                            if (charAnalysis.preservationScore > 30) {
-                                chosenWordText = wordTextTra;
-                                chosenWordConf = wordConfTra;
-                                chosenWordModel = 'Traditional (Character Appropriate)';
-                                traditionalWords++;
-                            } else {
-                                chosenWordText = wordTextSim;
-                                chosenWordConf = wordConfSim;
-                                chosenWordModel = 'Simplified (Character Appropriate)';
-                                simplifiedWords++;
-                            }
-                        } else {
-                            // Fall back to confidence
-                            let finalWordConfSim = wordConfSim;
-                            if (biasToggle.checked) {
-                                finalWordConfSim = wordConfSim * 1.05;
-                            }
-                            
-                            if (finalWordConfSim > wordConfTra) {
-                                chosenWordText = wordTextSim;
-                                chosenWordConf = wordConfSim;
-                                chosenWordModel = 'Simplified (Confidence Fallback)';
-                                simplifiedWords++;
-                            } else {
-                                chosenWordText = wordTextTra;
-                                chosenWordConf = wordConfTra;
-                                chosenWordModel = 'Traditional (Confidence Fallback)';
-                                traditionalWords++;
-                            }
-                        }
-                    } else {
-                        // Original confidence-based approach
-                        let finalWordConfSim = wordConfSim;
-                        if (biasToggle.checked) {
-                            finalWordConfSim = wordConfSim * 1.05;
-                        }
-                        
-                        if (finalWordConfSim > wordConfTra) {
-                            chosenWordText = wordTextSim;
-                            chosenWordConf = wordConfSim;
-                            chosenWordModel = 'Simplified';
-                            simplifiedWords++;
-                        } else if (wordConfTra > finalWordConfSim) {
-                            chosenWordText = wordTextTra;
-                            chosenWordConf = wordConfTra;
-                            chosenWordModel = 'Traditional';
-                            traditionalWords++;
-                        } else {
-                            chosenWordText = biasToggle.checked ? wordTextSim : wordTextTra;
-                            chosenWordConf = biasToggle.checked ? wordConfSim : wordConfTra;
-                            chosenWordModel = biasToggle.checked ? 'Simplified (Tie)' : 'Traditional (Tie)';
-                            ties++;
-                            if (biasToggle.checked) {
-                                simplifiedWords++;
-                            } else {
-                                traditionalWords++;
-                            }
-                        }
-                    }
-                    
-                    totalPreservationScore += charAnalysis.preservationScore;
-                    totalAppropriateness += charAnalysis.appropriatenessScore;
-                    totalCompleteness += charAnalysis.completeness;
-                    totalConsistency += charAnalysis.consistencyScore;
-                    totalWords++;
-                    
-                    wordAlignment.push({
-                        position: totalWords - 1,
-                        simplified: {
-                            text: wordTextSim,
-                            confidence: wordConfSim,
-                            bbox: wordSim.bbox
-                        },
-                        traditional: {
-                            text: wordTextTra,
-                            confidence: wordConfTra,
-                            bbox: wordTra.bbox
-                        },
-                        chosen: {
-                            text: chosenWordText,
-                            confidence: chosenWordConf,
-                            model: chosenWordModel
-                        },
-                        characterAnalysis: charAnalysis,
-                        positionOverlap: bestOverlap
-                    });
-                }
-            }
+            const wordAlignment = [];
             
-            // Second pass: Handle unmatched words with positional fallback
-            const maxWords = Math.max(wordsSim.length, wordsTra.length);
-            for (let i = wordAlignment.length; i < maxWords; i++) {
-                const wordSim = wordsSim[i];
-                const wordTra = wordsTra[i];
+            // Process each alignment from the text-based matching
+            for (const align of textAlignment) {
+                const wordSim = align.simIndex !== -1 ? wordsSim[align.simIndex] : null;
+                const wordTra = align.traIndex !== -1 ? wordsTra[align.traIndex] : null;
                 
-                const wordTextSim = wordSim ? (wordSim.text || '') : '';
-                const wordTextTra = wordTra ? (wordTra.text || '') : '';
+                const wordTextSim = wordSim ? (wordSim.text?.trim() || '') : '';
+                const wordTextTra = wordTra ? (wordTra.text?.trim() || '') : '';
                 const wordConfSim = wordSim ? (wordSim.confidence || 0) : 0;
                 const wordConfTra = wordTra ? (wordTra.confidence || 0) : 0;
+                
+                // Track match type statistics
+                if (align.matchType === 'exact') exactMatches++;
+                else if (align.matchType === 'fuzzy') fuzzyMatches++;
+                else if (align.matchType === 'position') positionFallbacks++;
                 
                 // Check if words are identical - if so, don't count in voting
                 const wordsAreIdentical = wordTextSim === wordTextTra && wordTextSim !== '';
@@ -851,7 +889,7 @@
                 // Character-level analysis
                 const charAnalysis = analyzeCharacterDifferences(wordTextSim, wordTextTra);
                 
-                // Apply same decision logic as first pass
+                // Decision based on strategy
                 let chosenWordText, chosenWordConf, chosenWordModel;
                 const strategy = decisionStrategy.value;
                 
@@ -861,8 +899,10 @@
                     chosenWordConf = Math.max(wordConfSim, wordConfTra);
                     chosenWordModel = 'Identical (No Vote)';
                     identicalWords++; // Count identical words separately
-                } else if (strategy === 'character-appropriateness' && wordTextSim && wordTextTra) {
+                } else if (strategy === 'character-appropriateness') {
+                    // NEW: Decision based on character appropriateness
                     if (charAnalysis.appropriatenessScore > 50) {
+                        // High appropriateness - choose based on preservation
                         if (charAnalysis.preservationScore > 30) {
                             chosenWordText = wordTextTra;
                             chosenWordConf = wordConfTra;
@@ -875,40 +915,51 @@
                             simplifiedWords++;
                         }
                     } else {
+                        // Fall back to confidence
                         let finalWordConfSim = wordConfSim;
                         if (biasToggle.checked) {
                             finalWordConfSim = wordConfSim * 1.05;
                         }
                         
-                        if (finalWordConfSim >= wordConfTra) {
-                            chosenWordText = wordTextSim || wordTextTra;
-                            chosenWordConf = wordConfSim || wordConfTra;
-                            chosenWordModel = 'Simplified (Positional Fallback)';
+                        if (finalWordConfSim > wordConfTra) {
+                            chosenWordText = wordTextSim;
+                            chosenWordConf = wordConfSim;
+                            chosenWordModel = 'Simplified (Confidence Fallback)';
                             simplifiedWords++;
                         } else {
-                            chosenWordText = wordTextTra || wordTextSim;
-                            chosenWordConf = wordConfTra || wordConfSim;
-                            chosenWordModel = 'Traditional (Positional Fallback)';
+                            chosenWordText = wordTextTra;
+                            chosenWordConf = wordConfTra;
+                            chosenWordModel = 'Traditional (Confidence Fallback)';
                             traditionalWords++;
                         }
                     }
                 } else {
-                    // Original logic for non-character strategies
+                    // Original confidence-based approach
                     let finalWordConfSim = wordConfSim;
                     if (biasToggle.checked) {
                         finalWordConfSim = wordConfSim * 1.05;
                     }
                     
-                    if (finalWordConfSim >= wordConfTra) {
-                        chosenWordText = wordTextSim || wordTextTra;
-                        chosenWordConf = wordConfSim || wordConfTra;
-                        chosenWordModel = 'Simplified (Positional)';
+                    if (finalWordConfSim > wordConfTra) {
+                        chosenWordText = wordTextSim;
+                        chosenWordConf = wordConfSim;
+                        chosenWordModel = 'Simplified';
                         simplifiedWords++;
-                    } else {
-                        chosenWordText = wordTextTra || wordTextSim;
-                        chosenWordConf = wordConfTra || wordConfSim;
-                        chosenWordModel = 'Traditional (Positional)';
+                    } else if (wordConfTra > finalWordConfSim) {
+                        chosenWordText = wordTextTra;
+                        chosenWordConf = wordConfTra;
+                        chosenWordModel = 'Traditional';
                         traditionalWords++;
+                    } else {
+                        chosenWordText = biasToggle.checked ? wordTextSim : wordTextTra;
+                        chosenWordConf = biasToggle.checked ? wordConfSim : wordConfTra;
+                        chosenWordModel = biasToggle.checked ? 'Simplified (Tie)' : 'Traditional (Tie)';
+                        ties++;
+                        if (biasToggle.checked) {
+                            simplifiedWords++;
+                        } else {
+                            traditionalWords++;
+                        }
                     }
                 }
                 
@@ -919,7 +970,7 @@
                 totalWords++;
                 
                 wordAlignment.push({
-                    position: i,
+                    position: totalWords - 1,
                     simplified: {
                         text: wordTextSim,
                         confidence: wordConfSim,
@@ -936,7 +987,12 @@
                         model: chosenWordModel
                     },
                     characterAnalysis: charAnalysis,
-                    positionOverlap: 0 // No overlap for positional matches
+                    // NEW v29A-CC: Include text matching information
+                    textMatching: {
+                        matchType: align.matchType,
+                        similarity: align.similarity,
+                        debug: align.debug
+                    }
                 });
             }
             
@@ -951,14 +1007,20 @@
                 traditionalPercentage: totalWords > 0 ? (traditionalWords / totalWords * 100).toFixed(2) : '0.00',
                 tiePercentage: totalWords > 0 ? (ties / totalWords * 100).toFixed(2) : '0.00',
                 identicalPercentage: totalWords > 0 ? (identicalWords / totalWords * 100).toFixed(2) : '0.00',
-                // NEW v28B-CC metrics
+                // NEW v29A-CC metrics
+                exactMatches: exactMatches,
+                fuzzyMatches: fuzzyMatches,
+                positionFallbacks: positionFallbacks,
+                exactMatchPercentage: totalWords > 0 ? (exactMatches / totalWords * 100).toFixed(2) : '0.00',
+                fuzzyMatchPercentage: totalWords > 0 ? (fuzzyMatches / totalWords * 100).toFixed(2) : '0.00',
+                positionFallbackPercentage: totalWords > 0 ? (positionFallbacks / totalWords * 100).toFixed(2) : '0.00',
                 averagePreservationScore: totalWords > 0 ? (totalPreservationScore / totalWords).toFixed(2) : '0.00',
                 averageAppropriatenessScore: totalWords > 0 ? (totalAppropriateness / totalWords).toFixed(2) : '0.00',
                 averageCompleteness: totalWords > 0 ? (totalCompleteness / totalWords).toFixed(2) : '0.00',
                 averageConsistency: totalWords > 0 ? (totalConsistency / totalWords).toFixed(2) : '0.00'
             };
             
-            console.log('FINAL Enhanced Word-level stats (v28B-CC):', stats);
+            console.log('FINAL Enhanced Word-level stats (v29A-CC text-based matching):', stats);
             
             return { wordAlignment, stats, resultSim, resultTra };
         }
@@ -1068,7 +1130,7 @@
                     break;
                     
                 default:
-                    // Default to character-appropriateness for v28B-CC
+                    // Default to character-appropriateness for v29A-CC
                     return makeParagraphDecision(paraConfSim, paraConfTra, wordStats, 'character-appropriateness');
             }
             
@@ -1139,7 +1201,7 @@
                         simplifiedPercentage: '0.00',
                         traditionalPercentage: '0.00',
                         tiePercentage: '0.00',
-                        // NEW v28B-CC metrics
+                        // NEW v29A-CC metrics
                         averagePreservationScore: '0.00',
                         averageAppropriatenessScore: '0.00',
                         averageCompleteness: '0.00',
@@ -1343,7 +1405,7 @@
                 traditionalPercentage: totalParaWords > 0 ? (paraTraditionalWords / totalParaWords * 100).toFixed(2) : '0.00',
                 tiePercentage: totalParaWords > 0 ? (paraTies / totalParaWords * 100).toFixed(2) : '0.00',
                 identicalPercentage: totalParaWords > 0 ? (paraIdenticalWords / totalParaWords * 100).toFixed(2) : '0.00',
-                // NEW v28B-CC metrics
+                // NEW v29A-CC metrics
                 averagePreservationScore: totalParaWords > 0 ? (totalPreservation / totalParaWords).toFixed(2) : '0.00',
                 averageAppropriatenessScore: totalParaWords > 0 ? (totalAppropriateness / totalParaWords).toFixed(2) : '0.00',
                 averageCompleteness: totalParaWords > 0 ? (totalCompleteness / totalParaWords).toFixed(2) : '0.00',
@@ -1354,7 +1416,7 @@
 
         // Enhanced paragraph processing with character analysis
         async function twoPassParagraphProcessing(resultSim, resultTra, globalWordAlignment, globalWordStats) {
-            console.log('Starting enhanced paragraph processing with character analysis (v28B-CC):', globalWordStats);
+            console.log('Starting enhanced paragraph processing with character analysis (v29A-CC):', globalWordStats);
             
             // Get paragraph-level data from both results
             const paragraphsSim = resultSim.data.paragraphs || [];
@@ -1406,7 +1468,7 @@
                 // FIXED: Enhanced paragraph word analysis with paragraph index for proper filtering
                 const paragraphWordAnalysis = analyzeWordsInParagraph(globalWordsSim, globalWordsTra, paraSim, paraTra, globalWordAlignment, i);
                 
-                console.log(`Paragraph ${i} enhanced analysis (v28B-CC):`, paragraphWordAnalysis);
+                console.log(`Paragraph ${i} enhanced analysis (v29A-CC):`, paragraphWordAnalysis);
                 
                 // Make paragraph-level decision using selected strategy with enhanced metrics
                 const { winningModel, chosenByStrategy } = makeParagraphDecision(paraConfSim, paraConfTra, paragraphWordAnalysis, strategy);
@@ -1460,7 +1522,7 @@
                 decisionStrategy: strategy
             };
             
-            console.log('FINAL Enhanced Paragraph stats (v28B-CC):', paragraphStats);
+            console.log('FINAL Enhanced Paragraph stats (v29A-CC):', paragraphStats);
             
             return { alignment, paragraphStats };
         }
@@ -1470,25 +1532,43 @@
             return alignment.map(item => item.chosen.text).join('\n\n'); // Paragraph breaks
         }
 
-        // Enhanced debug information display
+        // NEW v29A-CC: Enhanced debug information display with text matching details
         function displayDebugInfo(wordStats, paragraphStats) {
             let html = `<div class="debug-info">
-                <h5>Enhanced Debug Information (v28B-CC - Identical Words Filtering)</h5>
+                <h5>Enhanced Debug Information (v29A-CC - Text-based Fuzzy Matching)</h5>
+                <p><strong>Algorithm:</strong> Text-based fuzzy matching with Levenshtein distance (80% similarity threshold)</p>
                 <p><strong>Decision Strategy:</strong> ${paragraphStats.decisionStrategy}</p>
                 <p><strong>Word Stats:</strong> Total: ${wordStats.totalWords}, Sim: ${wordStats.simplifiedWords}, Tra: ${wordStats.traditionalWords}, Ties: ${wordStats.ties}, Identical: ${wordStats.identicalWords}</p>
+                <p><strong>Matching Quality:</strong> Exact: ${wordStats.exactMatches} (${wordStats.exactMatchPercentage}%), Fuzzy: ${wordStats.fuzzyMatches} (${wordStats.fuzzyMatchPercentage}%), Position Fallback: ${wordStats.positionFallbacks} (${wordStats.positionFallbackPercentage}%)</p>
                 <p><strong>Character Analysis:</strong> Preservation: ${wordStats.averagePreservationScore}%, Appropriateness: ${wordStats.averageAppropriatenessScore}%, Completeness: ${wordStats.averageCompleteness}%</p>
                 <p><strong>Paragraph Stats:</strong> Total: ${paragraphStats.totalParagraphs}, Sim: ${paragraphStats.simplifiedParagraphs}, Tra: ${paragraphStats.traditionalParagraphs}</p>
-                <p><strong>Decision Basis:</strong> ${paragraphStats.decisionStrategy === 'character-appropriateness' ? 'Character preservation and appropriateness analysis' : 'Traditional confidence/word-vote analysis'}</p>
-                <p><strong>Identical Words Logic:</strong> Words with identical text in both models are excluded from voting to ensure only discriminative differences influence model selection.</p>
+                <p><strong>Algorithm Benefits:</strong> Text-based matching prevents word mis-alignment issues like "文字" vs "文", "，" vs "輸入" by matching similar content regardless of position differences.</p>
             </div>`;
+            
+            // Add text matching debug if available
+            if (window.alignmentDebug && window.alignmentDebug.length > 0) {
+                html += `<div class="levenshtein-debug">
+                    <h6>Text Matching Debug (First 10 alignments)</h6>
+                    <pre style="max-height: 200px; overflow-y: auto; font-size: 11px;">`;
+                window.alignmentDebug.slice(0, 10).forEach(debug => {
+                    html += debug + '\n';
+                });
+                if (window.alignmentDebug.length > 10) {
+                    html += `... and ${window.alignmentDebug.length - 10} more alignments\n`;
+                }
+                html += `</pre>
+                </div>`;
+            }
+            
             return html;
         }
 
-        // Enhanced statistics display with character analysis
+        // Enhanced statistics display with character analysis and text matching metrics
         function displayStatistics(wordStats, paragraphStats) {
             let html = `<div class="stats-container">
-                <h4>Enhanced Analysis Statistics (v28B-CC - Fixed Paragraph Stats)</h4>
+                <h4>Enhanced Analysis Statistics (v29A-CC - Text-based Fuzzy Matching)</h4>
                 <p><strong>Decision Strategy Used:</strong> <em>${paragraphStats.decisionStrategy}</em></p>
+                <p><strong>Text Matching Algorithm:</strong> <em>Levenshtein distance with 80% similarity threshold</em></p>
                 
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -1498,6 +1578,18 @@
                     <div class="stat-card">
                         <div class="stat-value">${paragraphStats.totalParagraphs}</div>
                         <div class="stat-label">Total Paragraphs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${wordStats.exactMatches}</div>
+                        <div class="stat-label">Exact Matches</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${wordStats.fuzzyMatches}</div>
+                        <div class="stat-label">Fuzzy Matches</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${wordStats.positionFallbacks}</div>
+                        <div class="stat-label">Position Fallbacks</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value">${wordStats.averagePreservationScore}%</div>
@@ -1511,11 +1603,39 @@
                         <div class="stat-value">${wordStats.averageCompleteness}%</div>
                         <div class="stat-label">Completeness Score</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${wordStats.averageConsistency}%</div>
-                        <div class="stat-label">Consistency Score</div>
-                    </div>
                 </div>
+                
+                <h5>Text Matching Quality (v29A-CC Innovation)</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Match Type</th>
+                            <th>Count</th>
+                            <th>Percentage</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="exact-match">
+                            <td>Exact Matches</td>
+                            <td>${wordStats.exactMatches}</td>
+                            <td>${wordStats.exactMatchPercentage}%</td>
+                            <td>Identical text strings found</td>
+                        </tr>
+                        <tr class="similarity-match">
+                            <td>Fuzzy Matches</td>
+                            <td>${wordStats.fuzzyMatches}</td>
+                            <td>${wordStats.fuzzyMatchPercentage}%</td>
+                            <td>Similar text (>80% Levenshtein similarity)</td>
+                        </tr>
+                        <tr class="position-fallback">
+                            <td>Position Fallbacks</td>
+                            <td>${wordStats.positionFallbacks}</td>
+                            <td>${wordStats.positionFallbackPercentage}%</td>
+                            <td>No text match found, used position</td>
+                        </tr>
+                    </tbody>
+                </table>
                 
                 <h5>Word-Level Model Selection</h5>
                 <table>
@@ -1648,9 +1768,9 @@
             return 'May not match source text requirements';
         }
 
-        // Enhanced paragraph analysis display with character details
+        // Enhanced paragraph analysis display with character details and text matching info
         function displayParagraphAnalysis(alignment) {
-            let html = `<h4>Detailed Paragraph Analysis (v28B-CC - Fixed Paragraph Stats)</h4>`;
+            let html = `<h4>Detailed Paragraph Analysis (v29A-CC - Text-based Fuzzy Matching)</h4>`;
             
             alignment.forEach(item => {
                 html += `<div class="paragraph-details">
@@ -1740,7 +1860,7 @@
                         </tbody>
                     </table>
                     
-                    <h6>Character-Level Analysis Sample (All ${item.wordAnalysis.details.length} Words in This Paragraph)</h6>
+                    <h6>Character-Level Analysis Sample with Text Matching Info (All ${item.wordAnalysis.details.length} Words in This Paragraph)</h6>
                     <div class="word-sample">
                     <table>
                         <thead>
@@ -1750,15 +1870,17 @@
                                 <th>Traditional</th>
                                 <th>Chosen</th>
                                 <th>Model</th>
+                                <th>Text Match</th>
                                 <th>Character Analysis</th>
                             </tr>
                         </thead>
                         <tbody>`;
                 
-                // Show ALL words with character analysis (v28B-CC change)
+                // Show ALL words with character analysis and text matching info (v29A-CC change)
                 item.wordAnalysis.details.forEach(wordItem => {
                     const charAnalysis = wordItem.characterAnalysis || {};
                     const characterPairs = charAnalysis.characterPairs || [];
+                    const textMatch = wordItem.textMatching || {};
                     
                     let charPairsDisplay = '';
                     if (characterPairs.length > 0) {
@@ -1777,6 +1899,18 @@
                         }
                     }
                     
+                    // Display text matching information
+                    let matchDisplay = '';
+                    if (textMatch.matchType) {
+                        const matchClass = textMatch.matchType === 'exact' ? 'exact-match' : 
+                                          textMatch.matchType === 'fuzzy' ? 'similarity-match' : 'position-fallback';
+                        matchDisplay = `<span class="${matchClass}" title="${textMatch.debug || ''}">${textMatch.matchType.toUpperCase()}`;
+                        if (textMatch.similarity !== undefined) {
+                            matchDisplay += ` (${textMatch.similarity.toFixed(1)}%)`;
+                        }
+                        matchDisplay += '</span>';
+                    }
+                    
                     const rowClass = wordItem.chosen.model.includes('Traditional') ? 'word-traditional' : 'word-simplified';
                     html += `<tr class="${rowClass}">
                         <td>${wordItem.position}</td>
@@ -1784,13 +1918,18 @@
                         <td>${wordItem.traditional.text || '(empty)'}</td>
                         <td><strong>${wordItem.chosen.text || '(empty)'}</strong></td>
                         <td>${wordItem.chosen.model}</td>
+                        <td>${matchDisplay}</td>
                         <td>${charPairsDisplay}</td>
                     </tr>`;
                 });
                 
                 html += `</tbody>
                     </table>
-                    <p><small><em>Blue background = Traditional model chosen, Purple background = Simplified model chosen. Shows words from this paragraph only.</em></small></p>
+                    <p><small><em>Blue background = Traditional model chosen, Purple background = Simplified model chosen. 
+                    <span class="exact-match">Orange border = Exact match</span>, 
+                    <span class="similarity-match">Green border = Fuzzy match (>80%)</span>, 
+                    <span class="position-fallback">Pink border = Position fallback</span>. 
+                    Shows words from this paragraph only.</em></small></p>
                     </div>
                 </div>`;
             });
@@ -1803,15 +1942,18 @@
             let html = displayDebugInfo(wordStats, paragraphStats);
             html += displayStatistics(wordStats, paragraphStats);
             
-            // Character analysis summary
+            // Character analysis summary with v29A-CC improvements
             html += `<div class="character-analysis">
-                <h4>Character-Level Analysis Summary</h4>
+                <h4>Character-Level Analysis Summary (v29A-CC Innovation)</h4>
                 <p><strong>Key Insights:</strong></p>
                 <ul>
+                    <li><strong>Text Matching Quality:</strong> ${wordStats.exactMatches} exact matches, ${wordStats.fuzzyMatches} fuzzy matches (>80% similarity), ${wordStats.positionFallbacks} position fallbacks</li>
+                    <li><strong>Algorithm Improvement:</strong> Text-based fuzzy matching prevents catastrophic word mis-alignment issues between Simplified and Traditional models</li>
                     <li><strong>Character Preservation:</strong> ${wordStats.averagePreservationScore}% - ${getPreservationDescription(wordStats.averagePreservationScore)}</li>
                     <li><strong>Model Appropriateness:</strong> ${wordStats.averageAppropriatenessScore}% - ${getAppropriatenessDescription(wordStats.averageAppropriatenessScore)}</li>
                     <li><strong>Decision Strategy:</strong> ${paragraphStats.decisionStrategy === 'character-appropriateness' ? 'Character-level analysis prioritized Traditional preservation and appropriateness' : 'Traditional confidence-based analysis used'}</li>
                     <li><strong>Final Recommendation:</strong> ${parseFloat(wordStats.averagePreservationScore) > 50 ? 'Traditional model better preserves original character forms' : 'Simplified model provides better overall recognition'}</li>
+                    <li><strong>Matching Success:</strong> ${((parseFloat(wordStats.exactMatchPercentage) + parseFloat(wordStats.fuzzyMatchPercentage))).toFixed(1)}% of words matched by content similarity rather than position</li>
                 </ul>
             </div>`;
             
@@ -1839,21 +1981,21 @@
                 console.log('Detected script:', detectedScript);
                 console.log('Languages to use:', languagesToUse);
                 
-                // Special handling for Chinese - run enhanced character-level analysis
+                // Special handling for Chinese - run enhanced character-level analysis with text-based matching
                 if (detectedScript === 'Han' && languagesToUse.includes('chi_sim') && languagesToUse.includes('chi_tra')) {
-                    console.log('Chinese detected - running enhanced character-level analysis (v28B-CC)...');
+                    console.log('Chinese detected - running enhanced text-based fuzzy matching analysis (v29A-CC)...');
                     
-                    // First pass: Enhanced word-level comparison with character analysis
-                    showProgress('Character Analysis...', 10, 'Performing position-based alignment with character analysis...');
+                    // First pass: Enhanced word-level comparison with text-based fuzzy matching
+                    showProgress('Character Analysis...', 10, 'Performing text-based fuzzy matching with Levenshtein distance...');
                     const { wordAlignment, stats: wordStats, resultSim, resultTra } = await compareWordLevelResults();
                     
-                    console.log('Enhanced word-level analysis complete (v28B-CC). Stats:', wordStats);
+                    console.log('Enhanced word-level analysis complete (v29A-CC). Stats:', wordStats);
                     
                     // Second pass: Paragraph-level processing with character-aware decisions
                     showProgress('Paragraph Analysis...', 50, 'Processing paragraphs with character-level decision making...');
                     const { alignment, paragraphStats } = await twoPassParagraphProcessing(resultSim, resultTra, wordAlignment, wordStats);
                     
-                    console.log('Enhanced paragraph processing complete (v28B-CC). Stats:', paragraphStats);
+                    console.log('Enhanced paragraph processing complete (v29A-CC). Stats:', paragraphStats);
                     
                     // Reconstruct final text while preserving paragraph breaks
                     const finalText = reconstructText(alignment);
@@ -1861,10 +2003,10 @@
                     // Display the final OCR result
                     ocrResults.textContent = finalText;
                     
-                    // Display enhanced analysis with character-level insights
+                    // Display enhanced analysis with character-level insights and text matching details
                     displayDetailedChineseAnalysis(alignment, finalText, wordStats, paragraphStats);
                     
-                    updateProgress(100, `OCR complete with ${paragraphStats.decisionStrategy} strategy (v28B-CC - Fixed Paragraph Stats)`);
+                    updateProgress(100, `OCR complete with ${paragraphStats.decisionStrategy} strategy (v29A-CC - Text-based Fuzzy Matching)`);
                 } else {
                     // Create a worker with the appropriate languages
                     const worker = await Tesseract.createWorker(languagesToUse);
@@ -1931,6 +2073,11 @@
             osdResults.textContent = '';
             ocrResults.textContent = '';
             chineseAnalysis.innerHTML = '';
+            
+            // Clear debug data
+            if (window.alignmentDebug) {
+                delete window.alignmentDebug;
+            }
         }
     </script>
 </body>
