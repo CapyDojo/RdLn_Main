@@ -93,6 +93,12 @@ npm run build
 - Windows packaging: `npm run electron:build:win`; app at `dist-electron-new/win-unpacked/RdLn.exe`.
 - Tauri is on hold — avoid `npm run tauri:*` until re-enabled.
 
+### Helpful Scripts
+- `npm run check`: Runs lint + unit tests.
+- `npm run check:strict`: Same as check, but fails on warnings.
+- `npm run smoke`: Fast subset tests for pages/services (verbose).
+- `npm run pack:win`: Windows Electron packaging shortcut.
+
 ### Development Guidelines
 - **SSMR Approach**: Safe, Step-by-step, Modular, Reversible changes
 - **Visual Consistency**: Maintain DOM structure parity between components
