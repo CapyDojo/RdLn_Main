@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DOCX Processing Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 3px;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <h1>DOCX Processing Test</h1>
+    
+    <div class="test-section">
+        <h2>File Type Detection Test</h2>
+        <button id="runDetectionTest">Run File Type Detection Test</button>
+        <div id="detectionResult" class="test-result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>DOCX Processing Test</h2>
+        <input type="file" id="docxFile" accept=".docx" />
+        <button id="processDocx">Process DOCX File</button>
+        <div id="processingResult" class="test-result" style="display: none;"></div>
+    </div>
+
+    <script type="module">
+        // Import our services
+        import { FileTypeDetector } from './src/services/FileTypeDetector.js';
+        
+        // Test file type detection
+        document.getElementById('runDetectionTest').addEventListener('click', () => {
+            const resultDiv = document.getElementById('detectionResult');
+            resultDiv.style.display = 'block';
+            
+            try {
+                // Create test files
+                const docxBlob = new Blob(['test'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                const docxBlob = new File([docxBlob], 'test.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                
+                const docBlob = new Blob(['test'], { type: 'application/msword' });
+                const docFile = new File([docBlob], 'test.doc', { type: 'application/msword' });
+                
+                const txtBlob = new Blob(['test'], { type: 'text/plain' });
+                const txtFile = new File([txtBlob], 'test.txt', { type: 'text/plain' });
+                
+                // Test detection
+                const isDocx = FileTypeDetector.isDocx(docxBlob);
+                const isDoc = FileTypeDetector.isDoc(docFile);
+                const txtIsDocx = FileTypeDetector.isDocx(txtFile);
+                const txtIsDoc = FileTypeDetector.isDoc(txtFile);
+                
+                const docxCategory = FileTypeDetector.getFileCategory(docxBlob);
+                const docCategory = FileTypeDetector.getFileCategory(docFile);
+                const txtCategory = FileTypeDetector.getFileCategory(txtFile);
+                
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `
+                    <strong>File Type Detection Results:</strong><br>
+                    DOCX file detected as DOCX: ${isDocx}<br>
+                    DOC file detected as DOC: ${isDoc}<br>
+                    TXT file detected as DOCX: ${txtIsDocx}<br>
+                    TXT file detected as DOC: ${txtIsDoc}<br>
+                    DOCX category: ${docxCategory}<br>
+                    DOC category: ${docCategory}<br>
+                    TXT category: ${txtCategory}<br>
+                `;
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        });
+        
+        // Test DOCX processing
+        document.getElementById('processDocx').addEventListener('click', async () => {
+            const fileInput = document.getElementById('docxFile');
+            const resultDiv = document.getElementById('processingResult');
+            
+            if (!fileInput.files.length) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = 'Please select a DOCX file first.';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'test-result';
+            resultDiv.innerHTML = 'Processing...';
+            
+            try {
+                // Dynamically import the FileProcessingService
+                const { FileProcessingService } = await import('./src/services/FileProcessingService.js');
+                const fileProcessingService = new FileProcessingService();
+                
+                const result = await fileProcessingService.processFile(file);
+                
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `
+                    <strong>Processing Result:</strong><br>
+                    Type: ${result.type}<br>
+                    Content length: ${result.content.length} characters<br>
+                    Processing time: ${result.processingTime}ms<br>
+                    Confidence: ${result.confidence}<br>
+                    Method: ${result.method}<br>
+                    <br>
+                    <strong>Extracted Content:</strong><br>
+                    <pre>${result.content.substring(0, 500)}${result.content.length > 500 ? '...' : ''}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
