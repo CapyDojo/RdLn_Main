@@ -12,6 +12,8 @@ import { DEV_CONFIG } from '../config/appConfig';
 import { formatPastedText, formatRtfHtmlPaste } from '../utils/paragraphFormatting';
 import { analyzePasteContext, getFormattingLevel } from '../utils/pastePDFdetection';
 import { useFontSize } from '../contexts/FontSizeContext';
+import { FileProcessingService } from '../services/FileProcessingService';
+import { ProcessingResult, ProcessingError } from '../types/file-processing.types';
 
 // Tauri-specific helpers removed (unused)
 
@@ -51,6 +53,9 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   const [modalAnimated, setModalAnimated] = useState(false);
   const [isZoomUpdate, setIsZoomUpdate] = useState(false);
   const lastWindowSize = useRef({ width: window.innerWidth, height: window.innerHeight });
+
+  // File processing service
+  const fileProcessingService = useRef<FileProcessingService>(new FileProcessingService());
 
   const toggleAutoFormat = () => setIsAutoFormatEnabled(prev => !prev);
 
@@ -268,6 +273,81 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       }
     };
 
+    const handleDocxProcessed = async (event: CustomEvent) => {
+      const { content, fileName, panelTitle } = event.detail;
+      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+        console.log(`🔍 GHOST DEBUG: DOCX Event triggered for ${currentInstanceId}, file: ${fileName}`);
+      }
+
+      // Check if component is still mounted
+      if (!isMountedRef.current) {
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+          console.log(`🔍 GHOST DEBUG: Component ${currentInstanceId} unmounted, ignoring DOCX content`);
+        }
+        return;
+      }
+
+      try {
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+          console.log(`🔍 GHOST DEBUG: Processing DOCX content for ${currentInstanceId}`);
+        }
+
+        // Add the extracted content to the textarea
+        const textarea = textareaRef.current;
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const newValue =
+            textarea.value.substring(0, start) +
+            (start > 0 && textarea.value[start - 1] !== '\n' ? '\n\n' : '') +
+            content +
+            (end < textarea.value.length && textarea.value[end] !== '\n' ? '\n\n' : '') +
+            textarea.value.substring(end);
+
+          if (onChange.length > 1) {
+            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
+          } else {
+            onChange(newValue);
+          }
+
+          setTimeout(() => {
+            const newCursorPos = start + content.length + (start > 0 ? 2 : 0);
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+          }, 0);
+        } else {
+          onChange(content);
+        }
+
+        // Double-check if still mounted after async operation
+        if (!isMountedRef.current) {
+          if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+            console.log(`🔍 GHOST DEBUG: Component ${currentInstanceId} unmounted during DOCX processing, ignoring result`);
+          }
+          return;
+        }
+
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+          console.log(`🔍 GHOST DEBUG: DOCX processing completed for ${currentInstanceId}`);
+        }
+
+        performanceTracker.trackMetric('tauri_docx_drop_success', {
+          fileName: fileName,
+          panelTitle: title,
+          instanceId: currentInstanceId
+        });
+      } catch (error) {
+        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
+          console.error(`🔍 GHOST DEBUG: DOCX processing failed for ${currentInstanceId}:`, error);
+        }
+        performanceTracker.trackMetric('tauri_docx_drop_error', {
+          error: String(error),
+          panelTitle: title,
+          instanceId: currentInstanceId
+        });
+      }
+    };
+
     const handleFileError = (event: CustomEvent) => {
       const { error, panelTitle } = event.detail;
       if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) {
@@ -287,6 +367,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         console.log(`🔍 GHOST DEBUG: Adding listeners to DOM element for ${currentInstanceId}`);
       }
       panelDiv.addEventListener('tauri-file-processed', handleFileProcessed as EventListener);
+      panelDiv.addEventListener('tauri-docx-processed', handleDocxProcessed as EventListener);
       panelDiv.addEventListener('tauri-file-error', handleFileError as EventListener);
 
       return () => {
@@ -294,6 +375,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           console.log(`🔍 GHOST DEBUG: Cleaning up listeners for ${currentInstanceId}`);
         }
         panelDiv.removeEventListener('tauri-file-processed', handleFileProcessed as EventListener);
+        panelDiv.removeEventListener('tauri-docx-processed', handleDocxProcessed as EventListener);
         panelDiv.removeEventListener('tauri-file-error', handleFileError as EventListener);
       };
     } else {
@@ -342,6 +424,16 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     const items = Array.from(e.clipboardData.items);
     const imageItem = items.find(item => item.type.startsWith('image/'));
     const textItem = items.find(item => item.type.startsWith('text/plain'));
+    
+    // Check for file attachments (including DOCX)
+    const fileItems = items.filter(item => item.kind === 'file');
+    const docxFileItem = fileItems.find(item => {
+      // Get the file to check its type
+      const file = item.getAsFile();
+      if (!file) return false;
+      return file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+             file.name.toLowerCase().endsWith('.docx');
+    });
 
     // Get plain text content for analysis
     const plainText = textItem ? e.clipboardData.getData('text/plain') : '';
@@ -353,10 +445,50 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     performanceTracker.trackMetric('paste_operation', {
       hasImage: !!imageItem,
       hasText: !!textItem,
+      hasDocx: !!docxFileItem,
       itemCount: items.length,
       sourceType: pasteContext.sourceType,
       detectedSource: pasteContext.detectedSource
     });
+
+    // Process DOCX file if present
+    if (docxFileItem) {
+      e.preventDefault();
+      try {
+        const docxFile = docxFileItem.getAsFile();
+        if (!docxFile) return;
+
+        const result = await fileProcessingService.current.processFile(docxFile);
+        
+        const textarea = textareaRef.current;
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const newValue = textarea.value.substring(0, start) + result.content + textarea.value.substring(end);
+
+          if (onChange.length > 1) {
+            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
+          } else {
+            onChange(newValue);
+          }
+
+          setTimeout(() => {
+            textarea.setSelectionRange(start + result.content.length, start + result.content.length);
+            textarea.focus();
+          }, 0);
+        } else {
+          onChange(result.content);
+        }
+        
+        return; // Exit after processing DOCX
+      } catch (error: any) {
+        console.error('DOCX processing failed:', error);
+        // Show error to user
+        alert(error.message || 'Failed to process DOCX file from clipboard. Please try another file.');
+        performanceTracker.trackMetric('docx_paste_error', { error: error.message });
+        return;
+      }
+    }
 
     if (textItem && !imageItem) {
       e.preventDefault();
@@ -449,16 +581,63 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
     const files = Array.from(e.dataTransfer.files);
     const imageFile = files.find(file => file.type.startsWith('image/'));
+    const docxFile = files.find(file => 
+      file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      file.name.toLowerCase().endsWith('.docx')
+    );
 
     performanceTracker.trackMetric('drop_operation', {
       fileCount: files.length,
-      hasImage: !!imageFile
+      hasImage: !!imageFile,
+      hasDocx: !!docxFile
     });
 
+    // Process DOCX file if present
+    if (docxFile) {
+      try {
+        const result = await fileProcessingService.current.processFile(docxFile);
+        const textarea = textareaRef.current;
+        
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const newValue =
+            textarea.value.substring(0, start) +
+            (start > 0 && textarea.value[start - 1] !== '\n' ? '\n\n' : '') +
+            result.content +
+            (end < textarea.value.length && textarea.value[end] !== '\n' ? '\n\n' : '') +
+            textarea.value.substring(end);
+
+          if (onChange.length > 1) {
+            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
+          } else {
+            onChange(newValue);
+          }
+
+          setTimeout(() => {
+            const newCursorPos = start + result.content.length + (start > 0 ? 2 : 0);
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+          }, 0);
+        } else {
+          onChange(result.content);
+        }
+        
+        return; // Exit after processing DOCX
+      } catch (error: any) {
+        console.error('DOCX processing failed:', error);
+        // Show error to user
+        alert(error.message || 'Failed to process DOCX file. Please try another file.');
+        performanceTracker.trackMetric('docx_error', { error: error.message });
+        return;
+      }
+    }
+
+    // Process image file if present (existing OCR functionality)
     if (imageFile) {
       await processImageWithOCR(imageFile);
     }
-  }, [performanceTracker, processImageWithOCR]);
+  }, [performanceTracker, processImageWithOCR, onChange]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

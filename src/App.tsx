@@ -36,6 +36,7 @@ import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
 import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
 import OnboardingTour, { TourRestartButton } from './components/experimental/onboarding/OnboardingTour';
 import { StorageQuotaManager } from './components/StorageQuotaManager';
+import DocxTestPage from './pages/DocxTestPage';
 import './styles/resize-overrides.css';
 
 interface AppContentProps {
@@ -411,6 +412,8 @@ function App() {
               <SmartPasteTest />
             ) : window.location.pathname === '/unified-tests' ? (
               <UnifiedTestDashboard />
+            ) : window.location.pathname === '/docx-test' ? (
+              <DocxTestPage />
             ) : (
               <AppContent
                 showAdvancedOcrCard={showAdvancedOcrCardState}

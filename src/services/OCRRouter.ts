@@ -29,23 +29,8 @@ export class OCRRouter {
     fallbackFunction: (imageFile: File | Blob, options: OCROptions) => Promise<string>
   ): Promise<string> {
     
-    const isTauri = this.isTauriEnvironment();
-    // Environment check completed
-    
-    if (isTauri) {
-      // Routing to Tauri native OCR backend
-      try {
-        // Dynamically import TauriOCRProvider to avoid issues in web environment
-        const { TauriOCRProvider } = await import('./TauriOCRProvider');
-        return TauriOCRProvider.extractTextFromImage(imageFile, options);
-      } catch (error) {
-        console.error('❌ OCRRouter: Failed to load TauriOCRProvider, falling back:', error);
-        return fallbackFunction(imageFile, options);
-      }
-    } else {
-      // Routing to existing web/Electron OCR implementation
-      return fallbackFunction(imageFile, options);
-    }
+    // Always use fallback function for now (TauriOCRProvider not implemented)
+    return fallbackFunction(imageFile, options);
   }
 
   /**
@@ -60,22 +45,7 @@ export class OCRRouter {
     fallbackFunction: (imageFile: File | Blob) => Promise<any[]>
   ): Promise<any[]> {
     
-    const isTauri = this.isTauriEnvironment();
-    // Language detection routing
-    
-    if (isTauri) {
-      // Routing language detection to Tauri backend
-      try {
-        // Dynamically import TauriOCRProvider to avoid issues in web environment
-        const { TauriOCRProvider } = await import('./TauriOCRProvider');
-        return TauriOCRProvider.detectLanguage(imageFile);
-      } catch (error) {
-        console.error('❌ OCRRouter: Failed to load TauriOCRProvider for language detection, falling back:', error);
-        return fallbackFunction(imageFile);
-      }
-    } else {
-      // Routing language detection to existing implementation
-      return fallbackFunction(imageFile);
-    }
+    // Always use fallback function for now (TauriOCRProvider not implemented)
+    return fallbackFunction(imageFile);
   }
 }
