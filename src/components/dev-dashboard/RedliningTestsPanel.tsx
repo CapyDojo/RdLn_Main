@@ -15,7 +15,7 @@ import {
 import { BaseComponentProps } from '../../types/components';
 
 // Import test data
-import extremeTestCases from '../../testing/data/extreme-test-cases.json';
+import extremeTestCases from '../../../tests/fixtures/extreme-test-cases.json';
 import { ExtremeTestCase, ExtremeTestDifficulty } from '../../testing/types/extreme-test-types';
 
 interface RedliningTestsPanelProps extends BaseComponentProps {
