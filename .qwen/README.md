@@ -30,3 +30,24 @@ The integration allows Qwen Code to:
 - Wait for elements
 - Access console messages
 - Get structured accessibility snapshots
+
+## Context7 MCP Integration
+
+The configuration also includes Context7 MCP, which provides:
+- Library resolution capabilities (`resolve-library-id`)
+- Documentation retrieval (`get-library-docs`)
+
+Context7 is part of the Upstash suite of tools for serverless data services.
+
+To use Context7 MCP with Qwen Code:
+
+1. Ensure the Context7 MCP package is available:
+   ```bash
+   npx @upstash/context7-mcp@latest
+   ```
+
+2. The MCP server will automatically be available when Qwen Code uses the configuration.
+
+The integration allows Qwen Code to:
+- Resolve library identifiers
+- Retrieve library documentation

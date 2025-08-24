@@ -3,6 +3,10 @@
     "playwright": {
       "command": "npm",
       "args": ["run", "mcp"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["@upstash/context7-mcp@latest"]
     }
   }
 }

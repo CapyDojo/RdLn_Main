@@ -9,14 +9,16 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     include: [
-      'tests/**/*.{test,spec}.{js,ts,jsx,tsx}',
+      'tests/unit/**/*.{test,spec}.{js,ts,jsx,tsx}',
+      'tests/integration/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'src/**/*.{test,spec}.{js,ts,jsx,tsx}'
     ],
     exclude: [
       'tests/performance/**/*',
       'tests/accuracy/**/*',
+      'tests/e2e/**/*',
       'node_modules/**/*',
-      'tests/archive/decommissioned/**/*',
+      'tests/archive/**/*',
     ],
     testTimeout: 30000, // 30 seconds for OCR operations
     hookTimeout: 30000,

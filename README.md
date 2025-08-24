@@ -111,13 +111,20 @@ npm run build
 
 This project is configured to work with Serena MCP, an AI coding agent that provides semantic understanding of the codebase.
 
-#### Quick Setup:
+#### For Claude Code:
 1. Ensure you have Python 3.12+ and uv installed
 2. Run the configuration test: `python test-serena-config.py`
 3. Start the server: `start-serena-server.bat`
 4. Connect your MCP client to the server
 
-See `SERENA-README.md` for detailed instructions and `SERENA-USAGE.md` for examples.
+#### For Qoder IDE:
+1. Install uvx: `pip install uvx`
+2. Run setup: `setup-qoder-serena.bat`
+3. In Qoder: Settings → MCP → Import `.qoder/mcp.json`
+4. Enable "Serena Code Intelligence" server
+5. Verify with: `python test-qoder-serena-integration.py`
+
+See `SERENA-README.md` for detailed instructions, `SERENA-USAGE.md` for examples, and `QODER_SERENA_INTEGRATION.md` for Qoder-specific setup.
 
 ## 📚 Documentation
 
