@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesseract.js Character Extraction Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tesseract.js Character Extraction Test</h1>
+        <p>This test verifies that we can extract character-level data from Tesseract.js output.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="processBtn" class="btn">Extract Character Data</button>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Processing...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="result-box">
+                <h3>OCR Results</h3>
+                <pre id="ocrResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>Character Data Analysis</h3>
+                <div id="charAnalysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const processBtn = document.getElementById('processBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const ocrResults = document.getElementById('ocrResults');
+        const charAnalysis = document.getElementById('charAnalysis');
+
+        // State variables
+        let currentImage = null;
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        processBtn.addEventListener('click', processImage);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Function to extract characters from words with position information
+        function extractCharactersFromWords(words) {
+            const characters = [];
+            
+            if (!words) return characters;
+            
+            words.forEach((word, wordIndex) => {
+                if (word && word.symbols) {
+                    word.symbols.forEach((symbol, symbolIndex) => {
+                        if (symbol && symbol.text) {
+                            characters.push({
+                                text: symbol.text,
+                                confidence: symbol.confidence || 0,
+                                bbox: symbol.bbox || null,
+                                wordIndex: wordIndex,
+                                symbolIndex: symbolIndex,
+                                wordText: word.text || ''
+                            });
+                        }
+                    });
+                }
+            });
+            
+            return characters;
+        }
+
+        // Function to display character data
+        function displayCharacterData(chars) {
+            let html = `<h4>Extracted Characters (${chars.length} total)</h4>`;
+            
+            if (chars.length === 0) {
+                html += '<p>No character data found.</p>';
+                charAnalysis.innerHTML = html;
+                return;
+            }
+            
+            // Show statistics
+            const charCount = chars.length;
+            const uniqueChars = new Set(chars.map(c => c.text)).size;
+            const avgConfidence = chars.reduce((sum, c) => sum + c.confidence, 0) / chars.length;
+            
+            html += `
+                <div style="background-color: #e9f7ef; border: 1px solid #d4edda; border-radius: 4px; padding: 15px; margin: 10px 0;">
+                    <h5>Character Statistics</h5>
+                    <table>
+                        <tr>
+                            <td><strong>Total Characters:</strong></td>
+                            <td>${charCount}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Unique Characters:</strong></td>
+                            <td>${uniqueChars}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Average Confidence:</strong></td>
+                            <td>${avgConfidence.toFixed(2)}</td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+            
+            // Show first 20 characters in a table
+            html += `
+                <h5>First 20 Characters</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Position</th>
+                            <th>Character</th>
+                            <th>Confidence</th>
+                            <th>Word</th>
+                            <th>Word Index</th>
+                            <th>Symbol Index</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            const sampleChars = chars.slice(0, 20);
+            sampleChars.forEach((char, index) => {
+                html += `
+                    <tr>
+                        <td>${index}</td>
+                        <td><strong>${char.text}</strong></td>
+                        <td>${char.confidence.toFixed(2)}</td>
+                        <td>${char.wordText}</td>
+                        <td>${char.wordIndex}</td>
+                        <td>${char.symbolIndex}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            // Show a sample of the full character list
+            html += `
+                <h5>Full Character List (First 100 characters)</h5>
+                <pre>${chars.slice(0, 100).map(c => c.text).join('')}</pre>
+            `;
+            
+            charAnalysis.innerHTML = html;
+        }
+
+        async function processImage() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Processing Image...', 0, 'Initializing OCR...');
+                
+                // Process with English model first to test character extraction
+                showProgress('Processing Image...', 20, 'Running OCR with English model...');
+                const worker = await Tesseract.createWorker(['eng']);
+                await worker.setParameters({
+                    classify_enable_learning: '0'
+                });
+                
+                // Enable blocks output to get character-level data
+                const result = await worker.recognize(currentImage, {}, { blocks: true });
+                await worker.terminate();
+                
+                // Display OCR results
+                ocrResults.textContent = result.data.text;
+                
+                // Extract character data
+                showProgress('Processing Image...', 60, 'Extracting character data...');
+                const characters = extractCharactersFromWords(result.data.words);
+                
+                // Log detailed structure for debugging
+                console.log('Full result data structure:', Object.keys(result.data));
+                console.log('Words data:', result.data.words);
+                console.log('First word (if exists):', result.data.words && result.data.words[0]);
+                console.log('Characters extracted:', characters);
+                
+                // Display character analysis
+                showProgress('Processing Image...', 90, 'Displaying results...');
+                displayCharacterData(characters);
+                
+                updateProgress(100, 'Processing complete!');
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('Processing Error:', error);
+                alert('Error during processing: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+    </script>
+</body>
+</html>
