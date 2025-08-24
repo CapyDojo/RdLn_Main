@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Granular Layout Analysis - QC-v3</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .analysis-section {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            background-color: #fafafa;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .block-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .block-item {
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            padding: 8px;
+            background-color: rgba(0, 123, 255, 0.1);
+            min-width: 150px;
+        }
+        .block-text {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .block-info {
+            font-size: 11px;
+            color: #666;
+        }
+        .highlight-complex {
+            border: 2px solid #ff6b6b !important;
+            background-color: rgba(255, 107, 107, 0.2) !important;
+        }
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border: 1px solid #333;
+        }
+        .processing-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RdLn™ Granular Layout Analysis - QC-v3</h1>
+        <p>This prototype implements a practical approach for fine-tuning granularity between PSM 3 and PSM 6.</p>
+        <p>It automatically identifies complex regions that need more granular processing.</p>
+        
+        <div class="processing-info">
+            <h4>Approach:</h4>
+            <ol>
+                <li>Run initial PSM 3 analysis to get paragraph-level segmentation</li>
+                <li>Identify complex paragraphs using character set analysis and confidence metrics</li>
+                <li>Apply PSM 6 granular processing to complex regions</li>
+                <li>Combine results for optimal multilingual handling</li>
+            </ol>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="analyzeBtn" class="btn">Analyze Layout</button>
+            <button id="resetBtn" class="btn">Reset</button>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Analyzing Layout...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="analysis-section">
+                <div class="section-title">PSM 3 Initial Analysis</div>
+                <div id="psm3Results"></div>
+            </div>
+            
+            <div class="analysis-section">
+                <div class="section-title">Complex Region Identification</div>
+                <div id="complexRegionResults"></div>
+            </div>
+            
+            <div class="analysis-section">
+                <div class="section-title">Granular Processing Results</div>
+                <div id="granularResults"></div>
+            </div>
+            
+            <div class="analysis-section">
+                <div class="section-title">Combined Final Results</div>
+                <div id="finalResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const psm3Results = document.getElementById('psm3Results');
+        const complexRegionResults = document.getElementById('complexRegionResults');
+        const granularResults = document.getElementById('granularResults');
+        const finalResults = document.getElementById('finalResults');
+
+        // State variables
+        let currentImage = null;
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        analyzeBtn.addEventListener('click', analyzeLayout);
+        resetBtn.addEventListener('click', resetPrototype);
+
+        // Functions
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function resetPrototype() {
+            // Reset all state
+            currentImage = null;
+            
+            // Reset UI
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            controls.classList.add('hidden');
+            results.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            
+            // Clear results
+            psm3Results.innerHTML = '';
+            complexRegionResults.innerHTML = '';
+            granularResults.innerHTML = '';
+            finalResults.innerHTML = '';
+        }
+
+        // Analyze layout with a specific PSM mode
+        async function analyzeWithPSM(psmId, rectangle = null) {
+            try {
+                const worker = await Tesseract.createWorker('eng+chi_sim+chi_tra');
+                await worker.setParameters({
+                    tessedit_pageseg_mode: psmId,
+                    classify_enable_learning: '0'
+                });
+                
+                // If rectangle is specified, only process that region
+                let result;
+                if (rectangle) {
+                    // Create a cropped version of the image for this region
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = rectangle.width;
+                    canvas.height = rectangle.height;
+                    ctx.drawImage(
+                        currentImage, 
+                        rectangle.left, 
+                        rectangle.top, 
+                        rectangle.width, 
+                        rectangle.height,
+                        0, 
+                        0, 
+                        rectangle.width, 
+                        rectangle.height
+                    );
+                    
+                    result = await worker.recognize(canvas, {}, { 
+                        blocks: true,
+                        paragraphs: true,
+                        lines: true,
+                        words: true,
+                        symbols: true
+                    });
+                } else {
+                    result = await worker.recognize(currentImage, {}, { 
+                        blocks: true,
+                        paragraphs: true,
+                        lines: true,
+                        words: true,
+                        symbols: true
+                    });
+                }
+                
+                await worker.terminate();
+                return result;
+            } catch (error) {
+                console.error('Error analyzing with PSM ' + psmId + ':', error);
+                return null;
+            }
+        }
+
+        // Format layout elements for display
+        function formatLayoutElements(result, level = 'paragraphs') {
+            let html = '';
+            
+            if (result && result.data) {
+                // Determine what to show based on level
+                switch(level) {
+                    case 'blocks':
+                        if (result.data.blocks && result.data.blocks.length > 0) {
+                            html += '<h4>Blocks (' + result.data.blocks.length + ')</h4>';
+                            html += '<div class="block-container">';
+                            result.data.blocks.forEach((block, index) => {
+                                html += `
+                                    <div class="block-item" id="block-${index}">
+                                        <div class="block-text">${block.text ? block.text.substring(0, 50) + (block.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                                        <div class="block-info">Conf: ${(block.confidence || 0).toFixed(2)}%</div>
+                                    </div>
+                                `;
+                            });
+                            html += '</div>';
+                        }
+                        break;
+                        
+                    case 'paragraphs':
+                        if (result.data.paragraphs && result.data.paragraphs.length > 0) {
+                            html += '<h4>Paragraphs (' + result.data.paragraphs.length + ')</h4>';
+                            html += '<div class="block-container">';
+                            result.data.paragraphs.forEach((paragraph, index) => {
+                                html += `
+                                    <div class="block-item" id="para-${index}">
+                                        <div class="block-text">${paragraph.text ? paragraph.text.substring(0, 50) + (paragraph.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                                        <div class="block-info">Conf: ${(paragraph.confidence || 0).toFixed(2)}%</div>
+                                    </div>
+                                `;
+                            });
+                            html += '</div>';
+                        }
+                        break;
+                        
+                    case 'lines':
+                        if (result.data.lines && result.data.lines.length > 0) {
+                            html += '<h4>Lines (' + result.data.lines.length + ')</h4>';
+                            html += '<div class="block-container">';
+                            result.data.lines.forEach((line, index) => {
+                                html += `
+                                    <div class="block-item">
+                                        <div class="block-text">${line.text ? line.text.substring(0, 50) + (line.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                                        <div class="block-info">Conf: ${(line.confidence || 0).toFixed(2)}%</div>
+                                    </div>
+                                `;
+                            });
+                            html += '</div>';
+                        }
+                        break;
+                }
+            }
+            
+            return html;
+        }
+
+        // Analyze character composition of text
+        function analyzeCharacterComposition(text) {
+            if (!text) return { chinese: 0, latin: 0, numbers: 0, punctuation: 0, total: 0 };
+            
+            let chinese = 0;
+            let latin = 0;
+            let numbers = 0;
+            let punctuation = 0;
+            
+            for (let char of text) {
+                if (/[\u4e00-\u9fff]/.test(char)) {
+                    chinese++;
+                } else if (/[a-zA-Z]/.test(char)) {
+                    latin++;
+                } else if (/[0-9]/.test(char)) {
+                    numbers++;
+                } else if (/[\s\p{P}\p{S}]/u.test(char)) {
+                    punctuation++;
+                }
+            }
+            
+            const total = text.length;
+            return { chinese, latin, numbers, punctuation, total };
+        }
+
+        // Identify complex regions based on character composition and confidence
+        function identifyComplexRegions(paragraphs) {
+            const complexRegions = [];
+            
+            paragraphs.forEach((paragraph, index) => {
+                const text = paragraph.text || '';
+                const confidence = paragraph.confidence || 0;
+                
+                // Analyze character composition
+                const composition = analyzeCharacterComposition(text);
+                
+                // Determine if this is a complex region
+                const hasMixedScripts = composition.chinese > 0 && (composition.latin > 0 || composition.numbers > 0);
+                const lowConfidence = confidence < 70;
+                const highPunctuationRatio = composition.total > 0 && (composition.punctuation / composition.total) > 0.3;
+                
+                if (hasMixedScripts || lowConfidence || highPunctuationRatio) {
+                    complexRegions.push({
+                        index: index,
+                        paragraph: paragraph,
+                        composition: composition,
+                        isMixedScript: hasMixedScripts,
+                        isLowConfidence: lowConfidence,
+                        isHighPunctuation: highPunctuationRatio,
+                        complexityScore: 
+                            (hasMixedScripts ? 3 : 0) + 
+                            (lowConfidence ? 2 : 0) + 
+                            (highPunctuationRatio ? 1 : 0)
+                    });
+                }
+            });
+            
+            // Sort by complexity score (highest first)
+            complexRegions.sort((a, b) => b.complexityScore - a.complexityScore);
+            
+            return complexRegions;
+        }
+
+        // Format complex region analysis for display
+        function formatComplexRegions(complexRegions) {
+            if (complexRegions.length === 0) {
+                return '<p>No complex regions identified. All paragraphs appear to have uniform content.</p>';
+            }
+            
+            let html = `<p>Identified ${complexRegions.length} complex regions that may benefit from granular processing:</p>`;
+            html += '<div class="block-container">';
+            
+            complexRegions.forEach(region => {
+                const comp = region.composition;
+                html += `
+                    <div class="block-item highlight-complex">
+                        <div class="block-text">${region.paragraph.text ? region.paragraph.text.substring(0, 50) + (region.paragraph.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                        <div class="block-info">Complexity Score: ${region.complexityScore}/6</div>
+                        <div class="block-info">Chinese: ${Math.round((comp.chinese/comp.total)*100)}% | Latin: ${Math.round((comp.latin/comp.total)*100)}%</div>
+                        <div class="block-info">Confidence: ${(region.paragraph.confidence || 0).toFixed(2)}%</div>
+                        <div class="block-info">
+                            ${region.isMixedScript ? 'Mixed Scripts ' : ''}
+                            ${region.isLowConfidence ? 'Low Confidence ' : ''}
+                            ${region.isHighPunctuation ? 'High Punctuation ' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        // Apply granular processing to a specific region
+        async function applyGranularProcessing(region) {
+            try {
+                // Get the bounding box of the region
+                const bbox = region.paragraph.bbox;
+                if (!bbox) {
+                    console.warn('No bounding box found for region', region);
+                    return null;
+                }
+                
+                // Create a cropped version of the image for this region
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const width = Math.max(1, Math.round(bbox.x1 - bbox.x0));
+                const height = Math.max(1, Math.round(bbox.y1 - bbox.y0));
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw the cropped region
+                ctx.drawImage(
+                    currentImage,
+                    Math.round(bbox.x0),
+                    Math.round(bbox.y0),
+                    width,
+                    height,
+                    0,
+                    0,
+                    width,
+                    height
+                );
+                
+                // Run PSM 6 (single uniform block) on the cropped region for granular analysis
+                const worker = await Tesseract.createWorker('eng+chi_sim+chi_tra');
+                await worker.setParameters({
+                    tessedit_pageseg_mode: 6, // Single uniform block
+                    classify_enable_learning: '0'
+                });
+                
+                const result = await worker.recognize(canvas, {}, {
+                    blocks: true,
+                    paragraphs: true,
+                    lines: true,
+                    words: true,
+                    symbols: true
+                });
+                
+                await worker.terminate();
+                
+                return {
+                    originalRegion: region,
+                    granularResult: result,
+                    cropInfo: {
+                        x: Math.round(bbox.x0),
+                        y: Math.round(bbox.y0),
+                        width: width,
+                        height: height
+                    }
+                };
+            } catch (error) {
+                console.error('Error in granular processing for region:', error);
+                return null;
+            }
+        }
+
+        // Main analysis function
+        async function analyzeLayout() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Analyzing Layout...', 0, 'Initializing...');
+                
+                // Step 1: Run PSM 3 analysis (paragraph-level)
+                showProgress('Analyzing Layout...', 10, 'Running PSM 3 analysis...');
+                const psm3Result = await analyzeWithPSM(3);
+                
+                if (!psm3Result) {
+                    throw new Error('Failed to run PSM 3 analysis');
+                }
+                
+                psm3Results.innerHTML = formatLayoutElements(psm3Result, 'paragraphs');
+                
+                // Step 2: Identify complex regions
+                showProgress('Analyzing Layout...', 30, 'Identifying complex regions...');
+                const paragraphs = psm3Result.data.paragraphs || [];
+                const complexRegions = identifyComplexRegions(paragraphs);
+                
+                complexRegionResults.innerHTML = formatComplexRegions(complexRegions);
+                
+                // Step 3: Apply granular processing to complex regions
+                showProgress('Analyzing Layout...', 50, 'Applying granular processing to complex regions...');
+                const granularResultsData = [];
+                
+                for (let i = 0; i < complexRegions.length; i++) {
+                    const region = complexRegions[i];
+                    const progress = 50 + Math.round((i / complexRegions.length) * 30);
+                    showProgress('Analyzing Layout...', progress, `Processing complex region ${i+1} of ${complexRegions.length}...`);
+                    
+                    // Apply real granular processing
+                    const granularResult = await applyGranularProcessing(region);
+                    if (granularResult) {
+                        granularResultsData.push(granularResult);
+                    }
+                }
+                
+                // Format granular results
+                if (granularResultsData.length > 0) {
+                    let granularHtml = `<p>Granular processing applied to ${granularResultsData.length} complex regions:</p>`;
+                    granularHtml += '<div class="block-container">';
+                    
+                    granularResultsData.forEach((result, index) => {
+                        const lines = result.granularResult.data.lines || [];
+                        const words = result.granularResult.data.words || [];
+                        const avgLineConf = lines.length > 0 ? 
+                            (lines.reduce((sum, line) => sum + (line.confidence || 0), 0) / lines.length) : 0;
+                        
+                        granularHtml += `
+                            <div class="block-item">
+                                <div class="block-text">Region ${result.originalRegion.index}</div>
+                                <div class="block-info">Lines: ${lines.length} | Words: ${words.length}</div>
+                                <div class="block-info">Avg Line Conf: ${avgLineConf.toFixed(2)}%</div>
+                                <div class="block-info">Crop: ${result.cropInfo.width}×${result.cropInfo.height}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    granularHtml += '</div>';
+                    granularResults.innerHTML = granularHtml;
+                } else {
+                    granularResults.innerHTML = '<p>No granular processing was needed or failed.</p>';
+                }
+                
+                // Step 4: Combine results
+                showProgress('Analyzing Layout...', 90, 'Combining results...');
+                
+                // Show summary of actual processing
+                const summaryHtml = `
+                    <p><strong>Analysis Summary:</strong></p>
+                    <ul>
+                        <li>Total paragraphs analyzed: ${paragraphs.length}</li>
+                        <li>Complex regions identified: ${complexRegions.length}</li>
+                        <li>Regions processed with granular approach: ${granularResultsData.length}</li>
+                        <li>Success rate: ${complexRegions.length > 0 ? Math.round((granularResultsData.length/complexRegions.length)*100) : 0}%</li>
+                    </ul>
+                    <p><strong>Processing Strategy:</strong></p>
+                    <ul>
+                        <li>Used PSM 3 for overall document structure</li>
+                        <li>Identified mixed-script regions using character composition analysis</li>
+                        <li>Applied PSM 6 granular processing to complex regions by cropping and re-processing</li>
+                        <li>Obtained line-by-line and word-by-word breakdown for complex regions</li>
+                    </ul>
+                    <p><strong>Benefits:</strong></p>
+                    <ul>
+                        <li>Improved handling of mixed-language paragraphs</li>
+                        <li>More accurate text structure for complex regions</li>
+                        <li>Better confidence metrics at granular level</li>
+                    </ul>
+                `;
+                
+                finalResults.innerHTML = summaryHtml;
+                
+                updateProgress(100, 'Layout analysis complete!');
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('Analysis Error:', error);
+                alert('Error during analysis: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

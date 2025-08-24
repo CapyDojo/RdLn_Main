@@ -437,88 +437,113 @@
             }
         }
 
-        // Format layout elements for display
-        function formatLayoutElements(result) {
+        // Format layout elements for display - only show the primary level for each PSM
+        function formatLayoutElements(result, psmId) {
             let html = '';
             
-            // Blocks
-            if (result.data.blocks && result.data.blocks.length > 0) {
-                html += '<h4>Blocks (' + result.data.blocks.length + ')</h4>';
-                html += '<div class="block-container">';
-                result.data.blocks.forEach((block, index) => {
-                    html += `
-                        <div class="block-item">
-                            <div class="block-text">${block.text ? block.text.substring(0, 50) + (block.text.length > 50 ? '...' : '') : '(empty)'}</div>
-                            <div class="block-info">Conf: ${(block.confidence || 0).toFixed(2)}%</div>
-                            ${block.bbox ? `<div class="block-info">Size: ${Math.round(block.bbox.x1 - block.bbox.x0)}×${Math.round(block.bbox.y1 - block.bbox.y0)}</div>` : ''}
-                        </div>
-                    `;
-                });
-                html += '</div>';
-            }
-            
-            // Paragraphs
-            if (result.data.paragraphs && result.data.paragraphs.length > 0) {
-                html += '<h4>Paragraphs (' + result.data.paragraphs.length + ')</h4>';
-                html += '<div class="block-container">';
-                result.data.paragraphs.forEach((paragraph, index) => {
-                    html += `
-                        <div class="block-item">
-                            <div class="block-text">${paragraph.text ? paragraph.text.substring(0, 50) + (paragraph.text.length > 50 ? '...' : '') : '(empty)'}</div>
-                            <div class="block-info">Conf: ${(paragraph.confidence || 0).toFixed(2)}%</div>
-                            ${paragraph.bbox ? `<div class="block-info">Size: ${Math.round(paragraph.bbox.x1 - paragraph.bbox.x0)}×${Math.round(paragraph.bbox.y1 - paragraph.bbox.y0)}</div>` : ''}
-                        </div>
-                    `;
-                });
-                html += '</div>';
-            }
-            
-            // Lines
-            if (result.data.lines && result.data.lines.length > 0) {
-                html += '<h4>Lines (' + result.data.lines.length + ')</h4>';
-                html += '<div class="block-container">';
-                result.data.lines.forEach((line, index) => {
-                    html += `
-                        <div class="block-item">
-                            <div class="block-text">${line.text ? line.text.substring(0, 50) + (line.text.length > 50 ? '...' : '') : '(empty)'}</div>
-                            <div class="block-info">Conf: ${(line.confidence || 0).toFixed(2)}%</div>
-                            ${line.bbox ? `<div class="block-info">Size: ${Math.round(line.bbox.x1 - line.bbox.x0)}×${Math.round(line.bbox.y1 - line.bbox.y0)}</div>` : ''}
-                        </div>
-                    `;
-                });
-                html += '</div>';
-            }
-            
-            // Words
-            if (result.data.words && result.data.words.length > 0) {
-                html += '<h4>Words (' + result.data.words.length + ')</h4>';
-                html += '<div class="block-container">';
-                result.data.words.forEach((word, index) => {
-                    html += `
-                        <div class="block-item">
-                            <div class="block-text">${word.text || '(empty)'}</div>
-                            <div class="block-info">Conf: ${(word.confidence || 0).toFixed(2)}%</div>
-                            ${word.bbox ? `<div class="block-info">Size: ${Math.round(word.bbox.x1 - word.bbox.x0)}×${Math.round(word.bbox.y1 - word.bbox.y0)}</div>` : ''}
-                        </div>
-                    `;
-                });
-                html += '</div>';
-            }
-            
-            // Symbols/Characters
-            if (result.data.symbols && result.data.symbols.length > 0) {
-                const sampleSymbols = result.data.symbols.slice(0, 20);
-                html += '<h4>Symbols (Sample of ' + sampleSymbols.length + '/' + result.data.symbols.length + ')</h4>';
-                html += '<div class="block-container">';
-                sampleSymbols.forEach((symbol, index) => {
-                    html += `
-                        <div class="block-item">
-                            <div class="block-text">${symbol.text || '(empty)'}</div>
-                            <div class="block-info">Conf: ${(symbol.confidence || 0).toFixed(2)}%</div>
-                        </div>
-                    `;
-                });
-                html += '</div>';
+            // Determine what to show based on PSM mode
+            switch(psmId) {
+                case 1: // Automatic page segmentation with OSD - show blocks as primary
+                    if (result.data.blocks && result.data.blocks.length > 0) {
+                        html += '<h4>Primary: Blocks (' + result.data.blocks.length + ')</h4>';
+                        html += '<div class="block-container">';
+                        result.data.blocks.forEach((block, index) => {
+                            html += `
+                                <div class="block-item">
+                                    <div class="block-text">${block.text ? block.text.substring(0, 50) + (block.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                                    <div class="block-info">Conf: ${(block.confidence || 0).toFixed(2)}%</div>
+                                    ${block.bbox ? `<div class="block-info">Size: ${Math.round(block.bbox.x1 - block.bbox.x0)}×${Math.round(block.bbox.y1 - block.bbox.y0)}</div>` : ''}
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    break;
+                    
+                case 3: // Fully automatic page segmentation - show paragraphs as primary
+                    if (result.data.paragraphs && result.data.paragraphs.length > 0) {
+                        html += '<h4>Primary: Paragraphs (' + result.data.paragraphs.length + ')</h4>';
+                        html += '<div class="block-container">';
+                        result.data.paragraphs.forEach((paragraph, index) => {
+                            html += `
+                                <div class="block-item">
+                                    <div class="block-text">${paragraph.text ? paragraph.text.substring(0, 50) + (paragraph.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                                    <div class="block-info">Conf: ${(paragraph.confidence || 0).toFixed(2)}%</div>
+                                    ${paragraph.bbox ? `<div class="block-info">Size: ${Math.round(paragraph.bbox.x1 - paragraph.bbox.x0)}×${Math.round(paragraph.bbox.y1 - paragraph.bbox.y0)}</div>` : ''}
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    break;
+                    
+                case 6: // Single uniform block - show lines as primary
+                    if (result.data.lines && result.data.lines.length > 0) {
+                        html += '<h4>Primary: Lines (' + result.data.lines.length + ')</h4>';
+                        html += '<div class="block-container">';
+                        result.data.lines.forEach((line, index) => {
+                            html += `
+                                <div class="block-item">
+                                    <div class="block-text">${line.text ? line.text.substring(0, 50) + (line.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                                    <div class="block-info">Conf: ${(line.confidence || 0).toFixed(2)}%</div>
+                                    ${line.bbox ? `<div class="block-info">Size: ${Math.round(line.bbox.x1 - line.bbox.x0)}×${Math.round(line.bbox.y1 - line.bbox.y0)}</div>` : ''}
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    break;
+                    
+                case 7: // Single text line - show words as primary
+                    if (result.data.words && result.data.words.length > 0) {
+                        html += '<h4>Primary: Words (' + result.data.words.length + ')</h4>';
+                        html += '<div class="block-container">';
+                        result.data.words.forEach((word, index) => {
+                            html += `
+                                <div class="block-item">
+                                    <div class="block-text">${word.text || '(empty)'}</div>
+                                    <div class="block-info">Conf: ${(word.confidence || 0).toFixed(2)}%</div>
+                                    ${word.bbox ? `<div class="block-info">Size: ${Math.round(word.bbox.x1 - word.bbox.x0)}×${Math.round(word.bbox.y1 - word.bbox.y0)}</div>` : ''}
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    break;
+                    
+                case 13: // Raw line - show symbols as primary
+                    if (result.data.symbols && result.data.symbols.length > 0) {
+                        const sampleSymbols = result.data.symbols.slice(0, 30);
+                        html += '<h4>Primary: Symbols (Sample of ' + sampleSymbols.length + '/' + result.data.symbols.length + ')</h4>';
+                        html += '<div class="block-container">';
+                        sampleSymbols.forEach((symbol, index) => {
+                            html += `
+                                <div class="block-item">
+                                    <div class="block-text">${symbol.text || '(empty)'}</div>
+                                    <div class="block-info">Conf: ${(symbol.confidence || 0).toFixed(2)}%</div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    break;
+                    
+                default:
+                    // Fallback - show all available levels
+                    if (result.data.blocks && result.data.blocks.length > 0) {
+                        html += '<h4>Blocks (' + result.data.blocks.length + ')</h4>';
+                        html += '<div class="block-container">';
+                        result.data.blocks.forEach((block, index) => {
+                            html += `
+                                <div class="block-item">
+                                    <div class="block-text">${block.text ? block.text.substring(0, 50) + (block.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                                    <div class="block-info">Conf: ${(block.confidence || 0).toFixed(2)}%</div>
+                                    ${block.bbox ? `<div class="block-info">Size: ${Math.round(block.bbox.x1 - block.bbox.x0)}×${Math.round(block.bbox.y1 - block.bbox.y0)}</div>` : ''}
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
             }
             
             return html;
@@ -577,7 +602,7 @@
                         drawLayoutElements(result, psmMode.id);
                         
                         // Format and display results
-                        const formattedResult = formatLayoutElements(result);
+                        const formattedResult = formatLayoutElements(result, psmMode.id);
                         
                         // Display in appropriate results section
                         switch (psmMode.id) {

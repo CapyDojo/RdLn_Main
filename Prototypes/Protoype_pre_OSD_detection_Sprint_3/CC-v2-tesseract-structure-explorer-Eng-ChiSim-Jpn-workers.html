@@ -102,11 +102,17 @@
         .analysis-section.eng-only {
             border-color: #007bff;
         }
-        .analysis-section.multi-lang {
+        .analysis-section.chinese {
             border-color: #28a745;
         }
         .analysis-section.japanese {
             border-color: #ff6b6b;
+        }
+        .analysis-section.arabic {
+            border-color: #fd7e14;
+        }
+        .analysis-section.russian {
+            border-color: #e83e8c;
         }
         .structure-box {
             border: 1px solid #ddd;
@@ -184,7 +190,7 @@
 <body>
     <div class="container">
         <h1>RdLn™ Tesseract Structure Explorer v2 - Multi-Language Workers</h1>
-        <p>This prototype compares structure detection between different language workers (English, Chinese, Japanese) for multilingual text analysis.</p>
+        <p>This prototype compares structure detection between different single-language workers (English, Chinese, Japanese, Arabic, Russian) for multilingual text analysis.</p>
         
         <div class="upload-area" id="uploadArea">
             <p>Drag & drop an image here or click to select</p>
@@ -201,8 +207,10 @@
             <div class="worker-selector">
                 <h4>Analysis Options:</h4>
                 <button id="analyzeEngBtn" class="btn">Analyze: English Only</button>
-                <button id="analyzeMultiBtn" class="btn success">Analyze: English + Chinese</button>
+                <button id="analyzeMultiBtn" class="btn success">Analyze: Chinese Only</button>
                 <button id="analyzeJpnBtn" class="btn" style="background-color: #ff6b6b;">Analyze: Japanese Only</button>
+                <button id="analyzeAraBtn" class="btn" style="background-color: #fd7e14;">Analyze: Arabic Only</button>
+                <button id="analyzeRusBtn" class="btn" style="background-color: #e83e8c;">Analyze: Russian Only</button>
                 <button id="analyzeBothBtn" class="btn" style="background-color: #6f42c1;">Compare All</button>
                 <button id="resetBtn" class="btn secondary">Reset</button>
             </div>
@@ -229,8 +237,8 @@
                         <div class="comparison-stats" id="engStats"></div>
                         <div id="engResults"></div>
                     </div>
-                    <div class="analysis-section multi-lang" id="multiSection">
-                        <h3>🟢 English + Chinese Worker</h3>
+                    <div class="analysis-section chinese" id="multiSection">
+                        <h3>🟢 Chinese Only Worker</h3>
                         <div class="comparison-stats" id="multiStats"></div>
                         <div id="multiResults"></div>
                     </div>
@@ -238,6 +246,16 @@
                         <h3>🔴 Japanese Only Worker</h3>
                         <div class="comparison-stats" id="jpnStats"></div>
                         <div id="jpnResults"></div>
+                    </div>
+                    <div class="analysis-section arabic" id="araSection" style="display: none;">
+                        <h3>🟠 Arabic Only Worker</h3>
+                        <div class="comparison-stats" id="araStats"></div>
+                        <div id="araResults"></div>
+                    </div>
+                    <div class="analysis-section russian" id="rusSection" style="display: none;">
+                        <h3>🟣 Russian Only Worker</h3>
+                        <div class="comparison-stats" id="rusStats"></div>
+                        <div id="rusResults"></div>
                     </div>
                 </div>
             </div>
@@ -261,6 +279,7 @@
                     <button id="osdFullImageBtn" class="btn">OSD: Full Image</button>
                     <button id="osdBlocksBtn" class="btn">OSD: Individual Blocks</button>
                     <button id="osdParagraphsBtn" class="btn">OSD: Individual Paragraphs</button>
+                    <button id="osdLinesBtn" class="btn">OSD: Individual Lines</button>
                     <div id="activeWorkerInfo" style="margin-top: 10px; font-style: italic; color: #666;"></div>
                 </div>
 
@@ -280,6 +299,8 @@
         const analyzeEngBtn = document.getElementById('analyzeEngBtn');
         const analyzeMultiBtn = document.getElementById('analyzeMultiBtn');
         const analyzeJpnBtn = document.getElementById('analyzeJpnBtn');
+        const analyzeAraBtn = document.getElementById('analyzeAraBtn');
+        const analyzeRusBtn = document.getElementById('analyzeRusBtn');
         const analyzeBothBtn = document.getElementById('analyzeBothBtn');
         const resetBtn = document.getElementById('resetBtn');
         const progressContainer = document.getElementById('progressContainer');
@@ -292,13 +313,24 @@
         const singleViewTitle = document.getElementById('singleViewTitle');
         const engResults = document.getElementById('engResults');
         const multiResults = document.getElementById('multiResults');
+        const jpnResults = document.getElementById('jpnResults');
+        const araResults = document.getElementById('araResults');
+        const rusResults = document.getElementById('rusResults');
         const engStats = document.getElementById('engStats');
         const multiStats = document.getElementById('multiStats');
+        const jpnStats = document.getElementById('jpnStats');
+        const araStats = document.getElementById('araStats');
+        const rusStats = document.getElementById('rusStats');
+        const jpnSection = document.getElementById('jpnSection');
+        const araSection = document.getElementById('araSection');
+        const rusSection = document.getElementById('rusSection');
+        const comparisonGrid = document.getElementById('comparisonGrid');
         const singleResults = document.getElementById('singleResults');
         const osdResults = document.getElementById('osdResults');
         const osdFullImageBtn = document.getElementById('osdFullImageBtn');
         const osdBlocksBtn = document.getElementById('osdBlocksBtn');
         const osdParagraphsBtn = document.getElementById('osdParagraphsBtn');
+        const osdLinesBtn = document.getElementById('osdLinesBtn');
         const activeWorkerInfo = document.getElementById('activeWorkerInfo');
         const tempCanvas = document.getElementById('tempCanvas');
 
@@ -307,6 +339,8 @@
         let engStructureData = null;
         let multiStructureData = null;
         let jpnStructureData = null;
+        let araStructureData = null;
+        let rusStructureData = null;
         let activeStructureData = null; // For OSD testing
         let activeWorkerType = null;
 
@@ -334,11 +368,14 @@
         analyzeEngBtn.addEventListener('click', () => analyzeStructure('eng'));
         analyzeMultiBtn.addEventListener('click', () => analyzeStructure('multi'));
         analyzeJpnBtn.addEventListener('click', () => analyzeStructure('jpn'));
+        analyzeAraBtn.addEventListener('click', () => analyzeStructure('ara'));
+        analyzeRusBtn.addEventListener('click', () => analyzeStructure('rus'));
         analyzeBothBtn.addEventListener('click', () => analyzeStructure('all'));
         resetBtn.addEventListener('click', resetPrototype);
         osdFullImageBtn.addEventListener('click', () => testOSDFullImage());
         osdBlocksBtn.addEventListener('click', () => testOSDByBlocks());
         osdParagraphsBtn.addEventListener('click', () => testOSDByParagraphs());
+        osdLinesBtn.addEventListener('click', () => testOSDByLines());
 
         // File handling functions
         function handleFileSelect(e) {
@@ -395,15 +432,25 @@
         async function analyzeSingle(workerType) {
             const isMulti = workerType === 'multi';
             const isJpn = workerType === 'jpn';
+            const isAra = workerType === 'ara';
+            const isRus = workerType === 'rus';
             let languages, title, emoji;
             
-            if (isJpn) {
+            if (isRus) {
+                languages = ['rus'];
+                title = '🟣 Russian Only Worker Analysis';
+                emoji = '🟣';
+            } else if (isAra) {
+                languages = ['ara'];
+                title = '🟠 Arabic Only Worker Analysis';
+                emoji = '🟠';
+            } else if (isJpn) {
                 languages = ['jpn'];
                 title = '🔴 Japanese Only Worker Analysis';
                 emoji = '🔴';
             } else if (isMulti) {
-                languages = ['eng', 'chi_sim'];
-                title = '🟢 English + Chinese Worker Analysis';
+                languages = ['chi_sim'];
+                title = '🟢 Chinese Only Worker Analysis';
                 emoji = '🟢';
             } else {
                 languages = ['eng'];
@@ -411,7 +458,7 @@
                 emoji = '🔵';
             }
             
-            const workerDesc = isJpn ? 'Japanese' : (isMulti ? 'multi-language' : 'English');
+            const workerDesc = isRus ? 'Russian' : (isAra ? 'Arabic' : (isJpn ? 'Japanese' : (isMulti ? 'Chinese' : 'English')));
             showProgress('Analyzing Structure...', 0, `Initializing ${workerDesc} worker...`);
             
             const worker = await Tesseract.createWorker(languages);
@@ -426,7 +473,15 @@
             updateProgress(90, 'Processing structure data...');
             
             // Store results and set as active for OSD testing
-            if (isJpn) {
+            if (isRus) {
+                rusStructureData = result.data;
+                activeStructureData = result.data;
+                activeWorkerType = 'rus';
+            } else if (isAra) {
+                araStructureData = result.data;
+                activeStructureData = result.data;
+                activeWorkerType = 'ara';
+            } else if (isJpn) {
                 jpnStructureData = result.data;
                 activeStructureData = result.data;
                 activeWorkerType = 'jpn';
@@ -452,7 +507,7 @@
             await worker.terminate();
             
             // Update active worker info
-            const workerName = isJpn ? 'Japanese Only' : (isMulti ? 'English + Chinese' : 'English Only');
+            const workerName = isRus ? 'Russian Only' : (isAra ? 'Arabic Only' : (isJpn ? 'Japanese Only' : (isMulti ? 'Chinese Only' : 'English Only')));
             activeWorkerInfo.textContent = `Active for OSD testing: ${workerName} worker`;
             
             setTimeout(() => {
@@ -473,20 +528,20 @@
             engStructureData = engResult.data;
             await engWorker.terminate();
             
-            updateProgress(50, 'Initializing multi-language worker...');
+            updateProgress(50, 'Initializing Chinese worker...');
             
-            // Multi-language worker
-            const multiWorker = await Tesseract.createWorker(['eng', 'chi_sim']);
+            // Chinese worker
+            const multiWorker = await Tesseract.createWorker(['chi_sim']);
             await multiWorker.setParameters({ classify_enable_learning: '0' });
             
-            updateProgress(70, 'Running multi-language analysis...');
+            updateProgress(70, 'Running Chinese analysis...');
             const multiResult = await multiWorker.recognize(currentImage, {}, { blocks: true });
             multiStructureData = multiResult.data;
             await multiWorker.terminate();
             
             updateProgress(90, 'Generating comparison...');
             
-            // Set multi-language as active (more comprehensive for OSD)
+            // Set Chinese as active (good for Chinese script OSD)
             activeStructureData = multiStructureData;
             activeWorkerType = 'multi';
             
@@ -508,36 +563,58 @@
             const engWorker = await Tesseract.createWorker(['eng']);
             await engWorker.setParameters({ classify_enable_learning: '0' });
             
-            updateProgress(15, 'Running English analysis...');
+            updateProgress(10, 'Running English analysis...');
             const engResult = await engWorker.recognize(currentImage, {}, { blocks: true });
             engStructureData = engResult.data;
             await engWorker.terminate();
             
-            updateProgress(35, 'Initializing multi-language worker...');
+            updateProgress(25, 'Initializing Chinese worker...');
             
-            // Multi-language worker
-            const multiWorker = await Tesseract.createWorker(['eng', 'chi_sim']);
+            // Chinese worker
+            const multiWorker = await Tesseract.createWorker(['chi_sim']);
             await multiWorker.setParameters({ classify_enable_learning: '0' });
             
-            updateProgress(50, 'Running multi-language analysis...');
+            updateProgress(35, 'Running Chinese analysis...');
             const multiResult = await multiWorker.recognize(currentImage, {}, { blocks: true });
             multiStructureData = multiResult.data;
             await multiWorker.terminate();
             
-            updateProgress(70, 'Initializing Japanese worker...');
+            updateProgress(50, 'Initializing Japanese worker...');
             
             // Japanese worker
             const jpnWorker = await Tesseract.createWorker(['jpn']);
             await jpnWorker.setParameters({ classify_enable_learning: '0' });
             
-            updateProgress(85, 'Running Japanese analysis...');
+            updateProgress(60, 'Running Japanese analysis...');
             const jpnResult = await jpnWorker.recognize(currentImage, {}, { blocks: true });
             jpnStructureData = jpnResult.data;
             await jpnWorker.terminate();
             
-            updateProgress(95, 'Generating comparison...');
+            updateProgress(70, 'Initializing Arabic worker...');
             
-            // Set multi-language as active (most comprehensive for OSD)
+            // Arabic worker
+            const araWorker = await Tesseract.createWorker(['ara']);
+            await araWorker.setParameters({ classify_enable_learning: '0' });
+            
+            updateProgress(80, 'Running Arabic analysis...');
+            const araResult = await araWorker.recognize(currentImage, {}, { blocks: true });
+            araStructureData = araResult.data;
+            await araWorker.terminate();
+            
+            updateProgress(85, 'Initializing Russian worker...');
+            
+            // Russian worker
+            const rusWorker = await Tesseract.createWorker(['rus']);
+            await rusWorker.setParameters({ classify_enable_learning: '0' });
+            
+            updateProgress(92, 'Running Russian analysis...');
+            const rusResult = await rusWorker.recognize(currentImage, {}, { blocks: true });
+            rusStructureData = rusResult.data;
+            await rusWorker.terminate();
+            
+            updateProgress(97, 'Generating comparison...');
+            
+            // Set Chinese as active (good for Chinese script OSD)
             activeStructureData = multiStructureData;
             activeWorkerType = 'multi';
             
@@ -553,23 +630,65 @@
         }
 
         function displayComparison() {
-            // Generate stats
-            const engStatsData = generateStats(engStructureData);
-            const multiStatsData = generateStats(multiStructureData);
+            // Count how many workers have data
+            const workers = {
+                jpn: jpnStructureData !== null,
+                ara: araStructureData !== null,
+                rus: rusStructureData !== null
+            };
             
-            engStats.innerHTML = engStatsData;
-            multiStats.innerHTML = multiStatsData;
+            const activeWorkers = Object.values(workers).filter(Boolean).length + 2; // +2 for eng and multi (always present)
             
-            // Generate structure displays
+            // Adjust grid layout based on number of active workers
+            if (activeWorkers === 5) {
+                // All 5 workers - use wrap layout
+                comparisonGrid.style.gridTemplateColumns = '1fr 1fr 1fr';
+                comparisonGrid.style.gridTemplateRows = 'auto auto';
+            } else if (activeWorkers >= 3) {
+                // 3+ workers - 3 column layout
+                comparisonGrid.style.gridTemplateColumns = '1fr 1fr 1fr';
+                comparisonGrid.style.gridTemplateRows = 'auto';
+            } else {
+                // 2 workers - 2 column layout
+                comparisonGrid.style.gridTemplateColumns = '1fr 1fr';
+                comparisonGrid.style.gridTemplateRows = 'auto';
+            }
+            
+            // Show/hide sections and populate data
+            engStats.innerHTML = generateStats(engStructureData);
+            multiStats.innerHTML = generateStats(multiStructureData);
             engResults.innerHTML = generateStructureHTML(engStructureData);
             multiResults.innerHTML = generateStructureHTML(multiStructureData);
+            
+            if (workers.jpn) {
+                jpnSection.style.display = 'block';
+                jpnStats.innerHTML = generateStats(jpnStructureData);
+                jpnResults.innerHTML = generateStructureHTML(jpnStructureData);
+            } else {
+                jpnSection.style.display = 'none';
+            }
+            
+            if (workers.ara) {
+                araSection.style.display = 'block';
+                araStats.innerHTML = generateStats(araStructureData);
+                araResults.innerHTML = generateStructureHTML(araStructureData);
+            } else {
+                araSection.style.display = 'none';
+            }
+            
+            if (workers.rus) {
+                rusSection.style.display = 'block';
+                rusStats.innerHTML = generateStats(rusStructureData);
+                rusResults.innerHTML = generateStructureHTML(rusStructureData);
+            } else {
+                rusSection.style.display = 'none';
+            }
+            
+            activeWorkerInfo.textContent = 'Active for OSD testing: Chinese worker (good for Chinese script)';
             
             // Show comparison view
             singleView.classList.add('hidden');
             comparisonView.classList.remove('hidden');
-            
-            // Update active worker info
-            activeWorkerInfo.textContent = 'Active for OSD testing: English + Chinese worker (more comprehensive)';
         }
 
         function generateStats(data) {
@@ -685,7 +804,7 @@
                 }
             }
             
-            displayOSDResults(`Blocks OSD (${activeWorkerType === 'multi' ? 'Multi-Lang' : 'Eng-Only'} Structure)`, osdResults);
+            displayOSDResults(`Blocks OSD (${getActiveWorkerName()} Structure)`, osdResults);
         }
 
         async function testOSDByParagraphs() {
@@ -722,7 +841,66 @@
                 }
             }
             
-            displayOSDResults(`Paragraphs OSD (${activeWorkerType === 'multi' ? 'Multi-Lang' : 'Eng-Only'} Structure)`, osdResults);
+            displayOSDResults(`Paragraphs OSD (${getActiveWorkerName()} Structure)`, osdResults);
+        }
+
+        async function testOSDByLines() {
+            if (!activeStructureData || !activeStructureData.lines) {
+                alert('Please run structure analysis first');
+                return;
+            }
+            
+            showOSDProgress('Testing OSD on individual lines...');
+            const osdResults = [];
+            
+            // Test first 15 lines to avoid overwhelming the interface and long processing times
+            const linesToTest = activeStructureData.lines.slice(0, 15);
+            
+            for (let i = 0; i < linesToTest.length; i++) {
+                const line = linesToTest[i];
+                if (line.bbox && line.text && line.text.trim().length > 0) {
+                    try {
+                        const croppedImage = cropImageRegion(line.bbox);
+                        if (croppedImage) {
+                            const result = await Tesseract.detect(croppedImage);
+                            osdResults.push({
+                                index: i + 1,
+                                text: line.text?.substring(0, 40) || 'Empty line',
+                                result: result.data,
+                                confidence: line.confidence
+                            });
+                        }
+                    } catch (error) {
+                        osdResults.push({
+                            index: i + 1,
+                            text: line.text?.substring(0, 40) || 'Empty line',
+                            error: error.message,
+                            confidence: line.confidence
+                        });
+                    }
+                } else {
+                    // Skip empty or very short lines
+                    osdResults.push({
+                        index: i + 1,
+                        text: line.text || 'Empty/short line',
+                        skipped: 'Line too short or empty for OSD',
+                        confidence: line.confidence
+                    });
+                }
+            }
+            
+            displayOSDResults(`Lines OSD (${getActiveWorkerName()} Structure, First 15)`, osdResults);
+        }
+
+        function getActiveWorkerName() {
+            switch(activeWorkerType) {
+                case 'eng': return 'English';
+                case 'multi': return 'Chinese';
+                case 'jpn': return 'Japanese';
+                case 'ara': return 'Arabic';
+                case 'rus': return 'Russian';
+                default: return 'Unknown';
+            }
         }
 
         function cropImageRegion(bbox) {
@@ -759,12 +937,18 @@
                 results.forEach(item => {
                     html += `<div class="osd-results">`;
                     if (item.index) {
-                        html += `<strong>Item ${item.index}:</strong> "${item.text}"<br>`;
+                        html += `<strong>Item ${item.index}:</strong> "${item.text}"`;
+                        if (item.confidence !== undefined) {
+                            html += ` <em>(Line confidence: ${item.confidence?.toFixed(1) || 'N/A'}%)</em>`;
+                        }
+                        html += `<br>`;
                     }
                     if (item.result) {
                         html += `<pre>${JSON.stringify(item.result, null, 2)}</pre>`;
                     } else if (item.error) {
                         html += `<div style="color: red;">Error: ${item.error}</div>`;
+                    } else if (item.skipped) {
+                        html += `<div style="color: #666; font-style: italic;">Skipped: ${item.skipped}</div>`;
                     }
                     html += `</div>`;
                 });
@@ -796,6 +980,9 @@
             currentImage = null;
             engStructureData = null;
             multiStructureData = null;
+            jpnStructureData = null;
+            araStructureData = null;
+            rusStructureData = null;
             activeStructureData = null;
             activeWorkerType = null;
             
@@ -809,9 +996,19 @@
             // Clear results
             engResults.innerHTML = '';
             multiResults.innerHTML = '';
+            jpnResults.innerHTML = '';
+            araResults.innerHTML = '';
+            rusResults.innerHTML = '';
             singleResults.innerHTML = '';
             osdResults.innerHTML = '';
             activeWorkerInfo.textContent = '';
+            
+            // Reset comparison grid layout
+            comparisonGrid.style.gridTemplateColumns = '1fr 1fr';
+            comparisonGrid.style.gridTemplateRows = 'auto';
+            jpnSection.style.display = 'none';
+            araSection.style.display = 'none';
+            rusSection.style.display = 'none';
         }
     </script>
 </body>
