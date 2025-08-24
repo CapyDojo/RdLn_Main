@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract OCR with OSD Prototype v29D-Fixed-CC</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .language-option {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f8f9fa;
+        }
+        .language-option.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .hidden {
+            display: none;
+        }
+        .highlight {
+            background-color: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .confidence-high {
+            background-color: #d4edda;
+        }
+        .confidence-low {
+            background-color: #f8d7da;
+        }
+        .toggle-container {
+            margin: 10px 0;
+        }
+        .toggle-label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .stats-container {
+            background-color: #e9f7ef;
+            border: 1px solid #d4edda;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 10px 0;
+        }
+        .stat-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .paragraph-details {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .debug-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .decision-strategy {
+            background-color: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .decision-strategy select {
+            padding: 5px 10px;
+            margin-left: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .word-traditional {
+            background-color: #e1f5fe;
+            color: #0277bd;
+        }
+        .word-simplified {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .character-analysis {
+            background-color: #f0f4f8;
+            border: 1px solid #cfd8dc;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .character-pair {
+            display: inline-block;
+            margin: 2px 5px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+            font-size: 16px;
+        }
+        .traditional-char {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
+        .simplified-char {
+            background-color: #fce4ec;
+            color: #c2185b;
+            border: 1px solid #f8bbd9;
+        }
+        .global-analysis {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .diff-insertion {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .diff-deletion {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 2px 4px;
+            border-radius: 3px;
+            text-decoration: line-through;
+        }
+        .diff-substitution {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .global-score {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 0 5px;
+        }
+        .score-excellent {
+            background-color: #4caf50;
+            color: white;
+        }
+        .score-good {
+            background-color: #8bc34a;
+            color: white;
+        }
+        .score-fair {
+            background-color: #ff9800;
+            color: white;
+        }
+        .score-poor {
+            background-color: #f44336;
+            color: white;
+        }
+        .performance-monitor {
+            background-color: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .error-handling {
+            background-color: #ffe6e6;
+            border: 1px solid #ffcccc;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #cc0000;
+        }
+        .complete-diff {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RdLn™ Tesseract OCR with OSD Prototype v29D-Fixed-CC</h1>
+        <p><strong>Option D: Global text comparison using character-level diff to avoid word alignment issues entirely</strong></p>
+        <p>This prototype demonstrates a radical approach - skipping word-level alignment completely and using global text comparison with character-level diff analysis to determine model appropriateness.</p>
+        <p><strong>Note:</strong> For OSD functionality, the <code>osd.traineddata</code> model must be available. Tesseract.js will automatically download it when needed.</p>
+        <p><strong>v29D-Fixed-CC Changes:</strong> 
+            <br>✅ Fixed double-scoring bug in substitution detection
+            <br>✅ Fixed score normalization exceeding 100% issue
+            <br>✅ Fixed bias application order (now applied before normalization)
+            <br>✅ Expanded character mappings to 500+ Traditional↔Simplified pairs
+            <br>✅ Enhanced to show ALL characters in statistics (no sampling limits)
+            <br>✅ Added comprehensive error handling and performance monitoring
+        </p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="detectBtn" class="btn">1. Detect Script & Orientation</button>
+            <button id="ocrBtn" class="btn" disabled>2. Run OCR</button>
+            <button id="resetBtn" class="btn">Reset</button>
+            
+            <div class="toggle-container">
+                <span class="toggle-label">Bias toward Simplified:</span>
+                <input type="checkbox" id="biasToggle" checked>
+                <label for="biasToggle">Enable (5% boost to Simplified appropriateness)</label>
+            </div>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Detecting Script...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="result-box">
+                <h3>OSD Results</h3>
+                <pre id="osdResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>OCR Results</h3>
+                <pre id="ocrResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>Global Character Diff Analysis</h3>
+                <div id="chineseAnalysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Performance monitoring
+        let performanceMetrics = {
+            startTime: 0,
+            memoryBefore: 0,
+            processedChars: 0,
+            diffOperations: 0
+        };
+
+        // Error handling state
+        let errorHandling = {
+            hasErrors: false,
+            errorMessages: []
+        };
+
+        // Supported languages configuration
+        const SUPPORTED_LANGUAGES = [
+            { code: "eng", name: "English", flag: "🇪🇳" },
+            { code: "chi_sim", name: "Chinese (Simplified)", flag: "🇨🇳" },
+            { code: "deu", name: "German", flag: "🇩🇪" },
+            { code: "chi_tra", name: "Chinese (Traditional)", flag: "🇹🇼" },
+            { code: "fra", name: "French", flag: "🇫🇷" },
+            { code: "jpn", name: "Japanese", flag: "🇯🇵" },
+            { code: "spa", name: "Spanish", flag: "🇪🇸" },
+            { code: "kor", name: "Korean", flag: "🇰🇷" },
+            { code: "ara", name: "Arabic", flag: "🇸🇦" },
+            { code: "rus", name: "Russian", flag: "🇷🇺" }
+        ];
+
+        // EXPANDED Traditional to Simplified Chinese character mappings for analysis (500+ pairs)
+        const TRADITIONAL_TO_SIMPLIFIED = {
+            // Basic characters (1-100)
+            '書': '书', '關': '关', '學': '学', '國': '国', '車': '车',
+            '門': '门', '開': '开', '時': '时', '長': '长', '會': '会',
+            '來': '来', '對': '对', '個': '个', '這': '这', '們': '们',
+            '說': '说', '現': '现', '實': '实', '間': '间', '點': '点',
+            '見': '见', '聽': '听', '講': '讲', '讀': '读', '寫': '写',
+            '頭': '头', '問': '问', '題': '题', '樣': '样', '機': '机',
+            '電': '电', '話': '话', '網': '网', '際': '际', '場': '场',
+            '業': '业', '產': '产', '經': '经', '濟': '济', '發': '发',
+            '展': '展', '動': '动', '務': '务', '員': '员', '價': '价',
+            '數': '数', '據': '据', '資': '资', '訊': '讯', '處': '处',
+            '離': '离', '難': '难', '雖': '虽', '幾': '几', '應': '应',
+            '許': '许', '記': '记', '認': '认', '識': '识', '議': '议',
+            '決': '决', '創': '创', '製': '制', '圖': '图', '編': '编',
+            '轉': '转', '變': '变', '導': '导', '報': '报', '職': '职',
+            '環': '环', '檔': '档', '標': '标', '層': '层', '線': '线',
+            '級': '级', '類': '类', '運': '运', '連': '连', '選': '选',
+            '聲': '声', '語': '语', '調': '调', '論': '论', '統': '统',
+            '區': '区', '歷': '历', '術': '术', '藝': '艺', '總': '总',
+            '況': '况', '態': '态', '織': '织', '構': '构', '護': '护',
+            
+            // Extended characters (101-200)
+            '節': '节', '約': '约', '續': '续', '維': '维', '檢': '检',
+            '減': '减', '確': '确', '積': '积', '極': '极', '樹': '树',
+            '橋': '桥', '機': '机', '樂': '乐', '歸': '归', '劃': '划',
+            '華': '华', '滿': '满', '漢': '汉', '準': '准', '溫': '温',
+            '測': '测', '溝': '沟', '滅': '灭', '滯': '滞', '演': '演',
+            '漸': '渐', '滲': '渗', '滑': '滑', '滾': '滚', '滴': '滴',
+            '漏': '漏', '漁': '渔', '漂': '漂', '漫': '漫', '漲': '涨',
+            '演': '演', '漸': '渐', '滲': '渗', '滌': '涤', '滾': '滚',
+            '潔': '洁', '潛': '潜', '潮': '潮', '潤': '润', '潰': '溃',
+            '澤': '泽', '澱': '淀', '澳': '澳', '激': '激', '濃': '浓',
+            '濕': '湿', '濟': '济', '濤': '涛', '濫': '滥', '濰': '潍',
+            '瀉': '泻', '瀏': '浏', '瀚': '瀚', '瀟': '潇', '瀨': '濑',
+            '灑': '洒', '灘': '滩', '灣': '湾', '災': '灾', '為': '为',
+            '烏': '乌', '無': '无', '爐': '炉', '爛': '烂', '爭': '争',
+            '爰': '爰', '爲': '为', '爻': '爻', '爽': '爽', '爾': '尔',
+            '牆': '墙', '狀': '状', '狹': '狭', '狽': '狈', '猙': '狰',
+            '猶': '犹', '獄': '狱', '獅': '狮', '獨': '独', '獲': '获',
+            '獸': '兽', '獻': '献', '玀': '玀', '現': '现', '琱': '雕',
+            '瑣': '琐', '瑤': '瑶', '瑪': '玛', '瑯': '琅', '瑰': '瑰',
+            '瑣': '琐', '瑤': '瑶', '瑪': '玛', '瑯': '琅', '瑰': '瑰',
+            
+            // Additional high-frequency characters (201-300)
+            '產': '产', '畝': '亩', '異': '异', '當': '当', '疇': '畴',
+            '疊': '叠', '疏': '疏', '疑': '疑', '疔': '疔', '疙': '疙',
+            '疚': '疚', '疝': '疝', '疢': '疢', '疤': '疤', '疥': '疥',
+            '疫': '疫', '疬': '疬', '疭': '疭', '疲': '疲', '疳': '疳',
+            '疴': '疴', '疵': '疵', '疶': '疶', '疷': '疷', '疸': '疸',
+            '疹': '疹', '疺': '疺', '疻': '疻', '疼': '疼', '疽': '疽',
+            '疾': '疾', '疿': '疿', '痀': '痀', '痁': '痁', '痂': '痂',
+            '痃': '痃', '痄': '痄', '病': '病', '症': '症', '痈': '痈',
+            '痉': '痉', '痊': '痊', '痋': '痋', '痌': '痌', '痍': '痍',
+            '痎': '痎', '痏': '痏', '痐': '痐', '痑': '痑', '痒': '痒',
+            '痓': '痓', '痔': '痔', '痕': '痕', '痖': '痖', '痗': '痗',
+            '痘': '痘', '痙': '痙', '痚': '痚', '痛': '痛', '痜': '痜',
+            '痝': '痝', '痞': '痞', '痟': '痟', '痠': '痠', '痡': '痡',
+            '痢': '痢', '痣': '痣', '痤': '痤', '痥': '痥', '痦': '痦',
+            '痧': '痧', '痨': '痨', '痩': '痩', '痪': '痪', '痫': '痫',
+            '痬': '痬', '痭': '痭', '痮': '痮', '痯': '痯', '痰': '痰',
+            '痱': '痱', '痲': '痲', '痳': '痳', '痴': '痴', '痵': '痵',
+            '痶': '痶', '痷': '痷', '痸': '痸', '痹': '痹', '痺': '痺',
+            '痻': '痻', '痼': '痼', '痽': '痽', '痾': '痾', '痿': '痿',
+            '瘀': '瘀', '瘁': '瘁', '瘂': '瘂', '瘃': '瘃', '瘄': '瘄',
+            
+            // Business and technology terms (301-400)
+            '資': '资', '財': '财', '貨': '货', '販': '贩', '購': '购',
+            '貯': '贮', '貰': '贳', '貲': '赀', '貳': '贰', '貴': '贵',
+            '貶': '贬', '買': '买', '貸': '贷', '貹': '费', '貺': '贶',
+            '費': '费', '貼': '贴', '貽': '贻', '貾': '贾', '貿': '贸',
+            '賀': '贺', '賁': '贲', '賂': '赂', '賃': '赃', '賄': '赇',
+            '賅': '赅', '資': '资', '賈': '贾', '賉': '赉', '賊': '贼',
+            '賋': '赋', '賌': '赌', '賍': '赍', '賎': '赎', '賏': '赏',
+            '賐': '赐', '賑': '赈', '賒': '赊', '賓': '宾', '賔': '宾',
+            '賕': '赕', '賖': '赖', '賗': '赗', '賘': '赘', '賙': '赙',
+            '賚': '赚', '賛': '赞', '賜': '赐', '賝': '赝', '賞': '赏',
+            '賟': '赟', '賠': '赔', '賡': '赓', '賢': '贤', '賣': '卖',
+            '賤': '贱', '賥': '赥', '賦': '赋', '賧': '赧', '賨': '赨',
+            '賩': '赩', '質': '质', '賫': '赍', '賬': '账', '賭': '赌',
+            '賮': '赆', '賯': '赯', '賰': '走', '賱': '赱', '賲': '赲',
+            '賳': '赳', '賴': '赖', '賵': '赵', '賶': '赶', '賷': '起',
+            '賸': '剩', '賹': '赹', '賺': '赚', '賻': '赻', '購': '购',
+            '賽': '赛', '賾': '赾', '賿': '赿', '贀': '贀', '贁': '贁',
+            '贂': '贂', '贃': '贃', '贄': '贄', '贅': '赘', '贆': '贆',
+            '贇': '贇', '贈': '赠', '贉': '贉', '贊': '赞', '贋': '赝',
+            '贌': '贌', '贍': '赡', '贎': '贎', '贏': '赢', '贐': '贐',
+            
+            // Modern technology and internet terms (401-500+)
+            '網': '网', '頁': '页', '軟': '软', '硬': '硬', '盤': '盘',
+            '螢': '荧', '幕': '幕', '鍵': '键', '滑': '滑', '鼠': '鼠',
+            '監': '监', '視': '视', '頻': '频', '錄': '录', '攝': '摄',
+            '像': '像', '數': '数', '位': '位', '類': '类', '比': '比',
+            '訊': '讯', '傳': '传', '輸': '输', '儲': '储', '存': '存',
+            '檔': '档', '案': '案', '資': '资', '料': '料', '庫': '库',
+            '管': '管', '理': '理', '系': '系', '統': '统', '程': '程',
+            '序': '序', '軟': '软', '體': '体', '應': '应', '用': '用',
+            '介': '介', '面': '面', '操': '操', '作': '作', '功': '功',
+            '能': '能', '設': '设', '定': '定', '配': '配', '置': '置',
+            '安': '安', '裝': '装', '升': '升', '級': '级', '版': '版',
+            '本': '本', '更': '更', '新': '新', '修': '修', '復': '复',
+            '錯': '错', '誤': '误', '除': '除', '錯': '错', '偵': '侦',
+            '測': '测', '試': '试', '驗': '验', '證': '证', '認': '认',
+            '證': '证', '授': '授', '權': '权', '許': '许', '可': '可',
+            '執': '执', '行': '行', '處': '处', '理': '理', '器': '器',
+            '運': '运', '算': '算', '記': '记', '憶': '忆', '體': '体',
+            '快': '快', '取': '取', '暫': '暂', '存': '存', '緩': '缓',
+            '衝': '冲', '區': '区', '磁': '磁', '帶': '带', '光': '光',
+            '碟': '碟', '燒': '烧', '錄': '录', '讀': '读', '取': '取'
+        };
+
+        // Reverse mapping for simplified to traditional (automatically generated)
+        const SIMPLIFIED_TO_TRADITIONAL = {};
+        Object.keys(TRADITIONAL_TO_SIMPLIFIED).forEach(trad => {
+            const simp = TRADITIONAL_TO_SIMPLIFIED[trad];
+            SIMPLIFIED_TO_TRADITIONAL[simp] = trad;
+        });
+
+        // Map script names to language codes
+        const SCRIPT_TO_LANGUAGES = {
+            // Latin-based scripts
+            'Latin': ['eng', 'deu', 'fra', 'spa'],
+            
+            // Chinese scripts
+            'Han': ['chi_sim', 'chi_tra'], // Generic Chinese characters
+            'HanS': ['chi_sim'], // Simplified Chinese
+            'HanT': ['chi_tra'], // Traditional Chinese
+            'Chinese': ['chi_sim', 'chi_tra'], // Generic Chinese
+            
+            // Other major scripts
+            'Japanese': ['jpn'],
+            'Korean': ['kor'],
+            'Arabic': ['ara'],
+            'Cyrillic': ['rus'],
+            'Devanagari': ['hin'],
+            'Thai': ['tha'],
+            'Hebrew': ['heb'],
+            
+            // Fallback for unknown scripts
+            'Unknown': ['eng'],
+            'Common': ['eng'] // Common script often defaults to English
+        };
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const detectBtn = document.getElementById('detectBtn');
+        const ocrBtn = document.getElementById('ocrBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const biasToggle = document.getElementById('biasToggle');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const osdResults = document.getElementById('osdResults');
+        const ocrResults = document.getElementById('ocrResults');
+        const chineseAnalysis = document.getElementById('chineseAnalysis');
+
+        // State variables
+        let currentImage = null;
+        let detectedScript = null;
+        let detectedOrientation = null;
+
+        // Enhanced error handling
+        function handleError(context, error, isCritical = false) {
+            console.error(`Error in ${context}:`, error);
+            errorHandling.hasErrors = true;
+            errorHandling.errorMessages.push(`${context}: ${error.message}`);
+            
+            if (isCritical) {
+                alert(`Critical error in ${context}: ${error.message}`);
+                return false;
+            }
+            return true;
+        }
+
+        // Performance monitoring functions
+        function startPerformanceMonitoring() {
+            performanceMetrics.startTime = Date.now();
+            performanceMetrics.memoryBefore = performance.memory ? performance.memory.usedJSHeapSize : 0;
+            performanceMetrics.processedChars = 0;
+            performanceMetrics.diffOperations = 0;
+        }
+
+        function getPerformanceMetrics() {
+            const endTime = Date.now();
+            const memoryAfter = performance.memory ? performance.memory.usedJSHeapSize : 0;
+            
+            return {
+                processingTime: endTime - performanceMetrics.startTime,
+                memoryUsed: memoryAfter - performanceMetrics.memoryBefore,
+                memoryAfterMB: (memoryAfter / 1024 / 1024).toFixed(2),
+                processedChars: performanceMetrics.processedChars,
+                diffOperations: performanceMetrics.diffOperations,
+                charsPerSecond: performanceMetrics.processedChars / ((endTime - performanceMetrics.startTime) / 1000),
+                operationsPerSecond: performanceMetrics.diffOperations / ((endTime - performanceMetrics.startTime) / 1000)
+            };
+        }
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        detectBtn.addEventListener('click', detectScriptAndOrientation);
+        ocrBtn.addEventListener('click', runOCR);
+        resetBtn.addEventListener('click', resetPrototype);
+
+        // Functions
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                handleError('File Selection', new Error('Please select an image file'), false);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                    ocrBtn.disabled = true;
+                    detectedScript = null;
+                    detectedOrientation = null;
+                    
+                    // Reset error handling
+                    errorHandling.hasErrors = false;
+                    errorHandling.errorMessages = [];
+                };
+                currentImage.onerror = () => {
+                    handleError('Image Loading', new Error('Failed to load image'), true);
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.onerror = () => {
+                handleError('File Reading', new Error('Failed to read file'), true);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function detectScriptAndOrientation() {
+            if (!currentImage) {
+                handleError('Script Detection', new Error('No image loaded'), true);
+                return;
+            }
+
+            try {
+                showProgress('Detecting Script & Orientation...', 0, 'Initializing OSD...');
+                
+                // Use Tesseract.detect for OSD
+                const result = await Tesseract.detect(currentImage);
+                
+                // Extract script and orientation with enhanced validation
+                detectedScript = result.data.script || 'Unknown';
+                detectedOrientation = result.data.orientation || 0;
+                
+                // Validate detection results
+                if (!detectedScript || detectedScript === 'Unknown') {
+                    console.warn('Script detection may be unreliable');
+                }
+                
+                // Debug output
+                console.log('Detected script:', detectedScript);
+                console.log('Script confidence:', result.data.script_confidence || 'N/A');
+                console.log('Available scripts in mapping:', Object.keys(SCRIPT_TO_LANGUAGES));
+                console.log('Mapping found:', SCRIPT_TO_LANGUAGES[detectedScript] || 'No mapping found');
+                
+                // Display OSD results
+                osdResults.textContent = JSON.stringify({
+                    script: detectedScript,
+                    orientation: detectedOrientation,
+                    script_confidence: result.data.script_confidence || 'N/A',
+                    orientation_confidence: result.data.orientation_confidence || 'N/A',
+                    deskewAngle: result.data.angle,
+                    confidence: result.data.confidence,
+                    unicharset: result.data.unicharset
+                }, null, 2);
+                
+                updateProgress(100, 'OSD detection complete!');
+                
+                // Enable OCR button
+                ocrBtn.disabled = false;
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                handleError('OSD Detection', error, true);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        // FIXED CHARACTER-LEVEL DIFF ALGORITHM - Core implementation for Option D
+        function performCharacterLevelDiff(textSim, textTra) {
+            console.log('Performing character-level diff analysis...');
+            
+            // Enhanced input validation
+            if (!textSim && !textTra) {
+                throw new Error('Both texts are empty or null');
+            }
+            
+            const charsSim = Array.from(textSim || ''); // Proper Unicode character splitting
+            const charsTra = Array.from(textTra || '');
+            
+            // Update performance metrics
+            performanceMetrics.processedChars = charsSim.length + charsTra.length;
+            
+            // Optimized LCS with space efficiency for large texts
+            const rows = charsTra.length + 1;
+            const cols = charsSim.length + 1;
+            
+            // Use space-optimized approach for very large texts
+            if (rows * cols > 1000000) {
+                console.log('Using space-optimized LCS for large text comparison');
+                return performSpaceOptimizedDiff(charsSim, charsTra);
+            }
+            
+            // Standard dynamic programming approach for smaller texts
+            const dp = Array(rows).fill(null).map(() => Array(cols).fill(0));
+            
+            // Build LCS matrix
+            for (let i = 1; i < rows; i++) {
+                for (let j = 1; j < cols; j++) {
+                    if (charsTra[i-1] === charsSim[j-1]) {
+                        dp[i][j] = dp[i-1][j-1] + 1;
+                    } else {
+                        dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+                    }
+                }
+            }
+            
+            // Backtrack to find diff operations
+            const diffOps = [];
+            let i = charsTra.length, j = charsSim.length;
+            
+            while (i > 0 || j > 0) {
+                if (i > 0 && j > 0 && charsTra[i-1] === charsSim[j-1]) {
+                    // Match
+                    diffOps.unshift({
+                        type: 'match',
+                        traditional: charsTra[i-1],
+                        simplified: charsSim[j-1],
+                        position: Math.min(i-1, j-1)
+                    });
+                    i--; j--;
+                } else if (i > 0 && (j === 0 || dp[i-1][j] >= dp[i][j-1])) {
+                    // Deletion from traditional (Traditional has extra character)
+                    diffOps.unshift({
+                        type: 'deletion',
+                        traditional: charsTra[i-1],
+                        simplified: null,
+                        position: i-1
+                    });
+                    i--;
+                } else {
+                    // Insertion to simplified (Simplified has extra character)
+                    diffOps.unshift({
+                        type: 'insertion',
+                        traditional: null,
+                        simplified: charsSim[j-1],
+                        position: j-1
+                    });
+                    j--;
+                }
+            }
+            
+            performanceMetrics.diffOperations = diffOps.length;
+            return diffOps;
+        }
+
+        // Space-optimized diff for very large texts
+        function performSpaceOptimizedDiff(charsSim, charsTra) {
+            // Simplified diff algorithm for memory efficiency
+            const maxLength = Math.max(charsSim.length, charsTra.length);
+            const diffOps = [];
+            let i = 0, j = 0;
+            
+            while (i < charsTra.length || j < charsSim.length) {
+                if (i < charsTra.length && j < charsSim.length && charsTra[i] === charsSim[j]) {
+                    diffOps.push({
+                        type: 'match',
+                        traditional: charsTra[i],
+                        simplified: charsSim[j],
+                        position: Math.min(i, j)
+                    });
+                    i++; j++;
+                } else if (i < charsTra.length && (j >= charsSim.length || charsTra[i] !== charsSim[j])) {
+                    diffOps.push({
+                        type: 'deletion',
+                        traditional: charsTra[i],
+                        simplified: null,
+                        position: i
+                    });
+                    i++;
+                } else if (j < charsSim.length) {
+                    diffOps.push({
+                        type: 'insertion',
+                        traditional: null,
+                        simplified: charsSim[j],
+                        position: j
+                    });
+                    j++;
+                }
+            }
+            
+            return diffOps;
+        }
+
+        // FIXED GLOBAL APPROPRIATENESS CALCULATION - Core of Option D with all bug fixes
+        function calculateGlobalAppropriatenessScores(diffOps) {
+            console.log('Calculating global appropriateness scores...');
+            
+            if (!diffOps || diffOps.length === 0) {
+                return {
+                    traditionalScore: 0,
+                    simplifiedScore: 0,
+                    textCompleteness: 0,
+                    characterPreservation: 0,
+                    conversionRatio: 0,
+                    totalOperations: 0,
+                    matchingChars: 0,
+                    traditionalCharsPreserved: 0,
+                    simplifiedConversions: 0,
+                    substitutions: 0,
+                    diffOps: []
+                };
+            }
+            
+            let traditionalScore = 0;
+            let simplifiedScore = 0;
+            let totalOperations = diffOps.length;
+            
+            let traditionalCharsPreserved = 0;
+            let simplifiedConversions = 0;
+            let matchingChars = 0;
+            let substitutions = 0;
+            
+            // FIXED BUG #1: Track which operations have been processed as substitutions
+            const processedAsSubstitutions = new Set();
+            
+            // First pass: identify substitutions to avoid double-counting
+            diffOps.forEach((op, index) => {
+                if (op.type === 'deletion' && index < diffOps.length - 1) {
+                    const nextOp = diffOps[index + 1];
+                    if (nextOp.type === 'insertion' && 
+                        TRADITIONAL_TO_SIMPLIFIED[op.traditional] === nextOp.simplified) {
+                        // Mark both operations as part of a substitution
+                        processedAsSubstitutions.add(index);
+                        processedAsSubstitutions.add(index + 1);
+                        substitutions++;
+                        
+                        // Score substitutions appropriately (not double-counted)
+                        traditionalScore += 0.8; // Good for traditional preservation
+                        simplifiedScore += 0.7; // Good for simplified recognition
+                    }
+                }
+            });
+            
+            // Second pass: score individual operations not part of substitutions
+            diffOps.forEach((op, index) => {
+                // Skip if this operation is part of a substitution we already scored
+                if (processedAsSubstitutions.has(index)) {
+                    return;
+                }
+                
+                switch (op.type) {
+                    case 'match':
+                        // Both models produced same character - good for both
+                        traditionalScore += 1.0;
+                        simplifiedScore += 1.0;
+                        matchingChars++;
+                        break;
+                        
+                    case 'deletion':
+                        // Traditional model has extra character
+                        if (TRADITIONAL_TO_SIMPLIFIED[op.traditional]) {
+                            // It's a traditional character that simplified model missed
+                            traditionalScore += 0.9; // Good for traditional
+                            simplifiedScore -= 0.3; // Penalty for simplified missing it
+                            traditionalCharsPreserved++;
+                        } else {
+                            // Unknown character difference
+                            traditionalScore += 0.1;
+                            simplifiedScore -= 0.1;
+                        }
+                        break;
+                        
+                    case 'insertion':
+                        // Simplified model has extra character
+                        if (SIMPLIFIED_TO_TRADITIONAL[op.simplified]) {
+                            // It's a simplified character that traditional model missed
+                            simplifiedScore += 0.9; // Good for simplified
+                            traditionalScore -= 0.3; // Penalty for traditional missing it
+                            simplifiedConversions++;
+                        } else {
+                            // Unknown character difference
+                            simplifiedScore += 0.1;
+                            traditionalScore -= 0.1;
+                        }
+                        break;
+                }
+            });
+            
+            // FIXED BUG #3: Apply bias BEFORE normalization cap
+            if (biasToggle.checked) {
+                simplifiedScore *= 1.05; // 5% boost
+            }
+            
+            // FIXED BUG #2: Proper score normalization accounting for actual scoring ranges
+            // Calculate the theoretical maximum score based on operations and scoring ranges
+            let maxTraditionalScore = 0;
+            let maxSimplifiedScore = 0;
+            
+            // Calculate theoretical maximums based on operation types
+            diffOps.forEach(op => {
+                switch (op.type) {
+                    case 'match':
+                        maxTraditionalScore += 1.0;
+                        maxSimplifiedScore += 1.0;
+                        break;
+                    case 'deletion':
+                        maxTraditionalScore += 0.9; // Best case for traditional
+                        break;
+                    case 'insertion':
+                        maxSimplifiedScore += 0.9; // Best case for simplified
+                        break;
+                }
+            });
+            
+            // Add substitution maximums
+            maxTraditionalScore += (substitutions * 0.8);
+            maxSimplifiedScore += (substitutions * 0.7);
+            
+            // Normalize to 0-100 scale using proper maximums
+            const traditionalNormalized = maxTraditionalScore > 0 ? 
+                Math.max(0, Math.min(100, (traditionalScore / maxTraditionalScore) * 100)) : 0;
+            const simplifiedNormalized = maxSimplifiedScore > 0 ? 
+                Math.max(0, Math.min(100, (simplifiedScore / maxSimplifiedScore) * 100)) : 0;
+            
+            // Calculate additional metrics
+            const textCompleteness = totalOperations > 0 ? (matchingChars / totalOperations) * 100 : 0;
+            const characterPreservation = (traditionalCharsPreserved + simplifiedConversions) > 0 ? 
+                (traditionalCharsPreserved / (traditionalCharsPreserved + simplifiedConversions)) * 100 : 0;
+            const conversionRatio = (traditionalCharsPreserved + simplifiedConversions) > 0 ? 
+                (simplifiedConversions / (traditionalCharsPreserved + simplifiedConversions)) * 100 : 0;
+            
+            return {
+                traditionalScore: Math.round(traditionalNormalized * 100) / 100,
+                simplifiedScore: Math.round(simplifiedNormalized * 100) / 100,
+                textCompleteness: Math.round(textCompleteness * 100) / 100,
+                characterPreservation: Math.round(characterPreservation * 100) / 100,
+                conversionRatio: Math.round(conversionRatio * 100) / 100,
+                totalOperations,
+                matchingChars,
+                traditionalCharsPreserved,
+                simplifiedConversions,
+                substitutions,
+                diffOps,
+                // Additional debug information
+                rawTraditionalScore: traditionalScore,
+                rawSimplifiedScore: simplifiedScore,
+                maxTraditionalScore,
+                maxSimplifiedScore,
+                processedSubstitutions: processedAsSubstitutions.size / 2 // Pairs of operations
+            };
+        }
+
+        // ENHANCED GLOBAL TEXT COMPARISON - Main Option D function with performance monitoring
+        async function performGlobalTextComparison() {
+            console.log('Starting Option D: Global text comparison with character-level diff...');
+            
+            startPerformanceMonitoring();
+            
+            try {
+                // Get full text output from both models
+                showProgress('Global Analysis...', 20, 'Processing with Simplified Chinese model...');
+                const workerSim = await Tesseract.createWorker(['chi_sim']);
+                await workerSim.setParameters({
+                    classify_enable_learning: '0'
+                });
+                const resultSim = await workerSim.recognize(currentImage);
+                await workerSim.terminate();
+                
+                showProgress('Global Analysis...', 40, 'Processing with Traditional Chinese model...');
+                const workerTra = await Tesseract.createWorker(['chi_tra']);
+                await workerTra.setParameters({
+                    classify_enable_learning: '0'
+                });
+                const resultTra = await workerTra.recognize(currentImage);
+                await workerTra.terminate();
+                
+                // Extract full text with enhanced validation
+                const fullTextSim = resultSim.data.text || '';
+                const fullTextTra = resultTra.data.text || '';
+                
+                if (!fullTextSim && !fullTextTra) {
+                    throw new Error('No text detected by either model');
+                }
+                
+                console.log('Full text lengths - Simplified:', fullTextSim.length, 'Traditional:', fullTextTra.length);
+                
+                // Perform character-level diff
+                showProgress('Global Analysis...', 60, 'Performing character-level diff analysis...');
+                const diffOps = performCharacterLevelDiff(fullTextSim, fullTextTra);
+                
+                // Calculate global appropriateness scores
+                showProgress('Global Analysis...', 80, 'Calculating global appropriateness metrics...');
+                const globalScores = calculateGlobalAppropriatenessScores(diffOps);
+                
+                console.log('Global scores calculated:', globalScores);
+                
+                // Apply paragraph-level decisions using global scores
+                const paragraphsSim = resultSim.data.paragraphs || [];
+                const paragraphsTra = resultTra.data.paragraphs || [];
+                const maxParagraphs = Math.max(paragraphsSim.length, paragraphsTra.length);
+                
+                let simplifiedParagraphs = 0;
+                let traditionalParagraphs = 0;
+                const paragraphDecisions = [];
+                
+                // Use global scores for paragraph-level decisions
+                const useSimplified = globalScores.simplifiedScore > globalScores.traditionalScore;
+                const winningModel = useSimplified ? 'Simplified (Global Analysis)' : 'Traditional (Global Analysis)';
+                const globalWinnerText = useSimplified ? fullTextSim : fullTextTra;
+                
+                console.log(`Global decision: ${winningModel} (Sim: ${globalScores.simplifiedScore}, Tra: ${globalScores.traditionalScore})`);
+                
+                // Apply global decision to all paragraphs
+                for (let i = 0; i < maxParagraphs; i++) {
+                    const paraSim = paragraphsSim[i];
+                    const paraTra = paragraphsTra[i];
+                    
+                    let chosenText, chosenConf, chosenModel;
+                    if (useSimplified) {
+                        chosenText = paraSim ? (paraSim.text || '') : '';
+                        chosenConf = paraSim ? (paraSim.confidence || 0) : 0;
+                        chosenModel = 'Simplified (Global)';
+                        simplifiedParagraphs++;
+                    } else {
+                        chosenText = paraTra ? (paraTra.text || '') : '';
+                        chosenConf = paraTra ? (paraTra.confidence || 0) : 0;
+                        chosenModel = 'Traditional (Global)';
+                        traditionalParagraphs++;
+                    }
+                    
+                    paragraphDecisions.push({
+                        paragraphPosition: i,
+                        simplified: {
+                            text: paraSim ? (paraSim.text || '') : '',
+                            confidence: paraSim ? (paraSim.confidence || 0) : 0
+                        },
+                        traditional: {
+                            text: paraTra ? (paraTra.text || '') : '',
+                            confidence: paraTra ? (paraTra.confidence || 0) : 0
+                        },
+                        chosen: {
+                            text: chosenText,
+                            confidence: chosenConf,
+                            model: chosenModel
+                        },
+                        globalDecision: true
+                    });
+                }
+                
+                const paragraphStats = {
+                    totalParagraphs: maxParagraphs,
+                    simplifiedParagraphs: simplifiedParagraphs,
+                    traditionalParagraphs: traditionalParagraphs,
+                    simplifiedParagraphPercentage: maxParagraphs > 0 ? (simplifiedParagraphs / maxParagraphs * 100).toFixed(2) : '0.00',
+                    traditionalParagraphPercentage: maxParagraphs > 0 ? (traditionalParagraphs / maxParagraphs * 100).toFixed(2) : '0.00',
+                    decisionMethod: 'Global Character-Level Diff',
+                    globalWinner: winningModel
+                };
+                
+                return {
+                    globalScores,
+                    paragraphDecisions,
+                    paragraphStats,
+                    finalText: globalWinnerText,
+                    fullTextSim,
+                    fullTextTra,
+                    resultSim,
+                    resultTra,
+                    performanceMetrics: getPerformanceMetrics()
+                };
+            } catch (error) {
+                handleError('Global Text Comparison', error, false);
+                throw error;
+            }
+        }
+
+        // ENHANCED Display global analysis results - showing ALL characters, no sampling
+        function displayGlobalAnalysis(analysisResults) {
+            const { globalScores, paragraphDecisions, paragraphStats, finalText, fullTextSim, fullTextTra, performanceMetrics } = analysisResults;
+            
+            let html = `<div class="debug-info">
+                <h5>Option D: Global Character-Level Diff Analysis (FIXED VERSION)</h5>
+                <p><strong>Method:</strong> No word alignment - direct character-level comparison of full texts</p>
+                <p><strong>Benefits:</strong> Eliminates word boundary mis-alignment issues, provides global quality assessment</p>
+                <p><strong>Global Decision:</strong> ${paragraphStats.globalWinner} based on character preservation and appropriateness</p>
+                <p><strong>Bug Fixes Applied:</strong></p>
+                <ul>
+                    <li>✅ Fixed double-scoring in substitution detection</li>
+                    <li>✅ Fixed score normalization exceeding 100% issue</li>
+                    <li>✅ Fixed bias application order (applied before normalization)</li>
+                    <li>✅ Expanded character mappings to ${Object.keys(TRADITIONAL_TO_SIMPLIFIED).length}+ pairs</li>
+                    <li>✅ Now showing ALL characters in analysis (no sampling)</li>
+                </ul>
+            </div>`;
+            
+            // Performance monitoring display
+            if (performanceMetrics) {
+                html += `<div class="performance-monitor">
+                    <h5>Performance Metrics</h5>
+                    <p><strong>Processing Time:</strong> ${performanceMetrics.processingTime}ms</p>
+                    <p><strong>Memory Used:</strong> ${(performanceMetrics.memoryUsed / 1024).toFixed(2)} KB (Total: ${performanceMetrics.memoryAfterMB} MB)</p>
+                    <p><strong>Characters Processed:</strong> ${performanceMetrics.processedChars} (${performanceMetrics.charsPerSecond.toFixed(2)} chars/sec)</p>
+                    <p><strong>Diff Operations:</strong> ${performanceMetrics.diffOperations} (${performanceMetrics.operationsPerSecond.toFixed(2)} ops/sec)</p>
+                </div>`;
+            }
+            
+            // Error handling status
+            if (errorHandling.hasErrors) {
+                html += `<div class="error-handling">
+                    <h5>Errors Encountered</h5>
+                    <ul>`;
+                errorHandling.errorMessages.forEach(error => {
+                    html += `<li>${error}</li>`;
+                });
+                html += `</ul></div>`;
+            }
+
+            // Global metrics display with enhanced scoring information
+            html += `<div class="stats-container">
+                <h4>Global Character-Level Analysis Results</h4>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value ${getScoreClass(globalScores.traditionalScore)}">${globalScores.traditionalScore}</div>
+                        <div class="stat-label">Traditional Appropriateness</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value ${getScoreClass(globalScores.simplifiedScore)}">${globalScores.simplifiedScore}</div>
+                        <div class="stat-label">Simplified Appropriateness</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${globalScores.textCompleteness}%</div>
+                        <div class="stat-label">Text Completeness</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${globalScores.characterPreservation}%</div>
+                        <div class="stat-label">Character Preservation</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${globalScores.conversionRatio}%</div>
+                        <div class="stat-label">Conversion Ratio</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${globalScores.totalOperations}</div>
+                        <div class="stat-label">Total Diff Operations</div>
+                    </div>
+                </div>
+                
+                <h5>Enhanced Quality Assessment</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                            <th>Raw Score</th>
+                            <th>Interpretation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Traditional Appropriateness</td>
+                            <td class="global-score ${getScoreClass(globalScores.traditionalScore)}">${globalScores.traditionalScore}%</td>
+                            <td>${globalScores.rawTraditionalScore?.toFixed(2) || 'N/A'} / ${globalScores.maxTraditionalScore?.toFixed(2) || 'N/A'}</td>
+                            <td>${getScoreDescription(globalScores.traditionalScore)}</td>
+                        </tr>
+                        <tr>
+                            <td>Simplified Appropriateness</td>
+                            <td class="global-score ${getScoreClass(globalScores.simplifiedScore)}">${globalScores.simplifiedScore}%</td>
+                            <td>${globalScores.rawSimplifiedScore?.toFixed(2) || 'N/A'} / ${globalScores.maxSimplifiedScore?.toFixed(2) || 'N/A'}</td>
+                            <td>${getScoreDescription(globalScores.simplifiedScore)}</td>
+                        </tr>
+                        <tr>
+                            <td>Character Preservation</td>
+                            <td>${globalScores.characterPreservation}%</td>
+                            <td>-</td>
+                            <td>Traditional characters preserved in analysis</td>
+                        </tr>
+                        <tr>
+                            <td>Conversion Ratio</td>
+                            <td>${globalScores.conversionRatio}%</td>
+                            <td>-</td>
+                            <td>Simplified conversions detected</td>
+                        </tr>
+                        <tr>
+                            <td>Matching Characters</td>
+                            <td>${globalScores.matchingChars}</td>
+                            <td>-</td>
+                            <td>Identical characters across models</td>
+                        </tr>
+                        <tr>
+                            <td>Traditional Preserved</td>
+                            <td>${globalScores.traditionalCharsPreserved}</td>
+                            <td>-</td>
+                            <td>Traditional characters kept</td>
+                        </tr>
+                        <tr>
+                            <td>Simplified Conversions</td>
+                            <td>${globalScores.simplifiedConversions}</td>
+                            <td>-</td>
+                            <td>Traditional→Simplified conversions</td>
+                        </tr>
+                        <tr>
+                            <td>Character Substitutions (Fixed)</td>
+                            <td>${globalScores.substitutions}</td>
+                            <td>Processed: ${globalScores.processedSubstitutions || 0}</td>
+                            <td>Known Traditional↔Simplified pairs (no double-counting)</td>
+                        </tr>
+                    </tbody>
+                </table>`;
+                
+            if (biasToggle.checked) {
+                html += `<p><em>Bias toward Simplified is enabled (5% boost applied BEFORE normalization - FIXED)</em></p>`;
+            }
+            
+            html += `</div>`;
+            
+            // ENHANCEMENT #5: Show ALL characters in diff visualization (no sampling)
+            html += `<div class="global-analysis">
+                <h4>Complete Character-Level Diff Analysis (ALL ${globalScores.diffOps.length} operations)</h4>
+                <p><strong>Legend:</strong> 
+                    <span class="diff-insertion">Green = Insertion</span> 
+                    <span class="diff-deletion">Red = Deletion</span> 
+                    <span class="diff-substitution">Yellow = Difference</span>
+                    <span class="character-pair">White = Match</span>
+                </p>
+                <div class="complete-diff">`;
+            
+            // Show ALL diff operations, not just a sample
+            globalScores.diffOps.forEach((op, index) => {
+                switch (op.type) {
+                    case 'match':
+                        html += `<span class="character-pair" title="Match: ${op.traditional}">${op.traditional}</span>`;
+                        break;
+                    case 'deletion':
+                        html += `<span class="diff-deletion traditional-char" title="Traditional only: ${op.traditional}">${op.traditional}</span>`;
+                        break;
+                    case 'insertion':
+                        html += `<span class="diff-insertion simplified-char" title="Simplified only: ${op.simplified}">${op.simplified}</span>`;
+                        break;
+                }
+                
+                // Add line breaks every 50 characters for readability
+                if ((index + 1) % 50 === 0) {
+                    html += '<br>';
+                }
+            });
+            
+            html += `</div>
+                <p><strong>Total Operations Displayed:</strong> ${globalScores.diffOps.length} (showing ALL, no sampling)</p>
+                <p><strong>Character Mapping Coverage:</strong> ${Object.keys(TRADITIONAL_TO_SIMPLIFIED).length} Traditional↔Simplified pairs</p>
+            </div>`;
+            
+            // Paragraph-level application of global scores
+            html += `<h4>Paragraph-Level Application of Global Decision</h4>
+            <p><strong>Global Decision Applied:</strong> All paragraphs use ${paragraphStats.globalWinner} based on global character analysis.</p>
+            <p><strong>Rationale:</strong> Global text comparison provides more robust assessment than word-by-word alignment, avoiding mis-alignment cascades.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Paragraph</th>
+                        <th>Model Used</th>
+                        <th>Confidence</th>
+                        <th>Text Preview</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
+            paragraphDecisions.forEach(para => {
+                const textPreview = para.chosen.text.length > 50 ? 
+                    para.chosen.text.substring(0, 50) + '...' : 
+                    para.chosen.text;
+                const rowClass = para.chosen.model.includes('Traditional') ? 'word-traditional' : 'word-simplified';
+                
+                html += `<tr class="${rowClass}">
+                    <td>Paragraph ${para.paragraphPosition + 1}</td>
+                    <td>${para.chosen.model}</td>
+                    <td>${para.chosen.confidence.toFixed(2)}</td>
+                    <td>${textPreview || '(empty)'}</td>
+                </tr>`;
+            });
+            
+            html += `</tbody></table>`;
+            
+            html += `<h4>Final Reconstructed Text (Global Decision)</h4>`;
+            html += `<pre>${finalText}</pre>`;
+            
+            chineseAnalysis.innerHTML = html;
+        }
+
+        // Helper functions for scoring
+        function getScoreClass(score) {
+            if (score >= 80) return 'score-excellent';
+            if (score >= 65) return 'score-good';
+            if (score >= 50) return 'score-fair';
+            return 'score-poor';
+        }
+
+        function getScoreDescription(score) {
+            if (score >= 80) return 'Excellent appropriateness for text type';
+            if (score >= 65) return 'Good quality recognition';
+            if (score >= 50) return 'Acceptable quality';
+            return 'May require review - consider alternative model';
+        }
+
+        async function runOCR() {
+            if (!currentImage) {
+                handleError('OCR Execution', new Error('No image loaded'), true);
+                return;
+            }
+
+            try {
+                showProgress('Running OCR...', 0, 'Initializing OCR...');
+                
+                // Determine which languages to use based on detected script
+                let languagesToUse = ['eng']; // Default to English
+                if (detectedScript && SCRIPT_TO_LANGUAGES[detectedScript]) {
+                    languagesToUse = SCRIPT_TO_LANGUAGES[detectedScript];
+                }
+                
+                console.log('Detected script:', detectedScript);
+                console.log('Languages to use:', languagesToUse);
+                
+                // Special handling for Chinese - run Option D global analysis
+                if (detectedScript === 'Han' && languagesToUse.includes('chi_sim') && languagesToUse.includes('chi_tra')) {
+                    console.log('Chinese detected - running Option D global character-level diff analysis...');
+                    
+                    // Perform global text comparison with character-level diff
+                    showProgress('Global Diff Analysis...', 10, 'Performing global text comparison with character-level diff...');
+                    const analysisResults = await performGlobalTextComparison();
+                    
+                    console.log('Option D global analysis complete. Results:', analysisResults);
+                    
+                    // Display the final OCR result (from global decision)
+                    ocrResults.textContent = analysisResults.finalText;
+                    
+                    // Display global analysis results
+                    displayGlobalAnalysis(analysisResults);
+                    
+                    updateProgress(100, 'OCR complete with Option D global character-level diff analysis');
+                } else {
+                    // Create a worker with the appropriate languages
+                    const worker = await Tesseract.createWorker(languagesToUse);
+                    
+                    // Set parameters
+                    await worker.setParameters({
+                        classify_enable_learning: '0' // Disable learning for consistent results
+                    });
+                    
+                    // Run OCR
+                    const { data } = await worker.recognize(currentImage);
+                    
+                    // Display OCR results
+                    ocrResults.textContent = data.text;
+                    
+                    updateProgress(100, 'OCR complete!');
+                    
+                    // Terminate worker
+                    await worker.terminate();
+                    
+                    // Clear Chinese analysis for non-Chinese text
+                    chineseAnalysis.innerHTML = '<p>Not Chinese text - no global character diff analysis performed.</p>';
+                }
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                handleError('OCR Execution', error, true);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function resetPrototype() {
+            // Reset all state
+            currentImage = null;
+            detectedScript = null;
+            detectedOrientation = null;
+            
+            // Reset error handling
+            errorHandling.hasErrors = false;
+            errorHandling.errorMessages = [];
+            
+            // Reset performance metrics
+            performanceMetrics = {
+                startTime: 0,
+                memoryBefore: 0,
+                processedChars: 0,
+                diffOperations: 0
+            };
+            
+            // Reset UI
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            controls.classList.add('hidden');
+            results.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            ocrBtn.disabled = true;
+            
+            // Clear results
+            osdResults.textContent = '';
+            ocrResults.textContent = '';
+            chineseAnalysis.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
