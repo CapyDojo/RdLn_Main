@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract OCR with OSD Prototype v26D-CC</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        .highlight {
+            background-color: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .toggle-container {
+            margin: 10px 0;
+        }
+        .toggle-label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .stats-container {
+            background-color: #e9f7ef;
+            border: 1px solid #d4edda;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .debug-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .confidence-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .char-simplified {
+            background-color: #d4edda;
+        }
+        .char-traditional {
+            background-color: #f8d7da;
+        }
+        .char-identical {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+        .structured-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RdLn™ Tesseract OCR with OSD Prototype v26D-CC</h1>
+        <p>This prototype demonstrates Tesseract.js with Orientation and Script Detection (OSD) for 10 supported languages.</p>
+        <p><strong>Note:</strong> For OSD functionality, the <code>osd.traineddata</code> model must be available. Tesseract.js will automatically download it when needed.</p>
+        <p><strong>v26D-CC Changes:</strong> Structured confidence-only approach. Preserves Tesseract's natural paragraph and line structure while substituting individual characters based on confidence scores. No text reconstruction from coordinates - uses existing structure.</p>
+        
+        <div class="structured-info">
+            <h4>Structured Confidence-Only Approach (v26D)</h4>
+            <p><strong>Key Improvement:</strong> Preserves original document structure instead of reconstructing from coordinates</p>
+            <p><strong>How it works:</strong></p>
+            <ol>
+                <li>Run OCR with both Simplified and Traditional Chinese models</li>
+                <li>Use Tesseract's existing paragraph/line/word structure from Simplified model as base</li>
+                <li>For each character position, substitute the one with higher confidence</li>
+                <li>Apply 5% bias toward Simplified if enabled</li>
+                <li>Preserve original document structure and reading order</li>
+            </ol>
+            <p><em>This approach maintains natural text flow while optimizing individual character selections.</em></p>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="detectBtn" class="btn">1. Detect Script & Orientation</button>
+            <button id="ocrBtn" class="btn" disabled>2. Run OCR</button>
+            <button id="resetBtn" class="btn">Reset</button>
+            
+            <div class="toggle-container">
+                <span class="toggle-label">Bias toward Simplified:</span>
+                <input type="checkbox" id="biasToggle" checked>
+                <label for="biasToggle">Enable (5% boost to Simplified confidence)</label>
+            </div>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Detecting Script...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="result-box">
+                <h3>OSD Results</h3>
+                <pre id="osdResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>OCR Results</h3>
+                <pre id="ocrResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>Chinese Analysis</h3>
+                <div id="chineseAnalysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supported languages configuration
+        const SUPPORTED_LANGUAGES = [
+            { code: "eng", name: "English", flag: "🇪🇳" },
+            { code: "chi_sim", name: "Chinese (Simplified)", flag: "🇨🇳" },
+            { code: "deu", name: "German", flag: "🇩🇪" },
+            { code: "chi_tra", name: "Chinese (Traditional)", flag: "🇹🇼" },
+            { code: "fra", name: "French", flag: "🇫🇷" },
+            { code: "jpn", name: "Japanese", flag: "🇯🇵" },
+            { code: "spa", name: "Spanish", flag: "🇪🇸" },
+            { code: "kor", name: "Korean", flag: "🇰🇷" },
+            { code: "ara", name: "Arabic", flag: "🇸🇦" },
+            { code: "rus", name: "Russian", flag: "🇷🇺" }
+        ];
+
+        // Map script names to language codes
+        // Based on actual Tesseract OSD detection output and common script names
+        const SCRIPT_TO_LANGUAGES = {
+            // Latin-based scripts
+            'Latin': ['eng', 'deu', 'fra', 'spa'],
+            
+            // Chinese scripts
+            'Han': ['chi_sim', 'chi_tra'], // Generic Chinese characters
+            'HanS': ['chi_sim'], // Simplified Chinese
+            'HanT': ['chi_tra'], // Traditional Chinese
+            'Chinese': ['chi_sim', 'chi_tra'], // Generic Chinese
+            
+            // Other major scripts
+            'Japanese': ['jpn'],
+            'Korean': ['kor'],
+            'Arabic': ['ara'],
+            'Cyrillic': ['rus'],
+            'Devanagari': ['hin'],
+            'Thai': ['tha'],
+            'Hebrew': ['heb'],
+            
+            // Fallback for unknown scripts
+            'Unknown': ['eng'],
+            'Common': ['eng'] // Common script often defaults to English
+        };
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const detectBtn = document.getElementById('detectBtn');
+        const ocrBtn = document.getElementById('ocrBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const biasToggle = document.getElementById('biasToggle');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const osdResults = document.getElementById('osdResults');
+        const ocrResults = document.getElementById('ocrResults');
+        const chineseAnalysis = document.getElementById('chineseAnalysis');
+
+        // State variables
+        let currentImage = null;
+        let detectedScript = null;
+        let detectedOrientation = null;
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        detectBtn.addEventListener('click', detectScriptAndOrientation);
+        ocrBtn.addEventListener('click', runOCR);
+        resetBtn.addEventListener('click', resetPrototype);
+
+        // Functions
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                    ocrBtn.disabled = true;
+                    detectedScript = null;
+                    detectedOrientation = null;
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function detectScriptAndOrientation() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Detecting Script & Orientation...', 0, 'Initializing OSD...');
+                
+                // Use Tesseract.detect for OSD
+                const result = await Tesseract.detect(currentImage);
+                
+                // Extract script and orientation
+                detectedScript = result.data.script || 'Unknown';
+                detectedOrientation = result.data.orientation || 0;
+                
+                // Debug output
+                console.log('Detected script:', detectedScript);
+                console.log('Script confidence:', result.data.script_confidence || 'N/A');
+                console.log('Available scripts in mapping:', Object.keys(SCRIPT_TO_LANGUAGES));
+                console.log('Mapping found:', SCRIPT_TO_LANGUAGES[detectedScript] || 'No mapping found');
+                
+                // Display OSD results
+                osdResults.textContent = JSON.stringify({
+                    script: detectedScript,
+                    orientation: detectedOrientation,
+                    script_confidence: result.data.script_confidence || 'N/A',
+                    orientation_confidence: result.data.orientation_confidence || 'N/A',
+                    deskewAngle: result.data.angle,
+                    confidence: result.data.confidence,
+                    unicharset: result.data.unicharset
+                }, null, 2);
+                
+                updateProgress(100, 'OSD detection complete!');
+                
+                // Enable OCR button
+                ocrBtn.disabled = false;
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('OSD Error:', error);
+                alert('Error during OSD detection: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        // Function to extract characters from words with position information
+        function extractCharactersFromWords(words) {
+            const characters = [];
+            
+            words.forEach((word, wordIndex) => {
+                if (word && word.symbols) {
+                    word.symbols.forEach((symbol, symbolIndex) => {
+                        if (symbol && symbol.text) {
+                            characters.push({
+                                text: symbol.text,
+                                confidence: symbol.confidence || 0,
+                                bbox: symbol.bbox || null,
+                                wordIndex: wordIndex,
+                                symbolIndex: symbolIndex,
+                                wordText: word.text || '',
+                                lineIndex: word.lineIndex || 0,  // Added for structure preservation
+                                paragraphIndex: word.paragraphIndex || 0  // Added for structure preservation
+                            });
+                        }
+                    });
+                }
+            });
+            
+            return characters;
+        }
+
+        // Function to create a character map for efficient lookup
+        function createCharacterMap(characters) {
+            const map = new Map();
+            
+            characters.forEach(char => {
+                // Create a key based on position for efficient lookup
+                if (char.bbox) {
+                    const key = `${Math.round(char.bbox.x0)}_${Math.round(char.bbox.y0)}`;
+                    map.set(key, char);
+                }
+            });
+            
+            return map;
+        }
+
+        // Function to find a character in the map based on spatial proximity
+        function findCharacterInMap(charMap, targetChar, maxDistance = 30) {
+            if (!targetChar.bbox) return null;
+            
+            // Try exact position first
+            const exactKey = `${Math.round(targetChar.bbox.x0)}_${Math.round(targetChar.bbox.y0)}`;
+            if (charMap.has(exactKey)) {
+                return charMap.get(exactKey);
+            }
+            
+            // Search nearby positions
+            for (let [key, char] of charMap) {
+                const [x, y] = key.split('_').map(Number);
+                const dx = Math.abs(x - targetChar.bbox.x0);
+                const dy = Math.abs(y - targetChar.bbox.y0);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance <= maxDistance) {
+                    return char;
+                }
+            }
+            
+            return null;
+        }
+
+        // Function to perform structured confidence-only character selection
+        async function compareStructuredConfidenceCharacterResults() {
+            console.log('Starting structured confidence-only character comparison (v26D-CC)...');
+            
+            // Get character-level data from both models
+            showProgress('Character Analysis...', 20, 'Processing with Simplified Chinese model...');
+            const workerSim = await Tesseract.createWorker(['chi_sim']);
+            await workerSim.setParameters({
+                classify_enable_learning: '0'
+            });
+            // Enable blocks output to get character-level data
+            const resultSim = await workerSim.recognize(currentImage, {}, { blocks: true });
+            await workerSim.terminate();
+            
+            showProgress('Character Analysis...', 40, 'Processing with Traditional Chinese model...');
+            const workerTra = await Tesseract.createWorker(['chi_tra']);
+            await workerTra.setParameters({
+                classify_enable_learning: '0'
+            });
+            // Enable blocks output to get character-level data
+            const resultTra = await workerTra.recognize(currentImage, {}, { blocks: true });
+            await workerTra.terminate();
+            
+            // Extract character data and create maps for efficient lookup
+            const charsSim = extractCharactersFromWords(resultSim.data.words || []);
+            const charsTra = extractCharactersFromWords(resultTra.data.words || []);
+            
+            const charMapSim = createCharacterMap(charsSim);
+            const charMapTra = createCharacterMap(charsTra);
+            
+            console.log('Simplified characters count:', charsSim.length);
+            console.log('Traditional characters count:', charsTra.length);
+            
+            // Process each block, paragraph, line, and word from Simplified model (preserving structure)
+            const structuredResults = [];
+            let totalChars = 0;
+            let simplifiedSelected = 0;
+            let traditionalSelected = 0;
+            let identicalChars = 0;
+            
+            if (resultSim.data.blocks) {
+                resultSim.data.blocks.forEach((block, blockIndex) => {
+                    const blockResult = {
+                        index: blockIndex,
+                        paragraphs: []
+                    };
+                    
+                    if (block.paragraphs) {
+                        block.paragraphs.forEach((paragraph, paraIndex) => {
+                            const paraResult = {
+                                index: paraIndex,
+                                lines: []
+                            };
+                            
+                            if (paragraph.lines) {
+                                paragraph.lines.forEach((line, lineIndex) => {
+                                    const lineResult = {
+                                        index: lineIndex,
+                                        words: []
+                                    };
+                                    
+                                    if (line.words) {
+                                        line.words.forEach((word, wordIndex) => {
+                                            const wordResult = {
+                                                index: wordIndex,
+                                                text: '',
+                                                symbols: []
+                                            };
+                                            
+                                            if (word.symbols) {
+                                                word.symbols.forEach((symbol, symbolIndex) => {
+                                                    totalChars++;
+                                                    
+                                                    const simChar = {
+                                                        text: symbol.text || '',
+                                                        confidence: symbol.confidence || 0,
+                                                        bbox: symbol.bbox || null
+                                                    };
+                                                    
+                                                    // Find corresponding Traditional character
+                                                    const traCharObj = findCharacterInMap(charMapTra, simChar);
+                                                    
+                                                    if (traCharObj) {
+                                                        const traChar = {
+                                                            text: traCharObj.text || '',
+                                                            confidence: traCharObj.confidence || 0,
+                                                            bbox: traCharObj.bbox || null
+                                                        };
+                                                        
+                                                        // Check if characters are identical
+                                                        const charsAreIdentical = simChar.text === traChar.text && simChar.text !== '';
+                                                        
+                                                        // Apply bias if enabled
+                                                        let finalSimConf = simChar.confidence;
+                                                        if (biasToggle.checked) {
+                                                            finalSimConf = simChar.confidence * 1.05; // 5% boost to Simplified
+                                                        }
+                                                        
+                                                        // Select character with higher confidence
+                                                        let selectedChar, selectedSource;
+                                                        if (charsAreIdentical) {
+                                                            selectedChar = simChar; // Use either since identical
+                                                            selectedSource = 'Identical';
+                                                            identicalChars++;
+                                                        } else if (finalSimConf > traChar.confidence) {
+                                                            selectedChar = simChar;
+                                                            selectedSource = 'Simplified';
+                                                            simplifiedSelected++;
+                                                        } else if (traChar.confidence > finalSimConf) {
+                                                            selectedChar = traChar;
+                                                            selectedSource = 'Traditional';
+                                                            traditionalSelected++;
+                                                        } else {
+                                                            // Tie - default to Simplified with bias, otherwise Traditional
+                                                            if (biasToggle.checked) {
+                                                                selectedChar = simChar;
+                                                                selectedSource = 'Simplified (Tie)';
+                                                                simplifiedSelected++;
+                                                            } else {
+                                                                selectedChar = traChar;
+                                                                selectedSource = 'Traditional (Tie)';
+                                                                traditionalSelected++;
+                                                            }
+                                                        }
+                                                        
+                                                        wordResult.text += selectedChar.text;
+                                                        wordResult.symbols.push({
+                                                            selected: selectedChar,
+                                                            simplified: simChar,
+                                                            traditional: traChar,
+                                                            source: selectedSource,
+                                                            isIdentical: charsAreIdentical
+                                                        });
+                                                    } else {
+                                                        // No Traditional match - use Simplified
+                                                        wordResult.text += simChar.text;
+                                                        wordResult.symbols.push({
+                                                            selected: simChar,
+                                                            simplified: simChar,
+                                                            traditional: null,
+                                                            source: 'Simplified (No Match)',
+                                                            isIdentical: false
+                                                        });
+                                                        simplifiedSelected++;
+                                                    }
+                                                });
+                                            }
+                                            
+                                            lineResult.words.push(wordResult);
+                                        });
+                                    }
+                                    
+                                    paraResult.lines.push(lineResult);
+                                });
+                            }
+                            
+                            blockResult.paragraphs.push(paraResult);
+                        });
+                    }
+                    
+                    structuredResults.push(blockResult);
+                });
+            }
+            
+            // Calculate statistics
+            const stats = {
+                totalChars: totalChars,
+                simplifiedSelected: simplifiedSelected,
+                traditionalSelected: traditionalSelected,
+                identicalChars: identicalChars,
+                simplifiedPercentage: totalChars > 0 ? (simplifiedSelected / totalChars * 100).toFixed(2) : '0.00',
+                traditionalPercentage: totalChars > 0 ? (traditionalSelected / totalChars * 100).toFixed(2) : '0.00',
+                identicalPercentage: totalChars > 0 ? (identicalChars / totalChars * 100).toFixed(2) : '0.00'
+            };
+            
+            console.log('FINAL Structured confidence-only character stats (v26D-CC):', stats);
+            
+            return { structuredResults, stats, resultSim, resultTra };
+        }
+
+        // Function to reconstruct final text from structured results
+        function reconstructTextFromStructuredResults(structuredResults) {
+            let finalText = '';
+            
+            structuredResults.forEach(block => {
+                block.paragraphs.forEach(paragraph => {
+                    paragraph.lines.forEach(line => {
+                        const lineText = line.words.map(word => word.text).join(' ');
+                        finalText += lineText + '\n';
+                    });
+                    finalText += '\n'; // Paragraph break
+                });
+            });
+            
+            return finalText.trim(); // Remove trailing whitespace
+        }
+
+        // Function to display debug information - v26D-CC: Show structured confidence stats
+        function displayDebugInfo(stats) {
+            let html = `<div class="debug-info">
+                <h5>Debug Information (v26D-CC - Structured Confidence-Only Character Selection)</h5>
+                <p><strong>Global Character Stats:</strong> Total: ${stats.totalChars}, Identical: ${stats.identicalChars}</p>
+                <p><strong>Character Selection:</strong> Simplified: ${stats.simplifiedSelected}, Traditional: ${stats.traditionalSelected}</p>
+                <p><strong>Percentages:</strong> Simplified: ${stats.simplifiedPercentage}%, Traditional: ${stats.traditionalPercentage}%, Identical: ${stats.identicalPercentage}%</p>
+                <p><strong>Approach:</strong> Structured confidence-based selection preserving document structure.</p>
+            </div>`;
+            return html;
+        }
+
+        // Function to display detailed statistics - v26D-CC: Show structured confidence breakdown
+        function displayStatistics(stats) {
+            let html = `<div class="stats-container">
+                <h4>Structured Confidence-Only Character Selection Statistics (v26D-CC)</h4>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Count</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Total Characters Processed</td>
+                            <td>${stats.totalChars}</td>
+                            <td>100%</td>
+                        </tr>
+                        <tr class="char-simplified">
+                            <td>Simplified Characters Selected</td>
+                            <td>${stats.simplifiedSelected}</td>
+                            <td>${stats.simplifiedPercentage}%</td>
+                        </tr>
+                        <tr class="char-traditional">
+                            <td>Traditional Characters Selected</td>
+                            <td>${stats.traditionalSelected}</td>
+                            <td>${stats.traditionalPercentage}%</td>
+                        </tr>
+                        <tr class="char-identical">
+                            <td>Identical Characters</td>
+                            <td>${stats.identicalChars}</td>
+                            <td>${stats.identicalPercentage}%</td>
+                        </tr>
+                    </tbody>
+                </table>`;
+            
+            if (biasToggle.checked) {
+                html += `<p><em>Bias toward Simplified is enabled (5% boost applied during selection)</em></p>`;
+            } else {
+                html += `<p><em>Bias toward Simplified is disabled</em></p>`;
+            }
+            
+            html += `
+                <div class="structured-info">
+                    <h5>Structured Approach Benefits (v26D-CC)</h5>
+                    <ul>
+                        <li><strong>Preserves Reading Order:</strong> Uses Tesseract's natural document structure</li>
+                        <li><strong>Maintains Formatting:</strong> Keeps paragraphs, lines, and word spacing</li>
+                        <li><strong>Performance:</strong> Efficient character lookup using spatial mapping</li>
+                        <li><strong>Accuracy:</strong> Optimizes individual characters while preserving context</li>
+                    </ul>
+                </div>
+            </div>`;
+            
+            return html;
+        }
+
+        // Function to display character selection details
+        function displayCharacterSelectionDetails(structuredResults) {
+            let html = `<h4>Character Selection Details (First 30 characters)</h4>`;
+            
+            const allSymbols = [];
+            structuredResults.forEach(block => {
+                block.paragraphs.forEach(paragraph => {
+                    paragraph.lines.forEach(line => {
+                        line.words.forEach(word => {
+                            word.symbols.forEach(symbol => {
+                                allSymbols.push(symbol);
+                            });
+                        });
+                    });
+                });
+            });
+            
+            if (allSymbols.length === 0) {
+                html += '<p>No character data found.</p>';
+                return html;
+            }
+            
+            html += `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Selected</th>
+                            <th>Confidence</th>
+                            <th>Source</th>
+                            <th>Simplified</th>
+                            <th>Sim Conf</th>
+                            <th>Traditional</th>
+                            <th>Tra Conf</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            // Show first 30 character selections
+            const sampleSymbols = allSymbols.slice(0, 30);
+            sampleSymbols.forEach(symbol => {
+                let rowClass = "";
+                if (symbol.isIdentical) {
+                    rowClass = "char-identical";
+                } else if (symbol.source.includes('Simplified')) {
+                    rowClass = "char-simplified";
+                } else if (symbol.source.includes('Traditional')) {
+                    rowClass = "char-traditional";
+                }
+                
+                html += `<tr class="${rowClass}">
+                    <td><strong>${symbol.selected.text || '(empty)'}</strong></td>
+                    <td>${symbol.selected.confidence.toFixed(2)}</td>
+                    <td>${symbol.source}</td>
+                    <td>${symbol.simplified ? symbol.simplified.text || '(empty)' : '(none)'}</td>
+                    <td>${symbol.simplified ? symbol.simplified.confidence.toFixed(2) : '-'}</td>
+                    <td>${symbol.traditional ? symbol.traditional.text || '(empty)' : '(none)'}</td>
+                    <td>${symbol.traditional ? symbol.traditional.confidence.toFixed(2) : '-'}</td>
+                </tr>`;
+            });
+            
+            html += `</tbody></table>
+                <p><small><em>Green rows = Simplified selected, Red rows = Traditional selected, Gray rows = Identical characters</em></small></p>`;
+            
+            return html;
+        }
+
+        // Function to display detailed Chinese analysis results
+        function displayDetailedChineseAnalysis(structuredResults, finalText, stats) {
+            let html = displayDebugInfo(stats);
+            html += displayStatistics(stats);
+            html += displayCharacterSelectionDetails(structuredResults);
+            
+            html += `<h4>Final Reconstructed Output</h4>`;
+            html += `<pre>${finalText}</pre>`;
+            
+            chineseAnalysis.innerHTML = html;
+        }
+
+        async function runOCR() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Running OCR...', 0, 'Initializing OCR...');
+                
+                // Determine which languages to use based on detected script
+                let languagesToUse = ['eng']; // Default to English
+                if (detectedScript && SCRIPT_TO_LANGUAGES[detectedScript]) {
+                    languagesToUse = SCRIPT_TO_LANGUAGES[detectedScript];
+                }
+                
+                console.log('Detected script:', detectedScript);
+                console.log('Languages to use:', languagesToUse);
+                
+                // Special handling for Chinese - run structured confidence-only processing
+                if (detectedScript === 'Han' && languagesToUse.includes('chi_sim') && languagesToUse.includes('chi_tra')) {
+                    console.log('Chinese detected - running structured confidence-only character analysis (v26D-CC)...');
+                    
+                    // Perform structured confidence-only character comparison
+                    showProgress('Character Analysis...', 10, 'Comparing characters using structured confidence scores...');
+                    const { structuredResults, stats, resultSim, resultTra } = await compareStructuredConfidenceCharacterResults();
+                    
+                    console.log('Structured confidence-only character analysis complete (v26D-CC). Stats:', stats);
+                    
+                    // Reconstruct final text
+                    showProgress('Text Reconstruction...', 80, 'Reconstructing text using document structure...');
+                    const finalText = reconstructTextFromStructuredResults(structuredResults);
+                    
+                    // Display the final OCR result
+                    ocrResults.textContent = finalText;
+                    
+                    // Display detailed analysis with statistics
+                    displayDetailedChineseAnalysis(structuredResults, finalText, stats);
+                    
+                    updateProgress(100, `OCR complete with structured confidence-only approach (v26D-CC)`);
+                } else {
+                    // Create a worker with the appropriate languages
+                    const worker = await Tesseract.createWorker(languagesToUse);
+                    
+                    // Set parameters
+                    await worker.setParameters({
+                        classify_enable_learning: '0' // Disable learning for consistent results
+                    });
+                    
+                    // Run OCR
+                    const { data } = await worker.recognize(currentImage);
+                    
+                    // Display OCR results
+                    ocrResults.textContent = data.text;
+                    
+                    updateProgress(100, 'OCR complete!');
+                    
+                    // Terminate worker
+                    await worker.terminate();
+                    
+                    // Clear Chinese analysis for non-Chinese text
+                    chineseAnalysis.innerHTML = '<p>Not Chinese text - no character analysis performed.</p>';
+                }
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('OCR Error:', error);
+                alert('Error during OCR: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function resetPrototype() {
+            // Reset all state
+            currentImage = null;
+            detectedScript = null;
+            detectedOrientation = null;
+            
+            // Reset UI
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            controls.classList.add('hidden');
+            results.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            ocrBtn.disabled = true;
+            
+            // Clear results
+            osdResults.textContent = '';
+            ocrResults.textContent = '';
+            chineseAnalysis.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

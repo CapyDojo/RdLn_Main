@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesseract Layout Analysis Explorer</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .psm-section {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            background-color: #fafafa;
+        }
+        .psm-title {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .block-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .block-item {
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            padding: 8px;
+            background-color: rgba(0, 123, 255, 0.1);
+            min-width: 150px;
+        }
+        .block-text {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .block-info {
+            font-size: 11px;
+            color: #666;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tesseract Layout Analysis Explorer</h1>
+        <p>This prototype explores Tesseract's built-in layout analysis at different PSM (Page Segmentation Mode) granularity levels.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+            <canvas id="overlayCanvas"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: rgba(255, 0, 0, 0.3);"></div>
+                    <span>Blocks</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: rgba(0, 255, 0, 0.3);"></div>
+                    <span>Paragraphs</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: rgba(0, 0, 255, 0.3);"></div>
+                    <span>Lines</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: rgba(255, 255, 0, 0.3);"></div>
+                    <span>Words</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="analyzeBtn" class="btn">Analyze Layout</button>
+            <button id="resetBtn" class="btn">Reset</button>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Analyzing Layout...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="psm-section">
+                <div class="psm-title">PSM 1: Automatic page segmentation with OSD</div>
+                <div id="psm1Results"></div>
+            </div>
+            
+            <div class="psm-section">
+                <div class="psm-title">PSM 3: Fully automatic page segmentation, but no OSD</div>
+                <div id="psm3Results"></div>
+            </div>
+            
+            <div class="psm-section">
+                <div class="psm-title">PSM 6: Assume a single uniform block of text</div>
+                <div id="psm6Results"></div>
+            </div>
+            
+            <div class="psm-section">
+                <div class="psm-title">PSM 7: Treat the image as a single text line</div>
+                <div id="psm7Results"></div>
+            </div>
+            
+            <div class="psm-section">
+                <div class="psm-title">PSM 13: Raw line. Treat the image as a single text line, bypassing hacks that are Tesseract-specific</div>
+                <div id="psm13Results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const overlayCanvas = document.getElementById('overlayCanvas');
+        const controls = document.getElementById('controls');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const psm1Results = document.getElementById('psm1Results');
+        const psm3Results = document.getElementById('psm3Results');
+        const psm6Results = document.getElementById('psm6Results');
+        const psm7Results = document.getElementById('psm7Results');
+        const psm13Results = document.getElementById('psm13Results');
+
+        // State variables
+        let currentImage = null;
+
+        // PSM modes to test
+        const PSM_MODES = [
+            { id: 1, name: "Automatic page segmentation with OSD", description: "Fully automatic page segmentation with orientation and script detection" },
+            { id: 3, name: "Fully automatic page segmentation, but no OSD", description: "Automatic page segmentation, but no orientation and script detection" },
+            { id: 6, name: "Assume a single uniform block of text", description: "Treat the image as a single text block" },
+            { id: 7, name: "Treat the image as a single text line", description: "Assume all text is in a single line" },
+            { id: 13, name: "Raw line", description: "Treat the image as a single text line, bypassing Tesseract-specific hacks" }
+        ];
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        analyzeBtn.addEventListener('click', analyzeLayout);
+        resetBtn.addEventListener('click', resetPrototype);
+
+        // Functions
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Set up canvas for overlay
+                    setupCanvas();
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setupCanvas() {
+            if (!currentImage) return;
+            
+            const canvas = overlayCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions to match image
+            canvas.width = currentImage.width;
+            canvas.height = currentImage.height;
+            
+            // Draw the image on canvas
+            ctx.drawImage(currentImage, 0, 0);
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function resetPrototype() {
+            // Reset all state
+            currentImage = null;
+            
+            // Reset UI
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            controls.classList.add('hidden');
+            results.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            
+            // Clear results
+            psm1Results.innerHTML = '';
+            psm3Results.innerHTML = '';
+            psm6Results.innerHTML = '';
+            psm7Results.innerHTML = '';
+            psm13Results.innerHTML = '';
+        }
+
+        // Draw layout elements on canvas
+        function drawLayoutElements(result, psmId) {
+            if (!currentImage) return;
+            
+            const canvas = overlayCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // Don't clear canvas to preserve previous drawings
+            // Instead, draw with some transparency to allow overlapping
+            
+            // Set colors based on PSM (using different transparency for overlapping)
+            const colors = {
+                1: 'rgba(255, 0, 0, 0.3)',   // Red for PSM 1
+                3: 'rgba(0, 255, 0, 0.3)',   // Green for PSM 3
+                6: 'rgba(0, 0, 255, 0.3)',   // Blue for PSM 6
+                7: 'rgba(255, 255, 0, 0.3)', // Yellow for PSM 7
+                13: 'rgba(255, 0, 255, 0.3)' // Magenta for PSM 13
+            };
+            
+            const color = colors[psmId] || 'rgba(128, 128, 128, 0.3)';
+            
+            // Draw blocks
+            if (result.data.blocks) {
+                ctx.fillStyle = color;
+                result.data.blocks.forEach(block => {
+                    if (block.bbox) {
+                        ctx.fillRect(
+                            block.bbox.x0, 
+                            block.bbox.y0, 
+                            block.bbox.x1 - block.bbox.x0, 
+                            block.bbox.y1 - block.bbox.y0
+                        );
+                    }
+                });
+            }
+            
+            // Draw paragraphs
+            if (result.data.paragraphs) {
+                ctx.fillStyle = color.replace('0.3', '0.2');
+                result.data.paragraphs.forEach(paragraph => {
+                    if (paragraph.bbox) {
+                        ctx.fillRect(
+                            paragraph.bbox.x0, 
+                            paragraph.bbox.y0, 
+                            paragraph.bbox.x1 - paragraph.bbox.x0, 
+                            paragraph.bbox.y1 - paragraph.bbox.y0
+                        );
+                    }
+                });
+            }
+            
+            // Draw lines
+            if (result.data.lines) {
+                ctx.fillStyle = color.replace('0.3', '0.15');
+                result.data.lines.forEach(line => {
+                    if (line.bbox) {
+                        ctx.fillRect(
+                            line.bbox.x0, 
+                            line.bbox.y0, 
+                            line.bbox.x1 - line.bbox.x0, 
+                            line.bbox.y1 - line.bbox.y0
+                        );
+                    }
+                });
+            }
+            
+            // Draw words
+            if (result.data.words) {
+                ctx.fillStyle = color.replace('0.3', '0.1');
+                result.data.words.forEach(word => {
+                    if (word.bbox) {
+                        ctx.fillRect(
+                            word.bbox.x0, 
+                            word.bbox.y0, 
+                            word.bbox.x1 - word.bbox.x0, 
+                            word.bbox.y1 - word.bbox.y0
+                        );
+                    }
+                });
+            }
+        }
+
+        // Format layout elements for display
+        function formatLayoutElements(result) {
+            let html = '';
+            
+            // Blocks
+            if (result.data.blocks && result.data.blocks.length > 0) {
+                html += '<h4>Blocks (' + result.data.blocks.length + ')</h4>';
+                html += '<div class="block-container">';
+                result.data.blocks.forEach((block, index) => {
+                    html += `
+                        <div class="block-item">
+                            <div class="block-text">${block.text ? block.text.substring(0, 50) + (block.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                            <div class="block-info">Conf: ${(block.confidence || 0).toFixed(2)}%</div>
+                            ${block.bbox ? `<div class="block-info">Size: ${Math.round(block.bbox.x1 - block.bbox.x0)}×${Math.round(block.bbox.y1 - block.bbox.y0)}</div>` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // Paragraphs
+            if (result.data.paragraphs && result.data.paragraphs.length > 0) {
+                html += '<h4>Paragraphs (' + result.data.paragraphs.length + ')</h4>';
+                html += '<div class="block-container">';
+                result.data.paragraphs.forEach((paragraph, index) => {
+                    html += `
+                        <div class="block-item">
+                            <div class="block-text">${paragraph.text ? paragraph.text.substring(0, 50) + (paragraph.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                            <div class="block-info">Conf: ${(paragraph.confidence || 0).toFixed(2)}%</div>
+                            ${paragraph.bbox ? `<div class="block-info">Size: ${Math.round(paragraph.bbox.x1 - paragraph.bbox.x0)}×${Math.round(paragraph.bbox.y1 - paragraph.bbox.y0)}</div>` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // Lines
+            if (result.data.lines && result.data.lines.length > 0) {
+                html += '<h4>Lines (' + result.data.lines.length + ')</h4>';
+                html += '<div class="block-container">';
+                result.data.lines.forEach((line, index) => {
+                    html += `
+                        <div class="block-item">
+                            <div class="block-text">${line.text ? line.text.substring(0, 50) + (line.text.length > 50 ? '...' : '') : '(empty)'}</div>
+                            <div class="block-info">Conf: ${(line.confidence || 0).toFixed(2)}%</div>
+                            ${line.bbox ? `<div class="block-info">Size: ${Math.round(line.bbox.x1 - line.bbox.x0)}×${Math.round(line.bbox.y1 - line.bbox.y0)}</div>` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // Words
+            if (result.data.words && result.data.words.length > 0) {
+                html += '<h4>Words (' + result.data.words.length + ')</h4>';
+                html += '<div class="block-container">';
+                result.data.words.forEach((word, index) => {
+                    html += `
+                        <div class="block-item">
+                            <div class="block-text">${word.text || '(empty)'}</div>
+                            <div class="block-info">Conf: ${(word.confidence || 0).toFixed(2)}%</div>
+                            ${word.bbox ? `<div class="block-info">Size: ${Math.round(word.bbox.x1 - word.bbox.x0)}×${Math.round(word.bbox.y1 - word.bbox.y0)}</div>` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // Symbols/Characters
+            if (result.data.symbols && result.data.symbols.length > 0) {
+                const sampleSymbols = result.data.symbols.slice(0, 20);
+                html += '<h4>Symbols (Sample of ' + sampleSymbols.length + '/' + result.data.symbols.length + ')</h4>';
+                html += '<div class="block-container">';
+                sampleSymbols.forEach((symbol, index) => {
+                    html += `
+                        <div class="block-item">
+                            <div class="block-text">${symbol.text || '(empty)'}</div>
+                            <div class="block-info">Conf: ${(symbol.confidence || 0).toFixed(2)}%</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            return html;
+        }
+
+        // Analyze layout with a specific PSM mode
+        async function analyzeWithPSM(psmId) {
+            try {
+                const worker = await Tesseract.createWorker('eng+chi_sim+chi_tra');
+                await worker.setParameters({
+                    tessedit_pageseg_mode: psmId,
+                    classify_enable_learning: '0'
+                });
+                
+                // Run recognition with layout analysis enabled
+                const result = await worker.recognize(currentImage, {}, { 
+                    blocks: true,
+                    paragraphs: true,
+                    lines: true,
+                    words: true,
+                    symbols: true
+                });
+                
+                await worker.terminate();
+                return result;
+            } catch (error) {
+                console.error('Error analyzing with PSM ' + psmId + ':', error);
+                return null;
+            }
+        }
+
+        // Main analysis function
+        async function analyzeLayout() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Analyzing Layout...', 0, 'Initializing...');
+                
+                // Clear canvas for new drawing
+                const canvas = overlayCanvas;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(currentImage, 0, 0);
+                
+                // Analyze with each PSM mode
+                for (let i = 0; i < PSM_MODES.length; i++) {
+                    const psmMode = PSM_MODES[i];
+                    const progress = Math.round((i / PSM_MODES.length) * 100);
+                    
+                    showProgress('Analyzing Layout...', progress, 'Running PSM ' + psmMode.id + ': ' + psmMode.name);
+                    
+                    const result = await analyzeWithPSM(psmMode.id);
+                    
+                    if (result) {
+                        // Draw layout elements on canvas
+                        drawLayoutElements(result, psmMode.id);
+                        
+                        // Format and display results
+                        const formattedResult = formatLayoutElements(result);
+                        
+                        // Display in appropriate results section
+                        switch (psmMode.id) {
+                            case 1:
+                                psm1Results.innerHTML = formattedResult || '<p>No layout data available</p>';
+                                break;
+                            case 3:
+                                psm3Results.innerHTML = formattedResult || '<p>No layout data available</p>';
+                                break;
+                            case 6:
+                                psm6Results.innerHTML = formattedResult || '<p>No layout data available</p>';
+                                break;
+                            case 7:
+                                psm7Results.innerHTML = formattedResult || '<p>No layout data available</p>';
+                                break;
+                            case 13:
+                                psm13Results.innerHTML = formattedResult || '<p>No layout data available</p>';
+                                break;
+                        }
+                    } else {
+                        // Display error
+                        const errorHtml = '<p>Error occurred during analysis</p>';
+                        switch (psmMode.id) {
+                            case 1:
+                                psm1Results.innerHTML = errorHtml;
+                                break;
+                            case 3:
+                                psm3Results.innerHTML = errorHtml;
+                                break;
+                            case 6:
+                                psm6Results.innerHTML = errorHtml;
+                                break;
+                            case 7:
+                                psm7Results.innerHTML = errorHtml;
+                                break;
+                            case 13:
+                                psm13Results.innerHTML = errorHtml;
+                                break;
+                        }
+                    }
+                }
+                
+                updateProgress(100, 'Layout analysis complete!');
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('Analysis Error:', error);
+                alert('Error during analysis: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

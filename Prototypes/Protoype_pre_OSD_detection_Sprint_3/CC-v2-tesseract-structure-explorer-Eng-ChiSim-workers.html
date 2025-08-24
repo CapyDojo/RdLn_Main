@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract Structure Explorer v2 - Multi-Language Workers</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .btn.secondary {
+            background-color: #6c757d;
+        }
+        .btn.secondary:hover {
+            background-color: #545b62;
+        }
+        .btn.success {
+            background-color: #28a745;
+        }
+        .btn.success:hover {
+            background-color: #218838;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .hidden {
+            display: none;
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .analysis-section {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        .analysis-section.eng-only {
+            border-color: #007bff;
+        }
+        .analysis-section.multi-lang {
+            border-color: #28a745;
+        }
+        .analysis-section.japanese {
+            border-color: #ff6b6b;
+        }
+        .structure-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: white;
+            margin-bottom: 15px;
+        }
+        .structure-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .structure-item.block {
+            border-left-color: #dc3545;
+        }
+        .structure-item.paragraph {
+            border-left-color: #28a745;
+        }
+        .structure-item.line {
+            border-left-color: #ffc107;
+        }
+        .structure-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .comparison-stats {
+            background-color: #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .osd-test-section {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .osd-results {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+        }
+        .level-controls {
+            margin: 10px 0;
+        }
+        .canvas-container {
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            display: none;
+        }
+        .worker-selector {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RdLn™ Tesseract Structure Explorer v2 - Multi-Language Workers</h1>
+        <p>This prototype compares structure detection between different language workers (English, Chinese, Japanese) for multilingual text analysis.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview" class="image-preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <div class="worker-selector">
+                <h4>Analysis Options:</h4>
+                <button id="analyzeEngBtn" class="btn">Analyze: English Only</button>
+                <button id="analyzeMultiBtn" class="btn success">Analyze: English + Chinese</button>
+                <button id="analyzeJpnBtn" class="btn" style="background-color: #ff6b6b;">Analyze: Japanese Only</button>
+                <button id="analyzeBothBtn" class="btn" style="background-color: #6f42c1;">Compare All</button>
+                <button id="resetBtn" class="btn secondary">Reset</button>
+            </div>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Analyzing Structure...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="results" class="hidden">
+        <!-- Comparison View -->
+        <div id="comparisonView" class="hidden">
+            <div class="container">
+                <h2>Structure Detection Comparison</h2>
+                <div class="comparison-grid" id="comparisonGrid">
+                    <div class="analysis-section eng-only" id="engSection">
+                        <h3>🔵 English Only Worker</h3>
+                        <div class="comparison-stats" id="engStats"></div>
+                        <div id="engResults"></div>
+                    </div>
+                    <div class="analysis-section multi-lang" id="multiSection">
+                        <h3>🟢 English + Chinese Worker</h3>
+                        <div class="comparison-stats" id="multiStats"></div>
+                        <div id="multiResults"></div>
+                    </div>
+                    <div class="analysis-section japanese" id="jpnSection" style="display: none;">
+                        <h3>🔴 Japanese Only Worker</h3>
+                        <div class="comparison-stats" id="jpnStats"></div>
+                        <div id="jpnResults"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Single Analysis View -->
+        <div id="singleView" class="hidden">
+            <div class="container">
+                <h2 id="singleViewTitle">Text Structure Analysis</h2>
+                <div id="singleResults"></div>
+            </div>
+        </div>
+
+        <!-- OSD Testing Section -->
+        <div class="container">
+            <div class="osd-test-section">
+                <h2>OSD Testing by Structural Level</h2>
+                <p>Test script detection on different structural elements from the active analysis.</p>
+                
+                <div class="level-controls">
+                    <button id="osdFullImageBtn" class="btn">OSD: Full Image</button>
+                    <button id="osdBlocksBtn" class="btn">OSD: Individual Blocks</button>
+                    <button id="osdParagraphsBtn" class="btn">OSD: Individual Paragraphs</button>
+                    <div id="activeWorkerInfo" style="margin-top: 10px; font-style: italic; color: #666;"></div>
+                </div>
+
+                <div id="osdResults"></div>
+                <canvas id="tempCanvas" class="canvas-container"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const analyzeEngBtn = document.getElementById('analyzeEngBtn');
+        const analyzeMultiBtn = document.getElementById('analyzeMultiBtn');
+        const analyzeJpnBtn = document.getElementById('analyzeJpnBtn');
+        const analyzeBothBtn = document.getElementById('analyzeBothBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const comparisonView = document.getElementById('comparisonView');
+        const singleView = document.getElementById('singleView');
+        const singleViewTitle = document.getElementById('singleViewTitle');
+        const engResults = document.getElementById('engResults');
+        const multiResults = document.getElementById('multiResults');
+        const engStats = document.getElementById('engStats');
+        const multiStats = document.getElementById('multiStats');
+        const singleResults = document.getElementById('singleResults');
+        const osdResults = document.getElementById('osdResults');
+        const osdFullImageBtn = document.getElementById('osdFullImageBtn');
+        const osdBlocksBtn = document.getElementById('osdBlocksBtn');
+        const osdParagraphsBtn = document.getElementById('osdParagraphsBtn');
+        const activeWorkerInfo = document.getElementById('activeWorkerInfo');
+        const tempCanvas = document.getElementById('tempCanvas');
+
+        // State variables
+        let currentImage = null;
+        let engStructureData = null;
+        let multiStructureData = null;
+        let jpnStructureData = null;
+        let activeStructureData = null; // For OSD testing
+        let activeWorkerType = null;
+
+        // Event Listeners for file upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        analyzeEngBtn.addEventListener('click', () => analyzeStructure('eng'));
+        analyzeMultiBtn.addEventListener('click', () => analyzeStructure('multi'));
+        analyzeJpnBtn.addEventListener('click', () => analyzeStructure('jpn'));
+        analyzeBothBtn.addEventListener('click', () => analyzeStructure('all'));
+        resetBtn.addEventListener('click', resetPrototype);
+        osdFullImageBtn.addEventListener('click', () => testOSDFullImage());
+        osdBlocksBtn.addEventListener('click', () => testOSDByBlocks());
+        osdParagraphsBtn.addEventListener('click', () => testOSDByParagraphs());
+
+        // File handling functions
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                    engStructureData = null;
+                    multiStructureData = null;
+                    activeStructureData = null;
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function analyzeStructure(mode) {
+            if (!currentImage) return;
+
+            try {
+                if (mode === 'all') {
+                    await analyzeAll();
+                } else if (mode === 'both') {
+                    await analyzeBoth();
+                } else {
+                    await analyzeSingle(mode);
+                }
+            } catch (error) {
+                console.error('Structure Analysis Error:', error);
+                alert('Error during structure analysis: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        async function analyzeSingle(workerType) {
+            const isMulti = workerType === 'multi';
+            const isJpn = workerType === 'jpn';
+            let languages, title, emoji;
+            
+            if (isJpn) {
+                languages = ['jpn'];
+                title = '🔴 Japanese Only Worker Analysis';
+                emoji = '🔴';
+            } else if (isMulti) {
+                languages = ['eng', 'chi_sim'];
+                title = '🟢 English + Chinese Worker Analysis';
+                emoji = '🟢';
+            } else {
+                languages = ['eng'];
+                title = '🔵 English Only Worker Analysis';
+                emoji = '🔵';
+            }
+            
+            const workerDesc = isJpn ? 'Japanese' : (isMulti ? 'multi-language' : 'English');
+            showProgress('Analyzing Structure...', 0, `Initializing ${workerDesc} worker...`);
+            
+            const worker = await Tesseract.createWorker(languages);
+            await worker.setParameters({
+                classify_enable_learning: '0'
+            });
+            
+            updateProgress(30, 'Running structure analysis...');
+            
+            const result = await worker.recognize(currentImage, {}, { blocks: true });
+            
+            updateProgress(90, 'Processing structure data...');
+            
+            // Store results and set as active for OSD testing
+            if (isJpn) {
+                jpnStructureData = result.data;
+                activeStructureData = result.data;
+                activeWorkerType = 'jpn';
+            } else if (isMulti) {
+                multiStructureData = result.data;
+                activeStructureData = result.data;
+                activeWorkerType = 'multi';
+            } else {
+                engStructureData = result.data;
+                activeStructureData = result.data;
+                activeWorkerType = 'eng';
+            }
+            
+            // Display single analysis
+            singleViewTitle.textContent = title;
+            singleResults.innerHTML = generateStructureHTML(result.data);
+            
+            // Show single view
+            comparisonView.classList.add('hidden');
+            singleView.classList.remove('hidden');
+            
+            updateProgress(100, 'Analysis complete!');
+            await worker.terminate();
+            
+            // Update active worker info
+            const workerName = isJpn ? 'Japanese Only' : (isMulti ? 'English + Chinese' : 'English Only');
+            activeWorkerInfo.textContent = `Active for OSD testing: ${workerName} worker`;
+            
+            setTimeout(() => {
+                progressContainer.classList.add('hidden');
+                results.classList.remove('hidden');
+            }, 500);
+        }
+
+        async function analyzeBoth() {
+            showProgress('Comparing Workers...', 0, 'Initializing English worker...');
+            
+            // English worker
+            const engWorker = await Tesseract.createWorker(['eng']);
+            await engWorker.setParameters({ classify_enable_learning: '0' });
+            
+            updateProgress(20, 'Running English analysis...');
+            const engResult = await engWorker.recognize(currentImage, {}, { blocks: true });
+            engStructureData = engResult.data;
+            await engWorker.terminate();
+            
+            updateProgress(50, 'Initializing multi-language worker...');
+            
+            // Multi-language worker
+            const multiWorker = await Tesseract.createWorker(['eng', 'chi_sim']);
+            await multiWorker.setParameters({ classify_enable_learning: '0' });
+            
+            updateProgress(70, 'Running multi-language analysis...');
+            const multiResult = await multiWorker.recognize(currentImage, {}, { blocks: true });
+            multiStructureData = multiResult.data;
+            await multiWorker.terminate();
+            
+            updateProgress(90, 'Generating comparison...');
+            
+            // Set multi-language as active (more comprehensive for OSD)
+            activeStructureData = multiStructureData;
+            activeWorkerType = 'multi';
+            
+            // Display comparison
+            displayComparison();
+            
+            updateProgress(100, 'Comparison complete!');
+            
+            setTimeout(() => {
+                progressContainer.classList.add('hidden');
+                results.classList.remove('hidden');
+            }, 500);
+        }
+
+        async function analyzeAll() {
+            showProgress('Comparing All Workers...', 0, 'Initializing English worker...');
+            
+            // English worker
+            const engWorker = await Tesseract.createWorker(['eng']);
+            await engWorker.setParameters({ classify_enable_learning: '0' });
+            
+            updateProgress(15, 'Running English analysis...');
+            const engResult = await engWorker.recognize(currentImage, {}, { blocks: true });
+            engStructureData = engResult.data;
+            await engWorker.terminate();
+            
+            updateProgress(35, 'Initializing multi-language worker...');
+            
+            // Multi-language worker
+            const multiWorker = await Tesseract.createWorker(['eng', 'chi_sim']);
+            await multiWorker.setParameters({ classify_enable_learning: '0' });
+            
+            updateProgress(50, 'Running multi-language analysis...');
+            const multiResult = await multiWorker.recognize(currentImage, {}, { blocks: true });
+            multiStructureData = multiResult.data;
+            await multiWorker.terminate();
+            
+            updateProgress(70, 'Initializing Japanese worker...');
+            
+            // Japanese worker
+            const jpnWorker = await Tesseract.createWorker(['jpn']);
+            await jpnWorker.setParameters({ classify_enable_learning: '0' });
+            
+            updateProgress(85, 'Running Japanese analysis...');
+            const jpnResult = await jpnWorker.recognize(currentImage, {}, { blocks: true });
+            jpnStructureData = jpnResult.data;
+            await jpnWorker.terminate();
+            
+            updateProgress(95, 'Generating comparison...');
+            
+            // Set multi-language as active (most comprehensive for OSD)
+            activeStructureData = multiStructureData;
+            activeWorkerType = 'multi';
+            
+            // Display comparison
+            displayComparison();
+            
+            updateProgress(100, 'All workers comparison complete!');
+            
+            setTimeout(() => {
+                progressContainer.classList.add('hidden');
+                results.classList.remove('hidden');
+            }, 500);
+        }
+
+        function displayComparison() {
+            // Generate stats
+            const engStatsData = generateStats(engStructureData);
+            const multiStatsData = generateStats(multiStructureData);
+            
+            engStats.innerHTML = engStatsData;
+            multiStats.innerHTML = multiStatsData;
+            
+            // Generate structure displays
+            engResults.innerHTML = generateStructureHTML(engStructureData);
+            multiResults.innerHTML = generateStructureHTML(multiStructureData);
+            
+            // Show comparison view
+            singleView.classList.add('hidden');
+            comparisonView.classList.remove('hidden');
+            
+            // Update active worker info
+            activeWorkerInfo.textContent = 'Active for OSD testing: English + Chinese worker (more comprehensive)';
+        }
+
+        function generateStats(data) {
+            const blocks = data.blocks || [];
+            const paragraphs = data.paragraphs || [];
+            const lines = data.lines || [];
+            const words = data.words || [];
+            
+            return `
+                📊 Detected: ${blocks.length} blocks, ${paragraphs.length} paragraphs, ${lines.length} lines, ${words.length} words
+            `;
+        }
+
+        function generateStructureHTML(data) {
+            const blocks = data.blocks || [];
+            const paragraphs = data.paragraphs || [];
+            const lines = data.lines || [];
+            
+            let html = '';
+            
+            // Blocks
+            html += '<div class="structure-box"><h4>Blocks (Major Regions)</h4>';
+            html += blocks.map((block, i) => `
+                <div class="structure-item block">
+                    <strong>Block ${i + 1}</strong>
+                    <div class="structure-meta">
+                        Confidence: ${block.confidence?.toFixed(1) || 'N/A'}% | 
+                        BBox: (${block.bbox?.x0 || 0}, ${block.bbox?.y0 || 0}) to (${block.bbox?.x1 || 0}, ${block.bbox?.y1 || 0})
+                    </div>
+                    <div>${(block.text || '').substring(0, 100)}${block.text?.length > 100 ? '...' : ''}</div>
+                </div>
+            `).join('');
+            html += '</div>';
+            
+            // Paragraphs
+            html += '<div class="structure-box"><h4>Paragraphs</h4>';
+            html += paragraphs.map((para, i) => `
+                <div class="structure-item paragraph">
+                    <strong>Paragraph ${i + 1}</strong>
+                    <div class="structure-meta">
+                        Confidence: ${para.confidence?.toFixed(1) || 'N/A'}% | 
+                        BBox: (${para.bbox?.x0 || 0}, ${para.bbox?.y0 || 0}) to (${para.bbox?.x1 || 0}, ${para.bbox?.y1 || 0})
+                    </div>
+                    <div>${(para.text || '').substring(0, 80)}${para.text?.length > 80 ? '...' : ''}</div>
+                </div>
+            `).join('');
+            html += '</div>';
+            
+            // Lines (first 15)
+            const displayLines = lines.slice(0, 15);
+            html += '<div class="structure-box"><h4>Lines (First 15)</h4>';
+            html += displayLines.map((line, i) => `
+                <div class="structure-item line">
+                    <strong>Line ${i + 1}</strong>
+                    <div class="structure-meta">
+                        Confidence: ${line.confidence?.toFixed(1) || 'N/A'}% | 
+                        BBox: (${line.bbox?.x0 || 0}, ${line.bbox?.y0 || 0}) to (${line.bbox?.x1 || 0}, ${line.bbox?.y1 || 0})
+                    </div>
+                    <div>${line.text || 'Empty line'}</div>
+                </div>
+            `).join('');
+            if (lines.length > 15) {
+                html += `<div class="structure-meta">... and ${lines.length - 15} more lines</div>`;
+            }
+            html += '</div>';
+            
+            return html;
+        }
+
+        // OSD Testing Functions (same as v1 but use activeStructureData)
+        async function testOSDFullImage() {
+            if (!currentImage) return;
+            
+            showOSDProgress('Testing OSD on full image...');
+            
+            try {
+                const result = await Tesseract.detect(currentImage);
+                displayOSDResults('Full Image OSD', [result.data]);
+            } catch (error) {
+                displayOSDError('Full Image OSD', error);
+            }
+        }
+
+        async function testOSDByBlocks() {
+            if (!activeStructureData || !activeStructureData.blocks) {
+                alert('Please run structure analysis first');
+                return;
+            }
+            
+            showOSDProgress('Testing OSD on individual blocks...');
+            const osdResults = [];
+            
+            for (let i = 0; i < activeStructureData.blocks.length; i++) {
+                const block = activeStructureData.blocks[i];
+                if (block.bbox) {
+                    try {
+                        const croppedImage = cropImageRegion(block.bbox);
+                        if (croppedImage) {
+                            const result = await Tesseract.detect(croppedImage);
+                            osdResults.push({
+                                index: i + 1,
+                                text: block.text?.substring(0, 50) || 'Empty block',
+                                result: result.data
+                            });
+                        }
+                    } catch (error) {
+                        osdResults.push({
+                            index: i + 1,
+                            text: block.text?.substring(0, 50) || 'Empty block',
+                            error: error.message
+                        });
+                    }
+                }
+            }
+            
+            displayOSDResults(`Blocks OSD (${activeWorkerType === 'multi' ? 'Multi-Lang' : 'Eng-Only'} Structure)`, osdResults);
+        }
+
+        async function testOSDByParagraphs() {
+            if (!activeStructureData || !activeStructureData.paragraphs) {
+                alert('Please run structure analysis first');
+                return;
+            }
+            
+            showOSDProgress('Testing OSD on individual paragraphs...');
+            const osdResults = [];
+            
+            const parasToTest = activeStructureData.paragraphs.slice(0, 10);
+            
+            for (let i = 0; i < parasToTest.length; i++) {
+                const para = parasToTest[i];
+                if (para.bbox) {
+                    try {
+                        const croppedImage = cropImageRegion(para.bbox);
+                        if (croppedImage) {
+                            const result = await Tesseract.detect(croppedImage);
+                            osdResults.push({
+                                index: i + 1,
+                                text: para.text?.substring(0, 50) || 'Empty paragraph',
+                                result: result.data
+                            });
+                        }
+                    } catch (error) {
+                        osdResults.push({
+                            index: i + 1,
+                            text: para.text?.substring(0, 50) || 'Empty paragraph',
+                            error: error.message
+                        });
+                    }
+                }
+            }
+            
+            displayOSDResults(`Paragraphs OSD (${activeWorkerType === 'multi' ? 'Multi-Lang' : 'Eng-Only'} Structure)`, osdResults);
+        }
+
+        function cropImageRegion(bbox) {
+            if (!bbox || !currentImage) return null;
+            
+            const canvas = tempCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            const width = bbox.x1 - bbox.x0;
+            const height = bbox.y1 - bbox.y0;
+            
+            if (width <= 0 || height <= 0) return null;
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            ctx.drawImage(
+                currentImage,
+                bbox.x0, bbox.y0, width, height,
+                0, 0, width, height
+            );
+            
+            return canvas;
+        }
+
+        function showOSDProgress(message) {
+            osdResults.innerHTML = `<div style="color: #007bff; font-weight: bold;">${message}</div>`;
+        }
+
+        function displayOSDResults(title, results) {
+            let html = `<h3>${title}</h3>`;
+            
+            if (Array.isArray(results)) {
+                results.forEach(item => {
+                    html += `<div class="osd-results">`;
+                    if (item.index) {
+                        html += `<strong>Item ${item.index}:</strong> "${item.text}"<br>`;
+                    }
+                    if (item.result) {
+                        html += `<pre>${JSON.stringify(item.result, null, 2)}</pre>`;
+                    } else if (item.error) {
+                        html += `<div style="color: red;">Error: ${item.error}</div>`;
+                    }
+                    html += `</div>`;
+                });
+            } else {
+                html += `<div class="osd-results"><pre>${JSON.stringify(results, null, 2)}</pre></div>`;
+            }
+            
+            osdResults.innerHTML = html;
+        }
+
+        function displayOSDError(title, error) {
+            osdResults.innerHTML = `<h3>${title}</h3><div style="color: red;">Error: ${error.message}</div>`;
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function resetPrototype() {
+            // Reset all state
+            currentImage = null;
+            engStructureData = null;
+            multiStructureData = null;
+            activeStructureData = null;
+            activeWorkerType = null;
+            
+            // Reset UI
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            controls.classList.add('hidden');
+            results.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            
+            // Clear results
+            engResults.innerHTML = '';
+            multiResults.innerHTML = '';
+            singleResults.innerHTML = '';
+            osdResults.innerHTML = '';
+            activeWorkerInfo.textContent = '';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract OCR with OSD Prototype v26B-QC-Clean</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .spatial-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RdLn™ Tesseract OCR with OSD Prototype v26B-QC-Clean</h1>
+        <p>This prototype demonstrates Tesseract.js with Orientation and Script Detection (OSD) for Chinese text processing.</p>
+        <p><strong>Note:</strong> For OSD functionality, the <code>osd.traineddata</code> model must be available. Tesseract.js will automatically download it when needed.</p>
+        <p><strong>v26B-QC-Clean Changes:</strong> Cleaned version with core OCR pipeline and spatial proximity matching. Uses character-vote strategy with no bias.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="detectBtn" class="btn">1. Detect Script & Orientation</button>
+            <button id="ocrBtn" class="btn" disabled>2. Run OCR</button>
+            <button id="resetBtn" class="btn">Reset</button>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Detecting Script...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="result-box">
+                <h3>OSD Results</h3>
+                <pre id="osdResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>OCR Results</h3>
+                <pre id="ocrResults"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Map script names to language codes
+        const SCRIPT_TO_LANGUAGES = {
+            // Chinese scripts
+            'Han': ['chi_sim', 'chi_tra'], // Generic Chinese characters
+            'HanS': ['chi_sim'], // Simplified Chinese
+            'HanT': ['chi_tra'], // Traditional Chinese
+            'Chinese': ['chi_sim', 'chi_tra'], // Generic Chinese
+            
+            // Fallback for unknown scripts
+            'Unknown': ['eng'],
+            'Common': ['eng'] // Common script often defaults to English
+        };
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const detectBtn = document.getElementById('detectBtn');
+        const ocrBtn = document.getElementById('ocrBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const osdResults = document.getElementById('osdResults');
+        const ocrResults = document.getElementById('ocrResults');
+
+        // State variables
+        let currentImage = null;
+        let detectedScript = null;
+        let detectedOrientation = null;
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        detectBtn.addEventListener('click', detectScriptAndOrientation);
+        ocrBtn.addEventListener('click', runOCR);
+        resetBtn.addEventListener('click', resetPrototype);
+
+        // Functions
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                    ocrBtn.disabled = true;
+                    detectedScript = null;
+                    detectedOrientation = null;
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function detectScriptAndOrientation() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Detecting Script & Orientation...', 0, 'Initializing OSD...');
+                
+                // Use Tesseract.detect for OSD
+                const result = await Tesseract.detect(currentImage);
+                
+                // Extract script and orientation
+                detectedScript = result.data.script || 'Unknown';
+                detectedOrientation = result.data.orientation || 0;
+                
+                // Display OSD results
+                osdResults.textContent = JSON.stringify({
+                    script: detectedScript,
+                    orientation: detectedOrientation,
+                    script_confidence: result.data.script_confidence || 'N/A',
+                    orientation_confidence: result.data.orientation_confidence || 'N/A'
+                }, null, 2);
+                
+                updateProgress(100, 'OSD detection complete!');
+                
+                // Enable OCR button
+                ocrBtn.disabled = false;
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('OSD Error:', error);
+                alert('Error during OSD detection: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        // Function to check if a character is punctuation-only
+        function isPunctuationOnly(char) {
+            // Return true if the character is punctuation-only
+            const punctuationRegex = /^[sP]+$/u;
+            return punctuationRegex.test(char);
+        }
+
+        // Function to extract characters from words with position information
+        function extractCharactersFromWords(words) {
+            const characters = [];
+            
+            words.forEach((word, wordIndex) => {
+                if (word && word.symbols) {
+                    word.symbols.forEach((symbol, symbolIndex) => {
+                        if (symbol && symbol.text) {
+                            characters.push({
+                                text: symbol.text,
+                                confidence: symbol.confidence || 0,
+                                bbox: symbol.bbox || null,
+                                wordIndex: wordIndex,
+                                symbolIndex: symbolIndex,
+                                wordText: word.text || ''
+                            });
+                        }
+                    });
+                }
+            });
+            
+            return characters;
+        }
+
+        // Function to calculate distance between two bounding boxes
+        function calculateDistance(bbox1, bbox2) {
+            if (!bbox1 || !bbox2) return Infinity;
+            
+            // Calculate center points
+            const center1 = {
+                x: (bbox1.x0 + bbox1.x1) / 2,
+                y: (bbox1.y0 + bbox1.y1) / 2
+            };
+            
+            const center2 = {
+                x: (bbox2.x0 + bbox2.x1) / 2,
+                y: (bbox2.y0 + bbox2.y1) / 2
+            };
+            
+            // Calculate Euclidean distance
+            const dx = center1.x - center2.x;
+            const dy = center1.y - center2.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // Function to calculate overlap between two bounding boxes (IoU - Intersection over Union)
+        function calculateOverlap(bbox1, bbox2) {
+            if (!bbox1 || !bbox2) return 0;
+            
+            // Calculate intersection
+            const xLeft = Math.max(bbox1.x0, bbox2.x0);
+            const yTop = Math.max(bbox1.y0, bbox2.y0);
+            const xRight = Math.min(bbox1.x1, bbox2.x1);
+            const yBottom = Math.min(bbox1.y1, bbox2.y1);
+            
+            if (xRight <= xLeft || yBottom <= yTop) {
+                return 0; // No intersection
+            }
+            
+            const intersectionArea = (xRight - xLeft) * (yBottom - yTop);
+            
+            // Calculate union
+            const area1 = (bbox1.x1 - bbox1.x0) * (bbox1.y1 - bbox1.y0);
+            const area2 = (bbox2.x1 - bbox2.x0) * (bbox2.y1 - bbox2.y0);
+            const unionArea = area1 + area2 - intersectionArea;
+            
+            return unionArea > 0 ? intersectionArea / unionArea : 0;
+        }
+
+        // Function to find the best matching character based on spatial proximity
+        function findBestMatch(char, candidateChars, maxDistance = 50, minOverlap = 0.1) {
+            let bestMatch = null;
+            let bestScore = -1; // Using negative distance as score (higher is better)
+            
+            for (const candidate of candidateChars) {
+                // Skip if same character
+                if (char === candidate) continue;
+                
+                // Calculate distance and overlap
+                const distance = calculateDistance(char.bbox, candidate.bbox);
+                const overlap = calculateOverlap(char.bbox, candidate.bbox);
+                
+                // Check if within thresholds
+                if (distance <= maxDistance || overlap >= minOverlap) {
+                    // Score based on inverse distance and overlap
+                    const score = -(distance * 0.7) + (overlap * 30); // Weighted combination
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMatch = candidate;
+                    }
+                }
+            }
+            
+            return bestMatch;
+        }
+
+        // Function to perform spatial proximity character comparison between models
+        async function compareSpatialProximityCharacterResults() {
+            // Get character-level data from both models for comparison
+            showProgress('Spatial Character Analysis...', 20, 'Processing with Simplified Chinese model...');
+            const workerSim = await Tesseract.createWorker(['chi_sim']);
+            await workerSim.setParameters({
+                classify_enable_learning: '0'
+            });
+            // Enable blocks output to get character-level data
+            const resultSim = await workerSim.recognize(currentImage, {}, { blocks: true });
+            await workerSim.terminate();
+            
+            showProgress('Spatial Character Analysis...', 40, 'Processing with Traditional Chinese model...');
+            const workerTra = await Tesseract.createWorker(['chi_tra']);
+            await workerTra.setParameters({
+                classify_enable_learning: '0'
+            });
+            // Enable blocks output to get character-level data
+            const resultTra = await workerTra.recognize(currentImage, {}, { blocks: true });
+            await workerTra.terminate();
+            
+            // Extract word data for comparison
+            const wordsSim = resultSim.data.words || [];
+            const wordsTra = resultTra.data.words || [];
+            
+            // Extract character data from words
+            const charsSim = extractCharactersFromWords(wordsSim);
+            const charsTra = extractCharactersFromWords(wordsTra);
+            
+            // Spatial proximity matching
+            const charMatches = [];
+            let simplifiedWins = 0;
+            let traditionalWins = 0;
+            let ties = 0;
+            
+            // Match Simplified characters to Traditional characters
+            const matchedTraChars = new Set(); // Track already matched Traditional characters
+            
+            for (const charSim of charsSim) {
+                const charTextSim = charSim.text || '';
+                const charConfSim = charSim.confidence || 0;
+                
+                // Find best matching Traditional character based on spatial proximity
+                const bestMatch = findBestMatch(charSim, charsTra.filter((_, index) => !matchedTraChars.has(index)));
+                
+                if (bestMatch) {
+                    const charTextTra = bestMatch.text || '';
+                    const charConfTra = bestMatch.confidence || 0;
+                    
+                    // Mark as matched
+                    const matchIndex = charsTra.indexOf(bestMatch);
+                    matchedTraChars.add(matchIndex);
+                    
+                    // Check if characters are identical (same text)
+                    const charsAreIdentical = charTextSim === charTextTra && charTextSim !== '';
+                    
+                    // Check if either character is punctuation-only
+                    const isPunctuationOnlyChar = isPunctuationOnly(charTextSim) || isPunctuationOnly(charTextTra);
+                    
+                    let chosenCharText, chosenCharConf, chosenCharModel;
+                    
+                    if (charsAreIdentical || isPunctuationOnlyChar) {
+                        // If characters are identical or punctuation-only, use either since they're the same
+                        chosenCharText = charTextSim;
+                        chosenCharConf = Math.max(charConfSim, charConfTra); // Use higher confidence
+                        chosenCharModel = 'Identical';
+                    } else {
+                        // Apply zero bias (no preference)
+                        const bias = 0; // No bias
+                        let finalCharConfSim = charConfSim * (1 + bias);
+                        
+                        // Decide which character to use based on confidence
+                        if (finalCharConfSim > charConfTra) {
+                            chosenCharText = charTextSim;
+                            chosenCharConf = charConfSim;
+                            chosenCharModel = 'Simplified';
+                            simplifiedWins++;
+                        } else if (charConfTra > finalCharConfSim) {
+                            chosenCharText = charTextTra;
+                            chosenCharConf = charConfTra;
+                            chosenCharModel = 'Traditional';
+                            traditionalWins++;
+                        } else {
+                            // Tie - default to Simplified
+                            chosenCharText = charTextSim;
+                            chosenCharConf = charConfSim;
+                            chosenCharModel = 'Simplified (Tie)';
+                            ties++;
+                            simplifiedWins++;
+                        }
+                    }
+                    
+                    charMatches.push({
+                        simplified: {
+                            text: charTextSim,
+                            confidence: charConfSim,
+                            bbox: charSim.bbox,
+                            wordText: charSim.wordText
+                        },
+                        traditional: {
+                            text: charTextTra,
+                            confidence: charConfTra,
+                            bbox: bestMatch.bbox,
+                            wordText: bestMatch.wordText
+                        },
+                        chosen: {
+                            text: chosenCharText,
+                            confidence: chosenCharConf,
+                            model: chosenCharModel
+                        },
+                        isIdentical: charsAreIdentical,
+                        isPunctuationOnly: isPunctuationOnlyChar,
+                        distance: calculateDistance(charSim.bbox, bestMatch.bbox),
+                        overlap: calculateOverlap(charSim.bbox, bestMatch.bbox)
+                    });
+                }
+            }
+            
+            return { charMatches, resultSim, resultTra };
+        }
+
+        // Helper function to get characters within a paragraph based on bounding box
+        function getCharactersInParagraph(characters, paragraph) {
+            if (!paragraph || !paragraph.bbox || !characters) return [];
+            
+            const paraBox = paragraph.bbox;
+            return characters.filter(char => {
+                if (!char || !char.bbox) return false;
+                const charBox = char.bbox;
+                
+                // Check if character is within paragraph bounds (with some tolerance)
+                const tolerance = 5;
+                return charBox.x0 >= paraBox.x0 - tolerance &&
+                       charBox.y0 >= paraBox.y0 - tolerance &&
+                       charBox.x1 <= paraBox.x1 + tolerance &&
+                       charBox.y1 <= paraBox.y1 + tolerance;
+            });
+        }
+
+        // Function to analyze characters within a specific paragraph using spatial proximity
+        function analyzeCharactersInParagraphSpatial(charsSim, charsTra, paraSim, paraTra) {
+            // Get characters that belong to this paragraph
+            const paraCharsSim = getCharactersInParagraph(charsSim, paraSim);
+            const paraCharsTra = getCharactersInParagraph(charsTra, paraTra);
+            
+            // Perform spatial matching within this paragraph
+            const charMatches = [];
+            let paraSimplifiedWins = 0;
+            let paraTraditionalWins = 0;
+            let paraTies = 0;
+            let paraIdenticalChars = 0;
+            let paraPunctuationOnlyChars = 0;
+            
+            // Match Simplified characters to Traditional characters within paragraph
+            const matchedTraChars = new Set();
+            
+            for (const charSim of paraCharsSim) {
+                const charTextSim = charSim.text || '';
+                const charConfSim = charSim.confidence || 0;
+                
+                // Find best matching Traditional character based on spatial proximity
+                const bestMatch = findBestMatch(charSim, paraCharsTra.filter((_, index) => !matchedTraChars.has(index)));
+                
+                if (bestMatch) {
+                    const charTextTra = bestMatch.text || '';
+                    const charConfTra = bestMatch.confidence || 0;
+                    
+                    // Mark as matched
+                    const matchIndex = paraCharsTra.indexOf(bestMatch);
+                    matchedTraChars.add(matchIndex);
+                    
+                    // Check if characters are identical
+                    const charsAreIdentical = charTextSim === charTextTra && charTextSim !== '';
+                    
+                    // Check if either character is punctuation-only
+                    const isPunctuationOnlyChar = isPunctuationOnly(charTextSim) || isPunctuationOnly(charTextTra);
+                    
+                    // Apply zero bias (no preference)
+                    const bias = 0; // No bias
+                    let finalCharConfSim = charConfSim * (1 + bias);
+                    
+                    let chosenCharText, chosenCharConf, chosenCharModel;
+                    
+                    if (charsAreIdentical || isPunctuationOnlyChar) {
+                        chosenCharText = charTextSim;
+                        chosenCharConf = Math.max(charConfSim, charConfTra);
+                        chosenCharModel = 'Identical';
+                        if (charsAreIdentical) {
+                            paraIdenticalChars++;
+                        } else {
+                            paraPunctuationOnlyChars++;
+                        }
+                    } else {
+                        // Determine winner for this character
+                        if (finalCharConfSim > charConfTra) {
+                            chosenCharText = charTextSim;
+                            chosenCharConf = charConfSim;
+                            chosenCharModel = 'Simplified';
+                            paraSimplifiedWins++;
+                        } else if (charConfTra > finalCharConfSim) {
+                            chosenCharText = charTextTra;
+                            chosenCharConf = charConfTra;
+                            chosenCharModel = 'Traditional';
+                            paraTraditionalWins++;
+                        } else {
+                            // Tie - default to Simplified
+                            chosenCharText = charTextSim;
+                            chosenCharConf = charConfSim;
+                            chosenCharModel = 'Simplified (Tie)';
+                            paraTies++;
+                            paraSimplifiedWins++;
+                        }
+                    }
+                    
+                    charMatches.push({
+                        simplified: {
+                            text: charTextSim,
+                            confidence: charConfSim,
+                            bbox: charSim.bbox,
+                            wordText: charSim.wordText
+                        },
+                        traditional: {
+                            text: charTextTra,
+                            confidence: charConfTra,
+                            bbox: bestMatch.bbox,
+                            wordText: bestMatch.wordText
+                        },
+                        chosen: {
+                            text: chosenCharText,
+                            confidence: chosenCharConf,
+                            model: chosenCharModel
+                        },
+                        isIdentical: charsAreIdentical,
+                        isPunctuationOnly: isPunctuationOnlyChar
+                    });
+                }
+            }
+            
+            // Calculate statistics
+            const paraDifferentChars = paraSimplifiedWins + paraTraditionalWins + paraTies;
+            
+            return {
+                simplifiedWins: paraSimplifiedWins,
+                traditionalWins: paraTraditionalWins,
+                ties: paraTies,
+                identicalChars: paraIdenticalChars,
+                punctuationOnlyChars: paraPunctuationOnlyChars,
+                differentChars: paraDifferentChars,
+                details: charMatches
+            };
+        }
+
+        // Function to make paragraph-level decision based on character-vote strategy
+        function makeParagraphDecision(paraConfSim, paraConfTra, charStats) {
+            // Decision based on character-level statistics (only different characters)
+            if (charStats.simplifiedWins > charStats.traditionalWins) {
+                return { winningModel: 'Simplified (Character-Vote)', chosenByStrategy: 'simplified' };
+            } else if (charStats.traditionalWins > charStats.simplifiedWins) {
+                return { winningModel: 'Traditional (Character-Vote)', chosenByStrategy: 'traditional' };
+            } else {
+                // Tie in character votes - fall back to confidence
+                if (paraConfSim >= paraConfTra) {
+                    return { winningModel: 'Simplified (Character-Vote Tie)', chosenByStrategy: 'simplified' };
+                } else {
+                    return { winningModel: 'Traditional (Character-Vote Tie)', chosenByStrategy: 'traditional' };
+                }
+            }
+        }
+
+        // Function to perform two-pass paragraph processing with spatial proximity character analysis
+        async function twoPassParagraphProcessingSpatial(resultSim, resultTra, globalCharMatches) {
+            // Get paragraph-level data from both results
+            const paragraphsSim = resultSim.data.paragraphs || [];
+            const paragraphsTra = resultTra.data.paragraphs || [];
+            
+            const maxLength = Math.max(paragraphsSim.length, paragraphsTra.length);
+            const alignment = [];
+            
+            // Get global character lists for per-paragraph analysis
+            const globalWordsSim = resultSim.data.words || [];
+            const globalWordsTra = resultTra.data.words || [];
+            
+            // Extract characters from words
+            const globalCharsSim = extractCharactersFromWords(globalWordsSim);
+            const globalCharsTra = extractCharactersFromWords(globalWordsTra);
+            
+            // Process each paragraph with per-paragraph character analysis
+            for (let i = 0; i < maxLength; i++) {
+                showProgress('Processing Paragraphs...', 60 + Math.round((i / maxLength) * 30), `Analyzing paragraph ${i + 1} of ${maxLength}...`);
+                
+                const paraSim = paragraphsSim[i];
+                const paraTra = paragraphsTra[i];
+                
+                // Get text for each paragraph
+                const textSim = paraSim ? (paraSim.text || '') : '';
+                const textTra = paraTra ? (paraTra.text || '') : '';
+                
+                // Get paragraph confidence values
+                const paraConfSim = paraSim ? (paraSim.confidence || 0) : 0;
+                const paraConfTra = paraTra ? (paraTra.confidence || 0) : 0;
+                
+                // Analyze characters specifically within this paragraph using spatial proximity
+                const paragraphCharAnalysis = analyzeCharactersInParagraphSpatial(globalCharsSim, globalCharsTra, paraSim, paraTra);
+                
+                // Make paragraph-level decision using character-vote strategy with PARAGRAPH-SPECIFIC character stats
+                const { winningModel, chosenByStrategy } = makeParagraphDecision(paraConfSim, paraConfTra, paragraphCharAnalysis);
+                
+                // Determine chosen text and confidence based on the decision
+                let chosenText, chosenConf;
+                if (chosenByStrategy === 'simplified') {
+                    chosenText = textSim;
+                    chosenConf = paraConfSim;
+                } else {
+                    chosenText = textTra;
+                    chosenConf = paraConfTra;
+                }
+                
+                alignment.push({
+                    paragraphPosition: i,
+                    simplified: {
+                        text: textSim,
+                        confidence: paraConfSim
+                    },
+                    traditional: {
+                        text: textTra,
+                        confidence: paraConfTra
+                    },
+                    chosen: {
+                        text: chosenText,
+                        confidence: chosenConf,
+                        model: winningModel
+                    }
+                });
+            }
+            
+            return alignment;
+        }
+
+        // Function to reconstruct final text from alignment while preserving paragraph breaks
+        function reconstructText(alignment) {
+            return alignment.map(item => item.chosen.text).join('\n\n'); // Paragraph breaks
+        }
+
+        async function runOCR() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Running OCR...', 0, 'Initializing OCR...');
+                
+                // Determine which languages to use based on detected script
+                let languagesToUse = ['eng']; // Default to English
+                if (detectedScript && SCRIPT_TO_LANGUAGES[detectedScript]) {
+                    languagesToUse = SCRIPT_TO_LANGUAGES[detectedScript];
+                }
+                
+                // Special handling for Chinese - run spatial proximity processing
+                if (detectedScript === 'Han' && languagesToUse.includes('chi_sim') && languagesToUse.includes('chi_tra')) {
+                    // First pass: Spatial proximity character comparison
+                    showProgress('Spatial Character Analysis...', 10, 'Comparing characters using spatial proximity...');
+                    const { charMatches, resultSim, resultTra } = await compareSpatialProximityCharacterResults();
+                    
+                    // Second pass: Paragraph-level processing with spatial character analysis
+                    showProgress('Paragraph Analysis...', 50, 'Processing paragraphs with spatial character analysis...');
+                    const alignment = await twoPassParagraphProcessingSpatial(resultSim, resultTra, charMatches);
+                    
+                    // Reconstruct final text while preserving paragraph breaks
+                    const finalText = reconstructText(alignment);
+                    
+                    // Display the final OCR result
+                    ocrResults.textContent = finalText;
+                    
+                    updateProgress(100, 'OCR complete with character-vote strategy');
+                } else {
+                    // Create a worker with the appropriate languages
+                    const worker = await Tesseract.createWorker(languagesToUse);
+                    
+                    // Set parameters
+                    await worker.setParameters({
+                        classify_enable_learning: '0' // Disable learning for consistent results
+                    });
+                    
+                    // Run OCR
+                    const { data } = await worker.recognize(currentImage);
+                    
+                    // Display OCR results
+                    ocrResults.textContent = data.text;
+                    
+                    updateProgress(100, 'OCR complete!');
+                    
+                    // Terminate worker
+                    await worker.terminate();
+                }
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('OCR Error:', error);
+                alert('Error during OCR: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function resetPrototype() {
+            // Reset all state
+            currentImage = null;
+            detectedScript = null;
+            detectedOrientation = null;
+            
+            // Reset UI
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            controls.classList.add('hidden');
+            results.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            ocrBtn.disabled = true;
+            
+            // Clear results
+            osdResults.textContent = '';
+            ocrResults.textContent = '';
+        }
+    </script>
+</body>
+</html>

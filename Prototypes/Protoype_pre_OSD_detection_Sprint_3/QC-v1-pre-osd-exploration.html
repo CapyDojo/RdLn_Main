@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Pre-OSD Detection Explorer - Sprint 3</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .approach-section {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            background-color: #fafafa;
+        }
+        .approach-title {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .region-box {
+            border: 1px dashed #007bff;
+            margin: 5px;
+            padding: 5px;
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        .region-info {
+            font-size: 12px;
+            color: #666;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RdLn™ Pre-OSD Detection Explorer - Sprint 3</h1>
+        <p>This prototype explores three approaches to handle multilingual text images:</p>
+        <ol>
+            <li>Multi-Region OSD Detection</li>
+            <li>Visual Segmentation Approach</li>
+            <li>Hybrid Detection Method</li>
+        </ol>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+            <canvas id="overlayCanvas"></canvas>
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="analyzeBtn" class="btn">Analyze Image</button>
+            <button id="resetBtn" class="btn">Reset</button>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Analyzing Image...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="approach-section">
+                <div class="approach-title">Approach 1: Multi-Region OSD Detection</div>
+                <div id="approach1Results"></div>
+            </div>
+            
+            <div class="approach-section">
+                <div class="approach-title">Approach 2: Visual Segmentation</div>
+                <div id="approach2Results"></div>
+            </div>
+            
+            <div class="approach-section">
+                <div class="approach-title">Approach 3: Hybrid Detection</div>
+                <div id="approach3Results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const overlayCanvas = document.getElementById('overlayCanvas');
+        const controls = document.getElementById('controls');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const approach1Results = document.getElementById('approach1Results');
+        const approach2Results = document.getElementById('approach2Results');
+        const approach3Results = document.getElementById('approach3Results');
+
+        // State variables
+        let currentImage = null;
+        let imageCanvas = null;
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        analyzeBtn.addEventListener('click', analyzeImage);
+        resetBtn.addEventListener('click', resetPrototype);
+
+        // Functions
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Set up canvas for overlay
+                    setupCanvas();
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setupCanvas() {
+            if (!currentImage) return;
+            
+            const canvas = overlayCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions to match image
+            canvas.width = currentImage.width;
+            canvas.height = currentImage.height;
+            
+            // Draw the image on canvas
+            ctx.drawImage(currentImage, 0, 0);
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function resetPrototype() {
+            // Reset all state
+            currentImage = null;
+            
+            // Reset UI
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            controls.classList.add('hidden');
+            results.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            
+            // Clear results
+            approach1Results.innerHTML = '';
+            approach2Results.innerHTML = '';
+            approach3Results.innerHTML = '';
+        }
+
+        // Approach 1: Multi-Region OSD Detection
+        async function approach1MultiRegionOSD() {
+            showProgress('Approach 1: Multi-Region OSD', 0, 'Detecting text regions...');
+            
+            // In a real implementation, we would:
+            // 1. Use a text detection model to find text regions
+            // 2. Segment the image into those regions
+            // 3. Run OSD on each region
+            // 4. Process each region with appropriate models
+            
+            // For this prototype, we'll simulate the approach
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Simulate finding text regions
+            const regions = [
+                { id: 1, x: 50, y: 50, width: 200, height: 50, type: 'Latin' },
+                { id: 2, x: 50, y: 120, width: 300, height: 60, type: 'Chinese' },
+                { id: 3, x: 50, y: 200, width: 150, height: 40, type: 'Mixed' }
+            ];
+            
+            // Draw regions on canvas
+            drawRegions(regions);
+            
+            // Simulate OSD results for each region
+            const regionResults = regions.map(region => ({
+                id: region.id,
+                bbox: { x: region.x, y: region.y, width: region.width, height: region.height },
+                detectedScript: region.type === 'Chinese' ? 'Han' : (region.type === 'Latin' ? 'Latin' : 'Mixed'),
+                detectedOrientation: 0,
+                confidence: Math.random() * 0.7 + 0.3 // Random confidence between 0.3 and 1.0
+            }));
+            
+            // Display results
+            approach1Results.innerHTML = `
+                <p><strong>Detected ${regions.length} text regions:</strong></p>
+                <div>
+                    ${regionResults.map(result => `
+                        <div class="region-box">
+                            <div>Region ${result.id}: ${result.detectedScript} script</div>
+                            <div class="region-info">Orientation: ${result.detectedOrientation}° | Confidence: ${(result.confidence * 100).toFixed(1)}%</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <p><strong>Processing Plan:</strong></p>
+                <ul>
+                    <li>Regions with "Han" script → Use chi_sim vs chi_tra spatial matching</li>
+                    <li>Regions with "Latin" script → Use standard English OCR</li>
+                    <li>Regions with "Mixed" script → Use comprehensive multilingual model</li>
+                </ul>
+            `;
+            
+            updateProgress(100, 'Approach 1 complete');
+            return regionResults;
+        }
+
+        // Approach 2: Visual Segmentation
+        function approach2VisualSegmentation() {
+            showProgress('Approach 2: Visual Segmentation', 0, 'Analyzing visual patterns...');
+            
+            // In a real implementation, we would:
+            // 1. Analyze character spacing patterns
+            // 2. Identify character aspect ratios
+            // 3. Detect color/density patterns
+            // 4. Segment image based on these visual features
+            
+            // For this prototype, we'll simulate the approach
+            setTimeout(() => {
+                // Simulate segmentation results
+                const segments = [
+                    { id: 1, x: 60, y: 60, width: 180, height: 30, type: 'Latin Text Block' },
+                    { id: 2, x: 60, y: 130, width: 280, height: 50, type: 'Chinese Text Block' },
+                    { id: 3, x: 60, y: 210, width: 130, height: 25, type: 'Numeric Block' }
+                ];
+                
+                // Draw segments on canvas
+                drawSegments(segments);
+                
+                // Display results
+                approach2Results.innerHTML = `
+                    <p><strong>Identified ${segments.length} visual segments:</strong></p>
+                    <div>
+                        ${segments.map(segment => `
+                            <div class="region-box">
+                                <div>Segment ${segment.id}: ${segment.type}</div>
+                                <div class="region-info">Position: (${segment.x}, ${segment.y}) | Size: ${segment.width}×${segment.height}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <p><strong>Segmentation Logic:</strong></p>
+                    <ul>
+                        <li>Latin segments identified by word spacing patterns</li>
+                        <li>Chinese segments identified by uniform character spacing</li>
+                        <li>Numeric segments identified by character shape analysis</li>
+                    </ul>
+                `;
+                
+                updateProgress(100, 'Approach 2 complete');
+            }, 1000);
+        }
+
+        // Approach 3: Hybrid Detection
+        async function approach3HybridDetection() {
+            showProgress('Approach 3: Hybrid Detection', 0, 'Running hybrid analysis...');
+            
+            // In a real implementation, we would:
+            // 1. Use a lightweight text detection model
+            // 2. Perform character classification on detected areas
+            // 3. Analyze layout and reading direction
+            // 4. Score confidence for different scripts
+            
+            // For this prototype, we'll simulate the approach
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Simulate hybrid detection results
+            const hybridResults = {
+                textAreas: [
+                    { id: 1, x: 70, y: 70, width: 160, height: 20, primaryScript: 'Latin', confidence: 0.92 },
+                    { id: 2, x: 70, y: 140, width: 260, height: 40, primaryScript: 'Han', confidence: 0.87 },
+                    { id: 3, x: 70, y: 220, width: 110, height: 20, primaryScript: 'Numbers', confidence: 0.95 }
+                ],
+                layoutAnalysis: {
+                    readingDirection: 'Top to Bottom',
+                    textFlow: 'Mixed (Latin horizontal, Chinese vertical)',
+                    complexity: 'Medium'
+                }
+            };
+            
+            // Draw hybrid regions on canvas
+            drawHybridRegions(hybridResults.textAreas);
+            
+            // Display results
+            approach3Results.innerHTML = `
+                <p><strong>Hybrid Detection Results:</strong></p>
+                <div>
+                    ${hybridResults.textAreas.map(area => `
+                        <div class="region-box">
+                            <div>Area ${area.id}: ${area.primaryScript}</div>
+                            <div class="region-info">Confidence: ${(area.confidence * 100).toFixed(1)}% | Position: (${area.x}, ${area.y})</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <p><strong>Layout Analysis:</strong></p>
+                <ul>
+                    <li>Reading Direction: ${hybridResults.layoutAnalysis.readingDirection}</li>
+                    <li>Text Flow: ${hybridResults.layoutAnalysis.textFlow}</li>
+                    <li>Complexity: ${hybridResults.layoutAnalysis.complexity}</li>
+                </ul>
+                <p><strong>Processing Strategy:</strong></p>
+                <ul>
+                    <li>Route Latin areas to English model with horizontal text optimization</li>
+                    <li>Route Chinese areas to chi_sim/chi_tra spatial matching</li>
+                    <li>Route numeric areas to specialized digit recognition</li>
+                </ul>
+            `;
+            
+            updateProgress(100, 'Approach 3 complete');
+            return hybridResults;
+        }
+
+        // Helper functions for drawing on canvas
+        function drawRegions(regions) {
+            if (!currentImage) return;
+            
+            const canvas = overlayCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas and redraw image
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(currentImage, 0, 0);
+            
+            // Draw region boxes
+            ctx.strokeStyle = '#007bff';
+            ctx.lineWidth = 2;
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#007bff';
+            
+            regions.forEach((region, index) => {
+                ctx.strokeRect(region.x, region.y, region.width, region.height);
+                ctx.fillText(`Region ${region.id}`, region.x + 5, region.y + 15);
+            });
+        }
+
+        function drawSegments(segments) {
+            if (!currentImage) return;
+            
+            const canvas = overlayCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas and redraw image
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(currentImage, 0, 0);
+            
+            // Draw segment boxes
+            ctx.strokeStyle = '#28a745';
+            ctx.lineWidth = 2;
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#28a745';
+            
+            segments.forEach((segment, index) => {
+                ctx.strokeRect(segment.x, segment.y, segment.width, segment.height);
+                ctx.fillText(`Segment ${segment.id}`, segment.x + 5, segment.y + 15);
+            });
+        }
+
+        function drawHybridRegions(areas) {
+            if (!currentImage) return;
+            
+            const canvas = overlayCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas and redraw image
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(currentImage, 0, 0);
+            
+            // Draw hybrid region boxes
+            ctx.strokeStyle = '#ffc107';
+            ctx.lineWidth = 2;
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#ffc107';
+            
+            areas.forEach((area, index) => {
+                ctx.strokeRect(area.x, area.y, area.width, area.height);
+                ctx.fillText(`Area ${area.id}`, area.x + 5, area.y + 15);
+            });
+        }
+
+        // Main analysis function
+        async function analyzeImage() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Starting Analysis...', 0, 'Initializing...');
+                
+                // Run all three approaches
+                await approach1MultiRegionOSD();
+                approach2VisualSegmentation();
+                await approach3HybridDetection();
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('Analysis Error:', error);
+                alert('Error during analysis: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

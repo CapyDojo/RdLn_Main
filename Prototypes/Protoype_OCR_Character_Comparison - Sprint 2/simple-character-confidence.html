@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract OCR - Simple Character Confidence Comparison</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .toggle-container {
+            margin: 10px 0;
+        }
+        .toggle-label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .stats-container {
+            background-color: #e9f7ef;
+            border: 1px solid #d4edda;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .char-simplified {
+            background-color: #d4edda;
+        }
+        .char-traditional {
+            background-color: #f8d7da;
+        }
+        .simple-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RdLn™ Tesseract OCR - Simple Character Confidence Comparison</h1>
+        <p>This is a stripped-down version that compares Simplified vs Traditional Chinese character confidence scores directly.</p>
+        
+        <div class="simple-info">
+            <h4>Ultra-Simple Approach</h4>
+            <p><strong>How it works:</strong></p>
+            <ol>
+                <li>Run OCR with both Simplified and Traditional Chinese models</li>
+                <li>Extract all characters from both results</li>
+                <li>For each character position, select the one with higher confidence</li>
+                <li>That's it - no voting, no complex structures, no spatial matching</li>
+            </ol>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="processBtn" class="btn">Run Simple Character Comparison</button>
+            
+            <div class="toggle-container">
+                <span class="toggle-label">Bias toward Simplified:</span>
+                <input type="checkbox" id="biasToggle" checked>
+                <label for="biasToggle">Enable (5% boost to Simplified confidence)</label>
+            </div>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Processing...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="result-box">
+                <h3>Simple OCR Results</h3>
+                <pre id="ocrResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>Character Comparison</h3>
+                <div id="charComparison"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const processBtn = document.getElementById('processBtn');
+        const biasToggle = document.getElementById('biasToggle');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const ocrResults = document.getElementById('ocrResults');
+        const charComparison = document.getElementById('charComparison');
+
+        // State variables
+        let currentImage = null;
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        processBtn.addEventListener('click', processImage);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Function to extract characters from words
+        function extractCharacters(words) {
+            const characters = [];
+            
+            if (!words) return characters;
+            
+            words.forEach(word => {
+                if (word && word.symbols) {
+                    word.symbols.forEach(symbol => {
+                        if (symbol && symbol.text) {
+                            characters.push({
+                                text: symbol.text,
+                                confidence: symbol.confidence || 0
+                            });
+                        }
+                    });
+                }
+            });
+            
+            return characters;
+        }
+
+        // Function to display simple character comparison
+        function displaySimpleComparison(charsSim, charsTra) {
+            let html = `<h4>Character-by-Character Comparison</h4>`;
+            
+            if (charsSim.length === 0 || charsTra.length === 0) {
+                html += '<p>No character data found.</p>';
+                charComparison.innerHTML = html;
+                return;
+            }
+            
+            // Align characters by position (simple truncation to shorter array)
+            const minLength = Math.min(charsSim.length, charsTra.length);
+            const alignedChars = [];
+            
+            for (let i = 0; i < minLength; i++) {
+                alignedChars.push({
+                    simplified: charsSim[i],
+                    traditional: charsTra[i]
+                });
+            }
+            
+            // Handle unmatched characters
+            if (charsSim.length > minLength) {
+                for (let i = minLength; i < charsSim.length; i++) {
+                    alignedChars.push({
+                        simplified: charsSim[i],
+                        traditional: { text: '(missing)', confidence: 0 }
+                    });
+                }
+            } else if (charsTra.length > minLength) {
+                for (let i = minLength; i < charsTra.length; i++) {
+                    alignedChars.push({
+                        simplified: { text: '(missing)', confidence: 0 },
+                        traditional: charsTra[i]
+                    });
+                }
+            }
+            
+            // Statistics
+            let simplifiedWins = 0;
+            let traditionalWins = 0;
+            let ties = 0;
+            
+            const selectedChars = [];
+            
+            alignedChars.forEach(pair => {
+                const simText = pair.simplified.text || '';
+                const simConf = pair.simplified.confidence || 0;
+                const traText = pair.traditional.text || '';
+                const traConf = pair.traditional.confidence || 0;
+                
+                // Apply bias if enabled
+                let finalSimConf = simConf;
+                if (biasToggle.checked) {
+                    finalSimConf = simConf * 1.05; // 5% boost to Simplified
+                }
+                
+                // Select character with higher confidence
+                let selectedText, selectedConf, selectedSource;
+                if (finalSimConf > traConf) {
+                    selectedText = simText;
+                    selectedConf = simConf;
+                    selectedSource = 'Simplified';
+                    simplifiedWins++;
+                } else if (traConf > finalSimConf) {
+                    selectedText = traText;
+                    selectedConf = traConf;
+                    selectedSource = 'Traditional';
+                    traditionalWins++;
+                } else {
+                    // Tie - default to Simplified with bias, otherwise Traditional
+                    if (biasToggle.checked) {
+                        selectedText = simText;
+                        selectedConf = simConf;
+                        selectedSource = 'Simplified (Tie)';
+                        simplifiedWins++;
+                    } else {
+                        selectedText = traText;
+                        selectedConf = traConf;
+                        selectedSource = 'Traditional (Tie)';
+                        traditionalWins++;
+                    }
+                }
+                
+                selectedChars.push({
+                    selected: {
+                        text: selectedText,
+                        confidence: selectedConf,
+                        source: selectedSource
+                    },
+                    simplified: pair.simplified,
+                    traditional: pair.traditional
+                });
+            });
+            
+            // Build final text
+            const finalText = selectedChars.map(char => char.selected.text).join('');
+            
+            // Display statistics
+            html += `
+                <div class="stats-container">
+                    <h5>Simple Comparison Statistics</h5>
+                    <table>
+                        <tr class="char-simplified">
+                            <td><strong>Simplified Characters Selected:</strong></td>
+                            <td>${simplifiedWins}</td>
+                        </tr>
+                        <tr class="char-traditional">
+                            <td><strong>Traditional Characters Selected:</strong></td>
+                            <td>${traditionalWins}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tied Decisions:</strong></td>
+                            <td>${ties}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Characters:</strong></td>
+                            <td>${alignedChars.length}</td>
+                        </tr>
+                    </table>
+                    ${biasToggle.checked ? '<p><em>Bias toward Simplified is enabled (5% boost)</em></p>' : ''}
+                </div>
+            `;
+            
+            // Show first 50 character comparisons
+            html += `
+                <h5>First 50 Character Comparisons</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Position</th>
+                            <th>Selected</th>
+                            <th>Confidence</th>
+                            <th>Source</th>
+                            <th>Simplified</th>
+                            <th>Sim Conf</th>
+                            <th>Traditional</th>
+                            <th>Tra Conf</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            const sampleChars = selectedChars.slice(0, 50);
+            sampleChars.forEach((char, index) => {
+                let rowClass = "";
+                if (char.selected.source.includes('Simplified')) {
+                    rowClass = "char-simplified";
+                } else if (char.selected.source.includes('Traditional')) {
+                    rowClass = "char-traditional";
+                }
+                
+                html += `
+                    <tr class="${rowClass}">
+                        <td>${index + 1}</td>
+                        <td><strong>${char.selected.text || '(empty)'}</strong></td>
+                        <td>${char.selected.confidence.toFixed(2)}</td>
+                        <td>${char.selected.source}</td>
+                        <td>${char.simplified.text || '(empty)'}</td>
+                        <td>${char.simplified.confidence.toFixed(2)}</td>
+                        <td>${char.traditional.text || '(empty)'}</td>
+                        <td>${char.traditional.confidence.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            // Show final text
+            html += `
+                <h5>Final Text Result</h5>
+                <pre>${finalText}</pre>
+            `;
+            
+            charComparison.innerHTML = html;
+            ocrResults.textContent = finalText;
+        }
+
+        async function processImage() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Processing Image...', 0, 'Initializing OCR...');
+                
+                // Process with Simplified Chinese model
+                showProgress('Processing Image...', 20, 'Running OCR with Simplified Chinese model...');
+                const workerSim = await Tesseract.createWorker(['chi_sim']);
+                await workerSim.setParameters({
+                    classify_enable_learning: '0'
+                });
+                const resultSim = await workerSim.recognize(currentImage, {}, { blocks: true });
+                await workerSim.terminate();
+                
+                // Process with Traditional Chinese model
+                showProgress('Processing Image...', 50, 'Running OCR with Traditional Chinese model...');
+                const workerTra = await Tesseract.createWorker(['chi_tra']);
+                await workerTra.setParameters({
+                    classify_enable_learning: '0'
+                });
+                const resultTra = await workerTra.recognize(currentImage, {}, { blocks: true });
+                await workerTra.terminate();
+                
+                // Extract character data
+                showProgress('Processing Image...', 80, 'Comparing characters...');
+                const charsSim = extractCharacters(resultSim.data.words);
+                const charsTra = extractCharacters(resultTra.data.words);
+                
+                console.log('Simplified characters:', charsSim);
+                console.log('Traditional characters:', charsTra);
+                
+                // Display simple comparison
+                displaySimpleComparison(charsSim, charsTra);
+                
+                updateProgress(100, 'Processing complete!');
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('Processing Error:', error);
+                alert('Error during processing: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+    </script>
+</body>
+</html>

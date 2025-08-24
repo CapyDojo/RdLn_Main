@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "serena": {
+      "name": "Serena Code Intelligence (Minimal)",
+      "type": "STDIO",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--project",
+        ".",
+        "--context",
+        "desktop-app",
+        "--mode",
+        "interactive",
+        "--transport",
+        "stdio",
+        "--tool-timeout",
+        "30"
+      ],
+      "env": {
+        "SERENA_PROJECT_ROOT": ".",
+        "SERENA_CONTEXT": "RdLn_MVP_Stream"
+      },
+      "disabled": false,
+      "description": "Serena with minimal configuration for faster startup",
+      "autoApprove": [
+        "find_symbol",
+        "find_referencing_symbols", 
+        "get_symbols_overview",
+        "read_file",
+        "list_dir",
+        "search_for_pattern",
+        "onboarding",
+        "activate_project"
+      ]
+    }
+  }
+}

@@ -1,0 +1,135 @@
+- Build a standalone HTML prototype that performs OCR on bilingual/multilingual images by segmenting into lines/paragraphs, detecting script per region, routing each region to the best language(s), and
+reconstructing text in reading order. Include Chinese-specific dual-model merging (Simplified vs Traditional) using a structured, confidence-only approach that preserves Tesseract’s paragraph/line/word
+structure.
+
+Location
+
+- Create Prototypes/Bilingual_OSD_Routing/tesseract-osd-per-line-routing.html
+- Add a short Prototypes/Bilingual_OSD_Routing/README.md with usage notes.
+
+Constraints
+
+- Follow docs/DevRules/Agent_Rules.md and docs/DevRules/DEVELOPMENT_GUIDELINES.md.
+- Prefer native Windows commands in docs (e.g., start "" "<path>").
+- Do not touch src-tauri/**. Keep changes self-contained in Prototypes/**.
+- No large binaries or tessdata in repo; rely on CDN or optional local copy.
+- Keep implementation simple and focused; avoid unrelated refactors.
+
+Goals
+
+- Page-level OSD for orientation + rough script.
+- Region-level script selection for bilingual/multilingual lines/paragraphs.
+- Per-region OCR with appropriate PSM and language(s).
+- For Chinese lines: run both chi_sim and chi_tra, choose per-character by confidence, preserve Tesseract structure (blocks → paragraphs → lines → words → symbols).
+- Clear progress UI and result panes with stats.
+
+Features
+
+- Drag-and-drop image upload with preview.
+- Buttons: Detect (OSD), OCR, Reset. Toggle: “Bias toward Simplified (5%)”.
+- Mode select: Per-Line vs Per-Paragraph routing.
+- Progress bar with granular updates (init, detect, segment, per-region OCR, reconstruction).
+- Results panes:
+    - OSD JSON (script, orientation, confidences, angle).
+    - Final OCR text.
+    - Analysis: per-line/paragraph routing decisions, language chosen, confidence summaries.
+    - Chinese analysis table showing first 30 symbol selections with confidences and source (Simplified/Traditional/Identical).
+
+Languages and Mapping
+
+- Use SCRIPT_TO_LANGUAGES map:
+    - Latin → eng,deu,fra,spa
+    - Han/HanS/HanT → chi_sim,chi_tra as applicable
+    - Japanese → jpn; Korean → kor; Arabic → ara; Cyrillic → rus
+    - Fallback: eng
+- For routing, if script is mixed/unknown, fall back to Unicode heuristics per region (e.g., majority Han code points → chi_*, majority Latin → eng).
+
+Algorithm
+
+- Load tesseract.js@5 from CDN (allow a switch to local node_modules/tesseract.js/dist/tesseract.min.js if available).
+- OSD:
+    - const osd = await Tesseract.detect(image); display results.
+    - If osd.orientation or angle indicates rotation, rotate into a canvas and use that canvas for subsequent steps.
+- First-pass segmentation:
+    - Create a worker with a superset language string (e.g., eng+chi_sim+chi_tra).
+    - Recognize the (rotated) image to get layout: data.blocks, paragraphs, lines, words, symbols and bboxes.
+- Region selection:
+    - Based on user mode (Per-Line or Per-Paragraph), collect region bboxes in reading order.
+    - For each region:
+    - Crop to offscreen canvas.
+    - Try `Tesseract.detect(crop)` to get `script`. If it fails or low confidence, quickly infer via Unicode categories on a low-res OCR pass or by scanning pixel density of Han vs Latin after a quick
+`eng+chi_*` run.
+    - Map script → languages (e.g., Han → `chi_sim+chi_tra`; Latin → `eng`).
+- Per-region OCR:
+    - Reuse a small pool of workers to avoid re-creation:
+    - Worker A: `eng` (PSM 7 for lines / 6 for paragraphs)
+    - Worker B: `chi_sim+chi_tra` (or two single-language workers for dual-run Chinese)
+- For non-Chinese: recognize crop with chosen languages; return data.text.
+- For Chinese: run both chi_sim and chi_tra:
+    - Extract structure from one base (prefer `chi_sim`) and at symbol level compare confidence; pick higher confidence per symbol, applying optional 5% bias toward Simplified.
+    - Reconstruct region text by joining selected symbols → words → lines (preserve spacing/line breaks).
+- Reassembly:
+    - Concatenate recognized region outputs in original reading order.
+    - Display final text, per-region metadata (bbox, chosen script/language, confidence summaries).
+- Progress:
+    - Hook worker.on('progress', cb) to update progress text and bar during recognition.
+    - Update high-level stages (OSD, segmentation, region N/M, finalization).
+Implementation Notes
+
+- Use psm:
+    - Lines: tessedit_pageseg_mode: '7'
+    - Paragraphs/blocks: 6 (uniform block) or 3 (auto) based on mode.
+- Worker pool:
+    - Initialize once; set params (e.g., classify_enable_learning: '0').
+    - Avoid frequent createWorker/terminate; reuse with setParameters as needed.
+- Rotation:
+    - Apply page-level rotation to a canvas before all crops; don’t rotate per-region unless necessary.
+- Unicode heuristic:
+    - Quick per-region text from a fast eng+chi_sim+chi_tra run, then compute ratio of Han vs Latin code points to confirm or override OSD script for that region.
+- Chinese confidence merge:
+    - Preserve base structure; no coordinate reconstruction.
+    - Build selection stats: total chars, simplified-selected, traditional-selected, identical, percentages.
+- Safety:
+    - Handle empty/missing symbols, zero-length words, or no data.lines.
+    - Cap per-region detect attempts; fall back to combined language recognition to avoid stalling.
+
+UI Structure
+
+- Upload area, image preview.
+- Controls: Detect, OCR, Reset, Mode select, Bias toggle.
+- Progress bar + status text.
+- Results:
+    - OSD JSON (pretty-printed).
+    - Final OCR text.
+    - Analysis: per-region rows (index, bbox, chosen script/lang, confidence summary).
+    - Chinese table (first 30 selections with row coloring: green simplified, red traditional, gray identical).
+
+Acceptance Criteria
+
+- Can process an image with an English line followed by its Chinese translation and route each line correctly.
+- Shows OSD JSON and applies orientation correction when needed.
+- Produces final text that matches per-region language routing, with visible differences if bias is toggled.
+- Displays statistics for Chinese dual-model selection.
+- No runtime errors in latest Chrome/Edge.
+- Self-contained prototype under Prototypes/Bilingual_OSD_Routing/; no repo-wide breaks.
+- Readme includes how to open on Windows: start "" "C:\temp\RdLn_MVP_Stream\Prototypes\Bilingual_OSD_Routing\tesseract-osd-per-line-routing.html"
+
+Testing Tips
+
+- Use a bilingual image (ENG line + CHI line) and a trilingual snippet if possible.
+- Test rotated images (90/180 degrees).
+- Test Latin-only and Han-only cases; ensure routing overhead remains acceptable.
+- Validate that non-Chinese lines don’t invoke dual-model merging.
+- Try both modes (Per-Line vs Per-Paragraph).
+
+Performance Targets
+
+- For a 1500×2000 image with ~20 lines, total time under 8–12 seconds on a typical dev laptop with CDN models cached.
+- Keep concurrent region OCR low (1–2) to avoid memory spikes; use a simple queue.
+
+Stretch Goals (Optional)
+
+- Paragraph-level routing mode with heuristic merging of short lines.
+- Offline mode toggle pointing to local tesseract.min.js and core/worker assets if present.
+- Export results as JSON with per-region metadata.
+- Simple heatmap overlay on the preview showing routed regions and selected languages.

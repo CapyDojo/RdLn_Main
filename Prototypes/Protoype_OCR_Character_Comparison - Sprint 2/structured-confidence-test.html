@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structured Confidence-Only Character Selection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .hidden {
+            display: none;
+        }
+        .char-simplified {
+            background-color: #d4edda;
+        }
+        .char-traditional {
+            background-color: #f8d7da;
+        }
+        .char-identical {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+        .structured-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Structured Confidence-Only Character Selection Test</h1>
+        <p>This test verifies the structured confidence-only character selection approach.</p>
+        
+        <div class="structured-info">
+            <h4>Structured Approach Benefits</h4>
+            <ul>
+                <li>Preserves original document structure and reading order</li>
+                <li>Uses Tesseract's natural paragraph/line/word organization</li>
+                <li>Optimizes individual characters while maintaining context</li>
+            </ul>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="processBtn" class="btn">Test Structured Confidence Selection</button>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Processing...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="result-box">
+                <h3>OCR Results</h3>
+                <pre id="ocrResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>Structured Confidence Analysis</h3>
+                <div id="structuredAnalysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const processBtn = document.getElementById('processBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const ocrResults = document.getElementById('ocrResults');
+        const structuredAnalysis = document.getElementById('structuredAnalysis');
+
+        // State variables
+        let currentImage = null;
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        processBtn.addEventListener('click', processImage);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Function to create a character map for efficient lookup
+        function createCharacterMap(characters) {
+            const map = new Map();
+            
+            characters.forEach(char => {
+                // Create a key based on position for efficient lookup
+                if (char.bbox) {
+                    // Use rounded coordinates to handle slight differences
+                    const key = `${Math.round(char.bbox.x0/5)*5}_${Math.round(char.bbox.y0/5)*5}`;
+                    if (!map.has(key)) {
+                        map.set(key, []);
+                    }
+                    map.get(key).push(char);
+                }
+            });
+            
+            return map;
+        }
+
+        // Function to find a character in the map based on spatial proximity
+        function findCharacterInMap(charMap, targetChar, maxDistance = 20) {
+            if (!targetChar.bbox) return null;
+            
+            // Try exact position first
+            const exactKey = `${Math.round(targetChar.bbox.x0/5)*5}_${Math.round(targetChar.bbox.y0/5)*5}`;
+            if (charMap.has(exactKey)) {
+                const candidates = charMap.get(exactKey);
+                // Return the first candidate (or implement better selection logic)
+                return candidates[0];
+            }
+            
+            // Search nearby positions
+            for (let [key, chars] of charMap) {
+                const [x, y] = key.split('_').map(Number);
+                const dx = Math.abs(x - targetChar.bbox.x0);
+                const dy = Math.abs(y - targetChar.bbox.y0);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance <= maxDistance) {
+                    // Return the first candidate (or implement better selection logic)
+                    return chars[0];
+                }
+            }
+            
+            return null;
+        }
+
+        // Function to display structured confidence selection data
+        function displayStructuredConfidenceData(structuredResults) {
+            let html = `<h4>Structured Confidence-Only Character Selection Results</h4>`;
+            
+            if (!structuredResults || structuredResults.length === 0) {
+                html += '<p>No structured data found.</p>';
+                structuredAnalysis.innerHTML = html;
+                return;
+            }
+            
+            // Collect statistics
+            let totalChars = 0;
+            let simplifiedSelected = 0;
+            let traditionalSelected = 0;
+            let identicalChars = 0;
+            const allSymbols = [];
+            
+            structuredResults.forEach(block => {
+                block.paragraphs.forEach(paragraph => {
+                    paragraph.lines.forEach(line => {
+                        line.words.forEach(word => {
+                            word.symbols.forEach(symbol => {
+                                totalChars++;
+                                allSymbols.push(symbol);
+                                if (symbol.isIdentical) identicalChars++;
+                                else if (symbol.source.includes('Simplified')) simplifiedSelected++;
+                                else if (symbol.source.includes('Traditional')) traditionalSelected++;
+                            });
+                        });
+                    });
+                });
+            });
+            
+            html += `
+                <div style="background-color: #e9f7ef; border: 1px solid #d4edda; border-radius: 4px; padding: 15px; margin: 10px 0;">
+                    <h5>Selection Statistics</h5>
+                    <table>
+                        <tr>
+                            <td><strong>Total Characters:</strong></td>
+                            <td>${totalChars}</td>
+                        </tr>
+                        <tr class="char-simplified">
+                            <td><strong>Simplified Selected:</strong></td>
+                            <td>${simplifiedSelected}</td>
+                        </tr>
+                        <tr class="char-traditional">
+                            <td><strong>Traditional Selected:</strong></td>
+                            <td>${traditionalSelected}</td>
+                        </tr>
+                        <tr class="char-identical">
+                            <td><strong>Identical Characters:</strong></td>
+                            <td>${identicalChars}</td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+            
+            // Show first 20 character selections in a table
+            html += `
+                <h5>First 20 Character Selections</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Selected</th>
+                            <th>Confidence</th>
+                            <th>Source</th>
+                            <th>Simplified</th>
+                            <th>Sim Conf</th>
+                            <th>Traditional</th>
+                            <th>Tra Conf</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            const sampleSymbols = allSymbols.slice(0, 20);
+            sampleSymbols.forEach((symbol, index) => {
+                let rowClass = "";
+                if (symbol.isIdentical) {
+                    rowClass = "char-identical";
+                } else if (symbol.source.includes('Simplified')) {
+                    rowClass = "char-simplified";
+                } else if (symbol.source.includes('Traditional')) {
+                    rowClass = "char-traditional";
+                }
+                
+                html += `
+                    <tr class="${rowClass}">
+                        <td><strong>${symbol.selected.text || '(empty)'}</strong></td>
+                        <td>${symbol.selected.confidence.toFixed(2)}</td>
+                        <td>${symbol.source}</td>
+                        <td>${symbol.simplified ? symbol.simplified.text || '(empty)' : '(none)'}</td>
+                        <td>${symbol.simplified ? symbol.simplified.confidence.toFixed(2) : '-'}</td>
+                        <td>${symbol.traditional ? symbol.traditional.text || '(empty)' : '(none)'}</td>
+                        <td>${symbol.traditional ? symbol.traditional.confidence.toFixed(2) : '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+                <p><small><em>Green rows = Simplified selected, Red rows = Traditional selected, Gray rows = Identical characters</em></small></p>
+                
+                <h5>Document Structure Preservation</h5>
+                <p><strong>Blocks:</strong> ${structuredResults.length}</p>
+                <p><strong>Paragraphs:</strong> ${structuredResults.reduce((sum, block) => sum + block.paragraphs.length, 0)}</p>
+                <p><strong>Lines:</strong> ${structuredResults.reduce((sum, block) => 
+                    sum + block.paragraphs.reduce((pSum, para) => pSum + para.lines.length, 0), 0)}</p>
+                <p><strong>Words:</strong> ${structuredResults.reduce((sum, block) => 
+                    sum + block.paragraphs.reduce((pSum, para) => 
+                        pSum + para.lines.reduce((lSum, line) => lSum + line.words.length, 0), 0), 0)}</p>
+            `;
+            
+            structuredAnalysis.innerHTML = html;
+        }
+
+        async function processImage() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Processing Image...', 0, 'Initializing OCR...');
+                
+                // Process with both Simplified and Traditional Chinese models
+                showProgress('Processing Image...', 20, 'Running OCR with Simplified Chinese model...');
+                const workerSim = await Tesseract.createWorker(['chi_sim']);
+                await workerSim.setParameters({
+                    classify_enable_learning: '0'
+                });
+                const resultSim = await workerSim.recognize(currentImage, {}, { blocks: true });
+                await workerSim.terminate();
+                
+                showProgress('Processing Image...', 40, 'Running OCR with Traditional Chinese model...');
+                const workerTra = await Tesseract.createWorker(['chi_tra']);
+                await workerTra.setParameters({
+                    classify_enable_learning: '0'
+                });
+                const resultTra = await workerTra.recognize(currentImage, {}, { blocks: true });
+                await workerTra.terminate();
+                
+                // Display OCR results
+                ocrResults.textContent = resultSim.data.text;
+                
+                // Create character maps for efficient lookup
+                showProgress('Processing Image...', 60, 'Creating character maps...');
+                const charsSim = [];
+                const charsTra = [];
+                
+                // Extract characters from Simplified result
+                if (resultSim.data.words) {
+                    resultSim.data.words.forEach((word, wordIndex) => {
+                        if (word.symbols) {
+                            word.symbols.forEach((symbol, symbolIndex) => {
+                                if (symbol && symbol.text) {
+                                    charsSim.push({
+                                        text: symbol.text,
+                                        confidence: symbol.confidence || 0,
+                                        bbox: symbol.bbox || null,
+                                        wordIndex: wordIndex,
+                                        symbolIndex: symbolIndex,
+                                        wordText: word.text || ''
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                // Extract characters from Traditional result
+                if (resultTra.data.words) {
+                    resultTra.data.words.forEach((word, wordIndex) => {
+                        if (word.symbols) {
+                            word.symbols.forEach((symbol, symbolIndex) => {
+                                if (symbol && symbol.text) {
+                                    charsTra.push({
+                                        text: symbol.text,
+                                        confidence: symbol.confidence || 0,
+                                        bbox: symbol.bbox || null,
+                                        wordIndex: wordIndex,
+                                        symbolIndex: symbolIndex,
+                                        wordText: word.text || ''
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                const charMapSim = createCharacterMap(charsSim);
+                const charMapTra = createCharacterMap(charsTra);
+                
+                // Perform structured confidence-only selection
+                showProgress('Processing Image...', 80, 'Performing structured confidence-only character selection...');
+                const structuredResults = [];
+                
+                // Process each block, paragraph, line, and word from Simplified model (preserving structure)
+                if (resultSim.data.blocks) {
+                    resultSim.data.blocks.forEach((block, blockIndex) => {
+                        const blockResult = {
+                            index: blockIndex,
+                            paragraphs: []
+                        };
+                        
+                        if (block.paragraphs) {
+                            block.paragraphs.forEach((paragraph, paraIndex) => {
+                                const paraResult = {
+                                    index: paraIndex,
+                                    lines: []
+                                };
+                                
+                                if (paragraph.lines) {
+                                    paragraph.lines.forEach((line, lineIndex) => {
+                                        const lineResult = {
+                                            index: lineIndex,
+                                            words: []
+                                        };
+                                        
+                                        if (line.words) {
+                                            line.words.forEach((word, wordIndex) => {
+                                                const wordResult = {
+                                                    index: wordIndex,
+                                                    text: '',
+                                                    symbols: []
+                                                };
+                                                
+                                                if (word.symbols) {
+                                                    word.symbols.forEach((symbol, symbolIndex) => {
+                                                        const simChar = {
+                                                            text: symbol.text || '',
+                                                            confidence: symbol.confidence || 0,
+                                                            bbox: symbol.bbox || null
+                                                        };
+                                                        
+                                                        // Find corresponding Traditional character
+                                                        const traCharObj = findCharacterInMap(charMapTra, simChar);
+                                                        
+                                                        if (traCharObj) {
+                                                            const traChar = {
+                                                                text: traCharObj.text || '',
+                                                                confidence: traCharObj.confidence || 0,
+                                                                bbox: traCharObj.bbox || null
+                                                            };
+                                                            
+                                                            // Check if characters are identical
+                                                            const charsAreIdentical = simChar.text === traChar.text && simChar.text !== '';
+                                                            
+                                                            // Select character with higher confidence
+                                                            let selectedChar, selectedSource;
+                                                            if (charsAreIdentical) {
+                                                                selectedChar = simChar; // Use either since identical
+                                                                selectedSource = 'Identical';
+                                                            } else if (simChar.confidence > traChar.confidence) {
+                                                                selectedChar = simChar;
+                                                                selectedSource = 'Simplified';
+                                                            } else if (traChar.confidence > simChar.confidence) {
+                                                                selectedChar = traChar;
+                                                                selectedSource = 'Traditional';
+                                                            } else {
+                                                                // Tie - default to Simplified
+                                                                selectedChar = simChar;
+                                                                selectedSource = 'Simplified (Tie)';
+                                                            }
+                                                            
+                                                            wordResult.text += selectedChar.text;
+                                                            wordResult.symbols.push({
+                                                                selected: selectedChar,
+                                                                simplified: simChar,
+                                                                traditional: traChar,
+                                                                source: selectedSource,
+                                                                isIdentical: charsAreIdentical
+                                                            });
+                                                        } else {
+                                                            // No Traditional match - use Simplified
+                                                            wordResult.text += simChar.text;
+                                                            wordResult.symbols.push({
+                                                                selected: simChar,
+                                                                simplified: simChar,
+                                                                traditional: null,
+                                                                source: 'Simplified (No Match)',
+                                                                isIdentical: false
+                                                            });
+                                                        }
+                                                    });
+                                                }
+                                                
+                                                lineResult.words.push(wordResult);
+                                            });
+                                        }
+                                        
+                                        paraResult.lines.push(lineResult);
+                                    });
+                                }
+                                
+                                blockResult.paragraphs.push(paraResult);
+                            });
+                        }
+                        
+                        structuredResults.push(blockResult);
+                    });
+                }
+                
+                // Log detailed structure for debugging
+                console.log('Structured results:', structuredResults);
+                
+                // Display structured confidence selection analysis
+                showProgress('Processing Image...', 90, 'Displaying results...');
+                displayStructuredConfidenceData(structuredResults);
+                
+                updateProgress(100, 'Processing complete!');
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('Processing Error:', error);
+                alert('Error during processing: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+    </script>
+</body>
+</html>

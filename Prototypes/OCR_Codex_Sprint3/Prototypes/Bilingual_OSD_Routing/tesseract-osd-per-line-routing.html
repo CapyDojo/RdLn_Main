@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bilingual OCR Routing Prototype (OSD + Per-Region)</title>
+    <style>
+      :root { --bg:#0b0c10; --panel:#111319; --muted:#8b93a4; --text:#e7eaf0; --accent:#5bb0ff; --ok:#2ecc71; --warn:#f39c12; --err:#e74c3c; }
+      html,body { margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+      h1 { font-size:18px; margin:16px; }
+      .container { display:flex; flex-direction:column; gap:12px; padding:12px; }
+      .row { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+      .panel { background:var(--panel); border:1px solid #1b1e27; border-radius:8px; padding:12px; }
+      .dropzone { border:2px dashed #2b3242; border-radius:8px; padding:16px; text-align:center; color:var(--muted); cursor:pointer; }
+      .dropzone.drag { border-color:var(--accent); color:var(--accent); }
+      .controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+      button { background:#1c2333; color:#e7eaf0; border:1px solid #2b3242; border-radius:6px; padding:8px 12px; cursor:pointer; }
+      button:disabled { opacity:.5; cursor:not-allowed; }
+      select, input[type="checkbox"] { accent-color: var(--accent); }
+      .progress { height:8px; background:#1b1e27; border-radius:999px; overflow:hidden; }
+      .bar { height:100%; width:0%; background:linear-gradient(90deg, var(--accent), #7fd3ff); transition:width .2s ease; }
+      pre { margin:0; white-space:pre-wrap; word-break:break-word; font-size:12px; color:#d8deea; }
+      textarea { width:100%; min-height:120px; background:#0e1117; color:#e7eaf0; border:1px solid #2b3242; border-radius:6px; padding:8px; }
+      table { width:100%; border-collapse:collapse; font-size:12px; }
+      th, td { border:1px solid #2b3242; padding:6px 8px; text-align:left; }
+      th { background:#121521; }
+      .chip { display:inline-block; padding:2px 6px; border-radius:999px; background:#151a28; border:1px solid #2b3242; color:#c9d3e7; font-size:11px; }
+      .muted { color: var(--muted); }
+      .badge-ok { background:#123b24; color:#9ae6b4; border-color:#1f5b37; }
+      .badge-warn { background:#3b2a12; color:#f7d794; border-color:#5b3a1f; }
+      .badge-err { background:#3b1412; color:#f5b7b1; border-color:#5b201f; }
+      .sim { background:#0f2e1b; color:#8ae99b; }
+      .tra { background:#2e0f0f; color:#f0a5a5; }
+      .ident { background:#1b1b1b; color:#c0c0c0; }
+      .cols { display:grid; grid-template-columns:repeat(3, minmax(260px, 1fr)); gap:12px; }
+      canvas { max-width:100%; background:#0e1117; border:1px solid #2b3242; border-radius:6px; }
+      .small { font-size:12px; }
+      .nowrap { white-space:nowrap; }
+    </style>
+    <script>
+      // Lightweight loader: try CDN; if blocked, allow manual local path swap below.
+      (function loadTesseract() {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/tesseract.js@5/dist/tesseract.min.js';
+        script.defer = true;
+        script.onerror = () => {
+          console.warn('CDN load failed. If you have a local copy, adjust the path below.');
+        };
+        document.head.appendChild(script);
+      })();
+      // Optional local fallback (uncomment and adjust if needed):
+      // <script src="./node_modules/tesseract.js/dist/tesseract.min.js" defer></script>
+    </script>
+  </head>
+  <body>
+    <h1>Bilingual OCR Routing Prototype</h1>
+    <div class="container">
+      <div class="row">
+        <div class="panel" style="flex:1; min-width:280px;">
+          <div id="dropzone" class="dropzone">
+            <div><strong>Drag & drop</strong> image here, or click to choose.</div>
+            <div class="small muted">PNG, JPG recommended · ~1500×2000 works well</div>
+            <input id="fileInput" type="file" accept="image/*" style="display:none;" />
+          </div>
+          <div style="margin-top:12px; display:flex; gap:12px; align-items:center;" class="controls">
+            <button id="btnDetect" disabled>Detect (OSD)</button>
+            <button id="btnOCR" disabled>OCR</button>
+            <button id="btnReset">Reset</button>
+            <label class="small"><input type="checkbox" id="biasToggle" /> Bias toward Simplified (5%)</label>
+            <label class="small">Mode:
+              <select id="modeSelect">
+                <option value="line">Per-Line</option>
+                <option value="paragraph">Per-Paragraph</option>
+              </select>
+            </label>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="progress"><div id="bar" class="bar"></div></div>
+            <div id="status" class="small muted" style="margin-top:6px;">Idle</div>
+          </div>
+          <div style="margin-top:12px;">
+            <canvas id="preview" width="0" height="0"></canvas>
+          </div>
+        </div>
+        <div class="panel" style="flex:1; min-width:260px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>OSD</strong>
+            <span id="osdBadge" class="chip">—</span>
+          </div>
+          <pre id="osdOut" style="margin-top:8px;">(Run Detect to populate)</pre>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="cols">
+          <div>
+            <strong>Final OCR Text</strong>
+            <textarea id="finalText" placeholder="(Run OCR to populate)"></textarea>
+          </div>
+          <div>
+            <strong>Per-Region Analysis</strong>
+            <table id="analysisTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th class="nowrap">BBox [x,y,w,h]</th>
+                  <th>Script</th>
+                  <th>Language</th>
+                  <th>Conf Summary</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div>
+            <strong>Chinese Merge (first 30 symbols)</strong>
+            <table id="cnTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Char</th>
+                  <th>Sim Conf</th>
+                  <th>Tra Conf</th>
+                  <th>Chosen</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Utility: progress handling
+      const $ = (sel) => document.querySelector(sel);
+      const state = {
+        image: null,            // HTMLImageElement
+        canvas: null,           // rotated canvas
+        osd: null,
+        supersetWorker: null,
+        workers: new Map(),     // key => worker
+        mode: 'line',
+        biasSimplified: false,
+      };
+
+      const SCRIPT_TO_LANGUAGES = {
+        Latin: ['eng','deu','fra','spa'],
+        Han: ['chi_sim','chi_tra'],
+        HanS: ['chi_sim','chi_tra'],
+        HanT: ['chi_sim','chi_tra'],
+        Japanese: ['jpn'],
+        Korean: ['kor'],
+        Arabic: ['ara'],
+        Cyrillic: ['rus'],
+      };
+
+      function setStatus(text) { $('#status').textContent = text; }
+      function setBar(pct) { $('#bar').style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+
+      function resetAll() {
+        state.image = null; state.canvas = null; state.osd = null;
+        $('#preview').width = $('#preview').height = 0;
+        $('#osdOut').textContent = '(Run Detect to populate)';
+        $('#osdBadge').textContent = '—';
+        $('#finalText').value = '';
+        $('#analysisTable tbody').innerHTML = '';
+        $('#cnTable tbody').innerHTML = '';
+        setBar(0); setStatus('Idle');
+        $('#btnDetect').disabled = true; $('#btnOCR').disabled = true;
+      }
+
+      function drawImageToCanvas(img, angleDeg = 0) {
+        const cv = $('#preview');
+        const ctx = cv.getContext('2d');
+        const rad = angleDeg * Math.PI / 180;
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const sin = Math.abs(Math.sin(rad)), cos = Math.abs(Math.cos(rad));
+        const bw = Math.floor(w * cos + h * sin);
+        const bh = Math.floor(w * sin + h * cos);
+        cv.width = bw; cv.height = bh;
+        ctx.save();
+        ctx.translate(bw/2, bh/2);
+        ctx.rotate(rad);
+        ctx.drawImage(img, -w/2, -h/2);
+        ctx.restore();
+        state.canvas = cv;
+        return cv;
+      }
+
+      function cropToCanvas(srcCanvas, bbox) {
+        const [x0,y0,x1,y1] = [bbox.x0, bbox.y0, bbox.x1, bbox.y1];
+        const w = Math.max(1, x1 - x0);
+        const h = Math.max(1, y1 - y0);
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d');
+        ctx.drawImage(srcCanvas, x0, y0, w, h, 0, 0, w, h);
+        return cv;
+      }
+
+      function bboxFromTess(obj) {
+        const { x0, y0, x1, y1 } = obj.bbox || obj.bbox || {};
+        return { x0, y0, x1, y1 };
+      }
+
+      function bboxToString(bb) {
+        return `[${bb.x0|0},${bb.y0|0},${(bb.x1-bb.x0)|0},${(bb.y1-bb.y0)|0}]`;
+      }
+
+      function majorityScriptFromText(s) {
+        let han=0, latin=0, other=0;
+        for (const ch of s) {
+          const cp = ch.codePointAt(0);
+          if ((cp>=0x4E00 && cp<=0x9FFF) || (cp>=0x3400 && cp<=0x4DBF)) han++;
+          else if ((cp>=0x0041 && cp<=0x007A) || (cp>=0x00C0 && cp<=0x024F)) latin++;
+          else other++;
+        }
+        if (han > latin && han > other) return 'Han';
+        if (latin >= han && latin > other) return 'Latin';
+        return 'Unknown';
+      }
+
+      async function getWorker(langKey, onProgress) {
+        if (state.workers.has(langKey)) return state.workers.get(langKey);
+        const { createWorker } = window.Tesseract;
+        const worker = await createWorker(langKey, 1, { logger: onProgress ? (m) => onProgress(m) : undefined });
+        // Conservative defaults; will be overridden per task
+        await worker.setParameters({ 'classify_enable_learning': '0' });
+        state.workers.set(langKey, worker);
+        return worker;
+      }
+
+      async function getSupersetWorker(onProgress) {
+        if (state.supersetWorker) return state.supersetWorker;
+        const { createWorker } = window.Tesseract;
+        const worker = await createWorker('eng+chi_sim+chi_tra', 1, { logger: onProgress ? (m) => onProgress(m) : undefined });
+        await worker.setParameters({ 'classify_enable_learning': '0' });
+        state.supersetWorker = worker;
+        return worker;
+      }
+
+      function clearWorkers() {
+        // Do not terminate to allow reuse during a session; keep simple.
+      }
+
+      async function runOSD() {
+        if (!window.Tesseract) { alert('Tesseract not loaded yet.'); return; }
+        if (!state.image) { alert('Please load an image.'); return; }
+        setStatus('Running OSD...'); setBar(5);
+        const t0 = performance.now();
+        const osd = await window.Tesseract.detect(state.image);
+        const t1 = performance.now();
+        state.osd = osd;
+        $('#osdOut').textContent = JSON.stringify(osd, null, 2);
+        const angle = (osd?.data?.orientation?.degrees || 0);
+        const script = (osd?.data?.script || 'Unknown');
+        $('#osdBadge').textContent = `${script} · ${angle}° · ${(t1-t0|0)}ms`;
+        drawImageToCanvas(state.image, angle);
+        setStatus('OSD complete'); setBar(20);
+      }
+
+      function collectRegions(layout, mode) {
+        const regions = [];
+        if (mode === 'paragraph' && layout.paragraphs && layout.paragraphs.length) {
+          layout.paragraphs.forEach((p, idx) => {
+            regions.push({ idx, kind: 'paragraph', bbox: bboxFromTess(p), ref: p });
+          });
+        } else if (layout.lines && layout.lines.length) {
+          layout.lines.forEach((ln, idx) => {
+            regions.push({ idx, kind: 'line', bbox: bboxFromTess(ln), ref: ln });
+          });
+        }
+        // Basic reading-order sort by y, then x
+        regions.sort((a,b) => (a.bbox.y0 - b.bbox.y0) || (a.bbox.x0 - b.bbox.x0));
+        return regions;
+      }
+
+      async function detectScriptForRegion(cropCanvas) {
+        try {
+          const osd = await window.Tesseract.detect(cropCanvas);
+          const script = osd?.data?.script || 'Unknown';
+          const conf = osd?.data?.confidence ?? 0;
+          if (!script || conf < 0.4) return { script: 'Unknown', conf: conf || 0 };
+          return { script, conf };
+        } catch (e) {
+          return { script: 'Unknown', conf: 0 };
+        }
+      }
+
+      async function quickHeuristicScript(cropCanvas) {
+        try {
+          const worker = await getSupersetWorker();
+          await worker.setParameters({ tessedit_pageseg_mode: state.mode === 'line' ? '7' : '6' });
+          const { data } = await worker.recognize(cropCanvas);
+          const s = (data && data.text) ? data.text : '';
+          const m = majorityScriptFromText(s);
+          return { script: m, conf: 0.5, text: s };
+        } catch (e) {
+          return { script: 'Unknown', conf: 0, text: '' };
+        }
+      }
+
+      function mapScriptToLangs(script) {
+        if (!script) return ['eng'];
+        if (SCRIPT_TO_LANGUAGES[script]) return SCRIPT_TO_LANGUAGES[script];
+        return ['eng'];
+      }
+
+      function isChineseLangs(langs) {
+        return langs.includes('chi_sim') || langs.includes('chi_tra');
+      }
+
+      async function recognizeWith(workerKey, canvas, psm) {
+        const worker = await getWorker(workerKey, (m) => {
+          if (m.status === 'recognizing text' && m.progress) {
+            setStatus(`OCR ${workerKey}: ${(m.progress*100).toFixed(0)}%`);
+          }
+        });
+        await worker.setParameters({ tessedit_pageseg_mode: String(psm) });
+        return worker.recognize(canvas);
+      }
+
+      function mergeChineseBySymbol(simData, traData, biasSimplified) {
+        const simSyms = (simData?.data?.symbols) || [];
+        const traSyms = (traData?.data?.symbols) || [];
+        const n = Math.min(simSyms.length, traSyms.length);
+        let mergedText = '';
+        const sample = [];
+        let cntSim=0, cntTra=0, cntIdent=0;
+        for (let i=0;i<n;i++) {
+          const s = simSyms[i];
+          const t = traSyms[i];
+          const chS = s.text || '';
+          const chT = t.text || '';
+          const confS = Number.isFinite(s.confidence) ? s.confidence : 0;
+          const confT = Number.isFinite(t.confidence) ? t.confidence : 0;
+          const adjS = biasSimplified ? confS * 1.05 : confS;
+          const adjT = confT;
+          let chosen = chS;
+          let source = 'Simplified';
+          if (chS === chT) { chosen = chS; source = 'Identical'; cntIdent++; }
+          else if (adjT > adjS) { chosen = chT; source = 'Traditional'; cntTra++; }
+          else { cntSim++; }
+          mergedText += chosen;
+          if (sample.length < 30) {
+            sample.push({ idx:i, ch: chosen, sim: confS.toFixed(1), tra: confT.toFixed(1), src: source });
+          }
+        }
+        // Preserve whitespace and line breaks from sim text length as a heuristic
+        const simText = simData?.data?.text || '';
+        // If there are clear line breaks and our merged string lacks them, insert based on simText
+        // Simple approach: if lengths are close, borrow whitespace from simText
+        if (Math.abs(simText.length - mergedText.length) <= Math.round(0.1 * (simText.length+1))) {
+          const out = [];
+          let j=0;
+          for (let i=0;i<simText.length && j<mergedText.length;i++) {
+            const ch = simText[i];
+            if (/\s/.test(ch)) out.push(ch);
+            else { out.push(mergedText[j]); j++; }
+          }
+          mergedText = out.join('');
+        }
+        const stats = { total:n, simplified:cntSim, traditional:cntTra, identical:cntIdent };
+        return { text: mergedText, stats, sample };
+      }
+
+      async function runOCR() {
+        if (!state.canvas) { alert('Run Detect first to orient the image.'); return; }
+        setStatus('Preparing segmentation...'); setBar(25);
+        const sup = await getSupersetWorker((m) => {
+          if (m.status && m.progress) setStatus(`Segmenting: ${m.status} ${(m.progress*100).toFixed(0)}%`);
+        });
+        await sup.setParameters({ tessedit_pageseg_mode: state.mode === 'line' ? '6' : '3' });
+        const seg = await sup.recognize(state.canvas);
+        const layout = seg?.data || {};
+        const regions = collectRegions(layout, state.mode);
+        if (!regions.length) { setStatus('No regions found'); return; }
+
+        setStatus(`Found ${regions.length} regions. Routing...`); setBar(35);
+        const finalParts = [];
+        const analysisRows = [];
+        const cnSamples = [];
+        let idx = 0;
+        for (const region of regions) {
+          idx++;
+          setStatus(`Region ${idx}/${regions.length}: detect script`);
+          const crop = cropToCanvas(state.canvas, region.bbox);
+          let det = await detectScriptForRegion(crop);
+          if (det.script === 'Unknown' || det.conf < 0.4) {
+            const heur = await quickHeuristicScript(crop);
+            if (heur.script !== 'Unknown') det = heur;
+          }
+          const langs = mapScriptToLangs(det.script);
+          let text = '';
+          let confSummary = '';
+          if (isChineseLangs(langs)) {
+            setStatus(`Region ${idx}: Chinese dual-run`);
+            const psm = state.mode === 'line' ? 7 : 6;
+            const [sim, tra] = await Promise.all([
+              recognizeWith('chi_sim', crop, psm),
+              recognizeWith('chi_tra', crop, psm),
+            ]);
+            const merged = mergeChineseBySymbol(sim, tra, state.biasSimplified);
+            text = merged.text;
+            confSummary = `CN symbols: ${merged.stats.total}; sim ${merged.stats.simplified}, tra ${merged.stats.traditional}, ident ${merged.stats.identical}`;
+            cnSamples.push(...merged.sample);
+          } else {
+            setStatus(`Region ${idx}: OCR (${langs[0] || 'eng'})`);
+            const key = (langs && langs.length) ? langs[0] : 'eng';
+            const psm = state.mode === 'line' ? 7 : 6;
+            const { data } = await recognizeWith(key, crop, psm);
+            text = data?.text || '';
+            const avg = Array.isArray(data?.words) && data.words.length ?
+              (data.words.reduce((a,w)=>a+(w.confidence||0),0) / data.words.length).toFixed(1) : '—';
+            confSummary = `avg word conf: ${avg}`;
+          }
+          finalParts.push(text.trim());
+          analysisRows.push({ idx: region.idx, bbox: region.bbox, script: det.script, langs: langs.join('+'), conf: confSummary });
+          setBar(35 + Math.round(60 * (idx/regions.length)));
+        }
+
+        $('#finalText').value = finalParts.join('\n');
+        const tb = $('#analysisTable tbody');
+        tb.innerHTML = '';
+        for (let i=0;i<analysisRows.length;i++) {
+          const r = analysisRows[i];
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${i+1}</td>
+            <td class="small">${bboxToString(r.bbox)}</td>
+            <td>${r.script}</td>
+            <td><span class="chip">${r.langs}</span></td>
+            <td class="small">${r.conf}</td>
+          `;
+          tb.appendChild(tr);
+        }
+
+        const ctb = $('#cnTable tbody');
+        ctb.innerHTML = '';
+        cnSamples.forEach((s) => {
+          const tr = document.createElement('tr');
+          let cls = 'ident';
+          if (s.src === 'Simplified') cls = 'sim';
+          else if (s.src === 'Traditional') cls = 'tra';
+          tr.innerHTML = `
+            <td>${s.idx+1}</td>
+            <td class="${cls}">${s.ch}</td>
+            <td>${s.sim}</td>
+            <td>${s.tra}</td>
+            <td>${s.src}</td>
+          `;
+          ctb.appendChild(tr);
+        });
+
+        setStatus('Done'); setBar(100);
+      }
+
+      function setupUI() {
+        const dz = $('#dropzone');
+        const fi = $('#fileInput');
+        dz.addEventListener('click', () => fi.click());
+        dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+        dz.addEventListener('drop', (e) => {
+          e.preventDefault(); dz.classList.remove('drag');
+          const f = e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) loadImageFile(f);
+        });
+        fi.addEventListener('change', (e) => {
+          const f = e.target.files && e.target.files[0];
+          if (f) loadImageFile(f);
+        });
+        $('#btnDetect').addEventListener('click', runOSD);
+        $('#btnOCR').addEventListener('click', runOCR);
+        $('#btnReset').addEventListener('click', () => { resetAll(); clearWorkers(); });
+        $('#modeSelect').addEventListener('change', (e) => { state.mode = e.target.value; });
+        $('#biasToggle').addEventListener('change', (e) => { state.biasSimplified = !!e.target.checked; });
+      }
+
+      function loadImageFile(file) {
+        resetAll();
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          state.image = img;
+          drawImageToCanvas(img, 0);
+          $('#btnDetect').disabled = false; $('#btnOCR').disabled = false; // allow OCR without OSD if desired
+          setStatus('Image loaded'); setBar(10);
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = () => { alert('Failed to load image'); URL.revokeObjectURL(url); };
+        img.src = url;
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        setupUI();
+        setStatus('Ready');
+      });
+    </script>
+  </body>
+  </html>
+

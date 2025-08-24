@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "name": "fetch",
+      "type": "STDIO",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-fetch"
+      ],
+      "disabled": false,
+      "description": "MCP server for web content fetching"
+    },
+    "context7": {
+      "name": "context7",
+      "type": "STDIO", 
+      "command": "npx",
+      "args": [
+        "-y",
+        "context7"
+      ],
+      "disabled": false,
+      "description": "Context management server"
+    },
+    "playwright": {
+      "name": "playwright",
+      "type": "STDIO",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@executeautomation/playwright-mcp-server"
+      ],
+      "disabled": false,
+      "description": "Playwright automation server"
+    }
+  }
+}
