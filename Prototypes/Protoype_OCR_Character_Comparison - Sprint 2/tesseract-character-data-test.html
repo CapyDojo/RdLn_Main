@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesseract.js Character Data Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <h1>Tesseract.js Character Data Test</h1>
+    <input type="file" id="fileInput" accept="image/*">
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            if (e.target.files.length) {
+                const file = e.target.files[0];
+                const image = new Image();
+                const reader = new FileReader();
+                
+                reader.onload = async (event) => {
+                    image.onload = async () => {
+                        try {
+                            // Test with blocks output enabled
+                            const worker = await Tesseract.createWorker(['eng']);
+                            await worker.setParameters({
+                                classify_enable_learning: '0'
+                            });
+                            
+                            const result = await worker.recognize(image, {}, { 
+                                blocks: true 
+                            });
+                            
+                            console.log('Full result structure:', Object.keys(result.data));
+                            
+                            // Check if blocks data is available
+                            if (result.data.blocks && result.data.blocks.length > 0) {
+                                const firstBlock = result.data.blocks[0];
+                                console.log('First block structure:', Object.keys(firstBlock));
+                                
+                                if (firstBlock.paragraphs && firstBlock.paragraphs.length > 0) {
+                                    const firstParagraph = firstBlock.paragraphs[0];
+                                    console.log('First paragraph structure:', Object.keys(firstParagraph));
+                                    
+                                    if (firstParagraph.lines && firstParagraph.lines.length > 0) {
+                                        const firstLine = firstParagraph.lines[0];
+                                        console.log('First line structure:', Object.keys(firstLine));
+                                        
+                                        if (firstLine.words && firstLine.words.length > 0) {
+                                            const firstWord = firstLine.words[0];
+                                            console.log('First word structure:', Object.keys(firstWord));
+                                            
+                                            if (firstWord.symbols) {
+                                                console.log('Symbols (characters) in first word:', firstWord.symbols);
+                                                document.getElementById('results').innerHTML = `
+                                                    <h2>Character Data Found!</h2>
+                                                    <p>First character: ${JSON.stringify(firstWord.symbols[0], null, 2)}</p>
+                                                    <pre>${JSON.stringify(firstWord.symbols, null, 2)}</pre>
+                                                `;
+                                            } else {
+                                                document.getElementById('results').innerHTML = '<p>No character (symbol) data found in word structure</p>';
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                document.getElementById('results').innerHTML = '<p>No blocks data found. Try enabling blocks output.</p>';
+                            }
+                            
+                            await worker.terminate();
+                        } catch (error) {
+                            console.error('Error:', error);
+                            document.getElementById('results').innerHTML = `<p>Error: ${error.message}</p>`;
+                        }
+                    };
+                    image.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>
