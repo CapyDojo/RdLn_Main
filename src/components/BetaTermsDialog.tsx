@@ -152,7 +152,7 @@ export const BetaTermsDialog: React.FC<BetaTermsDialogProps> = ({ isOpen, onClos
           <div>
             <h3 className="font-medium mb-2">4. ANALYTICS & DATA COLLECTION</h3>
             <p className="text-xs leading-relaxed opacity-90">
-              To improve the software, we collect anonymous usage data including:
+              To improve the software, we collect usage data including:
             </p>
             <ul className="text-xs leading-relaxed opacity-90 ml-4 mt-1 space-y-1">
               <li>• Feature usage (e.g., quick compare, scroll lock)</li>
@@ -160,9 +160,18 @@ export const BetaTermsDialog: React.FC<BetaTermsDialogProps> = ({ isOpen, onClos
               <li>• Performance metrics (processing times, errors)</li>
               <li>• UI interactions (theme changes, navigation)</li>
             </ul>
-            <p className="text-xs leading-relaxed opacity-90 mt-2">
+            <p class="text-xs leading-relaxed opacity-90 mt-2">
               We do <strong>NOT</strong> collect document content, personal information, or file names. 
-              All data is anonymized and used solely to improve the software experience.
+              Data is collected through PostHog analytics with privacy-focused settings enabled:
+            </p>
+            <ul class="text-xs leading-relaxed opacity-90 ml-4 mt-1 space-y-1">
+              <li>• Text masking enabled (hides sensitive content)</li>
+              <li>• Element attribute masking enabled</li>
+              <li>• Session recordings mask all inputs and text</li>
+              <li>• No autocapture of sensitive elements</li>
+            </ul>
+            <p class="text-xs leading-relaxed opacity-90 mt-2">
+              Data is used solely to improve the software experience and is retained according to PostHog's data retention policies.
             </p>
           </div>
 
