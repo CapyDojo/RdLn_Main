@@ -13,8 +13,8 @@ export default defineConfig(({ command, mode }) => {
     plugins: [react()],
     define: {
       'process.env.NODE_ENV': JSON.stringify(env.NODE_ENV || mode || 'development'),
-      'process.env.REACT_APP_POSTHOG_API_KEY': JSON.stringify(env.REACT_APP_POSTHOG_API_KEY || env.POSTHOG_KEY),
-      'process.env.REACT_APP_POSTHOG_HOST': JSON.stringify(env.REACT_APP_POSTHOG_HOST || env.POSTHOG_HOST),
+      'process.env.REACT_APP_POSTHOG_API_KEY': JSON.stringify(env.REACT_APP_POSTHOG_API_KEY || env.POSTHOG_KEY || ''),
+      'process.env.REACT_APP_POSTHOG_HOST': JSON.stringify(env.REACT_APP_POSTHOG_HOST || env.POSTHOG_HOST || ''),
     },
     optimizeDeps: {
       exclude: ['lucide-react'],
