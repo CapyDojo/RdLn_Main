@@ -41,7 +41,11 @@ export const ScrollLockProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [isScrollLocked]);
 
   const toggleScrollLock = () => {
-    setIsScrollLocked(prev => !prev);
+    const newValue = !isScrollLocked;
+    setIsScrollLocked(newValue);
+    
+    // Track feature usage
+    trackEvent.featureUsed('scroll_lock', { enabled: newValue });
   };
 
   const setScrollLock = (enabled: boolean) => {

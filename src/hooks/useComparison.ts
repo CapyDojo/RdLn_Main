@@ -922,6 +922,9 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
     setQuickCompareEnabled(newValue);
     localStorage.setItem('rdln-auto-compare-enabled', newValue.toString());
     
+    // Track feature usage
+    trackEvent.featureUsed('quick_compare', { enabled: newValue });
+    
     // 🚀 INSTANT DOPAMINE HIT: If enabling live compare and both panels have content, run comparison immediately
     if (newValue && state.originalText.trim() && state.revisedText.trim()) {
       // Live compare enabled with content - triggering instant comparison

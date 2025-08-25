@@ -150,6 +150,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
     try {
       const extractedText = await performanceTracker.trackOperation('ocr_extraction', async () => {
+        // Track OCR start
+        trackEvent.ocrStarted('auto', 0); // Confidence is unknown at start
         return await extractTextFromImage(imageFile);
       });
 
@@ -192,6 +194,9 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         userMessage: userFriendlyMessage,
         instanceId: instanceId.current
       });
+      
+      // Track OCR failure
+      trackEvent.ocrFailed('auto', errorMessage);
     }
   }, [performanceTracker, extractTextFromImage, value, onChange]);
 
@@ -451,6 +456,15 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       detectedSource: pasteContext.detectedSource
     });
 
+    // Track document upload via paste
+    if (imageItem) {
+      trackEvent.documentUpload('paste', 'image');
+    } else if (docxFileItem) {
+      trackEvent.documentUpload('paste', 'docx');
+    } else if (textItem) {
+      trackEvent.documentUpload('paste', 'text');
+    }
+
     // Process DOCX file if present
     if (docxFileItem) {
       e.preventDefault();
@@ -591,6 +605,13 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       hasImage: !!imageFile,
       hasDocx: !!docxFile
     });
+
+    // Track document upload
+    if (imageFile) {
+      trackEvent.documentUpload('drag_drop', imageFile.type);
+    } else if (docxFile) {
+      trackEvent.documentUpload('drag_drop', 'docx');
+    }
 
     // Process DOCX file if present
     if (docxFile) {
