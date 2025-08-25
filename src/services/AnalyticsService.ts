@@ -58,18 +58,58 @@ class AnalyticsService {
           console.log('📊 Analytics: PostHog initialized successfully');
           this.initialized = true;
         },
-        // Privacy-focused settings for professional tool
+        // Enhanced privacy-focused settings for professional document tool
         mask_all_element_attributes: true,
         mask_all_text: true,
         opt_out_capturing_by_default: false,
         autocapture: config.captureClicks ?? false, // Be selective about autocapture
+        // Advanced session recording privacy controls
+        disable_session_recording: false, // Keep session recording enabled but heavily masked
         session_recording: {
           maskAllInputs: true,
           maskInputOptions: {
             password: true,
             email: true,
-            'data-sensitive': true
+            tel: true,
+            text: true,
+            number: true,
+            checkbox: true,
+            radio: true,
+            select: true
+          },
+          // Additional masking for sensitive elements
+          mask: [
+            // Mask all document content areas
+            '[data-testid="original-text-content"]',
+            '[data-testid="revised-text-content"]',
+            '[data-testid="comparison-result"]',
+            '[data-testid="diff-content"]',
+            '[data-testid="redline-output"]',
+            // Mask text areas and inputs that might contain document content
+            'textarea',
+            'input[type="text"]',
+            'input[type="search"]',
+            // Mask any elements with sensitive data attributes
+            '[data-sensitive]',
+            '[data-private]'
+          ],
+          // Ensure canvas and media are not recorded
+          recordCanvas: false,
+          recordCrossOriginIframes: false
+        },
+        // Network capture privacy
+        mask_network_captures: true,
+        mask_web_socket_captures: true,
+        // Performance and advanced privacy
+        capture_performance_timing: false, // Disable performance timing to reduce data collection
+        // Custom masking functions for additional protection
+        mask_captured_text_fn: (text) => {
+          // Additional text masking as a safety layer
+          if (text && typeof text === 'string') {
+            // Don't mask already masked content, but add extra protection
+            return text.replace(/\S/g, '*'); // Heavy masking for any captured text
           }
+          return text;
         }
       });
     } catch (error) {
