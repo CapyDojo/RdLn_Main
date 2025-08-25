@@ -14,6 +14,7 @@ import { analyzePasteContext, getFormattingLevel } from '../utils/pastePDFdetect
 import { useFontSize } from '../contexts/FontSizeContext';
 import { FileProcessingService } from '../services/FileProcessingService';
 import { ProcessingResult, ProcessingError } from '../types/file-processing.types';
+import { trackEvent } from '../services/AnalyticsService';
 
 // Tauri-specific helpers removed (unused)
 
