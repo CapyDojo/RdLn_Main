@@ -1,5 +1,5 @@
 [build]
-  command = "npm install && npm run build:web"
+  command = "npm install --include=dev && npm run build:web"
   publish = "dist"
   environment = { NODE_VERSION = "20" }
 
