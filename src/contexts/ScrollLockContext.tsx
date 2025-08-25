@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { trackEvent } from '../services/AnalyticsService';
 
 interface ScrollLockContextType {
   isScrollLocked: boolean;
