@@ -30,6 +30,14 @@ class AnalyticsService {
   initialize(config: AnalyticsConfig): void {
     this.config = config;
     
+    console.log('📊 Analytics: Initializing with config:', {
+      apiKey: config.apiKey ? 'KEY_PRESENT' : 'MISSING',
+      apiHost: config.apiHost,
+      enableInDevelopment: config.enableInDevelopment,
+      capturePageviews: config.capturePageviews,
+      captureClicks: config.captureClicks
+    });
+    
     // Don't initialize in development unless explicitly enabled
     const isDevelopment = typeof process !== 'undefined' 
       ? process.env.NODE_ENV === 'development' 
@@ -42,7 +50,7 @@ class AnalyticsService {
 
     try {
       posthog.init(config.apiKey, {
-        api_host: config.apiHost || 'https://us.i.posthog.com',
+        api_host: config.apiHost || 'https://us.posthog.com',
         person_profiles: 'identified_only', // Only create profiles for identified users
         capture_pageview: config.capturePageviews ?? true,
         capture_pageleave: true, // Track when users leave pages

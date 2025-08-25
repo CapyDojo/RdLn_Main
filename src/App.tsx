@@ -363,12 +363,20 @@ function App() {
                            'your-posthog-api-key';
     const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 
                         (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_HOST) || 
-                        'https://us.i.posthog.com';
+                        'https://us.posthog.com';
     const NODE_ENV = (typeof process !== 'undefined' && process.env?.NODE_ENV) || 'development';
     
     if (POSTHOG_API_KEY && POSTHOG_API_KEY !== 'your-posthog-api-key') {
       // Only initialize if not already initialized (handles React Strict Mode)
       if (!analyticsService.isInitialized()) {
+        console.log('📊 Analytics: Initializing PostHog with:', {
+          apiKey: POSTHOG_API_KEY ? 'KEY_PRESENT' : 'MISSING',
+          apiHost: POSTHOG_HOST,
+          enableInDevelopment: false,
+          capturePageviews: true,
+          captureClicks: false
+        });
+        
         analyticsService.initialize({
           apiKey: POSTHOG_API_KEY,
           apiHost: POSTHOG_HOST,
@@ -379,16 +387,18 @@ function App() {
 
         // Track initial app load with delay to ensure initialization is complete
         setTimeout(() => {
+          console.log('📊 Analytics: Sending app_loaded event');
           analyticsService.track('app_loaded', {
             version: '0.5.15',
             environment: NODE_ENV
           });
           // Send a test event to verify events are being captured
+          console.log('📊 Analytics: Sending test_event');
           analyticsService.track('test_event', {
             timestamp: new Date().toISOString(),
             userAgent: navigator.userAgent
           });
-        }, 100);
+        }, 1000); // Increased delay to 1000ms to ensure initialization is complete
       }
     } else {
       // PostHog not configured - analytics disabled
