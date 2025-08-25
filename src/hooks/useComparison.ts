@@ -11,6 +11,7 @@ import {
 } from '../utils/errorHandling';
 import { usePerformanceMonitor } from './usePerformanceMonitor';
 import { PerformanceMonitor } from '../services/PerformanceMonitor';
+import { trackEvent } from '../services/AnalyticsService';
 
 // System resource guardrails to prevent browser crashes
 const checkSystemResources = (originalText: string, revisedText: string) => {
@@ -351,6 +352,9 @@ console.warn('⚠️ Auto-compare blocked - manual operation in progress');
     });
 
     try {
+      // Track comparison start
+      trackEvent.documentComparison('text', undefined);
+      
       // Add small delay to show processing state
       // Shorter delay for auto-compare to feel more responsive
       await new Promise(resolve => setTimeout(resolve, isAutoCompare ? 50 : 100));
@@ -520,6 +524,11 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
           result,
           isProcessing: false
         };
+        
+        // Track successful comparison completion
+        const endTime = Date.now();
+        const processingTime = endTime - parseInt(operationId.split('_')[1]);
+        trackEvent.documentComparison('text', processingTime);
         
         // console.log('🔍 New state being returned:', {
         //   hasResult: !!newState.result,

@@ -21,6 +21,7 @@ import { OCRRouter } from './OCRRouter';
 import { ImagePreprocessingService } from './ocr/utils/ImagePreprocessingService';
 import { DEV_CONFIG } from '../config/appConfig';
 import { OCRErrorDetection, OCRErrorHandler, OCRErrorUtils } from '../utils/ocrErrorHandling';
+import { trackEvent } from './AnalyticsService';
 
 // Note: Re-exports removed to avoid module resolution conflicts
 
@@ -273,6 +274,12 @@ export class OCRService {
     imageFile: File | Blob,
     options: OCROptions = {}
   ): Promise<string> {
+    const startTime = Date.now();
+    const detectedLanguage = options.language || 'auto';
+    
+    // Track OCR start
+    trackEvent.ocrStarted(detectedLanguage);
+    
     // Inverted logic: OCROrchestrator is now the default
     // The legacy path is used only if useOrchestrator is explicitly false
     if (options.useOrchestrator === false) {
@@ -297,9 +304,22 @@ export class OCRService {
         },
       };
       const result = await OCROrchestrator.extractText(imageFile, orchestrationOptions);
+      
+      // Track successful OCR completion
+      const processingTime = Date.now() - startTime;
+      const detectedLanguage = options.language || 'auto';
+      trackEvent.ocrCompleted(detectedLanguage, processingTime, result.text.split(' ').length);
+      
       return result.text;
     } catch (error) {
       console.warn('⚠️ Orchestrator failed, falling back to legacy OCR:', error);
+      
+      // Track OCR orchestrator failure (not the final failure)
+      trackEvent.errorOccurred('ocr_orchestrator_fallback', error instanceof Error ? error.message : String(error), {
+        language: detectedLanguage,
+        fallback_used: true
+      });
+      
       return this.extractTextFromImageUnifiedWorker(imageFile, options);
     }
   }

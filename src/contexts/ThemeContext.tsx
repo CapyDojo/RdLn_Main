@@ -3,6 +3,7 @@ import { ThemeName, ThemeConfig } from '../types/theme';
 import { themeDefinitions } from '../themes';
 import { generateAllThemeVariables, applyCSSVariables } from '../themes/utils/cssVariables';
 import { getThemeFromStorage } from '../themes/utils/validation';
+import { trackEvent } from '../services/AnalyticsService';
 
 interface ThemeContextType {
   currentTheme: ThemeName;
@@ -108,6 +109,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   }, [currentTheme]);
 
   const setTheme = (theme: ThemeName) => {
+    // Track theme change
+    trackEvent.themeChanged(theme);
+    
     setCurrentTheme(theme);
     localStorage.setItem('rdln-theme', theme);
   };

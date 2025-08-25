@@ -16,6 +16,7 @@ import { AlertCircle } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
 import { useUndoHistory } from '../hooks/useUndoHistory';
 import { useRdLnMemoryContext } from '../contexts/RdLnMemoryContext';
+import { trackEvent } from '../services/AnalyticsService';
 import { RedlineOutput } from './RedlineOutput';
 import { ProcessingDisplay } from './ProcessingDisplay';
 import { OutputLayout } from './OutputLayout';

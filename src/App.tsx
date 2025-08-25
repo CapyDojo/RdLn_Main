@@ -23,6 +23,7 @@ import { LayoutProvider } from './contexts/LayoutContext';
 import { ExperimentalLayoutProvider, useExperimentalFeatures } from './contexts/ExperimentalLayoutContext';
 import { ScrollLockProvider } from './contexts/ScrollLockContext';
 import { OCRService } from './services/OCRService';
+import { analyticsService, trackEvent } from './services/AnalyticsService';
 import { LogoTestPage } from './pages/LogoTestPage';
 import { CuppingTestPage } from './pages/CuppingTestPage';
 import { DeveloperDashboard } from './pages/DeveloperDashboard';
@@ -164,11 +165,13 @@ function AppContent({
   // Onboarding tour handlers
   const handleTourComplete = (tourId: string, duration: number) => {
     console.log(`✅ Tour completed: ${tourId} in ${duration}ms`);
+    trackEvent.tourCompleted(duration);
     setShowTourRestart(true);
   };
 
   const handleTourSkip = (tourId: string, stepNumber: number) => {
     console.log(`⏭️ Tour skipped: ${tourId} at step ${stepNumber}`);
+    trackEvent.tourSkipped(stepNumber);
     setShowTourRestart(true);
   };
 
@@ -184,6 +187,9 @@ function AppContent({
   };
 
   const handleStartTour = () => {
+    // Track tour start
+    trackEvent.tourStarted();
+    
     // Reset tour completion status and start fresh
     localStorage.removeItem('tour-rdln-welcome-tour-completed');
     localStorage.removeItem('tour-rdln-welcome-tour-skipped');
@@ -347,6 +353,36 @@ function App() {
   // State for developer mode toggles with localStorage persistence
   const [showAdvancedOcrCardState, setShowAdvancedOcrCardState] = useState(false);
   const [showPerformanceDemoCardState, setShowPerformanceDemoCardState] = useState(false);
+
+  // Initialize analytics on app start
+  useEffect(() => {
+    // Initialize PostHog analytics
+    // You'll need to replace 'your-posthog-api-key' with your actual PostHog project API key
+    const POSTHOG_API_KEY = process.env.REACT_APP_POSTHOG_API_KEY || 'your-posthog-api-key';
+    
+    if (POSTHOG_API_KEY && POSTHOG_API_KEY !== 'your-posthog-api-key') {
+      analyticsService.initialize({
+        apiKey: POSTHOG_API_KEY,
+        apiHost: process.env.REACT_APP_POSTHOG_HOST || 'https://us.i.posthog.com',
+        enableInDevelopment: process.env.NODE_ENV === 'development',
+        capturePageviews: true,
+        captureClicks: false // Privacy-focused: only track explicit events
+      });
+
+      // Track initial app load
+      analyticsService.track('app_loaded', {
+        version: '0.5.15',
+        environment: process.env.NODE_ENV
+      });
+    } else {
+      console.log('📊 Analytics: PostHog API key not configured');
+    }
+
+    // Cleanup on unmount
+    return () => {
+      analyticsService.shutdown();
+    };
+  }, []);
 
   // Load states from localStorage on initial render
   useEffect(() => {
