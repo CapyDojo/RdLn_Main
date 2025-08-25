@@ -53,10 +53,13 @@ nul
 mcp.log
 
 # Serena cache
-.serena/"# Claude settings"  
-".claude/" 
-"# Serena cache"  
-".serena/" 
-""  
-"# Test/prototype HTML files"  
-"test-osd-first-principles.html" 
+.serena/
+
+# Claude settings
+.claude/
+
+# Test/prototype HTML files
+test-osd-first-principles.html 
+
+# Local Netlify folder
+.netlify

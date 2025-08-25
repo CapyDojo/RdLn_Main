@@ -51,8 +51,6 @@ To further improve the user experience, the `detectionWorker` can be created in 
 
 This modular and performance-focused design makes the OCR system both powerful and efficient.
 
-
-
 1. The Initial Result is a Simple Array: The detectLanguage method itself returns a straightforward array of strings, like ['eng', 'jpn']. The order in this initial array is determined by Tesseract and
     isn't guaranteed to have any special meaning.
    
@@ -80,10 +78,6 @@ This modular and performance-focused design makes the OCR system both powerful a
    
    So, you are right to think of it as more than just a list. While the data structure is a simple array, it's treated like a priority queue where the order and selection of its items are intelligently
    managed by the system to optimize the final result.
-   
-   
-
-
 
   Let's imagine the user uploads an image containing English, Japanese, and French text.
 
@@ -174,3 +168,37 @@ This modular and performance-focused design makes the OCR system both powerful a
 * For extraction, it's re-ordered based on user input: ['fra', 'eng', 'jpn'].
 
 * For post-processing, a single language is selected from it based on internal logic: 'jpn'.
+
+
+
+The code that defines the list of languages for the detection worker is located in the OCRService.ts file, within the initializeDetectionWorker method.
+
+  Here is the exact code snippet:
+
+  File: src/services/OCRService.ts
+  Method: private static async initializeDetectionWorker()
+
+    1   private static async initializeDetectionWorker(): Promise<TesseractWorker> {
+    2     // Check cache first
+    3     if (this.detectionWorker) {
+    4       this.detectionWorker.lastUsed = Date.now();
+    5       this.detectionWorker.useCount++;
+    6       console.log(`🎯 DETECTION CACHE HIT: Reusing detection worker (used ${this.detectionWorker.useCount} times)`);
+    7       return this.detectionWorker.worker;
+    8     }
+    9 
+
+   10     // RESTORED: Use comprehensive language set for detection to enable proper multi-language detection
+   11     // This includes all the languages we want to support: English, Chinese (both), Spanish, French, German, Japanese, Korean, Arabic, Russian
+   12     const detectionLanguages: OCRLanguage[] = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+   13     console.log('🔄 DETECTION CACHE MISS: Creating new detection worker with full language support:', detectionLanguages);
+   14 
+   15     // Configure paths for offline/Electron mode  
+   16     const detectionConfig: any = {
+   17       logger: this.createLogger()
+   18     };
+
+  The key line is:
+  const detectionLanguages: OCRLanguage[] = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+
+  This array is then used to create the single, powerful Tesseract worker responsible for auto-detection.
