@@ -357,30 +357,47 @@ function App() {
   // Initialize analytics on app start
   useEffect(() => {
     // Initialize PostHog analytics
-    // You'll need to replace 'your-posthog-api-key' with your actual PostHog project API key
-    const POSTHOG_API_KEY = process.env.REACT_APP_POSTHOG_API_KEY || 'your-posthog-api-key';
+    const POSTHOG_API_KEY = (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_API_KEY) || 'your-posthog-api-key';
+    const POSTHOG_HOST = (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_HOST) || 'https://us.i.posthog.com';
+    const NODE_ENV = (typeof process !== 'undefined' && process.env?.NODE_ENV) || 'development';
     
     if (POSTHOG_API_KEY && POSTHOG_API_KEY !== 'your-posthog-api-key') {
-      analyticsService.initialize({
-        apiKey: POSTHOG_API_KEY,
-        apiHost: process.env.REACT_APP_POSTHOG_HOST || 'https://us.i.posthog.com',
-        enableInDevelopment: process.env.NODE_ENV === 'development',
-        capturePageviews: true,
-        captureClicks: false // Privacy-focused: only track explicit events
-      });
+      // Only initialize if not already initialized (handles React Strict Mode)
+      if (!analyticsService.isInitialized()) {
+        analyticsService.initialize({
+          apiKey: POSTHOG_API_KEY,
+          apiHost: POSTHOG_HOST,
+          enableInDevelopment: false, // Disable tracking in development
+          capturePageviews: true,
+          captureClicks: false // Privacy-focused: only track explicit events
+        });
 
-      // Track initial app load
-      analyticsService.track('app_loaded', {
-        version: '0.5.15',
-        environment: process.env.NODE_ENV
-      });
+        // Track initial app load with delay to ensure initialization is complete
+        setTimeout(() => {
+          analyticsService.track('app_loaded', {
+            version: '0.5.15',
+            environment: NODE_ENV
+          });
+        }, 100);
+      }
     } else {
       console.log('📊 Analytics: PostHog API key not configured');
     }
 
-    // Cleanup on unmount
-    return () => {
+    // Set up proper shutdown handler for window close
+    const handleBeforeUnload = () => {
       analyticsService.shutdown();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Don't shut down analytics on unmount in development (React Strict Mode)
+    // Only shut down in production or when the window is actually closing
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (NODE_ENV === 'production') {
+        analyticsService.shutdown();
+      }
     };
   }, []);
 

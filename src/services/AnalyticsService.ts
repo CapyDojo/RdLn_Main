@@ -31,7 +31,11 @@ class AnalyticsService {
     this.config = config;
     
     // Don't initialize in development unless explicitly enabled
-    if (process.env.NODE_ENV === 'development' && !config.enableInDevelopment) {
+    const isDevelopment = typeof process !== 'undefined' 
+      ? process.env.NODE_ENV === 'development' 
+      : window.location.hostname === 'localhost';
+    
+    if (isDevelopment && !config.enableInDevelopment) {
       console.log('📊 Analytics: Disabled in development mode');
       return;
     }
