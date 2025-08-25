@@ -381,7 +381,8 @@ function App() {
         }, 100);
       }
     } else {
-      console.log('📊 Analytics: PostHog API key not configured');
+      // PostHog not configured - analytics disabled
+      console.log('📊 Analytics: Disabled (no API key configured)');
     }
 
     // Set up proper shutdown handler for window close

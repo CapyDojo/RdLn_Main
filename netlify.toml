@@ -1,7 +1,11 @@
 [build]
   command = "npm install --include=dev && npm run build:web"
   publish = "dist"
-  environment = { NODE_VERSION = "20" }
+  environment = { 
+    NODE_VERSION = "20",
+    REACT_APP_POSTHOG_API_KEY = "${REACT_APP_POSTHOG_API_KEY}",
+    REACT_APP_POSTHOG_HOST = "${REACT_APP_POSTHOG_HOST}"
+  }
 
 [[headers]]
   for = "*.wasm"
