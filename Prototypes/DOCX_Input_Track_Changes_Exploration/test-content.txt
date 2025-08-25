@@ -1,0 +1,7 @@
+This is a simple test document for the DOCX processing prototype.
+
+It contains some text that can be used to verify basic text extraction functionality.
+
+The document is in DOCX format and can be used to test the prototype without track changes.
+
+For testing track changes functionality, you'll need to manually add track changes in Microsoft Word.

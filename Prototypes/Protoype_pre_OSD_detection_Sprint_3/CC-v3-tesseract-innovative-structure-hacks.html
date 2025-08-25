@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract Structure Explorer v3 - Innovative Speed Hacks</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+        .hack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .hack-section {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            position: relative;
+        }
+        .hack-section h3 {
+            margin: 0 0 15px 0;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 16px;
+        }
+        .hack-section.osd-only h3 {
+            background-color: #28a745;
+        }
+        .hack-section.scale-hack h3 {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .hack-section.box-only h3 {
+            background-color: #6f42c1;
+        }
+        .hack-section.confidence-hack h3 {
+            background-color: #fd7e14;
+        }
+        .hack-section.minimal-lang h3 {
+            background-color: #dc3545;
+        }
+        .hack-section.standard-eng h3 {
+            background-color: #17a2b8;
+        }
+        .hack-section.scale-25 h3 {
+            background-color: #e91e63;
+        }
+        .hack-section.scale-75 h3 {
+            background-color: #4caf50;
+        }
+        .hack-section.multi-lang h3 {
+            background-color: #673ab7;
+        }
+        .stats {
+            background-color: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .structure-output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+        }
+        .processing {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .complete {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .innovation-note {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-style: italic;
+        }
+        .performance-comparison {
+            grid-column: 1 / -1;
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .performance-comparison h3 {
+            margin: 0 0 15px 0;
+            color: #1976d2;
+            text-align: center;
+        }
+        .speed-ranking {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .speed-rank {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .rank-1 { border-left: 5px solid #ffd700; }
+        .rank-2 { border-left: 5px solid #c0c0c0; }
+        .rank-3 { border-left: 5px solid #cd7f32; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Tesseract Structure Explorer v3 - Innovative Speed Hacks</h1>
+        <p>Testing creative approaches to fast text structure detection with Tesseract</p>
+        
+        <div class="innovation-note">
+            💡 <strong>Innovation Focus:</strong> We're testing 5 different Tesseract "hacks" to get fast structure detection without full OCR overhead. Each approach trades accuracy for speed in different ways.
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>📁 Drop an image here or click to upload</p>
+            <p style="font-size: 14px; color: #666;">Supported formats: JPG, PNG, GIF, BMP</p>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        </div>
+        
+        <div class="controls" style="text-align: center;">
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; margin-right: 10px;">Detection Level:</label>
+                <select id="detectionLevel" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-right: 20px;">
+                    <option value="blocks">📦 Block Level</option>
+                    <option value="paragraphs">📄 Paragraph Level</option>
+                    <option value="lines">📝 Line Level</option>
+                </select>
+            </div>
+            <button class="btn" id="runAllHacks" disabled>⚡ Test All Structure Hacks</button>
+            <button class="btn" id="clearAll" style="background-color: #6c757d;">🗑️ Clear Results</button>
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>📷 Original Image</h3>
+            <img id="previewImage" class="image-preview">
+            <div class="progress-bar hidden" id="overallProgress">
+                <div class="progress-fill" id="overallProgressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hack-grid" id="hackGrid" style="display: none;">
+        
+        <div class="hack-section osd-only" id="osdOnlySection">
+            <h3>🧭 OSD-Only Mode (PSM 0)</h3>
+            <div class="innovation-note" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <strong>Innovation:</strong> Use PSM 0 for orientation/script detection only - skip OCR entirely!
+            </div>
+            <div class="stats" id="osdOnlyStatus">Ready to test...</div>
+            <div class="structure-output" id="osdOnlyOutput"></div>
+        </div>
+
+        <div class="hack-section scale-hack" id="scaleHackSection">
+            <h3>📏 Scale-Down Hack (50%)</h3>
+            <div class="innovation-note" style="background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%); color: #000;">
+                <strong>Innovation:</strong> Process at 50% resolution for 4x speed boost, then scale results up!
+            </div>
+            <div class="stats" id="scaleHackStatus">Ready to test...</div>
+            <div class="structure-output" id="scaleHackOutput"></div>
+        </div>
+
+        <div class="hack-section box-only" id="boxOnlySection">
+            <h3>📦 Box-Only Mode</h3>
+            <div class="innovation-note" style="background: linear-gradient(135deg, #6f42c1 0%, #9c27b0 100%);">
+                <strong>Innovation:</strong> Generate bounding boxes only, skip text extraction completely!
+            </div>
+            <div class="stats" id="boxOnlyStatus">Ready to test...</div>
+            <div class="structure-output" id="boxOnlyOutput"></div>
+        </div>
+
+        <div class="hack-section confidence-hack" id="confidenceHackSection">
+            <h3>🎯 High-Confidence Only</h3>
+            <div class="innovation-note" style="background: linear-gradient(135deg, #fd7e14 0%, #ff8c42 100%);">
+                <strong>Innovation:</strong> Only process high-confidence regions (95%+) to skip uncertain areas!
+            </div>
+            <div class="stats" id="confidenceHackStatus">Ready to test...</div>
+            <div class="structure-output" id="confidenceHackOutput"></div>
+        </div>
+
+        <div class="hack-section minimal-lang" id="minimalLangSection">
+            <h3>🔤 Minimal Language</h3>
+            <div class="innovation-note" style="background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);">
+                <strong>Innovation:</strong> Use smallest possible language model - just digits/punctuation!
+            </div>
+            <div class="stats" id="minimalLangStatus">Ready to test...</div>
+            <div class="structure-output" id="minimalLangOutput"></div>
+        </div>
+
+        <div class="hack-section standard-eng" id="standardEngSection">
+            <h3>🔵 Standard English (v2 Baseline)</h3>
+            <div class="innovation-note" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                <strong>Baseline:</strong> Full English OCR from v2 for comparison - the "traditional" approach!
+            </div>
+            <div class="stats" id="standardEngStatus">Ready to test...</div>
+            <div class="structure-output" id="standardEngOutput"></div>
+        </div>
+
+        <div class="hack-section scale-25" id="scale25Section">
+            <h3>📐 Scale-Down 25%</h3>
+            <div class="innovation-note" style="background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);">
+                <strong>Innovation:</strong> Ultra-low resolution (25%) for maximum speed - 16x pixel reduction!
+            </div>
+            <div class="stats" id="scale25Status">Ready to test...</div>
+            <div class="structure-output" id="scale25Output"></div>
+        </div>
+
+        <div class="hack-section scale-75" id="scale75Section">
+            <h3>📊 Scale-Down 75%</h3>
+            <div class="innovation-note" style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);">
+                <strong>Innovation:</strong> Minimal scale-down (75%) for balanced speed vs accuracy!
+            </div>
+            <div class="stats" id="scale75Status">Ready to test...</div>
+            <div class="structure-output" id="scale75Output"></div>
+        </div>
+
+        <div class="hack-section multi-lang" id="multiLangSection">
+            <h3>🌍 10-Language Detection</h3>
+            <div class="innovation-note" style="background: linear-gradient(135deg, #673ab7 0%, #9c27b0 100%);">
+                <strong>Innovation:</strong> Full multilingual detection worker - comprehensive language support!
+            </div>
+            <div class="stats" id="multiLangStatus">Ready to test...</div>
+            <div class="structure-output" id="multiLangOutput"></div>
+        </div>
+
+    </div>
+
+    <div class="performance-comparison hidden" id="performanceComparison">
+        <h3>🏆 Speed Hack Performance Comparison</h3>
+        <div class="speed-ranking" id="speedRanking"></div>
+        <div style="text-align: center; margin-top: 20px;">
+            <strong>🎯 Recommendation:</strong> <span id="recommendation">Testing in progress...</span>
+        </div>
+    </div>
+
+    <div class="performance-comparison hidden" id="resultsSummary">
+        <h3>📋 Results Summary (Copy & Share)</h3>
+        <div style="background: white; border: 2px solid #007bff; border-radius: 4px; padding: 15px; margin: 10px 0; position: relative;">
+            <button class="btn" onclick="copyToClipboard('summaryText')" style="position: absolute; top: 10px; right: 10px; padding: 5px 10px; font-size: 12px;">📋 Copy</button>
+            <div id="summaryText" style="font-family: monospace; font-size: 12px; white-space: pre-wrap; user-select: text; padding-top: 30px; line-height: 1.4;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentImage = null;
+        let hackResults = {};
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const runAllHacks = document.getElementById('runAllHacks');
+        const clearAll = document.getElementById('clearAll');
+        const detectionLevel = document.getElementById('detectionLevel');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const hackGrid = document.getElementById('hackGrid');
+        const performanceComparison = document.getElementById('performanceComparison');
+        const resultsSummary = document.getElementById('resultsSummary');
+
+        // Upload handling
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        runAllHacks.addEventListener('click', runAllStructureHacks);
+        clearAll.addEventListener('click', clearAllResults);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                loadImage(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                loadImage(e.target.files[0]);
+            }
+        }
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImage = new Image();
+                currentImage.onload = function() {
+                    previewImage.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    runAllHacks.disabled = false;
+                    console.log(`Loaded image: ${currentImage.width}x${currentImage.height}`);
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearAllResults() {
+            imagePreview.classList.add('hidden');
+            hackGrid.style.display = 'none';
+            performanceComparison.classList.add('hidden');
+            resultsSummary.classList.add('hidden');
+            runAllHacks.disabled = true;
+            currentImage = null;
+            hackResults = {};
+            
+            // Reset all status displays
+            ['osdOnlyStatus', 'scaleHackStatus', 'boxOnlyStatus', 'confidenceHackStatus', 'minimalLangStatus', 'standardEngStatus', 'scale25Status', 'scale75Status', 'multiLangStatus'].forEach(id => {
+                document.getElementById(id).innerHTML = 'Ready to test...';
+                document.getElementById(id).className = 'stats';
+            });
+            
+            // Clear all outputs
+            ['osdOnlyOutput', 'scaleHackOutput', 'boxOnlyOutput', 'confidenceHackOutput', 'minimalLangOutput', 'standardEngOutput', 'scale25Output', 'scale75Output', 'multiLangOutput'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+        }
+
+        function getDetectionOptions() {
+            const level = detectionLevel.value;
+            switch(level) {
+                case 'paragraphs':
+                    return { blocks: true, paragraphs: true };
+                case 'lines':
+                    return { blocks: true, paragraphs: true, lines: true };
+                default: // 'blocks'
+                    return { blocks: true };
+            }
+        }
+
+        function getDetectionCount(result) {
+            const level = detectionLevel.value;
+            if (!result.data) return 0;
+            
+            switch(level) {
+                case 'paragraphs':
+                    return result.data.paragraphs ? result.data.paragraphs.length : 0;
+                case 'lines':
+                    return result.data.lines ? result.data.lines.length : 0;
+                default: // 'blocks'
+                    return result.data.blocks ? result.data.blocks.length : 0;
+            }
+        }
+
+        function getDetectionLevelLabel() {
+            const level = detectionLevel.value;
+            switch(level) {
+                case 'paragraphs': return 'paragraphs';
+                case 'lines': return 'lines';
+                default: return 'blocks';
+            }
+        }
+
+        async function runAllStructureHacks() {
+            if (!currentImage) return;
+            
+            runAllHacks.disabled = true;
+            hackGrid.style.display = 'grid';
+            hackResults = {};
+            
+            const progressBar = document.getElementById('overallProgress');
+            const progressFill = document.getElementById('overallProgressFill');
+            progressBar.classList.remove('hidden');
+            
+            const hacks = [
+                { name: 'osdOnly', func: runOSDOnlyHack },
+                { name: 'scaleHack', func: runScaleDownHack },
+                { name: 'boxOnly', func: runBoxOnlyHack },
+                { name: 'confidenceHack', func: runConfidenceHack },
+                { name: 'minimalLang', func: runMinimalLanguageHack },
+                { name: 'standardEng', func: runStandardEnglishWorker },
+                { name: 'scale25', func: runScale25Hack },
+                { name: 'scale75', func: runScale75Hack },
+                { name: 'multiLang', func: runMultiLanguageWorker }
+            ];
+            
+            for (let i = 0; i < hacks.length; i++) {
+                const hack = hacks[i];
+                progressFill.style.width = `${(i / hacks.length) * 100}%`;
+                await hack.func();
+            }
+            
+            progressFill.style.width = '100%';
+            setTimeout(() => {
+                progressBar.classList.add('hidden');
+                displayPerformanceComparison();
+                generateResultsSummary();
+            }, 500);
+            
+            runAllHacks.disabled = false;
+        }
+
+        async function runOSDOnlyHack() {
+            updateHackStatus('osdOnly', '🧭 Initializing OSD-only worker...', 'processing');
+            
+            const startTime = performance.now();
+            
+            try {
+                const worker = await Tesseract.createWorker();
+                const initTime = performance.now();
+                
+                await worker.loadLanguage('eng');
+                await worker.initialize('eng');
+                
+                // Configure for OSD only (PSM 0)
+                await worker.setParameters({
+                    tessedit_pageseg_mode: 0  // OSD only
+                });
+                
+                updateHackStatus('osdOnly', '🔍 Running OSD detection...', 'processing');
+                
+                const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+                const endTime = performance.now();
+                
+                hackResults.osdOnly = {
+                    totalTime: endTime - startTime,
+                    initTime: initTime - startTime,
+                    detectionTime: endTime - initTime,
+                    blocks: getDetectionCount(result),
+                    confidence: result.data.confidence || 0
+                };
+                
+                updateHackStatus('osdOnly', 
+                    `✅ Complete - ${Math.round(hackResults.osdOnly.totalTime)}ms total, ${hackResults.osdOnly.blocks} ${getDetectionLevelLabel()} found`, 
+                    'complete'
+                );
+                
+                displayHackOutput('osdOnly', {
+                    method: 'OSD-Only (PSM 0)',
+                    totalTime: Math.round(hackResults.osdOnly.totalTime),
+                    [getDetectionLevelLabel()]: hackResults.osdOnly.blocks,
+                    confidence: hackResults.osdOnly.confidence,
+                    innovation: 'Skip OCR entirely, just get page structure'
+                });
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                console.error('OSD-only hack error:', error);
+                updateHackStatus('osdOnly', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runScaleDownHack() {
+            updateHackStatus('scaleHack', '📏 Creating scaled-down image...', 'processing');
+            
+            const startTime = performance.now();
+            
+            try {
+                // Create scaled-down image (50% size)
+                const scaledCanvas = document.createElement('canvas');
+                const ctx = scaledCanvas.getContext('2d');
+                scaledCanvas.width = currentImage.width * 0.5;
+                scaledCanvas.height = currentImage.height * 0.5;
+                ctx.drawImage(currentImage, 0, 0, scaledCanvas.width, scaledCanvas.height);
+                
+                const worker = await Tesseract.createWorker();
+                const initTime = performance.now();
+                
+                await worker.loadLanguage('eng');
+                await worker.initialize('eng');
+                
+                updateHackStatus('scaleHack', '🔍 Processing scaled image...', 'processing');
+                
+                const result = await worker.recognize(scaledCanvas, {}, { blocks: true });
+                const endTime = performance.now();
+                
+                // Scale results back up
+                if (result.data.blocks) {
+                    result.data.blocks.forEach(block => {
+                        block.bbox.x0 *= 2;
+                        block.bbox.y0 *= 2;
+                        block.bbox.x1 *= 2;
+                        block.bbox.y1 *= 2;
+                    });
+                }
+                
+                hackResults.scaleHack = {
+                    totalTime: endTime - startTime,
+                    initTime: initTime - startTime,
+                    detectionTime: endTime - initTime,
+                    blocks: getDetectionCount(result),
+                    confidence: result.data.confidence || 0,
+                    scaleFactor: 0.5
+                };
+                
+                updateHackStatus('scaleHack', 
+                    `✅ Complete - ${Math.round(hackResults.scaleHack.totalTime)}ms total, ${hackResults.scaleHack.blocks} ${getDetectionLevelLabel()} found`, 
+                    'complete'
+                );
+                
+                displayHackOutput('scaleHack', {
+                    method: 'Scale-Down Hack (50%)',
+                    totalTime: Math.round(hackResults.scaleHack.totalTime),
+                    [getDetectionLevelLabel()]: hackResults.scaleHack.blocks,
+                    confidence: hackResults.scaleHack.confidence,
+                    innovation: 'Process at half resolution for 4x speed boost'
+                });
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                console.error('Scale-down hack error:', error);
+                updateHackStatus('scaleHack', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runBoxOnlyHack() {
+            updateHackStatus('boxOnly', '📦 Initializing box-only worker...', 'processing');
+            
+            const startTime = performance.now();
+            
+            try {
+                const worker = await Tesseract.createWorker();
+                const initTime = performance.now();
+                
+                await worker.loadLanguage('eng');
+                await worker.initialize('eng');
+                
+                updateHackStatus('boxOnly', '🔍 Generating bounding boxes only...', 'processing');
+                
+                // Request only blocks, skip text extraction
+                const result = await worker.recognize(currentImage, {}, { 
+                    blocks: true,
+                    text: false,
+                    hocr: false,
+                    tsv: false
+                });
+                const endTime = performance.now();
+                
+                hackResults.boxOnly = {
+                    totalTime: endTime - startTime,
+                    initTime: initTime - startTime,
+                    detectionTime: endTime - initTime,
+                    blocks: getDetectionCount(result),
+                    confidence: result.data.confidence || 0
+                };
+                
+                updateHackStatus('boxOnly', 
+                    `✅ Complete - ${Math.round(hackResults.boxOnly.totalTime)}ms total, ${hackResults.boxOnly.blocks} ${getDetectionLevelLabel()} found`, 
+                    'complete'
+                );
+                
+                displayHackOutput('boxOnly', {
+                    method: 'Box-Only Mode',
+                    totalTime: Math.round(hackResults.boxOnly.totalTime),
+                    [getDetectionLevelLabel()]: hackResults.boxOnly.blocks,
+                    confidence: hackResults.boxOnly.confidence,
+                    innovation: 'Skip text extraction, just get bounding boxes'
+                });
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                console.error('Box-only hack error:', error);
+                updateHackStatus('boxOnly', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runConfidenceHack() {
+            updateHackStatus('confidenceHack', '🎯 Setting high confidence threshold...', 'processing');
+            
+            const startTime = performance.now();
+            
+            try {
+                const worker = await Tesseract.createWorker();
+                const initTime = performance.now();
+                
+                await worker.loadLanguage('eng');
+                await worker.initialize('eng');
+                
+                // Configure for high confidence only
+                await worker.setParameters({
+                    tesseract_min_confidence: 95,
+                    tessedit_char_confidence_mask_dict: 0
+                });
+                
+                updateHackStatus('confidenceHack', '🔍 Processing high-confidence regions only...', 'processing');
+                
+                const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+                const endTime = performance.now();
+                
+                hackResults.confidenceHack = {
+                    totalTime: endTime - startTime,
+                    initTime: initTime - startTime,
+                    detectionTime: endTime - initTime,
+                    blocks: getDetectionCount(result),
+                    confidence: result.data.confidence || 0
+                };
+                
+                updateHackStatus('confidenceHack', 
+                    `✅ Complete - ${Math.round(hackResults.confidenceHack.totalTime)}ms total, ${hackResults.confidenceHack.blocks} ${getDetectionLevelLabel()} found`, 
+                    'complete'
+                );
+                
+                displayHackOutput('confidenceHack', {
+                    method: 'High-Confidence Only (95%+)',
+                    totalTime: Math.round(hackResults.confidenceHack.totalTime),
+                    [getDetectionLevelLabel()]: hackResults.confidenceHack.blocks,
+                    confidence: hackResults.confidenceHack.confidence,
+                    innovation: 'Skip uncertain regions, process only high-confidence areas'
+                });
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                console.error('Confidence hack error:', error);
+                updateHackStatus('confidenceHack', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runMinimalLanguageHack() {
+            updateHackStatus('minimalLang', '🔤 Loading minimal language model...', 'processing');
+            
+            const startTime = performance.now();
+            
+            try {
+                const worker = await Tesseract.createWorker();
+                const initTime = performance.now();
+                
+                await worker.loadLanguage('eng');
+                await worker.initialize('eng');
+                
+                // Configure for minimal character set (digits + basic punctuation)
+                await worker.setParameters({
+                    tessedit_char_whitelist: '0123456789.,!?;:()[]{}"\'-+= \n\t',
+                    tessedit_pageseg_mode: 3
+                });
+                
+                updateHackStatus('minimalLang', '🔍 Processing with minimal character set...', 'processing');
+                
+                const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+                const endTime = performance.now();
+                
+                hackResults.minimalLang = {
+                    totalTime: endTime - startTime,
+                    initTime: initTime - startTime,
+                    detectionTime: endTime - initTime,
+                    blocks: getDetectionCount(result),
+                    confidence: result.data.confidence || 0
+                };
+                
+                updateHackStatus('minimalLang', 
+                    `✅ Complete - ${Math.round(hackResults.minimalLang.totalTime)}ms total, ${hackResults.minimalLang.blocks} ${getDetectionLevelLabel()} found`, 
+                    'complete'
+                );
+                
+                displayHackOutput('minimalLang', {
+                    method: 'Minimal Language (Digits + Punctuation)',
+                    totalTime: Math.round(hackResults.minimalLang.totalTime),
+                    [getDetectionLevelLabel()]: hackResults.minimalLang.blocks,
+                    confidence: hackResults.minimalLang.confidence,
+                    innovation: 'Smallest possible character set for faster processing'
+                });
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                console.error('Minimal language hack error:', error);
+                updateHackStatus('minimalLang', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runStandardEnglishWorker() {
+            updateHackStatus('standardEng', '🔵 Initializing standard English worker...', 'processing');
+            
+            const startTime = performance.now();
+            
+            try {
+                const worker = await Tesseract.createWorker();
+                const initTime = performance.now();
+                
+                await worker.loadLanguage('eng');
+                await worker.initialize('eng');
+                
+                // Standard configuration (same as v2)
+                await worker.setParameters({
+                    classify_enable_learning: '0'
+                });
+                
+                updateHackStatus('standardEng', '🔍 Running full English OCR analysis...', 'processing');
+                
+                const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+                const endTime = performance.now();
+                
+                hackResults.standardEng = {
+                    totalTime: endTime - startTime,
+                    initTime: initTime - startTime,
+                    detectionTime: endTime - initTime,
+                    blocks: getDetectionCount(result),
+                    confidence: result.data.confidence || 0
+                };
+                
+                updateHackStatus('standardEng', 
+                    `✅ Complete - ${Math.round(hackResults.standardEng.totalTime)}ms total, ${hackResults.standardEng.blocks} ${getDetectionLevelLabel()} found`, 
+                    'complete'
+                );
+                
+                displayHackOutput('standardEng', {
+                    method: 'Standard English OCR (v2 Baseline)',
+                    totalTime: Math.round(hackResults.standardEng.totalTime),
+                    [getDetectionLevelLabel()]: hackResults.standardEng.blocks,
+                    confidence: hackResults.standardEng.confidence,
+                    innovation: 'Traditional full OCR approach - complete character recognition'
+                });
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                console.error('Standard English worker error:', error);
+                updateHackStatus('standardEng', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runScale25Hack() {
+            updateHackStatus('scale25', '📐 Creating ultra-scaled image (25%)...', 'processing');
+            
+            const startTime = performance.now();
+            
+            try {
+                // Create scaled-down image (25% size)
+                const scaledCanvas = document.createElement('canvas');
+                const ctx = scaledCanvas.getContext('2d');
+                scaledCanvas.width = currentImage.width * 0.25;
+                scaledCanvas.height = currentImage.height * 0.25;
+                ctx.drawImage(currentImage, 0, 0, scaledCanvas.width, scaledCanvas.height);
+                
+                const worker = await Tesseract.createWorker();
+                const initTime = performance.now();
+                
+                await worker.loadLanguage('eng');
+                await worker.initialize('eng');
+                
+                updateHackStatus('scale25', '🔍 Processing ultra-scaled image...', 'processing');
+                
+                const result = await worker.recognize(scaledCanvas, {}, getDetectionOptions());
+                const endTime = performance.now();
+                
+                // Scale results back up
+                if (result.data.blocks) {
+                    result.data.blocks.forEach(block => {
+                        block.bbox.x0 *= 4;
+                        block.bbox.y0 *= 4;
+                        block.bbox.x1 *= 4;
+                        block.bbox.y1 *= 4;
+                    });
+                }
+                if (result.data.paragraphs) {
+                    result.data.paragraphs.forEach(para => {
+                        para.bbox.x0 *= 4;
+                        para.bbox.y0 *= 4;
+                        para.bbox.x1 *= 4;
+                        para.bbox.y1 *= 4;
+                    });
+                }
+                if (result.data.lines) {
+                    result.data.lines.forEach(line => {
+                        line.bbox.x0 *= 4;
+                        line.bbox.y0 *= 4;
+                        line.bbox.x1 *= 4;
+                        line.bbox.y1 *= 4;
+                    });
+                }
+                
+                hackResults.scale25 = {
+                    totalTime: endTime - startTime,
+                    initTime: initTime - startTime,
+                    detectionTime: endTime - initTime,
+                    blocks: getDetectionCount(result),
+                    confidence: result.data.confidence || 0,
+                    scaleFactor: 0.25
+                };
+                
+                updateHackStatus('scale25', 
+                    `✅ Complete - ${Math.round(hackResults.scale25.totalTime)}ms total, ${hackResults.scale25.blocks} ${getDetectionLevelLabel()} found`, 
+                    'complete'
+                );
+                
+                displayHackOutput('scale25', {
+                    method: 'Scale-Down Hack (25%)',
+                    totalTime: Math.round(hackResults.scale25.totalTime),
+                    [getDetectionLevelLabel()]: hackResults.scale25.blocks,
+                    confidence: hackResults.scale25.confidence,
+                    innovation: 'Ultra-low resolution for maximum speed (16x pixel reduction)'
+                });
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                console.error('Scale-25% hack error:', error);
+                updateHackStatus('scale25', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runScale75Hack() {
+            updateHackStatus('scale75', '📊 Creating minimally-scaled image (75%)...', 'processing');
+            
+            const startTime = performance.now();
+            
+            try {
+                // Create scaled-down image (75% size)
+                const scaledCanvas = document.createElement('canvas');
+                const ctx = scaledCanvas.getContext('2d');
+                scaledCanvas.width = currentImage.width * 0.75;
+                scaledCanvas.height = currentImage.height * 0.75;
+                ctx.drawImage(currentImage, 0, 0, scaledCanvas.width, scaledCanvas.height);
+                
+                const worker = await Tesseract.createWorker();
+                const initTime = performance.now();
+                
+                await worker.loadLanguage('eng');
+                await worker.initialize('eng');
+                
+                updateHackStatus('scale75', '🔍 Processing minimally-scaled image...', 'processing');
+                
+                const result = await worker.recognize(scaledCanvas, {}, getDetectionOptions());
+                const endTime = performance.now();
+                
+                // Scale results back up
+                const scaleFactor = 1 / 0.75;
+                if (result.data.blocks) {
+                    result.data.blocks.forEach(block => {
+                        block.bbox.x0 *= scaleFactor;
+                        block.bbox.y0 *= scaleFactor;
+                        block.bbox.x1 *= scaleFactor;
+                        block.bbox.y1 *= scaleFactor;
+                    });
+                }
+                if (result.data.paragraphs) {
+                    result.data.paragraphs.forEach(para => {
+                        para.bbox.x0 *= scaleFactor;
+                        para.bbox.y0 *= scaleFactor;
+                        para.bbox.x1 *= scaleFactor;
+                        para.bbox.y1 *= scaleFactor;
+                    });
+                }
+                if (result.data.lines) {
+                    result.data.lines.forEach(line => {
+                        line.bbox.x0 *= scaleFactor;
+                        line.bbox.y0 *= scaleFactor;
+                        line.bbox.x1 *= scaleFactor;
+                        line.bbox.y1 *= scaleFactor;
+                    });
+                }
+                
+                hackResults.scale75 = {
+                    totalTime: endTime - startTime,
+                    initTime: initTime - startTime,
+                    detectionTime: endTime - initTime,
+                    blocks: getDetectionCount(result),
+                    confidence: result.data.confidence || 0,
+                    scaleFactor: 0.75
+                };
+                
+                updateHackStatus('scale75', 
+                    `✅ Complete - ${Math.round(hackResults.scale75.totalTime)}ms total, ${hackResults.scale75.blocks} ${getDetectionLevelLabel()} found`, 
+                    'complete'
+                );
+                
+                displayHackOutput('scale75', {
+                    method: 'Scale-Down Hack (75%)',
+                    totalTime: Math.round(hackResults.scale75.totalTime),
+                    [getDetectionLevelLabel()]: hackResults.scale75.blocks,
+                    confidence: hackResults.scale75.confidence,
+                    innovation: 'Balanced speed vs accuracy with minimal resolution reduction'
+                });
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                console.error('Scale-75% hack error:', error);
+                updateHackStatus('scale75', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runMultiLanguageWorker() {
+            updateHackStatus('multiLang', '🌍 Initializing 10-language detection worker...', 'processing');
+            
+            const startTime = performance.now();
+            
+            try {
+                // Use comprehensive language set for detection (from git reference)
+                const detectionLanguages = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+                
+                updateHackStatus('multiLang', '⏳ Loading multiple language models...', 'processing');
+                
+                const worker = await Tesseract.createWorker();
+                const initTime = performance.now();
+                
+                // Load all languages - this will take longer
+                await worker.loadLanguage(detectionLanguages);
+                await worker.initialize(detectionLanguages);
+                
+                // Configure for detection
+                await worker.setParameters({
+                    classify_enable_learning: '0'
+                });
+                
+                updateHackStatus('multiLang', '🔍 Running multilingual structure detection...', 'processing');
+                
+                const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+                const endTime = performance.now();
+                
+                hackResults.multiLang = {
+                    totalTime: endTime - startTime,
+                    initTime: initTime - startTime,
+                    detectionTime: endTime - initTime,
+                    blocks: getDetectionCount(result),
+                    confidence: result.data.confidence || 0,
+                    languages: detectionLanguages
+                };
+                
+                updateHackStatus('multiLang', 
+                    `✅ Complete - ${Math.round(hackResults.multiLang.totalTime)}ms total, ${hackResults.multiLang.blocks} ${getDetectionLevelLabel()} found`, 
+                    'complete'
+                );
+                
+                displayHackOutput('multiLang', {
+                    method: '10-Language Detection Worker',
+                    totalTime: Math.round(hackResults.multiLang.totalTime),
+                    [getDetectionLevelLabel()]: hackResults.multiLang.blocks,
+                    confidence: hackResults.multiLang.confidence,
+                    languages: detectionLanguages.join(', '),
+                    innovation: 'Comprehensive multilingual detection for best accuracy'
+                });
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                console.error('Multi-language worker error:', error);
+                updateHackStatus('multiLang', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function updateHackStatus(hackName, message, type = 'processing') {
+            const statusEl = document.getElementById(`${hackName}Status`);
+            statusEl.textContent = message;
+            statusEl.className = `stats ${type}`;
+        }
+
+        function displayHackOutput(hackName, data) {
+            const outputEl = document.getElementById(`${hackName}Output`);
+            outputEl.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function displayPerformanceComparison() {
+            const validResults = Object.entries(hackResults)
+                .filter(([key, data]) => data && data.totalTime)
+                .sort((a, b) => a[1].totalTime - b[1].totalTime);
+            
+            if (validResults.length === 0) return;
+            
+            performanceComparison.classList.remove('hidden');
+            const speedRanking = document.getElementById('speedRanking');
+            const recommendation = document.getElementById('recommendation');
+            
+            let rankingHTML = '';
+            validResults.forEach(([hackName, data], index) => {
+                const hackNames = {
+                    osdOnly: '🧭 OSD-Only',
+                    scaleHack: '📏 Scale-Down-50%',
+                    boxOnly: '📦 Box-Only',
+                    confidenceHack: '🎯 High-Confidence',
+                    minimalLang: '🔤 Minimal-Language',
+                    standardEng: '🔵 Standard-English',
+                    scale25: '📐 Scale-Down-25%',
+                    scale75: '📊 Scale-Down-75%',
+                    multiLang: '🌍 10-Languages'
+                };
+                
+                const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                rankingHTML += `
+                    <div class="speed-rank ${rankClass}">
+                        <div style="font-weight: bold;">${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}</div>
+                        <div>${hackNames[hackName]}</div>
+                        <div style="color: #007bff; font-weight: bold;">${Math.round(data.totalTime)}ms</div>
+                        <div style="font-size: 10px; color: #666;">${data.blocks} ${getDetectionLevelLabel()} found</div>
+                    </div>
+                `;
+            });
+            
+            speedRanking.innerHTML = rankingHTML;
+            
+            // Generate recommendation
+            const winner = validResults[0];
+            const winnerName = {
+                osdOnly: 'OSD-Only Mode',
+                scaleHack: 'Scale-Down Hack (50%)',
+                boxOnly: 'Box-Only Mode',
+                confidenceHack: 'High-Confidence Filter',
+                minimalLang: 'Minimal Language Model',
+                standardEng: 'Standard English OCR',
+                scale25: 'Scale-Down Hack (25%)',
+                scale75: 'Scale-Down Hack (75%)',
+                multiLang: '10-Language Detection'
+            }[winner[0]];
+            
+            recommendation.textContent = `Use ${winnerName} for fastest structure detection (${Math.round(winner[1].totalTime)}ms with ${winner[1].blocks} ${getDetectionLevelLabel()} found)`;
+        }
+
+        function generateResultsSummary() {
+            const validResults = Object.entries(hackResults)
+                .filter(([key, data]) => data && data.totalTime)
+                .sort((a, b) => a[1].totalTime - b[1].totalTime);
+            
+            if (validResults.length === 0) return;
+            
+            resultsSummary.classList.remove('hidden');
+            
+            const level = getDetectionLevelLabel();
+            const levelUpper = level.charAt(0).toUpperCase() + level.slice(1);
+            
+            let summary = `TESSERACT STRUCTURE DETECTION SPEED TEST - ${levelUpper} Level\n`;
+            summary += `=================================================\n\n`;
+            summary += `Test Configuration:\n`;
+            summary += `- Detection Level: ${levelUpper}\n`;
+            summary += `- Image: ${currentImage ? `${currentImage.width}x${currentImage.height}px` : 'Unknown'}\n`;
+            summary += `- Test Date: ${new Date().toLocaleDateString()}\n\n`;
+            
+            summary += `PERFORMANCE RANKING (Fastest to Slowest):\n`;
+            summary += `-----------------------------------------\n`;
+            
+            const methodNames = {
+                osdOnly: 'OSD-Only Mode (PSM 0)',
+                scaleHack: 'Scale-Down Hack (50%)',
+                boxOnly: 'Box-Only Mode',
+                confidenceHack: 'High-Confidence Filter (95%+)',
+                minimalLang: 'Minimal Language Model',
+                standardEng: 'Standard English OCR',
+                scale25: 'Scale-Down Hack (25%)',
+                scale75: 'Scale-Down Hack (75%)',
+                multiLang: '10-Language Detection Worker'
+            };
+            
+            validResults.forEach(([hackName, data], index) => {
+                const rank = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                summary += `${rank} ${methodNames[hackName]}\n`;
+                summary += `    Total Time: ${Math.round(data.totalTime)}ms\n`;
+                summary += `    Init Time: ${Math.round(data.initTime)}ms\n`;
+                summary += `    Detection Time: ${Math.round(data.detectionTime)}ms\n`;
+                summary += `    ${levelUpper} Found: ${data.blocks}\n`;
+                summary += `    Confidence: ${Math.round(data.confidence)}%\n\n`;
+            });
+            
+            summary += `SPEED COMPARISON:\n`;
+            summary += `----------------\n`;
+            const fastest = validResults[0];
+            const slowest = validResults[validResults.length - 1];
+            const speedup = Math.round(slowest[1].totalTime / fastest[1].totalTime * 10) / 10;
+            summary += `Fastest: ${methodNames[fastest[0]]} (${Math.round(fastest[1].totalTime)}ms)\n`;
+            summary += `Slowest: ${methodNames[slowest[0]]} (${Math.round(slowest[1].totalTime)}ms)\n`;
+            summary += `Speed Improvement: ${speedup}x faster\n\n`;
+            
+            summary += `RECOMMENDATION:\n`;
+            summary += `--------------\n`;
+            summary += `For fastest ${level} detection: ${methodNames[fastest[0]]}\n`;
+            summary += `- Processing time: ${Math.round(fastest[1].totalTime)}ms\n`;
+            summary += `- ${levelUpper} detected: ${fastest[1].blocks}\n`;
+            summary += `- Trade-off: ${getTradeOffAnalysis(fastest[0])}\n\n`;
+            
+            summary += `Generated by: Tesseract Structure Explorer v3\n`;
+            summary += `Timestamp: ${new Date().toISOString()}\n`;
+            
+            document.getElementById('summaryText').textContent = summary;
+        }
+        
+        function getTradeOffAnalysis(hackName) {
+            const analyses = {
+                osdOnly: 'Orientation detection only, may miss some structure details',
+                scaleHack: 'Lower resolution processing (50%), may miss fine details',
+                boxOnly: 'No text extraction, structure info only',
+                confidenceHack: 'May skip uncertain but valid text regions',
+                minimalLang: 'Limited character recognition, basic structure only',
+                standardEng: 'Full accuracy but slower processing',
+                scale25: 'Very low resolution (25%), fastest but may miss details',
+                scale75: 'Minimal resolution reduction (75%), balanced approach',
+                multiLang: 'Best multilingual accuracy but slowest processing'
+            };
+            return analyses[hackName] || 'Unknown trade-offs';
+        }
+        
+        function copyToClipboard(elementId) {
+            const textElement = document.getElementById(elementId);
+            const text = textElement.textContent;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopyFeedback();
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    fallbackCopyTextToClipboard(text);
+                });
+            } else {
+                fallbackCopyTextToClipboard(text);
+            }
+        }
+        
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopyFeedback();
+                } else {
+                    alert('Copy failed. Please select the text manually and copy it.');
+                }
+            } catch (err) {
+                console.error('Fallback copy failed: ', err);
+                alert('Copy failed. Please select the text manually and copy it.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        function showCopyFeedback() {
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✅ Copied!';
+            button.style.backgroundColor = '#28a745';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.backgroundColor = '#007bff';
+            }, 2000);
+        }
+
+        // Initialize
+        console.log('Tesseract Structure Explorer v3 - Innovative Speed Hacks initialized');
+    </script>
+</body>
+</html>

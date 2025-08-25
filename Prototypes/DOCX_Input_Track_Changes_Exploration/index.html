@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Track Changes Processing Comparison</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-bg: #2c3e50;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .intro {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .intro h2 {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        
+        .intro p {
+            margin-bottom: 15px;
+        }
+        
+        .methods-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .method-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .method-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .method-card h3 {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .method-card ul {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .method-card li {
+            margin-bottom: 10px;
+        }
+        
+        .drop-zone {
+            border: 3px dashed var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: var(--light-bg);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .drop-zone.dragover {
+            background-color: #e3f2fd;
+            border-color: #2980b9;
+        }
+        
+        .drop-zone-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .drop-zone-text {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .file-input-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .file-input {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .file-input:hover {
+            background-color: #2980b9;
+        }
+        
+        .file-info {
+            background-color: #e8f4fc;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .file-info.visible {
+            display: block;
+        }
+        
+        .processing {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .processing.visible {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .result-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .result-card h3 {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .result-content {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 150px;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #fafafa;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .track-changes-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff8e1;
+            border-radius: 4px;
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .error {
+            background-color: #fadbd8;
+            border: 1px solid #f1948a;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .error.visible {
+            display: block;
+        }
+        
+        .error-title {
+            font-weight: bold;
+            color: var(--danger-color);
+            margin-bottom: 5px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .method-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .method-btn {
+            padding: 10px 20px;
+            background-color: #eee;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .method-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .copy-button {
+            padding: 8px 16px;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .copy-button:hover {
+            background-color: #229954;
+        }
+        
+        .instructions {
+            background-color: #e3f2fd;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: var(--secondary-color);
+        }
+        
+        .instructions ul {
+            margin-bottom: 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .comparison-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .comparison-table tr:hover {
+            background-color: #e8f4fc;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .methods-container,
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .method-selector {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>DOCX Track Changes Processing Comparison</h1>
+            <div class="subtitle">Comparing different approaches to handling DOCX files with track changes</div>
+        </header>
+        
+        <section class="intro">
+            <h2>About This Prototype</h2>
+            <p>This prototype compares three different approaches to processing DOCX files with track changes:</p>
+            <ol>
+                <li><strong>Standard Mammoth.js</strong> - Basic text extraction using extractRawText()</li>
+                <li><strong>Enhanced Mammoth.js</strong> - HTML conversion with style mapping to detect track changes</li>
+                <li><strong>Custom XML Parsing</strong> - Direct XML parsing of DOCX structure for full track change preservation</li>
+            </ol>
+            <p>Upload a DOCX file with track changes to see how each method performs.</p>
+            <p>For detailed information about this prototype, see the <a href="overview.md" target="_blank">Overview Document</a>.</p>
+        </section>
+        
+        <div class="instructions">
+            <h3>How to Use This Prototype</h3>
+            <ul>
+                <li>Select a processing method using the buttons above</li>
+                <li>Drag and drop a DOCX file with track changes onto the drop zone, or click "Select DOCX File"</li>
+                <li>View the extracted content and track change information for the selected method</li>
+                <li>Compare results between different methods using the comparison table</li>
+                <li><strong>Note:</strong> Legacy DOC files are not supported. Please use DOCX format.</li>
+            </ul>
+        </div>
+        
+        <div class="controls">
+            <div class="method-selector">
+                <button class="method-btn active" data-method="standard">Standard Mammoth.js</button>
+                <button class="method-btn" data-method="enhanced">Enhanced Mammoth.js</button>
+                <button class="method-btn" data-method="xml">Custom XML Parsing</button>
+            </div>
+            <button class="copy-button" id="copy-button">Copy Results</button>
+        </div>
+        
+        <div class="drop-zone" id="drop-zone">
+            <div class="drop-zone-icon">📄</div>
+            <div class="drop-zone-text">Drag and drop a DOCX file with track changes here</div>
+            <div class="drop-zone-text">(DOC files not supported)</div>
+            <div class="drop-zone-text">or</div>
+        </div>
+        
+        <div class="file-input-container">
+            <input type="file" id="file-input" class="file-input" accept=".docx" />
+            <div class="drop-zone-text" style="font-size: 14px; color: #7f8c8d; margin-top: 10px;">
+                (DOC files not supported - please use DOCX format)
+            </div>
+        </div>
+        
+        <div class="file-info" id="file-info">
+            <strong>Selected File:</strong> <span id="file-name"></span> 
+            (<span id="file-size"></span>)
+        </div>
+        
+        <div class="processing" id="processing">
+            <div class="spinner"></div>
+            <p>Processing DOCX file with <span id="current-method">Standard Mammoth.js</span>... This may take a moment for large files.</p>
+        </div>
+        
+        <div class="error" id="error">
+            <div class="error-title">Error Processing File</div>
+            <div id="error-message"></div>
+        </div>
+        
+        <div class="results-container">
+            <div class="result-card">
+                <h3>Extracted Text Content</h3>
+                <div class="result-content" id="output-content">
+                    Extracted text will appear here...
+                </div>
+            </div>
+            
+            <div class="result-card">
+                <h3>Track Changes Information</h3>
+                <div class="result-content" id="track-changes-content">
+                    Track changes information will appear here...
+                </div>
+                <div class="track-changes-info" id="track-changes-summary">
+                    No track changes detected
+                </div>
+            </div>
+        </div>
+        
+        <section class="intro" style="margin-top: 30px;">
+            <h2>Method Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Text Extraction</th>
+                        <th>Track Changes Detection</th>
+                        <th>Performance</th>
+                        <th>Complexity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Standard Mammoth.js</strong></td>
+                        <td>✅ High quality</td>
+                        <td>❌ None</td>
+                        <td>✅ Fast</td>
+                        <td>✅ Low</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Enhanced Mammoth.js</strong></td>
+                        <td>✅ High quality</td>
+                        <td>🔶 Limited</td>
+                        <td>✅ Fast</td>
+                        <td>🔶 Medium</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Custom XML Parsing</strong></td>
+                        <td>✅ High quality</td>
+                        <td>✅ Full support</td>
+                        <td>🔶 Slower</td>
+                        <td>❌ High</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>For detailed findings and recommendations, see the <a href="findings-and-recommendations.md" target="_blank">Findings and Recommendations</a> document.</p>
+        </section>
+        
+        <footer>
+            <p>DOCX Track Changes Processing Comparison Prototype | Created for RdLn Application Development</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.10.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script type="module">
+        // DOM Elements
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const processing = document.getElementById('processing');
+        const outputContent = document.getElementById('output-content');
+        const trackChangesContent = document.getElementById('track-changes-content');
+        const trackChangesSummary = document.getElementById('track-changes-summary');
+        const error = document.getElementById('error');
+        const errorMessage = document.getElementById('error-message');
+        const copyButton = document.getElementById('copy-button');
+        const methodButtons = document.querySelectorAll('.method-btn');
+        const currentMethodSpan = document.getElementById('current-method');
+        
+        // State
+        let currentMethod = 'standard';
+        let currentFile = null;
+        
+        // Format file size for display
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Check if file is a DOCX file
+        function isDocxFile(file) {
+            return file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                   file.name.toLowerCase().endsWith('.docx');
+        }
+        
+        // Check if file is a legacy DOC file
+        function isDocFile(file) {
+            return file.type === 'application/msword' ||
+                   file.name.toLowerCase().endsWith('.doc');
+        }
+        
+        // Method 1: Standard Mammoth.js
+        async function processWithStandardMammoth(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                
+                return {
+                    text: result.value,
+                    trackChanges: [],
+                    hasTrackChanges: false,
+                    messages: result.messages
+                };
+            } catch (err) {
+                throw new Error(`Standard Mammoth.js processing failed: ${err.message}`);
+            }
+        }
+        
+        // Method 2: Enhanced Mammoth.js with HTML conversion
+        async function processWithEnhancedMammoth(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                
+                // Custom style map to identify track changes
+                const styleMap = [
+                    "s:Ins[style-name='Insertion'] => ins",
+                    "s:Del[style-name='Deletion'] => del",
+                    "rPr > strike => del",
+                    "rPr > u => ins"
+                ];
+                
+                const htmlResult = await mammoth.convertToHtml(
+                    { arrayBuffer: arrayBuffer },
+                    { styleMap: styleMap }
+                );
+                
+                // Process HTML to extract track changes
+                const processedContent = processTrackChangeHtml(htmlResult.value);
+                
+                return {
+                    text: processedContent.text,
+                    trackChanges: processedContent.changes,
+                    hasTrackChanges: processedContent.hasChanges,
+                    messages: htmlResult.messages
+                };
+            } catch (err) {
+                throw new Error(`Enhanced Mammoth.js processing failed: ${err.message}`);
+            }
+        }
+        
+        // Process HTML output to detect and extract track changes
+        function processTrackChangeHtml(html) {
+            // Create a DOM parser to work with the HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const changes = [];
+            let position = 0;
+            
+            // Walk through the document and identify track changes
+            const walker = document.createTreeWalker(
+                doc.body,
+                NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode: (node) => {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            const element = node;
+                            if (element.tagName === 'INS' || element.tagName === 'DEL') {
+                                return NodeFilter.FILTER_ACCEPT;
+                            }
+                        } else if (node.nodeType === Node.TEXT_NODE) {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                        return NodeFilter.FILTER_SKIP;
+                    }
+                }
+            );
+            
+            let currentNode;
+            let finalText = '';
+            
+            while (currentNode = walker.nextNode()) {
+                if (currentNode.nodeType === Node.TEXT_NODE) {
+                    const text = currentNode.textContent || '';
+                    finalText += text;
+                    position += text.length;
+                } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+                    const element = currentNode;
+                    const text = element.textContent || '';
+                    
+                    if (element.tagName === 'INS') {
+                        changes.push({
+                            type: 'insertion',
+                            content: text,
+                            position: position
+                        });
+                    } else if (element.tagName === 'DEL') {
+                        changes.push({
+                            type: 'deletion',
+                            content: text,
+                            position: position
+                        });
+                    }
+                    
+                    finalText += text;
+                    position += text.length;
+                }
+            }
+            
+            return {
+                text: finalText,
+                changes: changes,
+                hasChanges: changes.length > 0
+            };
+        }
+        
+        // Method 3: Custom XML Parsing
+        async function processWithXmlParsing(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                
+                // Parse the DOCX file as a ZIP archive
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(arrayBuffer);
+                
+                // Extract document.xml
+                const documentXml = await zipContent.file('word/document.xml')?.async('string');
+                if (!documentXml) {
+                    throw new Error('Invalid DOCX file: Could not find document.xml');
+                }
+                
+                // Parse XML and extract content with track changes
+                const result = parseDocumentXml(documentXml);
+                
+                return {
+                    text: result.text,
+                    trackChanges: result.trackChanges,
+                    hasTrackChanges: result.trackChanges.length > 0,
+                    changeCount: result.trackChanges.length
+                };
+            } catch (err) {
+                throw new Error(`XML Parsing processing failed: ${err.message}`);
+            }
+        }
+        
+        // Parse document.xml and extract text with track changes
+        function parseDocumentXml(xmlString) {
+            // Parse XML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(xmlString, 'application/xml');
+            
+            // Check for parsing errors
+            if (doc.querySelector('parsererror')) {
+                throw new Error('Failed to parse document.xml');
+            }
+            
+            const trackChanges = [];
+            let text = '';
+            let position = 0;
+            
+            // Extract paragraphs
+            const paragraphs = doc.querySelectorAll('w\\:p');
+            
+            paragraphs.forEach((paragraph, paraIndex) => {
+                if (paraIndex > 0) {
+                    text += '\n';
+                    position += 1;
+                }
+                
+                // Process each run in the paragraph
+                const runs = paragraph.querySelectorAll('w\\:r');
+                
+                runs.forEach(run => {
+                    // Check for insertions (<w:ins>)
+                    const insertions = run.querySelectorAll('w\\:ins');
+                    insertions.forEach(ins => {
+                        const author = ins.getAttribute('w:author') || undefined;
+                        const date = ins.getAttribute('w:date') || undefined;
+                        const content = extractTextFromRun(ins);
+                        
+                        trackChanges.push({
+                            type: 'insertion',
+                            author,
+                            date,
+                            content,
+                            position
+                        });
+                        
+                        text += content;
+                        position += content.length;
+                    });
+                    
+                    // Check for deletions (<w:del>)
+                    const deletions = run.querySelectorAll('w\\:del');
+                    deletions.forEach(del => {
+                        const author = del.getAttribute('w:author') || undefined;
+                        const date = del.getAttribute('w:date') || undefined;
+                        const content = extractTextFromRun(del);
+                        
+                        trackChanges.push({
+                            type: 'deletion',
+                            author,
+                            date,
+                            content,
+                            position
+                        });
+                        
+                        // Don't add deleted text to the main content
+                    });
+                    
+                    // Check for formatting changes (<w:tc>)
+                    const formattingChanges = run.querySelectorAll('w\\:tc');
+                    formattingChanges.forEach(tc => {
+                        const author = tc.getAttribute('w:author') || undefined;
+                        const date = tc.getAttribute('w:date') || undefined;
+                        const content = extractTextFromRun(tc);
+                        
+                        trackChanges.push({
+                            type: 'formatting',
+                            author,
+                            date,
+                            content,
+                            position
+                        });
+                        
+                        text += content;
+                        position += content.length;
+                    });
+                    
+                    // Process regular text runs (not in track changes)
+                    if (!run.querySelector('w\\:ins, w\\:del, w\\:tc')) {
+                        const content = extractTextFromRun(run);
+                        text += content;
+                        position += content.length;
+                    }
+                });
+            });
+            
+            return {
+                text,
+                trackChanges
+            };
+        }
+        
+        // Extract text content from a run element
+        function extractTextFromRun(runElement) {
+            let text = '';
+            
+            // Get text elements
+            const textElements = runElement.querySelectorAll('w\\:t');
+            textElements.forEach(textEl => {
+                text += textEl.textContent || '';
+            });
+            
+            // Get deleted text elements
+            const delTextElements = runElement.querySelectorAll('w\\:delText');
+            delTextElements.forEach(delTextEl => {
+                text += delTextEl.textContent || '';
+            });
+            
+            return text;
+        }
+        
+        // Process DOCX file with selected method
+        async function processDocxFile(file, method) {
+            // Show processing state
+            processing.classList.add('visible');
+            error.classList.remove('visible');
+            outputContent.textContent = 'Extracting text from DOCX file...';
+            trackChangesContent.textContent = 'Analyzing track changes...';
+            
+            try {
+                // Check if file is a legacy DOC file
+                if (isDocFile(file)) {
+                    throw new Error('Legacy DOC files are not supported. Please save your document as DOCX format and try again.');
+                }
+                
+                // Validate file type
+                if (!isDocxFile(file)) {
+                    throw new Error('Selected file is not a DOCX file. Please select a valid .docx file.');
+                }
+                
+                let result;
+                
+                // Process based on selected method
+                switch (method) {
+                    case 'standard':
+                        result = await processWithStandardMammoth(file);
+                        break;
+                    case 'enhanced':
+                        result = await processWithEnhancedMammoth(file);
+                        break;
+                    case 'xml':
+                        result = await processWithXmlParsing(file);
+                        break;
+                    default:
+                        throw new Error('Invalid processing method selected');
+                }
+                
+                // Display results
+                if (result.text.trim()) {
+                    outputContent.textContent = result.text;
+                } else {
+                    outputContent.textContent = 'No text content found in the DOCX file.';
+                }
+                
+                // Display track changes information
+                if (result.hasTrackChanges && result.trackChanges.length > 0) {
+                    trackChangesContent.textContent = JSON.stringify(result.trackChanges, null, 2);
+                    trackChangesSummary.textContent = `Detected ${result.trackChanges.length} track changes`;
+                    trackChangesSummary.style.display = 'block';
+                } else {
+                    trackChangesContent.textContent = 'No track changes detected in this document.';
+                    trackChangesSummary.textContent = 'No track changes detected';
+                    trackChangesSummary.style.display = 'block';
+                }
+                
+                // Show any messages (warnings, etc.)
+                if (result.messages && result.messages.length > 0) {
+                    console.log('Processing messages:', result.messages);
+                }
+                
+            } catch (err) {
+                // Display error
+                errorMessage.textContent = err.message;
+                error.classList.add('visible');
+                outputContent.textContent = 'Error processing file. Please try another file.';
+                trackChangesContent.textContent = 'Unable to analyze track changes due to processing error.';
+                console.error('File processing error:', err);
+            } finally {
+                // Hide processing state
+                processing.classList.remove('visible');
+            }
+        }
+        
+        // Handle file selection
+        function handleFileSelection(file) {
+            currentFile = file;
+            
+            // Display file info
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.add('visible');
+            
+            // Process the file with current method
+            processDocxFile(file, currentMethod);
+        }
+        
+        // Event Listeners
+        // File input change
+        fileInput.addEventListener('change', (event) => {
+            if (event.target.files.length > 0) {
+                handleFileSelection(event.target.files[0]);
+            }
+        });
+        
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            if (event.dataTransfer.files.length > 0) {
+                handleFileSelection(event.dataTransfer.files[0]);
+            }
+        });
+        
+        // Click on drop zone to trigger file input
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Method selection
+        methodButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active button
+                methodButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update current method
+                currentMethod = button.dataset.method;
+                
+                // Update UI text
+                const methodNames = {
+                    'standard': 'Standard Mammoth.js',
+                    'enhanced': 'Enhanced Mammoth.js',
+                    'xml': 'Custom XML Parsing'
+                };
+                currentMethodSpan.textContent = methodNames[currentMethod];
+                
+                // Process file if one is selected
+                if (currentFile) {
+                    processDocxFile(currentFile, currentMethod);
+                }
+            });
+        });
+        
+        // Copy button
+        copyButton.addEventListener('click', () => {
+            const fullResults = `Extracted Text:\n${outputContent.textContent}\n\nTrack Changes:\n${trackChangesContent.textContent}`;
+            navigator.clipboard.writeText(fullResults)
+                .then(() => {
+                    // Visual feedback
+                    const originalText = copyButton.textContent;
+                    copyButton.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyButton.textContent = originalText;
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+        });
+        
+        // Initialize
+        console.log('DOCX Track Changes Processing Comparison Prototype initialized');
+    </script>
+</body>
+</html>

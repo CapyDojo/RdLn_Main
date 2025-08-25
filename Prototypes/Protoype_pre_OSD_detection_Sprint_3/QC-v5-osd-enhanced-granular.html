@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RdLn™ Granular Layout Analysis - QC-v3</title>
+    <title>RdLn™ OSD-Enhanced Granular Layout Analysis - QC-v4</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body {
@@ -124,21 +124,9 @@
             border: 2px solid #ff6b6b !important;
             background-color: rgba(255, 107, 107, 0.2) !important;
         }
-        .legend {
-            display: flex;
-            gap: 15px;
-            margin: 10px 0;
-            font-size: 12px;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .legend-color {
-            width: 15px;
-            height: 15px;
-            border: 1px solid #333;
+        .highlight-chinese {
+            border: 2px solid #20c997 !important;
+            background-color: rgba(32, 201, 151, 0.2) !important;
         }
         .processing-info {
             background-color: #d1ecf1;
@@ -148,21 +136,28 @@
             margin: 10px 0;
             font-size: 14px;
         }
+        .osd-result {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>RdLn™ Granular Layout Analysis - QC-v3</h1>
-        <p>This prototype implements a practical approach for fine-tuning granularity between PSM 3 and PSM 6.</p>
-        <p>It automatically identifies complex regions that need more granular processing.</p>
+        <h1>RdLn™ OSD-Enhanced Granular Layout Analysis - QC-v4</h1>
+        <p>This prototype integrates Orientation and Script Detection (OSD) with our granular layout analysis approach.</p>
+        <p>It uses OSD to determine optimal processing strategies for different script types.</p>
         
         <div class="processing-info">
-            <h4>Approach:</h4>
+            <h4>OSD-Enhanced Approach:</h4>
             <ol>
-                <li>Run initial PSM 3 analysis to get paragraph-level segmentation</li>
-                <li>Identify complex paragraphs using character set analysis and confidence metrics</li>
-                <li>Apply PSM 6 granular processing to complex regions</li>
-                <li>Combine results for optimal multilingual handling</li>
+                <li>Run OSD to detect script and orientation</li>
+                <li>If Han script detected, use Chinese-optimized processing</li>
+                <li>For other scripts, use standard processing</li>
+                <li>Apply granular processing to complex mixed-script regions</li>
             </ol>
         </div>
         
@@ -178,11 +173,11 @@
         </div>
         
         <div id="controls" class="hidden">
-            <button id="analyzeBtn" class="btn">Analyze Layout</button>
+            <button id="analyzeBtn" class="btn">Analyze with OSD</button>
             <button id="resetBtn" class="btn">Reset</button>
             
             <div id="progressContainer" class="hidden">
-                <h3 id="progressTitle">Analyzing Layout...</h3>
+                <h3 id="progressTitle">Analyzing with OSD...</h3>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
@@ -192,8 +187,13 @@
         
         <div id="results" class="result-container hidden">
             <div class="analysis-section">
-                <div class="section-title">PSM 3 Initial Analysis</div>
-                <div id="psm3Results"></div>
+                <div class="section-title">OSD Results</div>
+                <div id="osdResults"></div>
+            </div>
+            
+            <div class="analysis-section">
+                <div class="section-title">Script-Specific Processing</div>
+                <div id="scriptProcessingResults"></div>
             </div>
             
             <div class="analysis-section">
@@ -227,7 +227,8 @@
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
         const results = document.getElementById('results');
-        const psm3Results = document.getElementById('psm3Results');
+        const osdResults = document.getElementById('osdResults');
+        const scriptProcessingResults = document.getElementById('scriptProcessingResults');
         const complexRegionResults = document.getElementById('complexRegionResults');
         const granularResults = document.getElementById('granularResults');
         const finalResults = document.getElementById('finalResults');
@@ -257,7 +258,7 @@
             }
         });
 
-        analyzeBtn.addEventListener('click', analyzeLayout);
+        analyzeBtn.addEventListener('click', analyzeWithOSD);
         resetBtn.addEventListener('click', resetPrototype);
 
         // Functions
@@ -315,10 +316,26 @@
             progressContainer.classList.add('hidden');
             
             // Clear results
-            psm3Results.innerHTML = '';
+            osdResults.innerHTML = '';
+            scriptProcessingResults.innerHTML = '';
             complexRegionResults.innerHTML = '';
             granularResults.innerHTML = '';
             finalResults.innerHTML = '';
+        }
+
+        // Run OSD detection
+        async function runOSD() {
+            try {
+                showProgress('Running OSD...', 5, 'Detecting script and orientation...');
+                
+                // Use Tesseract.detect for OSD
+                const result = await Tesseract.detect(currentImage);
+                
+                return result;
+            } catch (error) {
+                console.error('OSD Error:', error);
+                return null;
+            }
         }
 
         // Analyze layout with a specific PSM mode
@@ -375,6 +392,71 @@
             }
         }
 
+        // Apply granular processing to a specific region
+        async function applyGranularProcessing(region) {
+            try {
+                // Get the bounding box of the region
+                const bbox = region.paragraph.bbox;
+                if (!bbox) {
+                    console.warn('No bounding box found for region', region);
+                    return null;
+                }
+                
+                // Create a cropped version of the image for this region
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const width = Math.max(1, Math.round(bbox.x1 - bbox.x0));
+                const height = Math.max(1, Math.round(bbox.y1 - bbox.y0));
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw the cropped region
+                ctx.drawImage(
+                    currentImage,
+                    Math.round(bbox.x0),
+                    Math.round(bbox.y0),
+                    width,
+                    height,
+                    0,
+                    0,
+                    width,
+                    height
+                );
+                
+                // Run PSM 6 (single uniform block) on the cropped region for granular analysis
+                const worker = await Tesseract.createWorker('eng+chi_sim+chi_tra');
+                await worker.setParameters({
+                    tessedit_pageseg_mode: 6, // Single uniform block
+                    classify_enable_learning: '0'
+                });
+                
+                const result = await worker.recognize(canvas, {}, {
+                    blocks: true,
+                    paragraphs: true,
+                    lines: true,
+                    words: true,
+                    symbols: true
+                });
+                
+                await worker.terminate();
+                
+                return {
+                    originalRegion: region,
+                    granularResult: result,
+                    cropInfo: {
+                        x: Math.round(bbox.x0),
+                        y: Math.round(bbox.y0),
+                        width: width,
+                        height: height
+                    }
+                };
+            } catch (error) {
+                console.error('Error in granular processing for region:', error);
+                return null;
+            }
+        }
+
         // Format layout elements for display
         function formatLayoutElements(result, level = 'paragraphs') {
             let html = '';
@@ -403,8 +485,12 @@
                             html += '<h4>Paragraphs (' + result.data.paragraphs.length + ')</h4>';
                             html += '<div class="block-container">';
                             result.data.paragraphs.forEach((paragraph, index) => {
+                                // Highlight Chinese paragraphs
+                                const isChinese = paragraph.text && /[\u4e00-\u9fff]/.test(paragraph.text);
+                                const highlightClass = isChinese ? ' highlight-chinese' : '';
+                                
                                 html += `
-                                    <div class="block-item" id="para-${index}">
+                                    <div class="block-item${highlightClass}" id="para-${index}">
                                         <div class="block-text">${paragraph.text || '(empty)'}</div>
                                         <div class="block-info">Conf: ${(paragraph.confidence || 0).toFixed(2)}%</div>
                                     </div>
@@ -433,6 +519,23 @@
             }
             
             return html;
+        }
+
+        // Format OSD results for display
+        function formatOSDResults(result) {
+            if (!result || !result.data) {
+                return '<p>OSD detection failed</p>';
+            }
+            
+            return `
+                <div class="osd-result">
+                    <h4>OSD Detection Results</h4>
+                    <p><strong>Script:</strong> ${result.data.script || 'Unknown'}</p>
+                    <p><strong>Orientation:</strong> ${result.data.orientation || 0}°</p>
+                    <p><strong>Script Confidence:</strong> ${(result.data.script_confidence || 0).toFixed(2)}%</p>
+                    <p><strong>Orientation Confidence:</strong> ${(result.data.orientation_confidence || 0).toFixed(2)}%</p>
+                </div>
+            `;
         }
 
         // Analyze character composition of text
@@ -528,103 +631,64 @@
             return html;
         }
 
-        // Apply granular processing to a specific region
-        async function applyGranularProcessing(region) {
-            try {
-                // Get the bounding box of the region
-                const bbox = region.paragraph.bbox;
-                if (!bbox) {
-                    console.warn('No bounding box found for region', region);
-                    return null;
-                }
-                
-                // Create a cropped version of the image for this region
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const width = Math.max(1, Math.round(bbox.x1 - bbox.x0));
-                const height = Math.max(1, Math.round(bbox.y1 - bbox.y0));
-                
-                canvas.width = width;
-                canvas.height = height;
-                
-                // Draw the cropped region
-                ctx.drawImage(
-                    currentImage,
-                    Math.round(bbox.x0),
-                    Math.round(bbox.y0),
-                    width,
-                    height,
-                    0,
-                    0,
-                    width,
-                    height
-                );
-                
-                // Run PSM 6 (single uniform block) on the cropped region for granular analysis
-                const worker = await Tesseract.createWorker('eng+chi_sim+chi_tra');
-                await worker.setParameters({
-                    tessedit_pageseg_mode: 6, // Single uniform block
-                    classify_enable_learning: '0'
-                });
-                
-                const result = await worker.recognize(canvas, {}, {
-                    blocks: true,
-                    paragraphs: true,
-                    lines: true,
-                    words: true,
-                    symbols: true
-                });
-                
-                await worker.terminate();
-                
-                return {
-                    originalRegion: region,
-                    granularResult: result,
-                    cropInfo: {
-                        x: Math.round(bbox.x0),
-                        y: Math.round(bbox.y0),
-                        width: width,
-                        height: height
-                    }
-                };
-            } catch (error) {
-                console.error('Error in granular processing for region:', error);
-                return null;
-            }
-        }
-
-        // Main analysis function
-        async function analyzeLayout() {
+        // Main analysis function with OSD
+        async function analyzeWithOSD() {
             if (!currentImage) return;
 
             try {
-                showProgress('Analyzing Layout...', 0, 'Initializing...');
+                showProgress('Analyzing with OSD...', 0, 'Initializing...');
                 
-                // Step 1: Run PSM 3 analysis (paragraph-level)
-                showProgress('Analyzing Layout...', 10, 'Running PSM 3 analysis...');
-                const psm3Result = await analyzeWithPSM(3);
+                // Step 1: Run OSD detection
+                showProgress('Analyzing with OSD...', 10, 'Running OSD detection...');
+                const osdResult = await runOSD();
                 
-                if (!psm3Result) {
-                    throw new Error('Failed to run PSM 3 analysis');
+                if (!osdResult) {
+                    throw new Error('Failed to run OSD detection');
                 }
                 
-                psm3Results.innerHTML = formatLayoutElements(psm3Result, 'paragraphs');
+                osdResults.innerHTML = formatOSDResults(osdResult);
                 
-                // Step 2: Identify complex regions
-                showProgress('Analyzing Layout...', 30, 'Identifying complex regions...');
-                const paragraphs = psm3Result.data.paragraphs || [];
+                // Step 2: Script-specific processing
+                showProgress('Analyzing with OSD...', 20, 'Running script-specific processing...');
+                let scriptProcessingResult;
+                const detectedScript = osdResult.data.script || 'Unknown';
+                
+                // Determine processing strategy based on detected script
+                if (detectedScript === 'Han' || detectedScript === 'HanS' || detectedScript === 'HanT') {
+                    // Chinese script detected - use our specialized processing
+                    scriptProcessingResults.innerHTML = '<p><strong>Detected Chinese script - using specialized Chinese processing pipeline</strong></p>';
+                    
+                    // Run PSM 3 analysis for Chinese text
+                    scriptProcessingResult = await analyzeWithPSM(3);
+                } else {
+                    // Non-Chinese script - use standard processing
+                    scriptProcessingResults.innerHTML = `<p><strong>Detected ${detectedScript} script - using standard processing pipeline</strong></p>`;
+                    
+                    // Run PSM 3 analysis for other scripts
+                    scriptProcessingResult = await analyzeWithPSM(3);
+                }
+                
+                if (!scriptProcessingResult) {
+                    throw new Error('Failed to run script-specific processing');
+                }
+                
+                scriptProcessingResults.innerHTML += formatLayoutElements(scriptProcessingResult, 'paragraphs');
+                
+                // Step 3: Identify complex regions
+                showProgress('Analyzing with OSD...', 40, 'Identifying complex regions...');
+                const paragraphs = scriptProcessingResult.data.paragraphs || [];
                 const complexRegions = identifyComplexRegions(paragraphs);
                 
                 complexRegionResults.innerHTML = formatComplexRegions(complexRegions);
                 
-                // Step 3: Apply granular processing to complex regions
-                showProgress('Analyzing Layout...', 50, 'Applying granular processing to complex regions...');
+                // Step 4: Apply granular processing to complex regions
+                showProgress('Analyzing with OSD...', 60, 'Applying granular processing to complex regions...');
                 const granularResultsData = [];
                 
                 for (let i = 0; i < complexRegions.length; i++) {
                     const region = complexRegions[i];
-                    const progress = 50 + Math.round((i / complexRegions.length) * 30);
-                    showProgress('Analyzing Layout...', progress, `Processing complex region ${i+1} of ${complexRegions.length}...`);
+                    const progress = 60 + Math.round((i / complexRegions.length) * 30);
+                    showProgress('Analyzing with OSD...', progress, `Processing complex region ${i+1} of ${complexRegions.length}...`);
                     
                     // Apply real granular processing
                     const granularResult = await applyGranularProcessing(region);
@@ -681,13 +745,15 @@
                     granularResults.innerHTML = '<p>No granular processing was needed or failed.</p>';
                 }
                 
-                // Step 4: Combine results
-                showProgress('Analyzing Layout...', 90, 'Combining results...');
+                // Step 5: Combine results
+                showProgress('Analyzing with OSD...', 95, 'Combining results...');
                 
                 // Show summary of actual processing
                 const summaryHtml = `
-                    <p><strong>Analysis Summary:</strong></p>
+                    <p><strong>OSD-Enhanced Analysis Summary:</strong></p>
                     <ul>
+                        <li>Detected Script: ${osdResult.data.script || 'Unknown'}</li>
+                        <li>Detected Orientation: ${osdResult.data.orientation || 0}°</li>
                         <li>Total paragraphs analyzed: ${paragraphs.length}</li>
                         <li>Complex regions identified: ${complexRegions.length}</li>
                         <li>Regions processed with granular approach: ${granularResultsData.length}</li>
@@ -695,22 +761,17 @@
                     </ul>
                     <p><strong>Processing Strategy:</strong></p>
                     <ul>
-                        <li>Used PSM 3 for overall document structure</li>
+                        <li>Used OSD to detect script and orientation</li>
+                        <li>Applied script-specific processing (Chinese-optimized when appropriate)</li>
                         <li>Identified mixed-script regions using character composition analysis</li>
                         <li>Applied PSM 6 granular processing to complex regions by cropping and re-processing</li>
                         <li>Obtained line-by-line and word-by-word breakdown for complex regions</li>
-                    </ul>
-                    <p><strong>Benefits:</strong></p>
-                    <ul>
-                        <li>Improved handling of mixed-language paragraphs</li>
-                        <li>More accurate text structure for complex regions</li>
-                        <li>Better confidence metrics at granular level</li>
                     </ul>
                 `;
                 
                 finalResults.innerHTML = summaryHtml;
                 
-                updateProgress(100, 'Layout analysis complete!');
+                updateProgress(100, 'OSD-enhanced analysis complete!');
                 
                 // Show results
                 setTimeout(() => {

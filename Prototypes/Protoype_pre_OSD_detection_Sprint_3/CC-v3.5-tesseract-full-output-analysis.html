@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract Structure Explorer v3.5 - Full Output Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+        .results-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .methods-sidebar {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .method-tab {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            font-size: 13px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .method-tab:hover {
+            background: #e9ecef;
+        }
+        .method-tab.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .method-tab.completed {
+            border-left: 4px solid #28a745;
+        }
+        .method-tab.processing {
+            border-left: 4px solid #ffc107;
+        }
+        .method-tab.error {
+            border-left: 4px solid #dc3545;
+        }
+        .method-details {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 600px;
+        }
+        .method-details h2 {
+            margin: 0 0 20px 0;
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .innovation-note {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+        .performance-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .perf-card {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .perf-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            display: block;
+        }
+        .output-sections {
+            margin-top: 20px;
+        }
+        .output-section {
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .section-header {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+        .section-header:hover {
+            background: #e9ecef;
+        }
+        .section-content {
+            padding: 15px;
+            background: white;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .section-content.collapsed {
+            display: none;
+        }
+        .structure-data {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .region-item {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            margin: 8px 0;
+            padding: 12px;
+            font-size: 12px;
+        }
+        .region-header {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 8px;
+        }
+        .region-props {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+            font-size: 11px;
+        }
+        .region-prop {
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+        .region-text {
+            background: #e3f2fd;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-style: italic;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .status-ready {
+            background: #e9ecef;
+            color: #495057;
+        }
+        .status-processing {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-complete {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .comparison-summary {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            grid-column: 1 / -1;
+        }
+        .speed-ranking {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .speed-rank {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .rank-1 { border-left: 5px solid #ffd700; }
+        .rank-2 { border-left: 5px solid #c0c0c0; }
+        .rank-3 { border-left: 5px solid #cd7f32; }
+        .copy-summary {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .copy-content {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            user-select: text;
+        }
+        .toggle-arrow {
+            transition: transform 0.2s;
+        }
+        .toggle-arrow.collapsed {
+            transform: rotate(-90deg);
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Tesseract Structure Explorer v3.5 - Full Output Analysis</h1>
+        <p>Comprehensive analysis of Tesseract structure detection methods with complete untruncated output data.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>📁 Click here or drag & drop an image to analyze</p>
+            <p style="font-size: 14px; color: #666;">Supported formats: JPG, PNG, GIF, BMP</p>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        </div>
+        
+        <div class="controls" style="text-align: center;">
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; margin-right: 10px;">Detection Level:</label>
+                <select id="detectionLevel" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-right: 20px;">
+                    <option value="blocks">📦 Block Level</option>
+                    <option value="paragraphs">📄 Paragraph Level</option>
+                    <option value="lines">📝 Line Level</option>
+                </select>
+            </div>
+            <button class="btn" id="runAllMethods" disabled>⚡ Run All Detection Methods</button>
+            <button class="btn" id="clearResults" style="background-color: #6c757d;">🗑️ Clear Results</button>
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>📷 Original Image</h3>
+            <img id="previewImage" class="image-preview">
+            <div class="progress-bar hidden" id="overallProgress">
+                <div class="progress-fill" id="overallProgressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-layout hidden" id="resultsLayout">
+        <div class="methods-sidebar">
+            <h3 style="margin-top: 0;">Detection Methods</h3>
+            <div id="methodTabs"></div>
+            
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd;">
+                <h4>Quick Stats</h4>
+                <div id="quickStats" style="font-size: 12px;"></div>
+            </div>
+        </div>
+        
+        <div class="method-details" id="methodDetails">
+            <div style="text-align: center; color: #666; margin-top: 100px;">
+                <h3>Select a detection method to view detailed results</h3>
+                <p>Click on any method in the sidebar to see its complete structure output data.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="comparison-summary hidden" id="comparisonSummary">
+        <h3>📊 Performance Comparison & Summary</h3>
+        <div class="speed-ranking" id="speedRanking"></div>
+        
+        <div class="copy-summary">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="margin: 0;">📋 Formatted Results Summary</h4>
+                <button class="btn" onclick="copyToClipboard('summaryContent')" style="padding: 6px 12px; font-size: 12px;">📋 Copy Summary</button>
+            </div>
+            <div class="copy-content" id="summaryContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentImage = null;
+        let methodResults = {};
+        let activeMethod = null;
+
+        // Method definitions
+        const methods = [
+            { id: 'osdOnly', name: '🧭 OSD-Only Mode', color: '#28a745' },
+            { id: 'scale25', name: '📐 Scale-Down 25%', color: '#e91e63' },
+            { id: 'scaleHack', name: '📏 Scale-Down 50%', color: '#ffc107' },
+            { id: 'scale75', name: '📊 Scale-Down 75%', color: '#4caf50' },
+            { id: 'boxOnly', name: '📦 Box-Only Mode', color: '#6f42c1' },
+            { id: 'confidenceHack', name: '🎯 High-Confidence', color: '#fd7e14' },
+            { id: 'minimalLang', name: '🔤 Minimal Language', color: '#dc3545' },
+            { id: 'standardEng', name: '🔵 Standard English', color: '#17a2b8' },
+            { id: 'multiLang', name: '🌍 10-Languages', color: '#673ab7' }
+        ];
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const runAllMethods = document.getElementById('runAllMethods');
+        const clearResults = document.getElementById('clearResults');
+        const detectionLevel = document.getElementById('detectionLevel');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const resultsLayout = document.getElementById('resultsLayout');
+        const methodTabs = document.getElementById('methodTabs');
+        const methodDetails = document.getElementById('methodDetails');
+        const comparisonSummary = document.getElementById('comparisonSummary');
+
+        // Upload handling
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        runAllMethods.addEventListener('click', runAllDetectionMethods);
+        clearResults.addEventListener('click', clearAllResults);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                loadImage(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                loadImage(e.target.files[0]);
+            }
+        }
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImage = new Image();
+                currentImage.onload = function() {
+                    previewImage.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    runAllMethods.disabled = false;
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearAllResults() {
+            imagePreview.classList.add('hidden');
+            resultsLayout.classList.add('hidden');
+            comparisonSummary.classList.add('hidden');
+            runAllMethods.disabled = true;
+            currentImage = null;
+            methodResults = {};
+            activeMethod = null;
+        }
+
+        function getDetectionOptions() {
+            const level = detectionLevel.value;
+            switch(level) {
+                case 'paragraphs':
+                    return { blocks: true, paragraphs: true };
+                case 'lines':
+                    return { blocks: true, paragraphs: true, lines: true };
+                default:
+                    return { blocks: true };
+            }
+        }
+
+        function getDetectionCount(result) {
+            const level = detectionLevel.value;
+            if (!result.data) return 0;
+            
+            switch(level) {
+                case 'paragraphs':
+                    return result.data.paragraphs ? result.data.paragraphs.length : 0;
+                case 'lines':
+                    return result.data.lines ? result.data.lines.length : 0;
+                default:
+                    return result.data.blocks ? result.data.blocks.length : 0;
+            }
+        }
+
+        function getDetectionLevelLabel() {
+            const level = detectionLevel.value;
+            switch(level) {
+                case 'paragraphs': return 'paragraphs';
+                case 'lines': return 'lines';
+                default: return 'blocks';
+            }
+        }
+
+        function createMethodTabs() {
+            methodTabs.innerHTML = '';
+            methods.forEach(method => {
+                const tab = document.createElement('div');
+                tab.className = 'method-tab';
+                tab.id = `tab-${method.id}`;
+                tab.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>${method.name}</span>
+                        <span class="status-badge status-ready" id="status-${method.id}">Ready</span>
+                    </div>
+                `;
+                tab.addEventListener('click', () => selectMethod(method.id));
+                methodTabs.appendChild(tab);
+            });
+        }
+
+        function selectMethod(methodId) {
+            // Update active tab
+            document.querySelectorAll('.method-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(`tab-${methodId}`).classList.add('active');
+            
+            activeMethod = methodId;
+            displayMethodDetails(methodId);
+        }
+
+        function updateMethodStatus(methodId, status, message) {
+            const statusEl = document.getElementById(`status-${methodId}`);
+            const tabEl = document.getElementById(`tab-${methodId}`);
+            
+            statusEl.className = `status-badge status-${status}`;
+            statusEl.textContent = message || status;
+            
+            tabEl.className = `method-tab ${status}`;
+            if (activeMethod === methodId) {
+                tabEl.classList.add('active');
+            }
+        }
+
+        async function runAllDetectionMethods() {
+            if (!currentImage) return;
+            
+            runAllMethods.disabled = true;
+            resultsLayout.classList.remove('hidden');
+            createMethodTabs();
+            
+            const progressBar = document.getElementById('overallProgress');
+            const progressFill = document.getElementById('overallProgressFill');
+            progressBar.classList.remove('hidden');
+            
+            methodResults = {};
+            
+            for (let i = 0; i < methods.length; i++) {
+                const method = methods[i];
+                progressFill.style.width = `${(i / methods.length) * 100}%`;
+                
+                updateMethodStatus(method.id, 'processing', 'Running...');
+                
+                try {
+                    await runDetectionMethod(method.id);
+                    updateMethodStatus(method.id, 'completed', 'Complete');
+                } catch (error) {
+                    console.error(`${method.id} error:`, error);
+                    updateMethodStatus(method.id, 'error', 'Error');
+                    methodResults[method.id] = { error: error.message };
+                }
+            }
+            
+            progressFill.style.width = '100%';
+            setTimeout(() => {
+                progressBar.classList.add('hidden');
+                displayComparison();
+                updateQuickStats();
+            }, 500);
+            
+            runAllMethods.disabled = false;
+        }
+
+        async function runDetectionMethod(methodId) {
+            const startTime = performance.now();
+            
+            switch(methodId) {
+                case 'osdOnly':
+                    return await runOSDOnlyMethod(startTime);
+                case 'scale25':
+                    return await runScaleMethod(startTime, 0.25);
+                case 'scaleHack':
+                    return await runScaleMethod(startTime, 0.5);
+                case 'scale75':
+                    return await runScaleMethod(startTime, 0.75);
+                case 'boxOnly':
+                    return await runBoxOnlyMethod(startTime);
+                case 'confidenceHack':
+                    return await runConfidenceMethod(startTime);
+                case 'minimalLang':
+                    return await runMinimalLanguageMethod(startTime);
+                case 'standardEng':
+                    return await runStandardEnglishMethod(startTime);
+                case 'multiLang':
+                    return await runMultiLanguageMethod(startTime);
+            }
+        }
+
+        async function runOSDOnlyMethod(startTime) {
+            const worker = await Tesseract.createWorker();
+            const initTime = performance.now();
+            
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            await worker.setParameters({ tessedit_pageseg_mode: 0 });
+            
+            const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+            const endTime = performance.now();
+            
+            methodResults.osdOnly = {
+                method: 'OSD-Only Mode (PSM 0)',
+                totalTime: endTime - startTime,
+                initTime: initTime - startTime,
+                detectionTime: endTime - initTime,
+                count: getDetectionCount(result),
+                confidence: result.data.confidence || 0,
+                fullResult: result.data,
+                innovation: 'Orientation and script detection only - skips full OCR'
+            };
+            
+            await worker.terminate();
+        }
+
+        async function runScaleMethod(startTime, scaleFactor) {
+            const methodId = scaleFactor === 0.25 ? 'scale25' : scaleFactor === 0.5 ? 'scaleHack' : 'scale75';
+            
+            const scaledCanvas = document.createElement('canvas');
+            const ctx = scaledCanvas.getContext('2d');
+            scaledCanvas.width = currentImage.width * scaleFactor;
+            scaledCanvas.height = currentImage.height * scaleFactor;
+            ctx.drawImage(currentImage, 0, 0, scaledCanvas.width, scaledCanvas.height);
+            
+            const worker = await Tesseract.createWorker();
+            const initTime = performance.now();
+            
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            
+            const result = await worker.recognize(scaledCanvas, {}, getDetectionOptions());
+            const endTime = performance.now();
+            
+            // Scale results back up
+            const upscaleFactor = 1 / scaleFactor;
+            if (result.data.blocks) {
+                result.data.blocks.forEach(item => scaleItem(item, upscaleFactor));
+            }
+            if (result.data.paragraphs) {
+                result.data.paragraphs.forEach(item => scaleItem(item, upscaleFactor));
+            }
+            if (result.data.lines) {
+                result.data.lines.forEach(item => scaleItem(item, upscaleFactor));
+            }
+            
+            methodResults[methodId] = {
+                method: `Scale-Down Hack (${Math.round(scaleFactor * 100)}%)`,
+                totalTime: endTime - startTime,
+                initTime: initTime - startTime,
+                detectionTime: endTime - initTime,
+                count: getDetectionCount(result),
+                confidence: result.data.confidence || 0,
+                fullResult: result.data,
+                scaleFactor: scaleFactor,
+                innovation: `Process at ${Math.round(scaleFactor * 100)}% resolution for speed optimization`
+            };
+            
+            await worker.terminate();
+        }
+
+        function scaleItem(item, factor) {
+            if (item.bbox) {
+                item.bbox.x0 *= factor;
+                item.bbox.y0 *= factor;
+                item.bbox.x1 *= factor;
+                item.bbox.y1 *= factor;
+            }
+        }
+
+        async function runBoxOnlyMethod(startTime) {
+            const worker = await Tesseract.createWorker();
+            const initTime = performance.now();
+            
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            
+            const result = await worker.recognize(currentImage, {}, { 
+                ...getDetectionOptions(),
+                text: false,
+                hocr: false,
+                tsv: false
+            });
+            const endTime = performance.now();
+            
+            methodResults.boxOnly = {
+                method: 'Box-Only Mode',
+                totalTime: endTime - startTime,
+                initTime: initTime - startTime,
+                detectionTime: endTime - initTime,
+                count: getDetectionCount(result),
+                confidence: result.data.confidence || 0,
+                fullResult: result.data,
+                innovation: 'Generate bounding boxes only, skip text extraction'
+            };
+            
+            await worker.terminate();
+        }
+
+        async function runConfidenceMethod(startTime) {
+            const worker = await Tesseract.createWorker();
+            const initTime = performance.now();
+            
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            await worker.setParameters({
+                tesseract_min_confidence: 95,
+                tessedit_char_confidence_mask_dict: 0
+            });
+            
+            const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+            const endTime = performance.now();
+            
+            methodResults.confidenceHack = {
+                method: 'High-Confidence Filter (95%+)',
+                totalTime: endTime - startTime,
+                initTime: initTime - startTime,
+                detectionTime: endTime - initTime,
+                count: getDetectionCount(result),
+                confidence: result.data.confidence || 0,
+                fullResult: result.data,
+                innovation: 'Only process high-confidence regions, skip uncertain areas'
+            };
+            
+            await worker.terminate();
+        }
+
+        async function runMinimalLanguageMethod(startTime) {
+            const worker = await Tesseract.createWorker();
+            const initTime = performance.now();
+            
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            await worker.setParameters({
+                tessedit_char_whitelist: '0123456789.,!?;:()[]{}"\'-+= \n\t',
+                tessedit_pageseg_mode: 3
+            });
+            
+            const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+            const endTime = performance.now();
+            
+            methodResults.minimalLang = {
+                method: 'Minimal Language Model',
+                totalTime: endTime - startTime,
+                initTime: initTime - startTime,
+                detectionTime: endTime - initTime,
+                count: getDetectionCount(result),
+                confidence: result.data.confidence || 0,
+                fullResult: result.data,
+                innovation: 'Digits and punctuation only for fastest processing'
+            };
+            
+            await worker.terminate();
+        }
+
+        async function runStandardEnglishMethod(startTime) {
+            const worker = await Tesseract.createWorker();
+            const initTime = performance.now();
+            
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            await worker.setParameters({ classify_enable_learning: '0' });
+            
+            const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+            const endTime = performance.now();
+            
+            methodResults.standardEng = {
+                method: 'Standard English OCR',
+                totalTime: endTime - startTime,
+                initTime: initTime - startTime,
+                detectionTime: endTime - initTime,
+                count: getDetectionCount(result),
+                confidence: result.data.confidence || 0,
+                fullResult: result.data,
+                innovation: 'Traditional full OCR approach - complete accuracy baseline'
+            };
+            
+            await worker.terminate();
+        }
+
+        async function runMultiLanguageMethod(startTime) {
+            const detectionLanguages = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+            
+            const worker = await Tesseract.createWorker();
+            const initTime = performance.now();
+            
+            await worker.loadLanguage(detectionLanguages);
+            await worker.initialize(detectionLanguages);
+            await worker.setParameters({ classify_enable_learning: '0' });
+            
+            const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+            const endTime = performance.now();
+            
+            methodResults.multiLang = {
+                method: '10-Language Detection Worker',
+                totalTime: endTime - startTime,
+                initTime: initTime - startTime,
+                detectionTime: endTime - initTime,
+                count: getDetectionCount(result),
+                confidence: result.data.confidence || 0,
+                fullResult: result.data,
+                languages: detectionLanguages,
+                innovation: 'Comprehensive multilingual detection for maximum accuracy'
+            };
+            
+            await worker.terminate();
+        }
+
+        function displayMethodDetails(methodId) {
+            const method = methods.find(m => m.id === methodId);
+            const result = methodResults[methodId];
+            
+            if (!result) {
+                methodDetails.innerHTML = `
+                    <h2 style="background-color: ${method.color};">${method.name}</h2>
+                    <div style="text-align: center; color: #666; margin-top: 50px;">
+                        <h3>Method not yet executed</h3>
+                        <p>Run all detection methods to see detailed results.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (result.error) {
+                methodDetails.innerHTML = `
+                    <h2 style="background-color: ${method.color};">${method.name}</h2>
+                    <div class="innovation-note" style="background: #dc3545;">
+                        <strong>Error:</strong> ${result.error}
+                    </div>
+                `;
+                return;
+            }
+
+            const level = getDetectionLevelLabel();
+            const levelData = getStructureData(result.fullResult, level);
+            
+            methodDetails.innerHTML = `
+                <h2 style="background-color: ${method.color};">${method.name}</h2>
+                
+                <div class="innovation-note">
+                    <strong>Innovation:</strong> ${result.innovation}
+                </div>
+
+                <div class="performance-summary">
+                    <div class="perf-card">
+                        <span class="perf-value">${Math.round(result.totalTime)}ms</span>
+                        Total Time
+                    </div>
+                    <div class="perf-card">
+                        <span class="perf-value">${Math.round(result.initTime)}ms</span>
+                        Init Time
+                    </div>
+                    <div class="perf-card">
+                        <span class="perf-value">${Math.round(result.detectionTime)}ms</span>
+                        Detection Time
+                    </div>
+                    <div class="perf-card">
+                        <span class="perf-value">${result.count}</span>
+                        ${level.charAt(0).toUpperCase() + level.slice(1)} Found
+                    </div>
+                    <div class="perf-card">
+                        <span class="perf-value">${Math.round(result.confidence)}%</span>
+                        Confidence
+                    </div>
+                </div>
+
+                <div class="output-sections">
+                    ${generateOutputSections(result, levelData)}
+                </div>
+            `;
+            
+            // Add click handlers for collapsible sections
+            document.querySelectorAll('.section-header').forEach(header => {
+                header.addEventListener('click', toggleSection);
+            });
+        }
+
+        function getStructureData(fullResult, level) {
+            switch(level) {
+                case 'paragraphs':
+                    return fullResult.paragraphs || [];
+                case 'lines':
+                    return fullResult.lines || [];
+                default:
+                    return fullResult.blocks || [];
+            }
+        }
+
+        function generateOutputSections(result, levelData) {
+            const level = getDetectionLevelLabel();
+            
+            let sections = `
+                <div class="output-section">
+                    <div class="section-header">
+                        <span>📊 ${level.charAt(0).toUpperCase() + level.slice(1)} Structure Data (${levelData.length} items)</span>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-content">
+                        ${generateStructureItems(levelData, level)}
+                    </div>
+                </div>
+                
+                <div class="output-section">
+                    <div class="section-header">
+                        <span>🔍 Full Tesseract Output (Raw JSON)</span>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="structure-data">${JSON.stringify(result.fullResult, null, 2)}</div>
+                    </div>
+                </div>
+            `;
+
+            // Add blocks section if we're looking at paragraphs or lines
+            if (level !== 'blocks' && result.fullResult.blocks && result.fullResult.blocks.length > 0) {
+                sections += `
+                    <div class="output-section">
+                        <div class="section-header">
+                            <span>📦 Block Structure Data (${result.fullResult.blocks.length} blocks)</span>
+                            <span class="toggle-arrow">▼</span>
+                        </div>
+                        <div class="section-content">
+                            ${generateStructureItems(result.fullResult.blocks, 'blocks')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Add confidence data if available
+            if (result.fullResult.words && result.fullResult.words.length > 0) {
+                const avgConfidence = result.fullResult.words.reduce((sum, word) => sum + word.confidence, 0) / result.fullResult.words.length;
+                sections += `
+                    <div class="output-section">
+                        <div class="section-header">
+                            <span>📈 Word Confidence Data (${result.fullResult.words.length} words, avg: ${Math.round(avgConfidence)}%)</span>
+                            <span class="toggle-arrow">▼</span>
+                        </div>
+                        <div class="section-content">
+                            <div class="structure-data">${JSON.stringify(result.fullResult.words.slice(0, 50), null, 2)}${result.fullResult.words.length > 50 ? '\n\n... (showing first 50 words)' : ''}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return sections;
+        }
+
+        function generateStructureItems(items, type) {
+            if (!items || items.length === 0) {
+                return '<div style="text-align: center; color: #666; padding: 20px;">No structure data found</div>';
+            }
+
+            return items.map((item, index) => {
+                const bbox = item.bbox || {};
+                const width = Math.round(bbox.x1 - bbox.x0);
+                const height = Math.round(bbox.y1 - bbox.y0);
+                
+                return `
+                    <div class="region-item">
+                        <div class="region-header">${type.charAt(0).toUpperCase() + type.slice(1)} #${index + 1}</div>
+                        
+                        <div class="region-props">
+                            <div class="region-prop"><strong>Position:</strong> (${Math.round(bbox.x0)}, ${Math.round(bbox.y0)})</div>
+                            <div class="region-prop"><strong>Size:</strong> ${width} × ${height}px</div>
+                            <div class="region-prop"><strong>Area:</strong> ${width * height}px²</div>
+                            <div class="region-prop"><strong>Confidence:</strong> ${Math.round(item.confidence || 0)}%</div>
+                        </div>
+                        
+                        ${item.text ? `
+                            <div class="region-text">
+                                <strong>Text:</strong> "${item.text.trim()}"
+                            </div>
+                        ` : ''}
+                        
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; font-size: 11px; color: #666;">Show Raw Data</summary>
+                            <div class="structure-data" style="margin-top: 8px; max-height: 150px;">${JSON.stringify(item, null, 2)}</div>
+                        </details>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleSection(e) {
+            const content = e.currentTarget.nextElementSibling;
+            const arrow = e.currentTarget.querySelector('.toggle-arrow');
+            
+            content.classList.toggle('collapsed');
+            arrow.classList.toggle('collapsed');
+        }
+
+        function updateQuickStats() {
+            const validResults = Object.entries(methodResults)
+                .filter(([key, data]) => data && data.totalTime && !data.error)
+                .sort((a, b) => a[1].totalTime - b[1].totalTime);
+            
+            if (validResults.length === 0) return;
+            
+            const fastest = validResults[0];
+            const slowest = validResults[validResults.length - 1];
+            const avgTime = Math.round(validResults.reduce((sum, [key, data]) => sum + data.totalTime, 0) / validResults.length);
+            
+            document.getElementById('quickStats').innerHTML = `
+                <div style="margin: 5px 0;"><strong>Fastest:</strong> ${fastest[1].method.split(' ')[0]} (${Math.round(fastest[1].totalTime)}ms)</div>
+                <div style="margin: 5px 0;"><strong>Slowest:</strong> ${slowest[1].method.split(' ')[0]} (${Math.round(slowest[1].totalTime)}ms)</div>
+                <div style="margin: 5px 0;"><strong>Average:</strong> ${avgTime}ms</div>
+                <div style="margin: 5px 0;"><strong>Total Methods:</strong> ${validResults.length}</div>
+            `;
+        }
+
+        function displayComparison() {
+            comparisonSummary.classList.remove('hidden');
+            
+            const validResults = Object.entries(methodResults)
+                .filter(([key, data]) => data && data.totalTime && !data.error)
+                .sort((a, b) => a[1].totalTime - b[1].totalTime);
+            
+            if (validResults.length === 0) return;
+            
+            // Display speed ranking
+            let rankingHTML = '';
+            validResults.forEach(([methodId, data], index) => {
+                const method = methods.find(m => m.id === methodId);
+                const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                rankingHTML += `
+                    <div class="speed-rank ${rankClass}">
+                        <div style="font-weight: bold;">${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}</div>
+                        <div>${method.name}</div>
+                        <div style="color: #007bff; font-weight: bold;">${Math.round(data.totalTime)}ms</div>
+                        <div style="font-size: 10px; color: #666;">${data.count} ${getDetectionLevelLabel()}</div>
+                    </div>
+                `;
+            });
+            document.getElementById('speedRanking').innerHTML = rankingHTML;
+            
+            // Generate summary
+            generateFormattedSummary(validResults);
+        }
+
+        function generateFormattedSummary(validResults) {
+            const level = getDetectionLevelLabel();
+            const levelUpper = level.charAt(0).toUpperCase() + level.slice(1);
+            
+            let summary = `TESSERACT STRUCTURE DETECTION ANALYSIS - ${levelUpper} Level\n`;
+            summary += `=====================================================\n\n`;
+            summary += `Test Configuration:\n`;
+            summary += `- Detection Level: ${levelUpper}\n`;
+            summary += `- Image: ${currentImage ? `${currentImage.width}x${currentImage.height}px` : 'Unknown'}\n`;
+            summary += `- Test Date: ${new Date().toLocaleDateString()}\n`;
+            summary += `- Methods Tested: ${validResults.length}\n\n`;
+            
+            summary += `PERFORMANCE RANKING (Fastest to Slowest):\n`;
+            summary += `-----------------------------------------\n`;
+            
+            validResults.forEach(([methodId, data], index) => {
+                const method = methods.find(m => m.id === methodId);
+                const rank = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                summary += `${rank} ${data.method}\n`;
+                summary += `    Total Time: ${Math.round(data.totalTime)}ms\n`;
+                summary += `    Init Time: ${Math.round(data.initTime)}ms\n`;
+                summary += `    Detection Time: ${Math.round(data.detectionTime)}ms\n`;
+                summary += `    ${levelUpper} Found: ${data.count}\n`;
+                summary += `    Confidence: ${Math.round(data.confidence)}%\n`;
+                summary += `    Innovation: ${data.innovation}\n\n`;
+            });
+            
+            const fastest = validResults[0];
+            const slowest = validResults[validResults.length - 1];
+            const speedup = Math.round(slowest[1].totalTime / fastest[1].totalTime * 10) / 10;
+            
+            summary += `ANALYSIS:\n`;
+            summary += `--------\n`;
+            summary += `Fastest Method: ${fastest[1].method} (${Math.round(fastest[1].totalTime)}ms)\n`;
+            summary += `Slowest Method: ${slowest[1].method} (${Math.round(slowest[1].totalTime)}ms)\n`;
+            summary += `Speed Improvement: ${speedup}x faster\n`;
+            summary += `Average Processing Time: ${Math.round(validResults.reduce((sum, [key, data]) => sum + data.totalTime, 0) / validResults.length)}ms\n\n`;
+            
+            summary += `RECOMMENDATION FOR OSD PREPROCESSING:\n`;
+            summary += `------------------------------------\n`;
+            summary += `Best Speed: ${fastest[1].method} (${Math.round(fastest[1].totalTime)}ms, ${fastest[1].count} ${level})\n`;
+            summary += `Best Balance: ${validResults[Math.floor(validResults.length / 2)][1].method}\n`;
+            summary += `Best Accuracy: ${slowest[1].method} (most comprehensive but slowest)\n\n`;
+            
+            summary += `Generated by: Tesseract Structure Explorer v3.5\n`;
+            summary += `Timestamp: ${new Date().toISOString()}\n`;
+            
+            document.getElementById('summaryContent').textContent = summary;
+        }
+
+        function copyToClipboard(elementId) {
+            const textElement = document.getElementById(elementId);
+            const text = textElement.textContent;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopyFeedback(event.target);
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    fallbackCopyTextToClipboard(text, event.target);
+                });
+            } else {
+                fallbackCopyTextToClipboard(text, event.target);
+            }
+        }
+        
+        function fallbackCopyTextToClipboard(text, button) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopyFeedback(button);
+                } else {
+                    alert('Copy failed. Please select the text manually and copy it.');
+                }
+            } catch (err) {
+                console.error('Fallback copy failed: ', err);
+                alert('Copy failed. Please select the text manually and copy it.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        function showCopyFeedback(button) {
+            const originalText = button.textContent;
+            button.textContent = '✅ Copied!';
+            button.style.backgroundColor = '#28a745';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.backgroundColor = '#007bff';
+            }, 2000);
+        }
+
+        // Initialize
+        console.log('Tesseract Structure Explorer v3.5 - Full Output Analysis initialized');
+    </script>
+</body>
+</html>

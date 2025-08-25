@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prototype: PDF Input Sprint 1 (2025-08-25)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 24px; line-height: 1.4; }
+    header { margin-bottom: 16px; }
+    .note { font-size: 12px; color: #555; }
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+    .progress { margin: 12px 0; height: 8px; background: #f1f1f1; border-radius: 999px; overflow: hidden; }
+    .bar { height: 100%; width: 0%; background: #4f46e5; transition: width 0.2s ease; }
+    .status { margin: 8px 0; font-size: 13px; color: #333; }
+    .results { margin-top: 16px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #fff; }
+    .card h3 { margin: 0 0 8px 0; font-size: 14px; }
+    .mode { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+    .mode-text { background: #e0f2fe; color: #075985; }
+    .mode-ocr { background: #ecfdf5; color: #065f46; }
+    .mode-image { background: #fef3c7; color: #92400e; }
+    .error { color: #b91c1c; background: #fee2e2; padding: 8px; border: 1px solid #fecaca; border-radius: 6px; }
+    .muted { color: #6b7280; }
+    pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+    .footer { margin-top: 24px; font-size: 12px; color: #6b7280; }
+    .dropzone { border: 2px dashed #9ca3af; border-radius: 8px; padding: 16px; text-align: center; color: #6b7280; }
+    .dropzone.dragover { background: #eef2ff; border-color: #6366f1; color: #4f46e5; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Prototype: PDF Input Sprint 1</h1>
+    <div class="note">Self-contained prototype. No production code is modified.</div>
+  </header>
+
+  <section class="controls">
+    <label>
+      <strong>Select PDF:</strong>
+      <input id="fileInput" type="file" accept="application/pdf,.pdf" />
+    </label>
+    <button id="loadSampleBtn" title="Loads a tiny embedded sample PDF">Load Text Sample</button>
+    <label>
+      <input id="enableOcr" type="checkbox" checked /> Enable OCR for image-only pages
+    </label>
+    <label>
+      OCR Language:
+      <select id="ocrLang">
+        <option value="eng" selected>English (eng)</option>
+        <option value="chi_sim">Chinese Simplified (chi_sim)</option>
+        <option value="eng+chi_sim">English + Chinese Simplified</option>
+      </select>
+    </label>
+    <label>
+      DPI:
+      <select id="dpi">
+        <option value="200">200</option>
+        <option value="300" selected>300</option>
+      </select>
+    </label>
+    <button id="startBtn">Start</button>
+    <button id="cancelBtn">Cancel</button>
+    <span class="note">Uses CDN for pdf.js and tesseract.js; internet required for OCR model download.</span>
+  </section>
+
+  <div id="dropZone" class="dropzone" title="Drag a PDF here">
+    Drag & drop a PDF here, or use the file picker above
+  </div>
+
+  <div class="progress" aria-label="overall progress">
+    <div id="progressBar" class="bar"></div>
+  </div>
+  <div id="status" class="status muted">Idle</div>
+
+  <section id="results" class="results"></section>
+
+  <div class="footer">
+    - Page modes: <span class="mode mode-text">text</span>, <span class="mode mode-ocr">ocr</span>, <span class="mode mode-image">image-only (no OCR)</span><br />
+    - Known limitations: simple line joining; OCR requires network to fetch language data (eng).<br />
+    - Folder: @prototypes/Protoype_PDF_Input_Sprint_1_20250825
+  </div>
+
+  <!-- pdf.js from CDN -->
+  <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <!-- tesseract.js from CDN (optional, for OCR) -->
+  <script src="https://unpkg.com/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
+  <script type="module" src="./sample-pdf.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RdLn™ Granular Layout Analysis - QC-v3</title>
+    <title>RdLn™ Line-Level OSD Analysis - QC-v6</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body {
@@ -124,21 +124,13 @@
             border: 2px solid #ff6b6b !important;
             background-color: rgba(255, 107, 107, 0.2) !important;
         }
-        .legend {
-            display: flex;
-            gap: 15px;
-            margin: 10px 0;
-            font-size: 12px;
+        .highlight-chinese {
+            border: 2px solid #20c997 !important;
+            background-color: rgba(32, 201, 151, 0.2) !important;
         }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .legend-color {
-            width: 15px;
-            height: 15px;
-            border: 1px solid #333;
+        .highlight-script {
+            border: 2px solid #6f42c1 !important;
+            background-color: rgba(111, 66, 193, 0.2) !important;
         }
         .processing-info {
             background-color: #d1ecf1;
@@ -148,21 +140,34 @@
             margin: 10px 0;
             font-size: 14px;
         }
+        .osd-result {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .script-han { background-color: rgba(32, 201, 151, 0.3); }
+        .script-latin { background-color: rgba(0, 123, 255, 0.3); }
+        .script-numbers { background-color: rgba(255, 193, 7, 0.3); }
+        .script-mixed { background-color: rgba(111, 66, 193, 0.3); }
+        .script-unknown { background-color: rgba(108, 117, 125, 0.3); }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>RdLn™ Granular Layout Analysis - QC-v3</h1>
-        <p>This prototype implements a practical approach for fine-tuning granularity between PSM 3 and PSM 6.</p>
-        <p>It automatically identifies complex regions that need more granular processing.</p>
+        <h1>RdLn™ Line-Level OSD Analysis - QC-v6</h1>
+        <p>This prototype runs OSD at the line level to detect script for each individual line.</p>
+        <p>It provides the most granular script detection possible for multilingual documents.</p>
         
         <div class="processing-info">
-            <h4>Approach:</h4>
+            <h4>Line-Level OSD Approach:</h4>
             <ol>
-                <li>Run initial PSM 3 analysis to get paragraph-level segmentation</li>
-                <li>Identify complex paragraphs using character set analysis and confidence metrics</li>
-                <li>Apply PSM 6 granular processing to complex regions</li>
-                <li>Combine results for optimal multilingual handling</li>
+                <li>Run initial layout analysis with PSM 4 (single column)</li>
+                <li>Extract all lines from the document</li>
+                <li>Run OSD on each individual line to detect script</li>
+                <li>Process each line with script-specific models</li>
+                <li>Combine results preserving script diversity</li>
             </ol>
         </div>
         
@@ -178,11 +183,11 @@
         </div>
         
         <div id="controls" class="hidden">
-            <button id="analyzeBtn" class="btn">Analyze Layout</button>
+            <button id="analyzeBtn" class="btn">Analyze with Line-Level OSD</button>
             <button id="resetBtn" class="btn">Reset</button>
             
             <div id="progressContainer" class="hidden">
-                <h3 id="progressTitle">Analyzing Layout...</h3>
+                <h3 id="progressTitle">Analyzing with Line-Level OSD...</h3>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
@@ -192,18 +197,18 @@
         
         <div id="results" class="result-container hidden">
             <div class="analysis-section">
-                <div class="section-title">PSM 3 Initial Analysis</div>
-                <div id="psm3Results"></div>
+                <div class="section-title">Initial Layout Analysis</div>
+                <div id="initialResults"></div>
             </div>
             
             <div class="analysis-section">
-                <div class="section-title">Complex Region Identification</div>
-                <div id="complexRegionResults"></div>
+                <div class="section-title">Line-Level OSD Results</div>
+                <div id="lineOSDResults"></div>
             </div>
             
             <div class="analysis-section">
-                <div class="section-title">Granular Processing Results</div>
-                <div id="granularResults"></div>
+                <div class="section-title">Script-Specific Processing</div>
+                <div id="scriptProcessingResults"></div>
             </div>
             
             <div class="analysis-section">
@@ -227,9 +232,9 @@
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
         const results = document.getElementById('results');
-        const psm3Results = document.getElementById('psm3Results');
-        const complexRegionResults = document.getElementById('complexRegionResults');
-        const granularResults = document.getElementById('granularResults');
+        const initialResults = document.getElementById('initialResults');
+        const lineOSDResults = document.getElementById('lineOSDResults');
+        const scriptProcessingResults = document.getElementById('scriptProcessingResults');
         const finalResults = document.getElementById('finalResults');
 
         // State variables
@@ -257,7 +262,7 @@
             }
         });
 
-        analyzeBtn.addEventListener('click', analyzeLayout);
+        analyzeBtn.addEventListener('click', analyzeWithLineLevelOSD);
         resetBtn.addEventListener('click', resetPrototype);
 
         // Functions
@@ -315,10 +320,40 @@
             progressContainer.classList.add('hidden');
             
             // Clear results
-            psm3Results.innerHTML = '';
-            complexRegionResults.innerHTML = '';
-            granularResults.innerHTML = '';
+            initialResults.innerHTML = '';
+            lineOSDResults.innerHTML = '';
+            scriptProcessingResults.innerHTML = '';
             finalResults.innerHTML = '';
+        }
+
+        // Run OSD detection on a specific region
+        async function runOSDOnRegion(rectangle) {
+            try {
+                // Create a cropped version of the image for this region
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = rectangle.width;
+                canvas.height = rectangle.height;
+                ctx.drawImage(
+                    currentImage, 
+                    rectangle.left, 
+                    rectangle.top, 
+                    rectangle.width, 
+                    rectangle.height,
+                    0, 
+                    0, 
+                    rectangle.width, 
+                    rectangle.height
+                );
+                
+                // Use Tesseract.detect for OSD on the cropped region
+                const result = await Tesseract.detect(canvas);
+                
+                return result;
+            } catch (error) {
+                console.error('OSD Error for region:', error);
+                return null;
+            }
         }
 
         // Analyze layout with a specific PSM mode
@@ -375,8 +410,24 @@
             }
         }
 
+        // Get script-specific color class
+        function getScriptColorClass(script) {
+            switch(script) {
+                case 'Han':
+                case 'HanS':
+                case 'HanT':
+                    return 'script-han';
+                case 'Latin':
+                    return 'script-latin';
+                case 'Common':
+                    return 'script-numbers';
+                default:
+                    return 'script-unknown';
+            }
+        }
+
         // Format layout elements for display
-        function formatLayoutElements(result, level = 'paragraphs') {
+        function formatLayoutElements(result, level = 'lines') {
             let html = '';
             
             if (result && result.data) {
@@ -420,7 +471,7 @@
                             html += '<div class="block-container">';
                             result.data.lines.forEach((line, index) => {
                                 html += `
-                                    <div class="block-item">
+                                    <div class="block-item" id="line-${index}">
                                         <div class="block-text">${line.text || '(empty)'}</div>
                                         <div class="block-info">Conf: ${(line.confidence || 0).toFixed(2)}%</div>
                                     </div>
@@ -435,110 +486,80 @@
             return html;
         }
 
-        // Analyze character composition of text
-        function analyzeCharacterComposition(text) {
-            if (!text) return { chinese: 0, latin: 0, numbers: 0, punctuation: 0, total: 0 };
-            
-            let chinese = 0;
-            let latin = 0;
-            let numbers = 0;
-            let punctuation = 0;
-            
-            for (let char of text) {
-                if (/[\u4e00-\u9fff]/.test(char)) {
-                    chinese++;
-                } else if (/[a-zA-Z]/.test(char)) {
-                    latin++;
-                } else if (/[0-9]/.test(char)) {
-                    numbers++;
-                } else if (/[\s\p{P}\p{S}]/u.test(char)) {
-                    punctuation++;
-                }
+        // Format line-level OSD results for display
+        function formatLineOSDResults(lineOSDData) {
+            if (!lineOSDData || lineOSDData.length === 0) {
+                return '<p>No line-level OSD results available</p>';
             }
             
-            const total = text.length;
-            return { chinese, latin, numbers, punctuation, total };
-        }
-
-        // Identify complex regions based on character composition and confidence
-        function identifyComplexRegions(paragraphs) {
-            const complexRegions = [];
-            
-            paragraphs.forEach((paragraph, index) => {
-                const text = paragraph.text || '';
-                const confidence = paragraph.confidence || 0;
-                
-                // Analyze character composition
-                const composition = analyzeCharacterComposition(text);
-                
-                // Determine if this is a complex region
-                const hasMixedScripts = composition.chinese > 0 && (composition.latin > 0 || composition.numbers > 0);
-                const lowConfidence = confidence < 70;
-                const highPunctuationRatio = composition.total > 0 && (composition.punctuation / composition.total) > 0.3;
-                
-                if (hasMixedScripts || lowConfidence || highPunctuationRatio) {
-                    complexRegions.push({
-                        index: index,
-                        paragraph: paragraph,
-                        composition: composition,
-                        isMixedScript: hasMixedScripts,
-                        isLowConfidence: lowConfidence,
-                        isHighPunctuation: highPunctuationRatio,
-                        complexityScore: 
-                            (hasMixedScripts ? 3 : 0) + 
-                            (lowConfidence ? 2 : 0) + 
-                            (highPunctuationRatio ? 1 : 0)
-                    });
-                }
-            });
-            
-            // Sort by complexity score (highest first)
-            complexRegions.sort((a, b) => b.complexityScore - a.complexityScore);
-            
-            return complexRegions;
-        }
-
-        // Format complex region analysis for display
-        function formatComplexRegions(complexRegions) {
-            if (complexRegions.length === 0) {
-                return '<p>No complex regions identified. All paragraphs appear to have uniform content.</p>';
-            }
-            
-            let html = `<p>Identified ${complexRegions.length} complex regions that may benefit from granular processing:</p>`;
+            let html = '<p><strong>Line-Level Script Detection Results:</strong></p>';
             html += '<div class="block-container">';
             
-            complexRegions.forEach(region => {
-                const comp = region.composition;
+            lineOSDData.forEach((lineData, index) => {
+                const osdResult = lineData.osdResult;
+                const lineText = lineData.line.text || '(empty)';
+                const script = osdResult && osdResult.data ? osdResult.data.script : 'Unknown';
+                const colorClass = getScriptColorClass(script);
+                
                 html += `
-                    <div class="block-item highlight-complex">
-                        <div class="block-text">${region.paragraph.text || '(empty)'}</div>
-                        <div class="block-info">Complexity Score: ${region.complexityScore}/6</div>
-                        <div class="block-info">Chinese: ${Math.round((comp.chinese/comp.total)*100)}% | Latin: ${Math.round((comp.latin/comp.total)*100)}%</div>
-                        <div class="block-info">Confidence: ${(region.paragraph.confidence || 0).toFixed(2)}%</div>
-                        <div class="block-info">
-                            ${region.isMixedScript ? 'Mixed Scripts ' : ''}
-                            ${region.isLowConfidence ? 'Low Confidence ' : ''}
-                            ${region.isHighPunctuation ? 'High Punctuation ' : ''}
-                        </div>
+                    <div class="block-item ${colorClass}">
+                        <div class="block-text">${lineText.substring(0, 50) + (lineText.length > 50 ? '...' : '')}</div>
+                        <div class="block-info"><strong>Script:</strong> ${script}</div>
+                        <div class="block-info"><strong>Conf:</strong> ${(osdResult && osdResult.data ? (osdResult.data.script_confidence || 0).toFixed(2) : 'N/A')}%</div>
+                        <div class="block-info"><strong>Line:</strong> ${index + 1}</div>
                     </div>
                 `;
             });
             
             html += '</div>';
+            
+            // Add script distribution summary
+            const scriptCounts = {};
+            lineOSDData.forEach(lineData => {
+                const script = lineData.osdResult && lineData.osdResult.data ? lineData.osdResult.data.script : 'Unknown';
+                scriptCounts[script] = (scriptCounts[script] || 0) + 1;
+            });
+            
+            html += '<h4>Script Distribution:</h4>';
+            html += '<ul>';
+            for (const [script, count] of Object.entries(scriptCounts)) {
+                const percentage = ((count / lineOSDData.length) * 100).toFixed(1);
+                html += `<li>${script}: ${count} lines (${percentage}%)</li>`;
+            }
+            html += '</ul>';
+            
             return html;
         }
 
-        // Apply granular processing to a specific region
-        async function applyGranularProcessing(region) {
+        // Process line with script-specific model
+        async function processLineWithScript(line, osdResult) {
             try {
-                // Get the bounding box of the region
-                const bbox = region.paragraph.bbox;
-                if (!bbox) {
-                    console.warn('No bounding box found for region', region);
-                    return null;
+                const script = osdResult && osdResult.data ? osdResult.data.script : 'Unknown';
+                
+                // Determine which language models to use based on detected script
+                let languages = 'eng'; // Default to English
+                switch(script) {
+                    case 'Han':
+                    case 'HanS':
+                        languages = 'chi_sim';
+                        break;
+                    case 'HanT':
+                        languages = 'chi_tra';
+                        break;
+                    case 'Latin':
+                        languages = 'eng';
+                        break;
+                    default:
+                        languages = 'eng+chi_sim+chi_tra'; // Comprehensive model for mixed/unknown
                 }
                 
-                // Create a cropped version of the image for this region
+                // Get line bounding box
+                const bbox = line.bbox;
+                if (!bbox) {
+                    return { line, result: null, script };
+                }
+                
+                // Create a cropped version of the image for this line
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 const width = Math.max(1, Math.round(bbox.x1 - bbox.x0));
@@ -560,157 +581,173 @@
                     height
                 );
                 
-                // Run PSM 6 (single uniform block) on the cropped region for granular analysis
-                const worker = await Tesseract.createWorker('eng+chi_sim+chi_tra');
+                // Run OCR with script-specific models
+                const worker = await Tesseract.createWorker(languages);
                 await worker.setParameters({
-                    tessedit_pageseg_mode: 6, // Single uniform block
                     classify_enable_learning: '0'
                 });
                 
-                const result = await worker.recognize(canvas, {}, {
-                    blocks: true,
-                    paragraphs: true,
-                    lines: true,
-                    words: true,
-                    symbols: true
-                });
-                
+                const result = await worker.recognize(canvas);
                 await worker.terminate();
                 
-                return {
-                    originalRegion: region,
-                    granularResult: result,
-                    cropInfo: {
-                        x: Math.round(bbox.x0),
-                        y: Math.round(bbox.y0),
-                        width: width,
-                        height: height
-                    }
-                };
+                return { line, result, script };
             } catch (error) {
-                console.error('Error in granular processing for region:', error);
-                return null;
+                console.error('Error processing line with script:', error);
+                return { line, result: null, script: 'Error' };
             }
         }
 
-        // Main analysis function
-        async function analyzeLayout() {
+        // Format script-specific processing results
+        function formatScriptProcessingResults(processedLines) {
+            if (!processedLines || processedLines.length === 0) {
+                return '<p>No script-specific processing results available</p>';
+            }
+            
+            let html = '<p><strong>Script-Specific Processing Results:</strong></p>';
+            
+            // Group by script
+            const groupedByScript = {};
+            processedLines.forEach(processedLine => {
+                const script = processedLine.script;
+                if (!groupedByScript[script]) {
+                    groupedByScript[script] = [];
+                }
+                groupedByScript[script].push(processedLine);
+            });
+            
+            // Display results grouped by script
+            for (const [script, lines] of Object.entries(groupedByScript)) {
+                const colorClass = getScriptColorClass(script);
+                html += `<h4 class="${colorClass}">Script: ${script} (${lines.length} lines)</h4>`;
+                html += '<div class="block-container">';
+                
+                lines.forEach((processedLine, index) => {
+                    const lineText = processedLine.line.text || '(empty)';
+                    const resultText = processedLine.result && processedLine.result.data ? processedLine.result.data.text : '(processing failed)';
+                    const confidence = processedLine.result && processedLine.result.data ? (processedLine.result.data.confidence || 0).toFixed(2) : 'N/A';
+                    
+                    html += `
+                        <div class="block-item ${colorClass}">
+                            <div class="block-text"><strong>Original:</strong> ${lineText.substring(0, 50) + (lineText.length > 50 ? '...' : '')}</div>
+                            <div class="block-text"><strong>Processed:</strong> ${resultText.substring(0, 50) + (resultText.length > 50 ? '...' : '')}</div>
+                            <div class="block-info">Conf: ${confidence}%</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            return html;
+        }
+
+        // Main analysis function with line-level OSD
+        async function analyzeWithLineLevelOSD() {
             if (!currentImage) return;
 
             try {
-                showProgress('Analyzing Layout...', 0, 'Initializing...');
+                showProgress('Analyzing with Line-Level OSD...', 0, 'Initializing...');
                 
-                // Step 1: Run PSM 3 analysis (paragraph-level)
-                showProgress('Analyzing Layout...', 10, 'Running PSM 3 analysis...');
-                const psm3Result = await analyzeWithPSM(3);
+                // Step 1: Run initial layout analysis with PSM 4 (single column)
+                showProgress('Analyzing with Line-Level OSD...', 10, 'Running initial layout analysis...');
+                const initialResult = await analyzeWithPSM(4);
                 
-                if (!psm3Result) {
-                    throw new Error('Failed to run PSM 3 analysis');
+                if (!initialResult) {
+                    throw new Error('Failed to run initial layout analysis');
                 }
                 
-                psm3Results.innerHTML = formatLayoutElements(psm3Result, 'paragraphs');
+                initialResults.innerHTML = formatLayoutElements(initialResult, 'lines');
                 
-                // Step 2: Identify complex regions
-                showProgress('Analyzing Layout...', 30, 'Identifying complex regions...');
-                const paragraphs = psm3Result.data.paragraphs || [];
-                const complexRegions = identifyComplexRegions(paragraphs);
+                // Step 2: Run OSD on each line
+                showProgress('Analyzing with Line-Level OSD...', 20, 'Running OSD on each line...');
+                const lines = initialResult.data.lines || [];
+                const lineOSDData = [];
                 
-                complexRegionResults.innerHTML = formatComplexRegions(complexRegions);
-                
-                // Step 3: Apply granular processing to complex regions
-                showProgress('Analyzing Layout...', 50, 'Applying granular processing to complex regions...');
-                const granularResultsData = [];
-                
-                for (let i = 0; i < complexRegions.length; i++) {
-                    const region = complexRegions[i];
-                    const progress = 50 + Math.round((i / complexRegions.length) * 30);
-                    showProgress('Analyzing Layout...', progress, `Processing complex region ${i+1} of ${complexRegions.length}...`);
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const progress = 20 + Math.round((i / lines.length) * 30);
+                    showProgress('Analyzing with Line-Level OSD...', progress, `Running OSD on line ${i+1} of ${lines.length}...`);
                     
-                    // Apply real granular processing
-                    const granularResult = await applyGranularProcessing(region);
-                    if (granularResult) {
-                        granularResultsData.push(granularResult);
+                    // Get line bounding box
+                    const bbox = line.bbox;
+                    if (bbox) {
+                        // Create rectangle for OSD
+                        const rectangle = {
+                            left: Math.round(bbox.x0),
+                            top: Math.round(bbox.y0),
+                            width: Math.max(1, Math.round(bbox.x1 - bbox.x0)),
+                            height: Math.max(1, Math.round(bbox.y1 - bbox.y0))
+                        };
+                        
+                        // Run OSD on this line
+                        const osdResult = await runOSDOnRegion(rectangle);
+                        lineOSDData.push({ line, osdResult });
+                    } else {
+                        lineOSDData.push({ line, osdResult: null });
                     }
                 }
                 
-                // Format granular results
-                if (granularResultsData.length > 0) {
-                    let granularHtml = `<p>Granular processing applied to ${granularResultsData.length} complex regions:</p>`;
-                    granularHtml += '<div class="block-container">';
+                lineOSDResults.innerHTML = formatLineOSDResults(lineOSDData);
+                
+                // Step 3: Process each line with script-specific models
+                showProgress('Analyzing with Line-Level OSD...', 60, 'Processing lines with script-specific models...');
+                const processedLines = [];
+                
+                for (let i = 0; i < lineOSDData.length; i++) {
+                    const lineData = lineOSDData[i];
+                    const progress = 60 + Math.round((i / lineOSDData.length) * 30);
+                    showProgress('Analyzing with Line-Level OSD...', progress, `Processing line ${i+1} of ${lineOSDData.length} with script-specific models...`);
                     
-                    granularResultsData.forEach((result, index) => {
-                        const lines = result.granularResult.data.lines || [];
-                        const words = result.granularResult.data.words || [];
-                        const avgLineConf = lines.length > 0 ? 
-                            (lines.reduce((sum, line) => sum + (line.confidence || 0), 0) / lines.length) : 0;
-                        
-                        granularHtml += `
-                            <div class="block-item">
-                                <div class="block-text">Region ${result.originalRegion.index}</div>
-                                <div class="block-info">Lines: ${lines.length} | Words: ${words.length}</div>
-                                <div class="block-info">Avg Line Conf: ${avgLineConf.toFixed(2)}%</div>
-                                <div class="block-info">Crop: ${result.cropInfo.width}×${result.cropInfo.height}</div>
-                            </div>
-                        `;
-                    });
-                    
-                    granularHtml += '</div>';
-                    
-                    // Add detailed text breakdown
-                    granularHtml += '<h4>Detailed Text Breakdown:</h4>';
-                    granularResultsData.forEach((result, index) => {
-                        const lines = result.granularResult.data.lines || [];
-                        granularHtml += `<h5>Region ${result.originalRegion.index} - Lines:</h5>`;
-                        
-                        if (lines.length > 0) {
-                            lines.forEach((line, lineIndex) => {
-                                granularHtml += `
-                                    <div class="block-item">
-                                        <div class="block-text">${line.text || '(empty)'}</div>
-                                        <div class="block-info">Conf: ${(line.confidence || 0).toFixed(2)}%</div>
-                                    </div>
-                                `;
-                            });
-                        } else {
-                            granularHtml += '<p>No line data available</p>';
-                        }
-                    });
-                    
-                    granularResults.innerHTML = granularHtml;
-                } else {
-                    granularResults.innerHTML = '<p>No granular processing was needed or failed.</p>';
+                    // Process line with script-specific model
+                    const processedLine = await processLineWithScript(lineData.line, lineData.osdResult);
+                    processedLines.push(processedLine);
                 }
                 
+                scriptProcessingResults.innerHTML = formatScriptProcessingResults(processedLines);
+                
                 // Step 4: Combine results
-                showProgress('Analyzing Layout...', 90, 'Combining results...');
+                showProgress('Analyzing with Line-Level OSD...', 95, 'Combining final results...');
                 
                 // Show summary of actual processing
+                const scriptCounts = {};
+                lineOSDData.forEach(lineData => {
+                    const script = lineData.osdResult && lineData.osdResult.data ? lineData.osdResult.data.script : 'Unknown';
+                    scriptCounts[script] = (scriptCounts[script] || 0) + 1;
+                });
+                
+                let scriptSummary = '';
+                for (const [script, count] of Object.entries(scriptCounts)) {
+                    const percentage = ((count / lineOSDData.length) * 100).toFixed(1);
+                    scriptSummary += `${script}: ${count} lines (${percentage}%) | `;
+                }
+                
                 const summaryHtml = `
-                    <p><strong>Analysis Summary:</strong></p>
+                    <p><strong>Line-Level OSD Analysis Summary:</strong></p>
                     <ul>
-                        <li>Total paragraphs analyzed: ${paragraphs.length}</li>
-                        <li>Complex regions identified: ${complexRegions.length}</li>
-                        <li>Regions processed with granular approach: ${granularResultsData.length}</li>
-                        <li>Success rate: ${complexRegions.length > 0 ? Math.round((granularResultsData.length/complexRegions.length)*100) : 0}%</li>
+                        <li>Total lines analyzed: ${lines.length}</li>
+                        <li>Lines processed with script-specific models: ${processedLines.length}</li>
+                        <li>Script distribution: ${scriptSummary.slice(0, -3)}</li>
+                        <li>Success rate: ${Math.round((processedLines.length/lines.length)*100)}%</li>
                     </ul>
                     <p><strong>Processing Strategy:</strong></p>
                     <ul>
-                        <li>Used PSM 3 for overall document structure</li>
-                        <li>Identified mixed-script regions using character composition analysis</li>
-                        <li>Applied PSM 6 granular processing to complex regions by cropping and re-processing</li>
-                        <li>Obtained line-by-line and word-by-word breakdown for complex regions</li>
+                        <li>Used PSM 4 for initial line extraction</li>
+                        <li>Ran OSD on each individual line to detect script</li>
+                        <li>Applied script-specific language models to each line</li>
+                        <li>Preserved script diversity at the line level</li>
                     </ul>
                     <p><strong>Benefits:</strong></p>
                     <ul>
-                        <li>Improved handling of mixed-language paragraphs</li>
-                        <li>More accurate text structure for complex regions</li>
-                        <li>Better confidence metrics at granular level</li>
+                        <li>Maximum granularity in script detection</li>
+                        <li>Line-by-line script-specific processing</li>
+                        <li>Optimal handling of multilingual documents</li>
+                        <li>Identification of script transitions within documents</li>
                     </ul>
                 `;
                 
                 finalResults.innerHTML = summaryHtml;
                 
-                updateProgress(100, 'Layout analysis complete!');
+                updateProgress(100, 'Line-level OSD analysis complete!');
                 
                 // Show results
                 setTimeout(() => {

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesseract Language Loading Diagnostic Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .btn.small {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .diagnostic-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .section-header {
+            background: #e9ecef;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: bold;
+            color: #495057;
+        }
+        .section-content {
+            padding: 20px;
+        }
+        .log-output {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .language-test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .language-test {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            background: white;
+        }
+        .language-test h4 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+        .language-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px 5px 5px 0;
+        }
+        .status-success { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-loading { background: #fff3cd; color: #856404; }
+        .text-output {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .network-info {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Tesseract Language Loading Diagnostic Tool</h1>
+        <p>Comprehensive analysis of Tesseract.js language loading and multilingual processing behavior.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>📁 Click here or drag & drop an image to test language recognition</p>
+            <p style="font-size: 14px; color: #666;">Best results with images containing mixed languages (e.g., English + Cyrillic)</p>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="btn" id="runDiagnostics" disabled>🚀 Run Full Language Diagnostics</button>
+            <button class="btn" id="clearAll" style="background-color: #6c757d;">🗑️ Clear Results</button>
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>📷 Test Image</h3>
+            <img id="previewImage" class="image-preview">
+        </div>
+    </div>
+
+    <div id="diagnosticResults" class="hidden">
+        
+        <div class="diagnostic-section">
+            <div class="section-header">📋 Diagnostic Log</div>
+            <div class="section-content">
+                <div class="log-output" id="diagnosticLog"></div>
+                <button class="btn small" onclick="clearLog()">Clear Log</button>
+                <button class="btn small" onclick="copyLog()">📋 Copy Log</button>
+            </div>
+        </div>
+
+        <div class="diagnostic-section">
+            <div class="section-header">🌐 Network & CDN Status</div>
+            <div class="section-content">
+                <div class="network-info">
+                    <strong>Tesseract.js Version:</strong> <span id="tesseractVersion">Checking...</span><br>
+                    <strong>CDN Base URL:</strong> <span id="cdnUrl">Checking...</span><br>
+                    <strong>Available Languages:</strong> <span id="availableLanguages">Checking...</span>
+                </div>
+                <div id="networkRequests"></div>
+            </div>
+        </div>
+
+        <div class="diagnostic-section">
+            <div class="section-header">📦 Individual Language Loading Tests</div>
+            <div class="section-content">
+                <div class="language-test-grid" id="languageTests"></div>
+            </div>
+        </div>
+
+        <div class="diagnostic-section">
+            <div class="section-header">🔬 Single Language Recognition Tests</div>
+            <div class="section-content">
+                <p>Testing individual languages on the same image to compare results:</p>
+                <div id="recognitionTests"></div>
+            </div>
+        </div>
+
+        <div class="diagnostic-section">
+            <div class="section-header">🎯 Multi-Language vs Single Language Comparison</div>
+            <div class="section-content">
+                <div id="comparisonResults"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentImage = null;
+        let diagnosticLog = [];
+
+        // Language definitions to test
+        const testLanguages = [
+            { code: 'eng', name: 'English', flag: '🇺🇸' },
+            { code: 'rus', name: 'Russian', flag: '🇷🇺' },
+            { code: 'chi_sim', name: 'Chinese Simplified', flag: '🇨🇳' },
+            { code: 'chi_tra', name: 'Chinese Traditional', flag: '🇹🇼' },
+            { code: 'spa', name: 'Spanish', flag: '🇪🇸' },
+            { code: 'fra', name: 'French', flag: '🇫🇷' },
+            { code: 'deu', name: 'German', flag: '🇩🇪' },
+            { code: 'jpn', name: 'Japanese', flag: '🇯🇵' },
+            { code: 'kor', name: 'Korean', flag: '🇰🇷' },
+            { code: 'ara', name: 'Arabic', flag: '🇸🇦' }
+        ];
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const runDiagnostics = document.getElementById('runDiagnostics');
+        const clearAll = document.getElementById('clearAll');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const diagnosticResults = document.getElementById('diagnosticResults');
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        runDiagnostics.addEventListener('click', startDiagnostics);
+        clearAll.addEventListener('click', clearAllResults);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                loadImage(e.dataTransfer.files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                loadImage(e.target.files[0]);
+            }
+        }
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImage = new Image();
+                currentImage.onload = function() {
+                    previewImage.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    runDiagnostics.disabled = false;
+                    log(`Image loaded: ${currentImage.width}x${currentImage.height}px`);
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearAllResults() {
+            currentImage = null;
+            runDiagnostics.disabled = true;
+            imagePreview.classList.add('hidden');
+            diagnosticResults.classList.add('hidden');
+            diagnosticLog = [];
+            document.getElementById('diagnosticLog').textContent = '';
+        }
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            diagnosticLog.push(logEntry);
+            
+            const logElement = document.getElementById('diagnosticLog');
+            logElement.textContent = diagnosticLog.join('\n');
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            diagnosticLog = [];
+            document.getElementById('diagnosticLog').textContent = '';
+        }
+
+        function copyLog() {
+            const text = diagnosticLog.join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                log('Log copied to clipboard');
+            });
+        }
+
+        async function startDiagnostics() {
+            if (!currentImage) return;
+            
+            runDiagnostics.disabled = true;
+            diagnosticResults.classList.remove('hidden');
+            diagnosticLog = [];
+            
+            log('🚀 Starting comprehensive language diagnostics...');
+            
+            // Phase 1: Basic system info
+            await checkSystemInfo();
+            
+            // Phase 2: Individual language loading tests
+            await testIndividualLanguageLoading();
+            
+            // Phase 3: Single language recognition tests
+            await testSingleLanguageRecognition();
+            
+            // Phase 4: Multi-language comparison
+            await testMultiLanguageComparison();
+            
+            log('✅ All diagnostics completed!');
+            runDiagnostics.disabled = false;
+        }
+
+        async function checkSystemInfo() {
+            log('📋 Phase 1: Checking system information...');
+            
+            try {
+                // Check Tesseract version
+                const version = Tesseract.version || 'Unknown';
+                document.getElementById('tesseractVersion').textContent = version;
+                log(`Tesseract.js version: ${version}`);
+                
+                // Check if we can access CDN info
+                document.getElementById('cdnUrl').textContent = 'https://unpkg.com/tessdata@4/4.0.0/';
+                log('CDN URL configured for language downloads');
+                
+                // Try to get available languages list
+                const tempWorker = await Tesseract.createWorker();
+                log('Temporary worker created successfully');
+                
+                await tempWorker.terminate();
+                log('System check completed successfully');
+                
+            } catch (error) {
+                log(`❌ System check error: ${error.message}`);
+            }
+        }
+
+        async function testIndividualLanguageLoading() {
+            log('📦 Phase 2: Testing individual language loading...');
+            
+            const languageTestsContainer = document.getElementById('languageTests');
+            languageTestsContainer.innerHTML = '';
+            
+            for (const lang of testLanguages) {
+                const testDiv = document.createElement('div');
+                testDiv.className = 'language-test';
+                testDiv.innerHTML = `
+                    <h4>${lang.flag} ${lang.name} (${lang.code})</h4>
+                    <div id="status-${lang.code}">
+                        <span class="language-status status-loading">Loading...</span>
+                    </div>
+                    <div id="details-${lang.code}"></div>
+                `;
+                languageTestsContainer.appendChild(testDiv);
+                
+                // Test loading this specific language
+                await testSingleLanguageLoading(lang);
+            }
+        }
+
+        async function testSingleLanguageLoading(lang) {
+            const statusEl = document.getElementById(`status-${lang.code}`);
+            const detailsEl = document.getElementById(`details-${lang.code}`);
+            
+            try {
+                log(`Testing ${lang.name} (${lang.code}) loading...`);
+                const startTime = performance.now();
+                
+                const worker = await Tesseract.createWorker();
+                
+                // Try to load just this language
+                await worker.loadLanguage(lang.code);
+                const loadTime = Math.round(performance.now() - startTime);
+                
+                await worker.initialize(lang.code);
+                const initTime = Math.round(performance.now() - startTime);
+                
+                // Check what languages are actually available
+                const availableLangs = worker.options?.languages || 'Unknown';
+                
+                statusEl.innerHTML = `<span class="language-status status-success">✅ Loaded</span>`;
+                detailsEl.innerHTML = `
+                    <div style="font-size: 11px; color: #666;">
+                        Load time: ${loadTime}ms<br>
+                        Init time: ${initTime}ms<br>
+                        Available: ${availableLangs}
+                    </div>
+                `;
+                
+                log(`✅ ${lang.name} loaded successfully (${initTime}ms)`);
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                statusEl.innerHTML = `<span class="language-status status-error">❌ Failed</span>`;
+                detailsEl.innerHTML = `<div style="font-size: 11px; color: #dc3545;">Error: ${error.message}</div>`;
+                log(`❌ ${lang.name} failed to load: ${error.message}`);
+            }
+        }
+
+        async function testSingleLanguageRecognition() {
+            log('🔬 Phase 3: Testing single language recognition...');
+            
+            const recognitionContainer = document.getElementById('recognitionTests');
+            recognitionContainer.innerHTML = '';
+            
+            // Test key languages that should give different results
+            const keyLanguages = [
+                { code: 'eng', name: 'English', flag: '🇺🇸' },
+                { code: 'rus', name: 'Russian', flag: '🇷🇺' },
+                { code: 'chi_sim', name: 'Chinese Simplified', flag: '🇨🇳' }
+            ];
+            
+            for (const lang of keyLanguages) {
+                const testDiv = document.createElement('div');
+                testDiv.className = 'language-test';
+                testDiv.innerHTML = `
+                    <h4>${lang.flag} ${lang.name} Only Recognition</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-${lang.code}">0%</div>
+                    </div>
+                    <div class="text-output" id="result-${lang.code}">Processing...</div>
+                `;
+                recognitionContainer.appendChild(testDiv);
+                
+                await testSingleLanguageOCR(lang);
+            }
+        }
+
+        async function testSingleLanguageOCR(lang) {
+            const progressEl = document.getElementById(`progress-${lang.code}`);
+            const resultEl = document.getElementById(`result-${lang.code}`);
+            
+            try {
+                log(`Running OCR with ${lang.name} only...`);
+                progressEl.style.width = '20%';
+                progressEl.textContent = 'Loading...';
+                
+                const worker = await Tesseract.createWorker();
+                progressEl.style.width = '40%';
+                progressEl.textContent = 'Initializing...';
+                
+                await worker.loadLanguage(lang.code);
+                await worker.initialize(lang.code);
+                progressEl.style.width = '70%';
+                progressEl.textContent = 'Recognizing...';
+                
+                const result = await worker.recognize(currentImage, {}, { blocks: true });
+                progressEl.style.width = '100%';
+                progressEl.textContent = 'Complete';
+                
+                const blocks = result.data.blocks || [];
+                const textItems = blocks
+                    .map(block => block.text ? block.text.trim() : '')
+                    .filter(text => text.length > 0);
+                
+                const displayText = textItems.length > 0 ? 
+                    textItems.slice(0, 3).map((text, i) => `${i + 1}. "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"`).join('\n') :
+                    'No text recognized';
+                
+                resultEl.textContent = `Found ${blocks.length} blocks, ${textItems.length} with text:\n\n${displayText}`;
+                
+                log(`${lang.name} OCR: ${blocks.length} blocks, ${textItems.length} with text, confidence: ${Math.round(result.data.confidence || 0)}%`);
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                resultEl.textContent = `Error: ${error.message}`;
+                log(`❌ ${lang.name} OCR failed: ${error.message}`);
+                progressEl.style.width = '100%';
+                progressEl.textContent = 'Error';
+                progressEl.style.backgroundColor = '#dc3545';
+            }
+        }
+
+        async function testMultiLanguageComparison() {
+            log('🎯 Phase 4: Testing multi-language vs single language...');
+            
+            const comparisonContainer = document.getElementById('comparisonResults');
+            comparisonContainer.innerHTML = '<div class="language-test"><h4>Processing multi-language comparison...</h4><div class="progress-bar"><div class="progress-fill" id="multiProgress">0%</div></div></div>';
+            
+            try {
+                const multiProgressEl = document.getElementById('multiProgress');
+                
+                log('Testing 10-language worker...');
+                multiProgressEl.style.width = '20%';
+                multiProgressEl.textContent = 'Loading 10 languages...';
+                
+                const allLanguages = testLanguages.map(l => l.code);
+                const worker = await Tesseract.createWorker();
+                
+                multiProgressEl.style.width = '40%';
+                multiProgressEl.textContent = 'Initializing...';
+                
+                await worker.loadLanguage(allLanguages);
+                await worker.initialize(allLanguages);
+                
+                multiProgressEl.style.width = '70%';
+                multiProgressEl.textContent = 'Recognizing...';
+                
+                const result = await worker.recognize(currentImage, {}, { blocks: true });
+                
+                multiProgressEl.style.width = '100%';
+                multiProgressEl.textContent = 'Complete';
+                
+                const blocks = result.data.blocks || [];
+                const textItems = blocks
+                    .map(block => block.text ? block.text.trim() : '')
+                    .filter(text => text.length > 0);
+                
+                const displayText = textItems.length > 0 ? 
+                    textItems.slice(0, 3).map((text, i) => `${i + 1}. "${text.substring(0, 150)}${text.length > 150 ? '...' : ''}"`).join('\n\n') :
+                    'No text recognized';
+                
+                comparisonContainer.innerHTML = `
+                    <div class="language-test">
+                        <h4>🌍 10-Language Worker Results</h4>
+                        <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                            Languages loaded: ${allLanguages.join(', ')}<br>
+                            Blocks found: ${blocks.length} | Text items: ${textItems.length} | Confidence: ${Math.round(result.data.confidence || 0)}%
+                        </div>
+                        <div class="text-output">${displayText}</div>
+                    </div>
+                `;
+                
+                log(`Multi-language OCR: ${blocks.length} blocks, ${textItems.length} with text, confidence: ${Math.round(result.data.confidence || 0)}%`);
+                log('🔍 Compare this output with single-language results above to see differences');
+                
+                await worker.terminate();
+                
+            } catch (error) {
+                comparisonContainer.innerHTML = `
+                    <div class="language-test">
+                        <h4>❌ Multi-Language Test Failed</h4>
+                        <div class="text-output">Error: ${error.message}</div>
+                    </div>
+                `;
+                log(`❌ Multi-language test failed: ${error.message}`);
+            }
+        }
+
+        // Initialize
+        log('🔍 Tesseract Language Diagnostic Tool initialized');
+    </script>
+</body>
+</html>

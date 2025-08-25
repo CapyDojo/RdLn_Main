@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RdLn™ Tesseract Structure Explorer v2 - Multi-Language Workers</title>
+    <title>RdLn™ Tesseract Structure Explorer v6 - Multi-Language Workers + Scale 75%</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body {
@@ -114,6 +114,9 @@
         .analysis-section.russian {
             border-color: #e83e8c;
         }
+        .analysis-section.scale75 {
+            border-color: #4caf50;
+        }
         .structure-box {
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -189,8 +192,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>RdLn™ Tesseract Structure Explorer v2 - Multi-Language Workers</h1>
-        <p>This prototype compares structure detection between different single-language workers (English, Chinese, Japanese, Arabic, Russian) for multilingual text analysis.</p>
+        <h1>RdLn™ Tesseract Structure Explorer v6 - Multi-Language Workers + Scale 75%</h1>
+        <p>This prototype compares structure detection between different single-language workers (English, Chinese, Japanese, Arabic, Russian) and includes a Scale-Down 75% worker for multilingual text analysis.</p>
         
         <div class="upload-area" id="uploadArea">
             <p>Drag & drop an image here or click to select</p>
@@ -211,6 +214,7 @@
                 <button id="analyzeJpnBtn" class="btn" style="background-color: #ff6b6b;">Analyze: Japanese Only</button>
                 <button id="analyzeAraBtn" class="btn" style="background-color: #fd7e14;">Analyze: Arabic Only</button>
                 <button id="analyzeRusBtn" class="btn" style="background-color: #e83e8c;">Analyze: Russian Only</button>
+                <button id="analyzeScale75Btn" class="btn" style="background-color: #4caf50;">📊 Scale-Down 75%</button>
                 <button id="analyzeBothBtn" class="btn" style="background-color: #6f42c1;">Compare All</button>
                 <button id="resetBtn" class="btn secondary">Reset</button>
             </div>
@@ -257,6 +261,11 @@
                         <div class="comparison-stats" id="rusStats"></div>
                         <div id="rusResults"></div>
                     </div>
+                    <div class="analysis-section scale75" id="scale75Section" style="display: none;">
+                        <h3>📊 Scale-Down 75% Worker</h3>
+                        <div class="comparison-stats" id="scale75Stats"></div>
+                        <div id="scale75Results"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -301,6 +310,7 @@
         const analyzeJpnBtn = document.getElementById('analyzeJpnBtn');
         const analyzeAraBtn = document.getElementById('analyzeAraBtn');
         const analyzeRusBtn = document.getElementById('analyzeRusBtn');
+        const analyzeScale75Btn = document.getElementById('analyzeScale75Btn');
         const analyzeBothBtn = document.getElementById('analyzeBothBtn');
         const resetBtn = document.getElementById('resetBtn');
         const progressContainer = document.getElementById('progressContainer');
@@ -316,14 +326,17 @@
         const jpnResults = document.getElementById('jpnResults');
         const araResults = document.getElementById('araResults');
         const rusResults = document.getElementById('rusResults');
+        const scale75Results = document.getElementById('scale75Results');
         const engStats = document.getElementById('engStats');
         const multiStats = document.getElementById('multiStats');
         const jpnStats = document.getElementById('jpnStats');
         const araStats = document.getElementById('araStats');
         const rusStats = document.getElementById('rusStats');
+        const scale75Stats = document.getElementById('scale75Stats');
         const jpnSection = document.getElementById('jpnSection');
         const araSection = document.getElementById('araSection');
         const rusSection = document.getElementById('rusSection');
+        const scale75Section = document.getElementById('scale75Section');
         const comparisonGrid = document.getElementById('comparisonGrid');
         const singleResults = document.getElementById('singleResults');
         const osdResults = document.getElementById('osdResults');
@@ -341,6 +354,7 @@
         let jpnStructureData = null;
         let araStructureData = null;
         let rusStructureData = null;
+        let scale75StructureData = null;
         let activeStructureData = null; // For OSD testing
         let activeWorkerType = null;
         
@@ -350,7 +364,8 @@
             multi: null,
             jpn: null,
             ara: null,
-            rus: null
+            rus: null,
+            scale75: null
         };
 
         // Event Listeners for file upload
@@ -379,6 +394,7 @@
         analyzeJpnBtn.addEventListener('click', () => analyzeStructure('jpn'));
         analyzeAraBtn.addEventListener('click', () => analyzeStructure('ara'));
         analyzeRusBtn.addEventListener('click', () => analyzeStructure('rus'));
+        analyzeScale75Btn.addEventListener('click', () => analyzeStructure('scale75'));
         analyzeBothBtn.addEventListener('click', () => analyzeStructure('all'));
         resetBtn.addEventListener('click', resetPrototype);
         osdFullImageBtn.addEventListener('click', () => testOSDFullImage());
@@ -413,6 +429,7 @@
                     results.classList.add('hidden');
                     engStructureData = null;
                     multiStructureData = null;
+                    scale75StructureData = null;
                     activeStructureData = null;
                 };
                 currentImage.src = e.target.result;
@@ -443,9 +460,14 @@
             const isJpn = workerType === 'jpn';
             const isAra = workerType === 'ara';
             const isRus = workerType === 'rus';
+            const isScale75 = workerType === 'scale75';
             let languages, title, emoji;
             
-            if (isRus) {
+            if (isScale75) {
+                languages = ['eng'];
+                title = '📊 Scale-Down 75% Worker Analysis';
+                emoji = '📊';
+            } else if (isRus) {
                 languages = ['rus'];
                 title = '🟣 Russian Only Worker Analysis';
                 emoji = '🟣';
@@ -467,11 +489,23 @@
                 emoji = '🔵';
             }
             
-            const workerDesc = isRus ? 'Russian' : (isAra ? 'Arabic' : (isJpn ? 'Japanese' : (isMulti ? 'Chinese' : 'English')));
+            const workerDesc = isScale75 ? 'Scale-Down 75%' : (isRus ? 'Russian' : (isAra ? 'Arabic' : (isJpn ? 'Japanese' : (isMulti ? 'Chinese' : 'English'))));
             showProgress('Analyzing Structure...', 0, `Initializing ${workerDesc} worker...`);
             
             // Start timing
             const startTime = performance.now();
+            
+            let imageToProcess = currentImage;
+            
+            // For scale75, create a scaled-down image
+            if (isScale75) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = currentImage.width * 0.75;
+                canvas.height = currentImage.height * 0.75;
+                ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+                imageToProcess = canvas;
+            }
             
             const worker = await Tesseract.createWorker(languages);
             await worker.setParameters({
@@ -482,23 +516,28 @@
             
             updateProgress(30, 'Running structure analysis...');
             
-            const result = await worker.recognize(currentImage, {}, { blocks: true });
+            const result = await worker.recognize(imageToProcess, {}, { blocks: true });
             
             const endTime = performance.now();
             
             // Store performance data
-            const workerKey = isRus ? 'rus' : (isAra ? 'ara' : (isJpn ? 'jpn' : (isMulti ? 'multi' : 'eng')));
+            const workerKey = isScale75 ? 'scale75' : (isRus ? 'rus' : (isAra ? 'ara' : (isJpn ? 'jpn' : (isMulti ? 'multi' : 'eng'))));
             performanceData[workerKey] = {
                 totalTime: endTime - startTime,
                 initTime: workerInitTime - startTime,
                 processingTime: endTime - workerInitTime,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                scaleFactor: isScale75 ? 0.75 : 1.0
             };
             
             updateProgress(90, 'Processing structure data...');
             
             // Store results and set as active for OSD testing
-            if (isRus) {
+            if (isScale75) {
+                scale75StructureData = result.data;
+                activeStructureData = result.data;
+                activeWorkerType = 'scale75';
+            } else if (isRus) {
                 rusStructureData = result.data;
                 activeStructureData = result.data;
                 activeWorkerType = 'rus';
@@ -522,7 +561,7 @@
             
             // Display single analysis with performance data
             const perfData = performanceData[workerKey];
-            const perfSummary = `⏱️ Total: ${Math.round(perfData.totalTime)}ms | Init: ${Math.round(perfData.initTime)}ms | Processing: ${Math.round(perfData.processingTime)}ms`;
+            const perfSummary = `⏱️ Total: ${Math.round(perfData.totalTime)}ms | Init: ${Math.round(perfData.initTime)}ms | Processing: ${Math.round(perfData.processingTime)}ms${isScale75 ? ' | Scale: 75%' : ''}`;
             singleViewTitle.textContent = `${title} - ${perfSummary}`;
             singleResults.innerHTML = generateStructureHTML(result.data) + generatePerformanceHTML(perfData);
             
@@ -534,7 +573,7 @@
             await worker.terminate();
             
             // Update active worker info
-            const workerName = isRus ? 'Russian Only' : (isAra ? 'Arabic Only' : (isJpn ? 'Japanese Only' : (isMulti ? 'Chinese Only' : 'English Only')));
+            const workerName = isScale75 ? 'Scale-Down 75%' : (isRus ? 'Russian Only' : (isAra ? 'Arabic Only' : (isJpn ? 'Japanese Only' : (isMulti ? 'Chinese Only' : 'English Only'))));
             activeWorkerInfo.textContent = `Active for OSD testing: ${workerName} worker`;
             
             setTimeout(() => {
@@ -587,7 +626,7 @@
             showProgress('Comparing All Workers...', 0, 'Initializing English worker...');
             
             // Reset performance data
-            performanceData = { eng: null, multi: null, jpn: null, ara: null, rus: null };
+            performanceData = { eng: null, multi: null, jpn: null, ara: null, rus: null, scale75: null };
             
             // English worker
             let startTime = performance.now();
@@ -595,7 +634,7 @@
             await engWorker.setParameters({ classify_enable_learning: '0' });
             let initTime = performance.now();
             
-            updateProgress(10, 'Running English analysis...');
+            updateProgress(8, 'Running English analysis...');
             const engResult = await engWorker.recognize(currentImage, {}, { blocks: true });
             let endTime = performance.now();
             
@@ -608,7 +647,7 @@
             engStructureData = engResult.data;
             await engWorker.terminate();
             
-            updateProgress(25, 'Initializing Chinese worker...');
+            updateProgress(20, 'Initializing Chinese worker...');
             
             // Chinese worker
             startTime = performance.now();
@@ -616,7 +655,7 @@
             await multiWorker.setParameters({ classify_enable_learning: '0' });
             initTime = performance.now();
             
-            updateProgress(35, 'Running Chinese analysis...');
+            updateProgress(28, 'Running Chinese analysis...');
             const multiResult = await multiWorker.recognize(currentImage, {}, { blocks: true });
             endTime = performance.now();
             
@@ -629,7 +668,7 @@
             multiStructureData = multiResult.data;
             await multiWorker.terminate();
             
-            updateProgress(50, 'Initializing Japanese worker...');
+            updateProgress(40, 'Initializing Japanese worker...');
             
             // Japanese worker
             startTime = performance.now();
@@ -637,7 +676,7 @@
             await jpnWorker.setParameters({ classify_enable_learning: '0' });
             initTime = performance.now();
             
-            updateProgress(60, 'Running Japanese analysis...');
+            updateProgress(48, 'Running Japanese analysis...');
             const jpnResult = await jpnWorker.recognize(currentImage, {}, { blocks: true });
             endTime = performance.now();
             
@@ -650,7 +689,7 @@
             jpnStructureData = jpnResult.data;
             await jpnWorker.terminate();
             
-            updateProgress(70, 'Initializing Arabic worker...');
+            updateProgress(58, 'Initializing Arabic worker...');
             
             // Arabic worker
             startTime = performance.now();
@@ -658,7 +697,7 @@
             await araWorker.setParameters({ classify_enable_learning: '0' });
             initTime = performance.now();
             
-            updateProgress(80, 'Running Arabic analysis...');
+            updateProgress(68, 'Running Arabic analysis...');
             const araResult = await araWorker.recognize(currentImage, {}, { blocks: true });
             endTime = performance.now();
             
@@ -671,7 +710,7 @@
             araStructureData = araResult.data;
             await araWorker.terminate();
             
-            updateProgress(85, 'Initializing Russian worker...');
+            updateProgress(75, 'Initializing Russian worker...');
             
             // Russian worker
             startTime = performance.now();
@@ -679,7 +718,7 @@
             await rusWorker.setParameters({ classify_enable_learning: '0' });
             initTime = performance.now();
             
-            updateProgress(92, 'Running Russian analysis...');
+            updateProgress(83, 'Running Russian analysis...');
             const rusResult = await rusWorker.recognize(currentImage, {}, { blocks: true });
             endTime = performance.now();
             
@@ -692,7 +731,37 @@
             rusStructureData = rusResult.data;
             await rusWorker.terminate();
             
-            updateProgress(97, 'Generating comparison...');
+            updateProgress(90, 'Initializing Scale-Down 75% worker...');
+            
+            // Scale-Down 75% worker
+            startTime = performance.now();
+            
+            // Create scaled image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = currentImage.width * 0.75;
+            canvas.height = currentImage.height * 0.75;
+            ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+            
+            const scale75Worker = await Tesseract.createWorker(['eng']);
+            await scale75Worker.setParameters({ classify_enable_learning: '0' });
+            initTime = performance.now();
+            
+            updateProgress(95, 'Running Scale-Down 75% analysis...');
+            const scale75Result = await scale75Worker.recognize(canvas, {}, { blocks: true });
+            endTime = performance.now();
+            
+            performanceData.scale75 = {
+                totalTime: endTime - startTime,
+                initTime: initTime - startTime,
+                processingTime: endTime - initTime,
+                timestamp: new Date().toISOString(),
+                scaleFactor: 0.75
+            };
+            scale75StructureData = scale75Result.data;
+            await scale75Worker.terminate();
+            
+            updateProgress(98, 'Generating comparison...');
             
             // Set Chinese as active (good for Chinese script OSD)
             activeStructureData = multiStructureData;
@@ -714,14 +783,15 @@
             const workers = {
                 jpn: jpnStructureData !== null,
                 ara: araStructureData !== null,
-                rus: rusStructureData !== null
+                rus: rusStructureData !== null,
+                scale75: scale75StructureData !== null
             };
             
             const activeWorkers = Object.values(workers).filter(Boolean).length + 2; // +2 for eng and multi (always present)
             
             // Adjust grid layout based on number of active workers
-            if (activeWorkers === 5) {
-                // All 5 workers - use wrap layout
+            if (activeWorkers >= 6) {
+                // All 6 workers - use 3x2 layout
                 comparisonGrid.style.gridTemplateColumns = '1fr 1fr 1fr';
                 comparisonGrid.style.gridTemplateRows = 'auto auto';
             } else if (activeWorkers >= 3) {
@@ -764,6 +834,14 @@
                 rusSection.style.display = 'none';
             }
             
+            if (workers.scale75) {
+                scale75Section.style.display = 'block';
+                scale75Stats.innerHTML = generateStats(scale75StructureData) + (performanceData.scale75 ? `<br>⏱️ ${Math.round(performanceData.scale75.totalTime)}ms | Scale: 75%` : '');
+                scale75Results.innerHTML = generateStructureHTML(scale75StructureData) + generatePerformanceHTML(performanceData.scale75);
+            } else {
+                scale75Section.style.display = 'none';
+            }
+            
             activeWorkerInfo.textContent = 'Active for OSD testing: Chinese worker (good for Chinese script)';
             
             // Show comparison view
@@ -792,6 +870,7 @@
                         <div><strong>Total Time:</strong> ${Math.round(perfData.totalTime)}ms</div>
                         <div><strong>Worker Init:</strong> ${Math.round(perfData.initTime)}ms</div>
                         <div><strong>OCR Processing:</strong> ${Math.round(perfData.processingTime)}ms</div>
+                        ${perfData.scaleFactor && perfData.scaleFactor !== 1.0 ? `<div><strong>Scale Factor:</strong> ${Math.round(perfData.scaleFactor * 100)}%</div>` : ''}
                         <div><strong>Timestamp:</strong> ${new Date(perfData.timestamp).toLocaleTimeString()}</div>
                     </div>
                 </div>
@@ -995,6 +1074,7 @@
                 case 'jpn': return 'Japanese';
                 case 'ara': return 'Arabic';
                 case 'rus': return 'Russian';
+                case 'scale75': return 'Scale-Down 75%';
                 default: return 'Unknown';
             }
         }
@@ -1079,6 +1159,7 @@
             jpnStructureData = null;
             araStructureData = null;
             rusStructureData = null;
+            scale75StructureData = null;
             activeStructureData = null;
             activeWorkerType = null;
             
@@ -1095,6 +1176,7 @@
             jpnResults.innerHTML = '';
             araResults.innerHTML = '';
             rusResults.innerHTML = '';
+            scale75Results.innerHTML = '';
             singleResults.innerHTML = '';
             osdResults.innerHTML = '';
             activeWorkerInfo.textContent = '';
@@ -1105,6 +1187,7 @@
             jpnSection.style.display = 'none';
             araSection.style.display = 'none';
             rusSection.style.display = 'none';
+            scale75Section.style.display = 'none';
         }
     </script>
 </body>
