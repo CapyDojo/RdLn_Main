@@ -1,6 +1,7 @@
 [build]
-  command = "npm run build:web"
+  command = "npm ci && npm run build:web"
   publish = "dist"
+  environment = { NODE_VERSION = "20" }
 
 [[headers]]
   for = "*.wasm"
