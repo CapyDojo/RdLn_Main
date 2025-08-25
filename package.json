@@ -13,8 +13,8 @@
   "main": "src-electron/main.cjs",
   "scripts": {
     "dev": "vite",
-    "build": "npx vite build",
-    "build:web": "npx vite build",
+    "build": "vite build",
+    "build:web": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
