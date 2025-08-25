@@ -1,5 +1,5 @@
 [build]
-  command = "npm ci --production=false && npm run build:web"
+  command = "npm install && npm run build:web"
   publish = "dist"
   environment = { NODE_VERSION = "20" }
 

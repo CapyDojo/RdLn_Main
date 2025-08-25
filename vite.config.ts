@@ -32,6 +32,11 @@ export default defineConfig(({ command, mode }) => {
     build: {
       assetsDir: 'assets',
       rollupOptions: {
+        external: (id) => {
+          // Handle optional rollup native dependencies
+          if (id.includes('@rollup/rollup-')) return false;
+          return false;
+        },
         output: {
           assetFileNames: 'assets/[name]-[hash][extname]',
           chunkFileNames: 'assets/[name]-[hash].js',
