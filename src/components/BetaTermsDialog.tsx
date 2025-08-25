@@ -150,7 +150,24 @@ export const BetaTermsDialog: React.FC<BetaTermsDialogProps> = ({ isOpen, onClos
           </div>
 
           <div>
-            <h3 className="font-medium mb-2">4. FEEDBACK OWNERSHIP</h3>
+            <h3 className="font-medium mb-2">4. ANALYTICS & DATA COLLECTION</h3>
+            <p className="text-xs leading-relaxed opacity-90">
+              To improve the software, we collect anonymous usage data including:
+            </p>
+            <ul className="text-xs leading-relaxed opacity-90 ml-4 mt-1 space-y-1">
+              <li>• Feature usage (e.g., quick compare, scroll lock)</li>
+              <li>• Document operations (uploads, comparisons, OCR processing)</li>
+              <li>• Performance metrics (processing times, errors)</li>
+              <li>• UI interactions (theme changes, navigation)</li>
+            </ul>
+            <p className="text-xs leading-relaxed opacity-90 mt-2">
+              We do <strong>NOT</strong> collect document content, personal information, or file names. 
+              All data is anonymized and used solely to improve the software experience.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-medium mb-2">5. FEEDBACK OWNERSHIP</h3>
             <p className="text-xs leading-relaxed opacity-90">
               Any feedback, suggestions, or bug reports you provide become the exclusive property 
               of RdLn Team and may be used to improve the software without compensation.
@@ -158,7 +175,7 @@ export const BetaTermsDialog: React.FC<BetaTermsDialogProps> = ({ isOpen, onClos
           </div>
 
           <div>
-            <h3 className="font-medium mb-2">5. NO WARRANTY & LIMITATION OF LIABILITY</h3>
+            <h3 className="font-medium mb-2">6. NO WARRANTY & LIMITATION OF LIABILITY</h3>
             <p className="text-xs leading-relaxed opacity-90">
               This beta software is provided "AS IS" without any warranties. RdLn Team shall not 
               be liable for any damages arising from your use of this beta software, including but 
@@ -167,7 +184,7 @@ export const BetaTermsDialog: React.FC<BetaTermsDialogProps> = ({ isOpen, onClos
           </div>
 
           <div>
-            <h3 className="font-medium mb-2">6. TERMINATION</h3>
+            <h3 className="font-medium mb-2">7. TERMINATION</h3>
             <p className="text-xs leading-relaxed opacity-90">
               RdLn Team may terminate your beta access at any time. Upon termination, you must 
               cease using the beta software and destroy any copies.
@@ -175,7 +192,7 @@ export const BetaTermsDialog: React.FC<BetaTermsDialogProps> = ({ isOpen, onClos
           </div>
 
           <div>
-            <h3 className="font-medium mb-2">7. GOVERNING LAW</h3>
+            <h3 className="font-medium mb-2">8. GOVERNING LAW</h3>
             <p className="text-xs leading-relaxed opacity-90">
               This agreement is governed by the laws of Queensland, Australia.
             </p>
