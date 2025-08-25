@@ -96,7 +96,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <br />
           <span className="text-6xl block" role="img" aria-label="Document">⛶</span>
           <br />
-          <p className="text-lg mt-2 font-sans"><i>Paste (Ctrl+V)<br></br>your screenshot for OCR</i></p>
+          <p className="text-lg mt-2 font-sans"><i>Drop files here (supports .DOCX, .PNG, .TXT)<br></br>or paste screenshots (Ctrl+V / Cmd+V)<br></br>for OCR in {supportedLanguages.length} languages</i></p>
         </div>
       );
     }
@@ -109,14 +109,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         <span className="text-6xl mb-3 block" role="img" aria-label="Document">⛶</span>
         <br></br>
         <p className="text-lg font-sans"><i>
-          PASTE (Ctrl+V) your screenshot</i>
-        </p>
-        <p className="text-lg font-sans">
-          <i>to extract text with OCR</i>
-        </p>
-        <br></br>
-        <p className="text-base mt-1 text-theme-primary-400 font-sans">
-          <i>Supports {supportedLanguages.length} languages including English, Chinese, Japanese, German, French, Arabic & more</i>
+          Drop files here (supports .DOCX, .PNG, .TXT)<br></br>or<br></br>Paste screenshots (Ctrl+V / Cmd+V)<br></br>for OCR in {supportedLanguages.length} languages</i>
         </p>
       </div>
     );
