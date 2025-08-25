@@ -10,8 +10,13 @@ export default defineConfig(({ command, mode }) => {
   const base = isElectronBuild ? './' : '/';
 
   // Get environment variables from process.env (for Netlify) or loaded env
-  const postHogApiKey = process.env.REACT_APP_POSTHOG_API_KEY || env.REACT_APP_POSTHOG_API_KEY || process.env.POSTHOG_KEY || env.POSTHOG_KEY || '';
-  const postHogHost = process.env.REACT_APP_POSTHOG_HOST || env.REACT_APP_POSTHOG_HOST || process.env.POSTHOG_HOST || env.POSTHOG_HOST || '';
+  // Try VITE_ prefixed variables first, then REACT_APP_ for compatibility
+  const postHogApiKey = process.env.VITE_POSTHOG_API_KEY || env.VITE_POSTHOG_API_KEY || 
+                       process.env.REACT_APP_POSTHOG_API_KEY || env.REACT_APP_POSTHOG_API_KEY || 
+                       process.env.POSTHOG_KEY || env.POSTHOG_KEY || '';
+  const postHogHost = process.env.VITE_POSTHOG_HOST || env.VITE_POSTHOG_HOST || 
+                      process.env.REACT_APP_POSTHOG_HOST || env.REACT_APP_POSTHOG_HOST || 
+                      process.env.POSTHOG_HOST || env.POSTHOG_HOST || '';
 
   return {
     plugins: [react()],

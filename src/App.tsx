@@ -356,9 +356,20 @@ function App() {
 
   // Initialize analytics on app start
   useEffect(() => {
+    // Test environment variables
+    console.log('Testing environment variables:');
+    console.log('process.env.REACT_APP_POSTHOG_API_KEY:', process.env.REACT_APP_POSTHOG_API_KEY);
+    console.log('import.meta.env.VITE_POSTHOG_API_KEY:', import.meta.env.VITE_POSTHOG_API_KEY);
+    console.log('import.meta.env:', import.meta.env);
+    
     // Initialize PostHog analytics
-    const POSTHOG_API_KEY = (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_API_KEY) || 'your-posthog-api-key';
-    const POSTHOG_HOST = (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_HOST) || 'https://us.i.posthog.com';
+    // Try VITE_ prefixed variables first, then REACT_APP_ for compatibility
+    const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY || 
+                           (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_API_KEY) || 
+                           'your-posthog-api-key';
+    const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 
+                        (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_HOST) || 
+                        'https://us.i.posthog.com';
     const NODE_ENV = (typeof process !== 'undefined' && process.env?.NODE_ENV) || 'development';
     
     if (POSTHOG_API_KEY && POSTHOG_API_KEY !== 'your-posthog-api-key') {
