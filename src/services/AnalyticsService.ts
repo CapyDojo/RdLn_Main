@@ -79,11 +79,13 @@ class AnalyticsService {
     }
 
     try {
+      console.log(`📊 Analytics: Tracking event: ${eventName}`, properties);
       posthog.capture(eventName, {
         ...properties,
         timestamp: new Date().toISOString(),
         app_version: '0.5.15'
       });
+      console.log(`📊 Analytics: Event tracked successfully: ${eventName}`);
     } catch (error) {
       console.error('📊 Analytics: Failed to track event:', eventName, error);
     }
@@ -96,10 +98,13 @@ class AnalyticsService {
     if (!this.initialized) return;
 
     try {
+      const url = path || window.location.href;
+      console.log(`📊 Analytics: Tracking page view: ${url}`);
       posthog.capture('$pageview', {
-        $current_url: path || window.location.href,
+        $current_url: url,
         app_version: '0.5.15'
       });
+      console.log(`📊 Analytics: Page view tracked successfully: ${url}`);
     } catch (error) {
       console.error('📊 Analytics: Failed to track page view:', error);
     }

@@ -383,6 +383,11 @@ function App() {
             version: '0.5.15',
             environment: NODE_ENV
           });
+          // Send a test event to verify events are being captured
+          analyticsService.track('test_event', {
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent
+          });
         }, 100);
       }
     } else {
