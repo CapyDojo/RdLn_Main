@@ -356,12 +356,6 @@ function App() {
 
   // Initialize analytics on app start
   useEffect(() => {
-    // Test environment variables
-    console.log('Testing environment variables:');
-    console.log('process.env.REACT_APP_POSTHOG_API_KEY:', process.env.REACT_APP_POSTHOG_API_KEY);
-    console.log('import.meta.env.VITE_POSTHOG_API_KEY:', import.meta.env.VITE_POSTHOG_API_KEY);
-    console.log('import.meta.env:', import.meta.env);
-    
     // Initialize PostHog analytics
     // Try VITE_ prefixed variables first, then REACT_APP_ for compatibility
     const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY || 
