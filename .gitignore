@@ -63,3 +63,9 @@ test-osd-first-principles.html
 
 # Local Netlify folder
 .netlify
+
+# Local development files and caches
+.claude/settings.local.json
+.serena/cache/
+.kiro/
+scripts/*.ps1
