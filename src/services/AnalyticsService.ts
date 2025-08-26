@@ -51,7 +51,7 @@ class AnalyticsService {
     try {
       posthog.init(config.apiKey, {
         api_host: config.apiHost || 'https://us.posthog.com',
-        person_profiles: 'identified_only', // Only create profiles for identified users
+        person_profiles: 'always', // Create profiles for all users, not just identified ones
         capture_pageview: config.capturePageviews ?? true,
         capture_pageleave: true, // Track when users leave pages
         loaded: () => {
