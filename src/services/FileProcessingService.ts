@@ -2,13 +2,16 @@
 
 import { FileTypeDetector } from './FileTypeDetector';
 import { DocxProcessor } from './DocxProcessor';
+import { TxtProcessor } from './TxtProcessor';
 import { ProcessingResult, FileValidationResult, ProcessingError, ERROR_CODES } from '../types/file-processing.types';
 
 export class FileProcessingService {
   private docxProcessor: DocxProcessor;
+  private txtProcessor: TxtProcessor;
 
   constructor() {
     this.docxProcessor = new DocxProcessor();
+    this.txtProcessor = new TxtProcessor();
   }
 
   /**
@@ -31,6 +34,8 @@ export class FileProcessingService {
     switch (fileType) {
       case 'docx':
         return await this.docxProcessor.extractText(file);
+      case 'txt':
+        return await this.txtProcessor.extractText(file);
       
       // Future cases for PDF would go here
       // case 'pdf-text':
@@ -38,7 +43,7 @@ export class FileProcessingService {
       
       default:
         throw {
-          message: 'Unsupported file type. Please upload a DOCX file.',
+          message: 'Unsupported file type. Please upload a DOCX or TXT file.',
           code: ERROR_CODES.UNSUPPORTED_TYPE
         } as ProcessingError;
     }
@@ -61,7 +66,7 @@ export class FileProcessingService {
     if (fileType === 'unknown') {
       return {
         valid: false,
-        message: 'Unsupported file type. Please upload a DOCX file.'
+        message: 'Unsupported file type. Please upload a DOCX or TXT file.'
       };
     }
 

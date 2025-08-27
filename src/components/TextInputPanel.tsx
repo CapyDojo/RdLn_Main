@@ -424,7 +424,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     const imageItem = items.find(item => item.type.startsWith('image/'));
     const textItem = items.find(item => item.type.startsWith('text/plain'));
     
-    // Check for file attachments (including DOCX)
+    // Check for file attachments (including DOCX and TXT)
     const fileItems = items.filter(item => item.kind === 'file');
     const docxFileItem = fileItems.find(item => {
       // Get the file to check its type
@@ -432,6 +432,14 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       if (!file) return false;
       return file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
              file.name.toLowerCase().endsWith('.docx');
+    });
+    
+    const txtFileItem = fileItems.find(item => {
+      // Get the file to check its type
+      const file = item.getAsFile();
+      if (!file) return false;
+      return file.type === 'text/plain' ||
+             file.name.toLowerCase().endsWith('.txt');
     });
 
     // Get plain text content for analysis
@@ -445,6 +453,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       hasImage: !!imageItem,
       hasText: !!textItem,
       hasDocx: !!docxFileItem,
+      hasTxt: !!txtFileItem,
       itemCount: items.length,
       sourceType: pasteContext.sourceType,
       detectedSource: pasteContext.detectedSource
@@ -455,6 +464,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       trackEvent.documentUpload('paste', 'image');
     } else if (docxFileItem) {
       trackEvent.documentUpload('paste', 'docx');
+    } else if (txtFileItem) {
+      trackEvent.documentUpload('paste', 'txt');
     } else if (textItem) {
       trackEvent.documentUpload('paste', 'text');
     }
@@ -494,6 +505,45 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         // Show error to user
         alert(error.message || 'Failed to process DOCX file from clipboard. Please try another file.');
         performanceTracker.trackMetric('docx_paste_error', { error: error.message });
+        return;
+      }
+    }
+
+    // Process TXT file if present
+    if (txtFileItem) {
+      e.preventDefault();
+      try {
+        const txtFile = txtFileItem.getAsFile();
+        if (!txtFile) return;
+
+        const result = await fileProcessingService.current.processFile(txtFile);
+        
+        const textarea = textareaRef.current;
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const newValue = textarea.value.substring(0, start) + result.content + textarea.value.substring(end);
+
+          if (onChange.length > 1) {
+            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
+          } else {
+            onChange(newValue);
+          }
+
+          setTimeout(() => {
+            textarea.setSelectionRange(start + result.content.length, start + result.content.length);
+            textarea.focus();
+          }, 0);
+        } else {
+          onChange(result.content);
+        }
+        
+        return; // Exit after processing TXT
+      } catch (error: any) {
+        console.error('TXT processing failed:', error);
+        // Show error to user
+        alert(error.message || 'Failed to process TXT file from clipboard. Please try another file.');
+        performanceTracker.trackMetric('txt_paste_error', { error: error.message });
         return;
       }
     }
@@ -593,11 +643,16 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       file.name.toLowerCase().endsWith('.docx')
     );
+    const txtFile = files.find(file => 
+      file.type === 'text/plain' ||
+      file.name.toLowerCase().endsWith('.txt')
+    );
 
     performanceTracker.trackMetric('drop_operation', {
       fileCount: files.length,
       hasImage: !!imageFile,
-      hasDocx: !!docxFile
+      hasDocx: !!docxFile,
+      hasTxt: !!txtFile
     });
 
     // Track document upload
@@ -605,6 +660,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       trackEvent.documentUpload('drag_drop', imageFile.type);
     } else if (docxFile) {
       trackEvent.documentUpload('drag_drop', 'docx');
+    } else if (txtFile) {
+      trackEvent.documentUpload('drag_drop', 'txt');
     }
 
     // Process DOCX file if present
@@ -644,6 +701,47 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         // Show error to user
         alert(error.message || 'Failed to process DOCX file. Please try another file.');
         performanceTracker.trackMetric('docx_error', { error: error.message });
+        return;
+      }
+    }
+
+    // Process TXT file if present
+    if (txtFile) {
+      try {
+        const result = await fileProcessingService.current.processFile(txtFile);
+        const textarea = textareaRef.current;
+        
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const newValue =
+            textarea.value.substring(0, start) +
+            (start > 0 && textarea.value[start - 1] !== '\n' ? '\n\n' : '') +
+            result.content +
+            (end < textarea.value.length && textarea.value[end] !== '\n' ? '\n\n' : '') +
+            textarea.value.substring(end);
+
+          if (onChange.length > 1) {
+            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
+          } else {
+            onChange(newValue);
+          }
+
+          setTimeout(() => {
+            const newCursorPos = start + result.content.length + (start > 0 ? 2 : 0);
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+          }, 0);
+        } else {
+          onChange(result.content);
+        }
+        
+        return; // Exit after processing TXT
+      } catch (error: any) {
+        console.error('TXT processing failed:', error);
+        // Show error to user
+        alert(error.message || 'Failed to process TXT file. Please try another file.');
+        performanceTracker.trackMetric('txt_error', { error: error.message });
         return;
       }
     }

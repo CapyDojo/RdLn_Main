@@ -28,14 +28,25 @@ export class FileTypeDetector {
   }
 
   /**
+   * Check if file is a TXT file
+   */
+  static isTxt(file: File): boolean {
+    return file.type === 'text/plain' ||
+           file.name.toLowerCase().endsWith('.txt');
+  }
+
+  /**
    * Determine file category for processing
    */
   static getFileCategory(file: File): FileType {
     if (this.isDocx(file)) {
       return 'docx';
     }
+    if (this.isTxt(file)) {
+      return 'txt';
+    }
     // Note: PDF detection would be implemented here for future support
-    // For now, we're focusing on DOCX support
+    // For now, we're focusing on DOCX and TXT support
     return 'unknown';
   }
 }
