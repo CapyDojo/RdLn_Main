@@ -1,12 +1,33 @@
-## Version 0.5.26 - "Revolutionary OCR Optimization - World-Class Performance & Progress Experience"
-*Released: 2025-08-19*
+## Version 0.5.27 - "Universal Text Input Excellence - TXT Support & Enhanced User Experience"
+*Released: 2025-08-20*
 
-### 🚀 **MAJOR: OCR System Complete Overhaul - 83% Performance Improvement**
-- **ENGLISH-FIRST INITIALIZATION**: Reduced OCR startup from 10-30 seconds to 3-5 seconds
-- **SMART WORKER REUSE**: Detection worker intelligently reused for extraction, eliminating duplicate initialization
-- **PROGRESSIVE ENHANCEMENT**: Background loading of additional languages without blocking UI
-- **NETWORK OPTIMIZATION**: 95% reduction in initial download (76MB → 4.2MB with progressive loading)
-- **MEMORY OPTIMIZATION**: 63% reduction in memory usage through smart worker sharing
+### 🎯 **FEATURE: Comprehensive .TXT File Support**
+- **PLAIN TEXT PROCESSING**: Added full support for .TXT files with drag & drop and paste functionality
+- **UNIVERSAL COMPATIBILITY**: Seamlessly handles all text encodings including UTF-8, Unicode, and special characters
+- **PERFORMANCE OPTIMIZED**: Lightning-fast processing using native FileReader API with zero dependencies
+- **ERROR HANDLING**: Robust error handling with user-friendly messages for corrupted or unreadable files
+- **INTEGRATION COMPLETE**: Works identically to existing DOCX support with consistent UI and behavior
+
+### 🚀 **ENHANCEMENT: Unified File Processing Architecture**
+- **MODULAR DESIGN**: Extracted dedicated TxtProcessor service following existing DocxProcessor pattern
+- **TYPE SAFETY**: Enhanced file-processing.types.ts with 'txt' file type and TXT_PROCESSING_FAILED error code
+- **DETECTION SYSTEM**: Updated FileTypeDetector to recognize TXT files by MIME type (text/plain) and extension (.txt)
+- **ROUTING LOGIC**: Extended FileProcessingService to route TXT files to TxtProcessor with proper validation
+- **BACKWARD COMPATIBILITY**: All existing DOCX functionality preserved without any breaking changes
+
+### ✨ **USER EXPERIENCE: Enhanced Input Panel Integration**
+- **PLACEHOLDER UPDATE**: TextInputPanel placeholder text updated to reflect "supports .DOCX, .PNG, .TXT" capability
+- **DRAG & DROP**: Full TXT file support in drag & drop operations with proper insertion at cursor position
+- **PASTE SUPPORT**: TXT file paste functionality integrated with existing clipboard processing pipeline
+- **CONSISTENT BEHAVIOR**: Identical user experience between DOCX and TXT files with proper error handling
+- **PERFORMANCE TRACKING**: Enhanced metrics tracking for TXT file processing operations
+
+### 🛡️ **QUALITY ASSURANCE: Comprehensive Testing Suite**
+- **UNIT TESTS**: Complete test coverage for TxtProcessor with edge cases including empty files, Unicode, and large files
+- **INTEGRATION TESTS**: FileProcessingService integration tests validating TXT file routing and processing
+- **DETECTION TESTS**: FileTypeDetector tests ensuring accurate TXT file recognition by MIME type and extension
+- **ERROR SCENARIOS**: Comprehensive error handling validation for various failure conditions
+- **PERFORMANCE BENCHMARKS**: Performance testing confirming efficient processing even for large text files
 
 ### 🎨 **REVOLUTIONARY: Professional Progress Tracking System**
 - **14+ GRANULAR PHASES**: Replaced static progress bars with detailed real-time feedback
