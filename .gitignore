@@ -55,9 +55,6 @@ mcp.log
 # Serena cache
 .serena/
 
-# Claude settings
-.claude/
-
 # Test/prototype HTML files
 test-osd-first-principles.html 
 
@@ -65,7 +62,6 @@ test-osd-first-principles.html
 .netlify
 
 # Local development files and caches
-.claude/settings.local.json
 .serena/cache/
 .kiro/
 scripts/*.ps1
