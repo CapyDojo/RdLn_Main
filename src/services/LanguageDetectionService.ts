@@ -374,24 +374,46 @@ export class LanguageDetectionService {
   /**
    * Post-process text using detected languages
    */
-  private static postProcessText(text: string, detectedLanguages: OCRLanguage[]): string {
-    // RESTORED: Use 3be3ff2's capability-based language selection for post-processing
+  private static async postProcessText(text: string, detectedLanguages: OCRLanguage[]): Promise<string> {
+    // RESTORED: Use 3be3ff2's comprehensive text processing pipeline
     const primaryLanguage = this.selectPrimaryLanguage(detectedLanguages);
     console.log('🧘 Post-processing with primary language:', primaryLanguage);
 
-    // Apply basic universal preservation (keep current enhancements)
-    let processed = this.gentleUniversalPreservation(text);
+    try {
+      // Import OCRTextCleanupService for comprehensive processing
+      const { OCRTextCleanupService } = await import('./OCRTextCleanupService');
+      
+      // Use the same sophisticated processing pipeline as the orchestrator
+      const processingResult = await OCRTextCleanupService.processText(
+        text,
+        detectedLanguages,
+        {
+          preserveParagraphs: true,
+          applyLegalTermFixes: true,
+          enhancedPunctuation: true
+        }
+      );
+      
+      console.log('✅ Applied comprehensive text processing:', processingResult.appliedProcessors.join(', '));
+      return processingResult.processedText;
+      
+    } catch (error) {
+      console.warn('⚠️ Comprehensive processing failed, falling back to basic processing:', error);
+      
+      // FALLBACK: Use basic processing if comprehensive fails
+      let processed = this.gentleUniversalPreservation(text);
 
-    // Remove single spaces between CJK characters (3be3ff2's approach)
-    const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
-    const cjkSpaceRegex = new RegExp(`(${cjk}) (${cjk})`, 'g');
-    let previousText;
-    do {
-      previousText = processed;
-      processed = processed.replace(cjkSpaceRegex, '$1$2');
-    } while (processed !== previousText);
+      // Remove single spaces between CJK characters (3be3ff2's approach)
+      const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
+      const cjkSpaceRegex = new RegExp(`(${cjk}) (${cjk})`, 'g');
+      let previousText;
+      do {
+        previousText = processed;
+        processed = processed.replace(cjkSpaceRegex, '$1$2');
+      } while (processed !== previousText);
 
-    return processed;
+      return processed;
+    }
   }
 
   /**
