@@ -7,7 +7,7 @@
 
 import { createWorker } from 'tesseract.js';
 import type { Worker as TesseractWorker } from 'tesseract.js';
-import { OCRLanguage, CachedWorker, LanguageDetectionCacheEntry, OCROptions, OCRProgressCallback } from '../types/ocr-types';
+import { OCRLanguage, CachedWorker, LanguageDetectionCacheEntry } from '../types/ocr-types';
 import { SUPPORTED_LANGUAGES } from '../config/ocrConfig';
 // PHASE 3.3: Import OCR Orchestrator for enhanced workflow coordination (SSMR Implementation)
 import { OCROrchestrator, OrchestrationOptions } from '../services/OCROrchestrator';
@@ -17,11 +17,6 @@ import { LanguageDetectionService } from '../services/LanguageDetectionService';
 import { OCRCacheManager } from '../services/OCRCacheManager';
 // TAURI INTEGRATION: Import OCR router for Tauri-specific OCR handling
 import { OCRRouter } from './OCRRouter';
-// Import Image Preprocessing Service for legacy pipeline
-import { ImagePreprocessingService } from './ocr/utils/ImagePreprocessingService';
-import { DEV_CONFIG } from '../config/appConfig';
-import { OCRErrorDetection, OCRErrorHandler, OCRErrorUtils } from '../utils/ocrErrorHandling';
-import { trackEvent } from './AnalyticsService';
 
 // Note: Re-exports removed to avoid module resolution conflicts
 
@@ -29,22 +24,16 @@ export class OCRService {
   private static workers: Map<string, CachedWorker> = new Map();
   private static loadingPromises: Map<string, Promise<TesseractWorker>> = new Map();
   private static detectionWorker: CachedWorker | null = null;
-
-  // FEATURE FLAG: Enable single-phase OCR approach
-  private static readonly USE_SINGLE_PHASE_OCR = process.env.NODE_ENV === 'development' || 
-                                                (typeof window !== 'undefined' && 
-                                                 (window as any).EXPERIMENTAL_FEATURES?.singlePhaseOCR);
   
   // Language detection cache
   private static languageCache: Map<string, LanguageDetectionCacheEntry> = new Map();
   private static readonly LANGUAGE_CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
   private static readonly MAX_LANGUAGE_CACHE_ENTRIES = 50; // Memory limit
   
-  // Cache configuration - TUNED: 30min expiry, adaptive cleanup, LRU eviction
-  private static readonly CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes (tuned from 10min)
-  private static readonly MAX_CACHED_WORKERS = 8; // Increased from 5 for better reuse
-  private static readonly CLEANUP_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes (more frequent cleanup)
-  private static readonly MEMORY_PRESSURE_THRESHOLD = 100 * 1024 * 1024; // 100MB threshold for adaptive cleanup
+  // Cache configuration
+  private static readonly CACHE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+  private static readonly MAX_CACHED_WORKERS = 5; // Prevent memory bloat
+  private static readonly CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
   // Start cleanup timer on first use
   private static cleanupTimer: NodeJS.Timeout | null = null;
@@ -73,7 +62,7 @@ export class OCRService {
     for (const key of expiredKeys) {
       const cached = this.workers.get(key);
       if (cached) {
-        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log(`🧹 Cleaning up expired OCR worker: ${key}`);
+        console.log(`🧹 Cleaning up expired OCR worker: ${key}`);
         await cached.worker.terminate();
         this.workers.delete(key);
       }
@@ -81,7 +70,7 @@ export class OCRService {
 
     // Cleanup detection worker if expired
     if (this.detectionWorker && now - this.detectionWorker.lastUsed > this.CACHE_EXPIRY_MS) {
-      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🧹 Cleaning up expired detection worker');
+      console.log('🧹 Cleaning up expired detection worker');
       await this.detectionWorker.worker.terminate();
       this.detectionWorker = null;
     }
@@ -93,58 +82,46 @@ export class OCRService {
       
       const toRemove = sortedEntries.slice(0, this.workers.size - this.MAX_CACHED_WORKERS);
       for (const [key, cached] of toRemove) {
-        if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log(`🧹 Removing LRU OCR worker: ${key}`);
+        console.log(`🧹 Removing LRU OCR worker: ${key}`);
         await cached.worker.terminate();
         this.workers.delete(key);
       }
     }
   }
 
-  // Language cache cleanup - TUNED: 30min expiry, adaptive cleanup, LRU eviction
+  // Language cache cleanup
   private static cleanupLanguageCache() {
     const now = Date.now();
     const expiredKeys: string[] = [];
-    let totalCacheSize = 0;
 
-    // Find expired language cache entries and calculate cache statistics
+    // Find expired language cache entries
     for (const [key, entry] of this.languageCache.entries()) {
-      const age = now - entry.timestamp;
-      if (age > this.LANGUAGE_CACHE_EXPIRY_MS) {
+      if (now - entry.timestamp > this.LANGUAGE_CACHE_EXPIRY_MS) {
         expiredKeys.push(key);
       }
-      totalCacheSize++;
-    }
-
-    // Adaptive cleanup based on cache pressure
-    const cachePressure = totalCacheSize > this.MAX_LANGUAGE_CACHE_ENTRIES * 0.8;
-    const shouldAggressiveCleanup = cachePressure || expiredKeys.length > 5;
-
-    if (shouldAggressiveCleanup) {
-      console.log(`🧹 LANGUAGE CACHE ADAPTIVE CLEANUP: Size=${totalCacheSize}, Expired=${expiredKeys.length}, Pressure=${cachePressure}`);
     }
 
     // Remove expired entries
     for (const key of expiredKeys) {
       this.languageCache.delete(key);
-      console.log(`🧹 Cleaned up expired language detection cache entry: ${key.substring(0, 20)}...`);
+      console.log(`🧹 Cleaned up expired language detection cache entry`);
     }
 
-    // LRU eviction - more sophisticated scoring
+    // If cache is too large, remove least recently used (by hitCount and timestamp)
     if (this.languageCache.size > this.MAX_LANGUAGE_CACHE_ENTRIES) {
       const sortedEntries = Array.from(this.languageCache.entries())
         .sort(([,a], [,b]) => {
-          // Enhanced scoring: prioritize by hitCount, recency, and usage
-          const scoreA = (a.hitCount * 10) - (now - a.timestamp) / 1000;
-          const scoreB = (b.hitCount * 10) - (now - b.timestamp) / 1000;
-          return scoreA - scoreB; // Lower score = less valuable
+          // Sort by hit count first, then by timestamp
+          if (a.hitCount !== b.hitCount) {
+            return a.hitCount - b.hitCount;
+          }
+          return a.timestamp - b.timestamp;
         });
       
-      const maxEntries = cachePressure ? Math.floor(this.MAX_LANGUAGE_CACHE_ENTRIES * 0.7) : this.MAX_LANGUAGE_CACHE_ENTRIES;
-      const toRemove = sortedEntries.slice(0, this.languageCache.size - maxEntries);
-      
-      for (const [key, entry] of toRemove) {
+      const toRemove = sortedEntries.slice(0, this.languageCache.size - this.MAX_LANGUAGE_CACHE_ENTRIES);
+      for (const [key] of toRemove) {
         this.languageCache.delete(key);
-        console.log(`🧹 LRU eviction: Removing language cache entry: ${key.substring(0, 20)}... (hits: ${entry.hitCount}, age: ${Math.round((now - entry.timestamp)/1000)}s)`);
+        console.log(`🧹 Removed LRU language detection cache entry`);
       }
     }
   }
@@ -231,343 +208,186 @@ export class OCRService {
     return languages.sort().join('-');
   }
 
-  private static async initializeDetectionWorker(onProgress?: OCRProgressCallback): Promise<TesseractWorker> {
+  private static async initializeDetectionWorker(): Promise<TesseractWorker> {
     // Check cache first
     if (this.detectionWorker) {
       this.detectionWorker.lastUsed = Date.now();
       this.detectionWorker.useCount++;
       console.log(`🎯 DETECTION CACHE HIT: Reusing detection worker (used ${this.detectionWorker.useCount} times)`);
-      if (onProgress) onProgress(1.0); // Immediate completion for cached worker
       return this.detectionWorker.worker;
     }
 
-    // Use OCRCacheManager's optimized detection worker initialization with progress
-    console.log('🔄 DETECTION CACHE MISS: Delegating to OCRCacheManager for optimized detection worker');
+    // RESTORED: Use comprehensive language set for detection to enable proper multi-language detection
+    // This includes all the languages we want to support: English, Chinese (both), Spanish, French, German, Japanese, Korean, Arabic, Russian
+    const detectionLanguages: OCRLanguage[] = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+    console.log('🔄 DETECTION CACHE MISS: Creating new detection worker with full language support:', detectionLanguages);
     
-    const worker = await OCRCacheManager.initializeDetectionWorker(onProgress);
+    // Configure paths for offline/Electron mode  
+    const detectionConfig: any = {
+      logger: this.createLogger()
+    };
+    
+    // Use local assets if in Electron or offline mode
+    if (typeof window !== 'undefined' && (window.isElectron || window.TESSERACT_CONFIG)) {
+      const config = window.TESSERACT_CONFIG || {};
+      detectionConfig.langPath = config.langPath || './tessdata/';
+      detectionConfig.corePath = config.corePath || './tesseract/';
+      detectionConfig.workerPath = config.workerPath || './tesseract/worker.min.js';
+      console.log('🔧 Using local Tesseract assets for detection worker');
+    }
+    
+    const worker = await createWorker(detectionLanguages, 1, detectionConfig);
 
-    // Cache the worker locally for OCRService tracking
+    // Cache the worker
     this.detectionWorker = {
       worker,
       lastUsed: Date.now(),
       useCount: 1,
-      languages: ['eng'] // Start with English, enhanced in background
+      languages: detectionLanguages
     };
 
     this.startCleanupTimer();
-    console.log('✅ Optimized detection worker obtained and cached locally');
+    console.log('✅ Multi-language detection worker cached successfully');
     return worker;
   }
 
-  private static async initializeWorker(languages: OCRLanguage[], onProgress?: OCRProgressCallback): Promise<TesseractWorker> {
+  private static async initializeWorker(languages: OCRLanguage[]): Promise<TesseractWorker> {
     // PRODUCTION FIX: Use OCRCacheManager's fixed worker creation
     console.log(`🔄 OCRService delegating to OCRCacheManager for languages: ${languages.join(', ')}`);
-    return OCRCacheManager.initializeWorker(languages, onProgress);
+    return OCRCacheManager.initializeWorker(languages);
+
+    this.loadingPromises.set(workerKey, loadingPromise);
+
+    try {
+      const worker = await loadingPromise;
+      
+      // Cache the worker
+      this.workers.set(workerKey, {
+        worker,
+        lastUsed: Date.now(),
+        useCount: 1,
+        languages: languages
+      });
+      
+      this.loadingPromises.delete(workerKey);
+      this.startCleanupTimer();
+      
+      console.log(`✅ Extraction worker cached for ${workerKey}`);
+      return worker;
+    } catch (error) {
+      this.loadingPromises.delete(workerKey);
+      throw error;
+    }
   }
 
   /**
    * Language detection - delegated to LanguageDetectionService for modularity
    */
-  public static async detectLanguage(imageFile: File | Blob, onProgress?: OCRProgressCallback): Promise<OCRLanguage[]> {
-    // SINGLE-PHASE OCR: Use combined approach if enabled
-    if (this.USE_SINGLE_PHASE_OCR) {
-      try {
-        console.log('🔍 Using single-phase OCR for language detection...');
-        const result = await LanguageDetectionService.extractTextWithLanguageDetection(imageFile, { onProgress });
-        return result.detectedLanguages;
-      } catch (error) {
-        console.warn('⚠️ Single-phase detection failed, falling back to legacy approach:', error);
-        // Fall through to legacy approach
-      }
-    }
-
-    // LEGACY: Route to appropriate language detection provider
+  public static async detectLanguage(imageFile: File | Blob): Promise<OCRLanguage[]> {
+    // TAURI INTEGRATION: Route to appropriate language detection provider
     return OCRRouter.routeLanguageDetection(imageFile, (imageFile) => {
-      return LanguageDetectionService.detectLanguage(imageFile, onProgress);
+      return LanguageDetectionService.detectLanguage(imageFile);
     });
   }
 
   public static async extractTextFromImage(
-    imageFile: File | Blob,
+    imageFile: File | Blob, 
     options: OCROptions = {}
   ): Promise<string> {
-    const startTime = Date.now();
-    const detectedLanguage = options.language || 'auto';
-    
-    // Track OCR start
-    trackEvent.ocrStarted(detectedLanguage);
+    // TAURI INTEGRATION: Route to appropriate OCR provider
+    return OCRRouter.routeOCRRequest(imageFile, options, (imageFile, options) => {
+      return this.extractTextFromImageLegacy(imageFile, options);
+    });
+  }
 
-    // SINGLE-PHASE OCR: Use combined approach if enabled and auto-detect is enabled
-    if (this.USE_SINGLE_PHASE_OCR && options.autoDetect !== false) {
+  // TAURI INTEGRATION: Renamed original method to avoid conflicts
+  private static async extractTextFromImageLegacy(
+    imageFile: File | Blob, 
+    options: OCROptions = {}
+  ): Promise<string> {
+    // PHASE 3.3: Enhanced workflow using OCR Orchestrator (opt-in)
+    if (options.useOrchestrator) {
+      console.log('🎼 Using enhanced OCR Orchestrator workflow...');
+      
       try {
-        console.log('🔍 Using single-phase OCR for text extraction...');
-        const result = await LanguageDetectionService.extractTextWithLanguageDetection(imageFile, { 
-          onProgress: options.onProgress,
-          autoDetect: options.autoDetect,
+        // Convert OCROptions to OrchestrationOptions
+        const orchestrationOptions: OrchestrationOptions = {
           languages: options.languages,
-          primaryLanguage: options.primaryLanguage
-        });
+          autoDetect: options.autoDetect,
+          primaryLanguage: options.primaryLanguage,
+          // Enable enhanced features in orchestrator
+          useBackgroundLoader: true,
+          performanceTracking: true,
+          textProcessing: {
+            preserveParagraphs: true,
+            applyLegalTermFixes: true,
+            enhancedPunctuation: true
+          }
+        };
         
-        // Track successful OCR completion
-        const processingTime = Date.now() - startTime;
-        trackEvent.ocrCompleted(detectedLanguage, processingTime, result.text.split(' ').length);
+        const result = await OCROrchestrator.extractText(imageFile, orchestrationOptions);
         
-        console.log('✅ Single-phase OCR completed successfully');
+        console.log('✨ Enhanced OCR completed with orchestrator');
+        console.log(`📊 Performance: extraction=${result.extractionTime.toFixed(1)}ms, processing=${result.processingTime.toFixed(1)}ms, total=${result.totalTime.toFixed(1)}ms`);
+        console.log(`🔧 Applied processors: ${result.appliedProcessors.join(', ')}`);
+        
         return result.text;
       } catch (error) {
-        console.warn('⚠️ Single-phase OCR failed, falling back to orchestrator:', error);
-        
-        // Track single-phase failure (not the final failure)
-        trackEvent.errorOccurred('single_phase_ocr_fallback', error instanceof Error ? error.message : String(error), {
-          language: detectedLanguage,
-          fallback_used: true
-        });
-        
-        // Fall through to orchestrator
+        console.warn('⚠️ Orchestrator failed, falling back to legacy OCR:', error);
+        // Fall through to legacy implementation
       }
     }
     
-    // ORCHESTRATOR: Default enhanced workflow (when single-phase not used or failed)
-    // The legacy path is used only if useOrchestrator is explicitly false
-    if (options.useOrchestrator === false) {
-      console.log('Legacy OCR path explicitly requested.');
-      return OCRRouter.routeOCRRequest(imageFile, options, (imageFile, options) => {
-        return this.extractTextFromImageUnifiedWorker(imageFile, options);
-      });
-    }
-
-    console.log('🎼 Using enhanced OCR Orchestrator workflow...');
+    // Legacy OCR implementation (default behavior - fully backward compatible)
     try {
-      const orchestrationOptions: OrchestrationOptions = {
-        languages: options.languages,
-        autoDetect: options.autoDetect,
-        primaryLanguage: options.primaryLanguage,
-        useBackgroundLoader: true,
-        performanceTracking: true,
-        textProcessing: {
-          preserveParagraphs: true,
-          applyLegalTermFixes: true,
-          enhancedPunctuation: true,
-        },
-      };
-      const result = await OCROrchestrator.extractText(imageFile, orchestrationOptions);
-      
-      // Track successful OCR completion
-      const processingTime = Date.now() - startTime;
-      const detectedLanguage = options.language || 'auto';
-      trackEvent.ocrCompleted(detectedLanguage, processingTime, result.text.split(' ').length);
-      
-      return result.text;
-    } catch (error) {
-      console.warn('⚠️ Orchestrator failed, falling back to legacy OCR:', error);
-      
-      // Track OCR orchestrator failure (not the final failure)
-      trackEvent.errorOccurred('ocr_orchestrator_fallback', error instanceof Error ? error.message : String(error), {
-        language: detectedLanguage,
-        fallback_used: true
-      });
-      
-      return this.extractTextFromImageUnifiedWorker(imageFile, options);
-    }
-  }
-
-  /**
-   * @deprecated This method uses a legacy unified worker pipeline.
-   * It is preserved for fallback purposes.
-   * The default path is now the OCROrchestrator.
-   */
-  private static async extractTextFromImageUnifiedWorker(
-    imageFile: File | Blob,
-    options: OCROptions = {}
-  ): Promise<string> {
-    // UNIFIED WORKER PIPELINE - OPTIMIZED FOR WORKER REUSE
-    try {
-      // Optional image preprocessing for legacy pipeline
-      let preprocessedImage = imageFile;
-      if (options.preprocessing !== false) {
-        try {
-          console.log('🖼️ Applying image preprocessing in legacy pipeline...');
-          
-          // Import the preprocessing config
-          const { DEFAULT_PREPROCESSING_CONFIG } = await import('../config/ocrConfig');
-          
-          // Determine preprocessing options
-          let preprocessingOptions;
-          if (typeof options.preprocessing === 'object') {
-            // Use provided preprocessing config
-            preprocessingOptions = options.preprocessing;
-          } else {
-            // Use default preprocessing config
-            preprocessingOptions = DEFAULT_PREPROCESSING_CONFIG;
-          }
-          
-          const preprocessingResult = await ImagePreprocessingService.preprocessImage(
-            imageFile,
-            preprocessingOptions
-          );
-          preprocessedImage = preprocessingResult.processedImage;
-          console.log('🔧 Applied preprocessing filters:', preprocessingResult.appliedFilters.join(', '));
-        } catch (error) {
-          console.warn('⚠️ Image preprocessing failed in legacy pipeline, continuing with original:', error);
-          preprocessedImage = imageFile;
-        }
-      }
-      let finalLanguages: OCRLanguage[];
-      let progressiveLanguages: OCRLanguage[] = [];
+      let languages: OCRLanguage[];
 
       if (options.autoDetect !== false) {
-        // UNIFIED WORKER: Use single worker for both detection and extraction
-        console.log('🔍 Using unified worker pipeline - detection and extraction with single worker...');
-        
-        // Start with English worker for unified pipeline
-        const workerStart = Date.now();
-        const unifiedWorker = await this.initializeWorker(['eng'], options.onProgress);
-        const workerInitTime = Date.now() - workerStart;
-        console.log(`⏱️ Unified worker initialized in ${workerInitTime}ms`);
-
-        // PHASE 1: OSD Detection with the same worker
-        const detectionStart = Date.now();
-        const { data: { script } } = await unifiedWorker.detect(preprocessedImage);
-        const scriptData = { script: script || 'Latin', confidence: 100 };
-        const detectedLanguages = this.mapScriptToLanguages(scriptData);
-        const detectionTime = Date.now() - detectionStart;
-        console.log(`⏱️ OSD detection completed in ${detectionTime}ms`);
-        progressiveLanguages = detectedLanguages;
-        console.log('📝 Detected languages from OSD:', detectedLanguages.map(lang => 
+        // Auto-detect languages
+        console.log('🔍 Detecting document language...');
+        const detectedLanguages = await this.detectLanguage(imageFile);
+        languages = detectedLanguages;
+        console.log('📝 Detected languages:', detectedLanguages.map(lang => 
           SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
         ).join(', '));
-
-        // PHASE 2: Progressive extraction with unified worker
-        if (detectedLanguages.length > 1 || (detectedLanguages[0] && detectedLanguages[0] !== 'eng')) {
-          console.log('🔄 Adding detected languages to unified worker...');
-          
-          // Reuse the same worker by adding languages
-          const additionalLanguages = detectedLanguages.filter(lang => lang !== 'eng');
-          const enhancedLanguages = ['eng', ...additionalLanguages];
-          
-          // Update worker with new languages without re-initialization
-          const updateStart = Date.now();
-          await unifiedWorker.loadLanguage(enhancedLanguages);
-          await unifiedWorker.initialize(enhancedLanguages.join('+'));
-          const updateTime = Date.now() - updateStart;
-          console.log(`⏱️ Worker updated with ${additionalLanguages.length} additional languages in ${updateTime}ms`);
-
-          finalLanguages = enhancedLanguages;
-        } else {
-          finalLanguages = ['eng'];
-        }
-
-        // PHASE 3: Final extraction with unified worker
-        const extractionStart = Date.now();
-        const { data: { text: finalText } } = await unifiedWorker.recognize(preprocessedImage);
-        const extractionTime = Date.now() - extractionStart;
-        console.log(`⏱️ Final extraction completed in ${extractionTime}ms`);
-
-        // Use final text with all detected languages
-        const processedText = this.multiLanguagePostProcessing(finalText, finalLanguages);
-        return processedText;
-
       } else if (options.languages && options.languages.length > 0) {
-        // Use specified languages - single worker approach
-        progressiveLanguages = options.languages;
-        finalLanguages = options.languages;
-        
-        console.log('🚀 Using unified worker for specified languages...');
-        
-        const workerStart = Date.now();
-        const unifiedWorker = await this.initializeWorker(finalLanguages, options.onProgress);
-        const workerInitTime = Date.now() - workerStart;
-        console.log(`⏱️ Unified worker initialized in ${workerInitTime}ms`);
-
-        const extractionStart = Date.now();
-        const { data: { text } } = await unifiedWorker.recognize(preprocessedImage);
-        const extractionTime = Date.now() - extractionStart;
-        console.log(`⏱️ Extraction completed in ${extractionTime}ms`);
-
-        const processedText = this.multiLanguagePostProcessing(text, finalLanguages);
-        return processedText;
-
+        // Use specified languages
+        languages = options.languages;
       } else {
-        // Default to English - single worker
-        finalLanguages = ['eng'];
-        
-        console.log('🚀 Using unified worker for English extraction...');
-        
-        const workerStart = Date.now();
-        const unifiedWorker = await this.initializeWorker(['eng'], options.onProgress);
-        const workerInitTime = Date.now() - workerStart;
-        console.log(`⏱️ Unified worker initialized in ${workerInitTime}ms`);
-
-        const extractionStart = Date.now();
-        const { data: { text } } = await unifiedWorker.recognize(preprocessedImage);
-        const extractionTime = Date.now() - extractionStart;
-        console.log(`⏱️ English extraction completed in ${extractionTime}ms`);
-
-        const processedText = this.multiLanguagePostProcessing(text, ['eng']);
-        return processedText;
+        // Default to English
+        languages = ['eng'];
       }
 
+      // Ensure primary language is first if specified
+      if (options.primaryLanguage && languages.includes(options.primaryLanguage)) {
+        languages = [
+          options.primaryLanguage,
+          ...languages.filter(lang => lang !== options.primaryLanguage)
+        ];
+      }
+
+      console.log('🚀 Getting extraction worker for languages:', languages.map(lang => 
+        SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
+      ).join(', '));
+
+      const worker = await this.initializeWorker(languages);
+      
+      console.log('📖 Extracting text from image...');
+      const extractionStart = Date.now();
+      
+      const { data: { text } } = await worker.recognize(imageFile);
+      
+      const extractionTime = Date.now() - extractionStart;
+      console.log(`⏱️ Text extraction completed in ${extractionTime}ms`);
+      
+      // Apply language-specific post-processing
+      const processedText = this.multiLanguagePostProcessing(text, languages);
+      
+      return processedText;
     } catch (error) {
-      OCRErrorHandler.logError('OCR text extraction', error, {
-        autoDetect: options.autoDetect,
-        specifiedLanguages: options.languages,
-        imageFileSize: imageFile.size,
-        imageFileType: imageFile.type || 'unknown'
-      });
-      
-      const errorCategory = OCRErrorDetection.categorizeError(error);
-      const standardizedMessage = OCRErrorHandler.createStandardizedErrorMessage(
-        'text extraction',
-        error,
-        { 
-          operation: 'extractTextFromImageLegacy',
-          category: errorCategory.category,
-          isRecoverable: errorCategory.isRecoverable
-        }
-      );
-      
-      throw new Error(standardizedMessage);
+      console.error('OCR extraction failed:', error);
+      throw new Error(`Failed to extract text from image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }
-
-  // UNIFIED WORKER: Map OSD script detection to language codes
-  private static mapScriptToLanguages(script: any): OCRLanguage[] {
-    if (!script || !script.script) {
-      console.log('⚠️ No script detected, defaulting to English');
-      return ['eng'];
-    }
-
-    const confidence = script.confidence || 0;
-    const detectedScript = script.script;
-
-    if (confidence < 30) {
-      console.log(`⚠️ Low confidence (${confidence}%), defaulting to English`);
-      return ['eng'];
-    }
-
-    console.log(`📊 Detected script: ${detectedScript} with confidence: ${confidence}%`);
-
-    // Map Tesseract.js script codes to OCR language codes
-    const scriptToLanguageMap: Record<string, OCRLanguage[]> = {
-      'Han': ['chi_sim', 'chi_tra'],
-      'Hani': ['chi_sim', 'chi_tra'],
-      'Japanese': ['jpn'],
-      'Hiragana': ['jpn'],
-      'Katakana': ['jpn'],
-      'Korean': ['kor'],
-      'Hangul': ['kor'],
-      'Arabic': ['ara'],
-      'Hebrew': ['eng'], // Fallback for Hebrew
-      'Cyrillic': ['rus'],
-      'Latin': ['eng', 'spa', 'fra', 'deu'],
-      'Devanagari': ['eng'], // Fallback for Devanagari
-      'Thai': ['eng'], // Fallback for Thai
-      'Tamil': ['eng'], // Fallback for Tamil
-    };
-
-    const languages = scriptToLanguageMap[detectedScript] || ['eng'];
-    console.log(`🗣️ Mapped script to languages: ${languages.join(', ')}`);
-    return languages;
   }
 
   // STAGE 2: Safe primary language selection (capability-based priority)
@@ -1377,13 +1197,6 @@ export class OCRService {
     };
   }
 
-  /**
-   * EMERGENCY: Force clear all workers due to configuration changes
-   */
-  public static async forceClearWorkers(): Promise<void> {
-    await OCRCacheManager.forceClearAllWorkers();
-  }
-
   public static async terminate(): Promise<void> {
     // Clear cleanup timer
     if (this.cleanupTimer) {
@@ -1410,12 +1223,12 @@ export class OCRService {
     // PHASE 3.3: Also cleanup orchestrator resources
     try {
       OCROrchestrator.cleanup();
-      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🧹 Orchestrator resources cleaned up');
+      console.log('🧹 Orchestrator resources cleaned up');
     } catch (error) {
       console.warn('⚠️ Failed to cleanup orchestrator:', error);
     }
     
-    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🧹 All OCR workers terminated and caches cleared');
+    console.log('🧹 All OCR workers terminated and caches cleared');
   }
 
   /**

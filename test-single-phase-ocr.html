@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single-Phase OCR Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .status.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .feature-toggle {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Single-Phase OCR Beta Test</h1>
+        <p>This page tests the new single-phase OCR implementation that combines language detection and text extraction for improved accuracy and performance.</p>
+        
+        <div class="feature-toggle">
+            <h3>Feature Flag Control</h3>
+            <button onclick="enableSinglePhase()">Enable Single-Phase OCR</button>
+            <button onclick="disableSinglePhase()">Disable Single-Phase OCR</button>
+            <button onclick="checkFeatureStatus()">Check Status</button>
+            <div id="featureStatus" class="status info">Feature flag status: Unknown</div>
+        </div>
+
+        <div id="testSection">
+            <h3>OCR Test</h3>
+            <p>Upload an image to test the OCR functionality:</p>
+            <input type="file" id="imageInput" accept="image/*">
+            <button onclick="runOCRTest()" id="testButton">Run OCR Test</button>
+            <button onclick="runDetectionTest()" id="detectionButton">Test Detection Only</button>
+        </div>
+
+        <div id="results">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Simulate feature flag functionality for testing
+        window.EXPERIMENTAL_FEATURES = window.EXPERIMENTAL_FEATURES || {};
+
+        function enableSinglePhase() {
+            window.EXPERIMENTAL_FEATURES.singlePhaseOCR = true;
+            updateFeatureStatus();
+            addStatusMessage('✅ Single-phase OCR enabled', 'success');
+        }
+
+        function disableSinglePhase() {
+            window.EXPERIMENTAL_FEATURES.singlePhaseOCR = false;
+            updateFeatureStatus();
+            addStatusMessage('❌ Single-phase OCR disabled', 'error');
+        }
+
+        function checkFeatureStatus() {
+            updateFeatureStatus();
+        }
+
+        function updateFeatureStatus() {
+            const isEnabled = window.EXPERIMENTAL_FEATURES?.singlePhaseOCR === true;
+            const isDev = false; // Would be true in development mode
+            const status = isEnabled || isDev ? 'ENABLED' : 'DISABLED';
+            const statusEl = document.getElementById('featureStatus');
+            statusEl.textContent = `Feature flag status: ${status}`;
+            statusEl.className = `status ${isEnabled ? 'success' : 'error'}`;
+        }
+
+        function addStatusMessage(message, type = 'info') {
+            const results = document.getElementById('results');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            results.appendChild(statusDiv);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function simulateOCRTest() {
+            addStatusMessage('🔍 Starting OCR test...', 'info');
+            
+            const isEnabled = window.EXPERIMENTAL_FEATURES?.singlePhaseOCR === true;
+            
+            setTimeout(() => {
+                if (isEnabled) {
+                    addStatusMessage('🔍 Using single-phase OCR (detection + extraction)...', 'info');
+                    setTimeout(() => {
+                        addStatusMessage('✅ Single-phase OCR completed successfully', 'success');
+                        addStatusMessage('📝 Languages detected: [eng, spa]', 'info');
+                        addStatusMessage('📖 Extracted text: "Sample text from the image..."', 'success');
+                        addStatusMessage('⏱️ Total time: 1250ms (single pass)', 'info');
+                    }, 1200);
+                } else {
+                    addStatusMessage('🎼 Using traditional OCR orchestrator...', 'info');
+                    setTimeout(() => {
+                        addStatusMessage('🔍 Phase 1: Language detection...', 'info');
+                        setTimeout(() => {
+                            addStatusMessage('📝 Languages detected: [eng, spa]', 'info');
+                            addStatusMessage('📖 Phase 2: Text extraction...', 'info');
+                            setTimeout(() => {
+                                addStatusMessage('✅ Traditional OCR completed', 'success');
+                                addStatusMessage('📖 Extracted text: "Sample text from the image..."', 'success');
+                                addStatusMessage('⏱️ Total time: 2100ms (dual phase)', 'info');
+                            }, 900);
+                        }, 600);
+                    }, 300);
+                }
+            }, 100);
+        }
+
+        function runOCRTest() {
+            const fileInput = document.getElementById('imageInput');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                addStatusMessage('❌ Please select an image file first', 'error');
+                return;
+            }
+
+            addStatusMessage(`📁 File selected: ${fileInput.files[0].name}`, 'info');
+            simulateOCRTest();
+        }
+
+        function runDetectionTest() {
+            const fileInput = document.getElementById('imageInput');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                addStatusMessage('❌ Please select an image file first', 'error');
+                return;
+            }
+
+            addStatusMessage('🔍 Testing language detection only...', 'info');
+            const isEnabled = window.EXPERIMENTAL_FEATURES?.singlePhaseOCR === true;
+            
+            setTimeout(() => {
+                if (isEnabled) {
+                    addStatusMessage('🔍 Single-phase detection: extracting text for analysis...', 'info');
+                    setTimeout(() => {
+                        addStatusMessage('✅ Languages detected: [eng, spa] (from text analysis)', 'success');
+                        addStatusMessage('⏱️ Detection time: 1150ms', 'info');
+                    }, 1100);
+                } else {
+                    addStatusMessage('🔍 Traditional OSD detection...', 'info');
+                    setTimeout(() => {
+                        addStatusMessage('✅ Languages detected: [eng] (from script analysis)', 'success');
+                        addStatusMessage('⏱️ Detection time: 350ms', 'info');
+                    }, 300);
+                }
+            }, 100);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFeatureStatus();
+            addStatusMessage('🚀 Single-phase OCR test page loaded', 'info');
+            addStatusMessage('📝 This is a simulation - no actual OCR processing occurs', 'info');
+        });
+    </script>
+</body>
+</html>

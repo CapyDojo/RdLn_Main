@@ -5,11 +5,32 @@
  * script analysis, word patterns, and statistical methods.
  */
 
-import { OCRLanguage } from '../types/ocr-types';
+import { OCRLanguage, OCROptions } from '../types/ocr-types';
 import { OCRCacheManager } from './OCRCacheManager';
 import { OCRErrorDetection, OCRErrorHandler, OCRErrorUtils } from '../utils/ocrErrorHandling';
+import { createWorker } from 'tesseract.js';
+import type { Worker as TesseractWorker } from 'tesseract.js';
 
 export class LanguageDetectionService {
+  // SINGLE-PHASE OCR: Comprehensive worker for both detection and extraction
+  private static comprehensiveWorker: { 
+    worker: TesseractWorker; 
+    lastUsed: number; 
+    useCount: number; 
+    languages: OCRLanguage[] 
+  } | null = null;
+
+  // Enhanced caching for combined results
+  private static combinedCache: Map<string, {
+    text: string;
+    detectedLanguages: OCRLanguage[];
+    timestamp: number;
+    hitCount: number;
+    extractionTime: number;
+  }> = new Map();
+
+  private static readonly COMBINED_CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
+  private static readonly MAX_COMBINED_CACHE_ENTRIES = 50;
 
   /**
    * Quick pre-screening to avoid OCR entirely for obvious cases
@@ -53,6 +74,369 @@ export class LanguageDetectionService {
     // Could check EXIF data, GPS location hints, etc. in future
 
     return null; // No quick determination possible
+  }
+
+  /**
+   * SINGLE-PHASE OCR: Combined language detection and text extraction
+   * This is the core method that restores 3be3ff2's accuracy while eliminating dual OCR passes
+   * @param imageFile Image file to analyze
+   * @param options OCR options including progress callbacks
+   * @returns Combined result with text, detected languages, and extraction time
+   */
+  public static async extractTextWithLanguageDetection(
+    imageFile: File | Blob,
+    options: OCROptions & { onProgress?: (progress: number) => void } = {}
+  ): Promise<{ text: string; detectedLanguages: OCRLanguage[]; extractionTime: number }> {
+    console.log('🔍 Starting single-phase OCR (detection + extraction)...');
+
+    // Quick pre-screening first (optimization from current approach)
+    const quickResult = await this.quickPreScreening(imageFile);
+    if (quickResult) {
+      console.log('⚡ Quick pre-screening successful, but still need text extraction');
+      // Even with quick languages, we need to extract text
+      const extractionStart = Date.now();
+      const worker = await this.initializeComprehensiveWorker(options.onProgress);
+      const { data } = await worker.recognize(imageFile);
+      const extractionTime = Date.now() - extractionStart;
+      
+      const processedText = this.postProcessText(data.text, quickResult);
+      await this.storeCombinedCache(imageFile, processedText, quickResult, extractionTime);
+      
+      return { text: processedText, detectedLanguages: quickResult, extractionTime };
+    }
+
+    // Check combined cache first
+    const cachedResult = await this.checkCombinedCache(imageFile);
+    if (cachedResult) {
+      console.log('🎯 Combined cache hit - returning both text and languages');
+      return cachedResult;
+    }
+
+    try {
+      if (options.onProgress) options.onProgress(0.05);
+
+      // Initialize comprehensive worker (3be3ff2's proven 10-language approach)
+      console.log('🔧 Initializing comprehensive OCR worker...');
+      const worker = await this.initializeComprehensiveWorker((progress) => {
+        if (options.onProgress) {
+          options.onProgress(0.05 + (progress * 0.3)); // 5-35% for initialization
+        }
+      });
+
+      if (options.onProgress) options.onProgress(0.35);
+
+      // SINGLE PASS: Extract text using comprehensive worker
+      console.log('📖 Extracting text with comprehensive language support...');
+      const extractionStart = Date.now();
+      
+      const recognizePromise = worker.recognize(imageFile);
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('OCR recognition timeout')), 90000) // 90 second timeout
+      );
+
+      if (options.onProgress) options.onProgress(0.4);
+
+      const { data } = await Promise.race([recognizePromise, timeoutPromise]);
+      const extractionTime = Date.now() - extractionStart;
+
+      if (options.onProgress) options.onProgress(0.8);
+
+      console.log(`⏱️ Text extraction completed in ${extractionTime}ms`);
+
+      // Analyze extracted text for language detection (3be3ff2's proven method)
+      const extractedText = data.text;
+      if (!extractedText || extractedText.trim().length === 0) {
+        console.warn('⚠️ No text extracted, defaulting to English');
+        const fallbackResult = {
+          text: '',
+          detectedLanguages: ['eng'] as OCRLanguage[],
+          extractionTime
+        };
+        await this.storeCombinedCache(imageFile, '', ['eng'], extractionTime);
+        return fallbackResult;
+      }
+
+      // RESTORED: Use 3be3ff2's proven text analysis method
+      const detectedLanguages = this.analyzeTextForLanguages(extractedText);
+      console.log('🎯 Languages detected from text analysis:', detectedLanguages);
+
+      if (options.onProgress) options.onProgress(0.9);
+
+      // Apply post-processing using detected languages
+      const processedText = this.postProcessText(extractedText, detectedLanguages);
+      
+      if (options.onProgress) options.onProgress(1.0);
+
+      // Store combined result in cache
+      await this.storeCombinedCache(imageFile, processedText, detectedLanguages, extractionTime);
+
+      console.log('✅ Single-phase OCR completed successfully');
+      return {
+        text: processedText,
+        detectedLanguages,
+        extractionTime
+      };
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn('⚠️ Single-phase OCR failed:', errorMessage);
+
+      // Enhanced error handling (preserve modern improvements)
+      const errorCategory = OCRErrorDetection.categorizeError(error);
+      OCRErrorHandler.logError('single-phase OCR', error, {
+        imageFileSize: imageFile.size,
+        imageFileType: imageFile.type || 'unknown'
+      });
+
+      // Return safe fallback
+      const fallbackResult = {
+        text: '',
+        detectedLanguages: OCRErrorUtils.createFallbackLanguages() as OCRLanguage[],
+        extractionTime: 0
+      };
+
+      return fallbackResult;
+    }
+  }
+
+  /**
+   * Initialize comprehensive worker for single-phase OCR
+   * Restores 3be3ff2's proven 10-language comprehensive approach
+   */
+  private static async initializeComprehensiveWorker(onProgress?: (progress: number) => void): Promise<TesseractWorker> {
+    // Check cache first
+    if (this.comprehensiveWorker) {
+      this.comprehensiveWorker.lastUsed = Date.now();
+      this.comprehensiveWorker.useCount++;
+      console.log(`🎯 Comprehensive worker cache hit (used ${this.comprehensiveWorker.useCount} times)`);
+      return this.comprehensiveWorker.worker;
+    }
+
+    console.log('🔄 Creating new comprehensive OCR worker...');
+    
+    // RESTORED: 3be3ff2's exact comprehensive language set
+    const comprehensiveLanguages: OCRLanguage[] = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+    
+    console.log('🌐 Comprehensive worker languages:', comprehensiveLanguages.map(lang => lang).join(', '));
+
+    // Configure paths for offline/Electron mode
+    const workerConfig: any = {
+      logger: this.createLogger()
+    };
+
+    // Use local assets if in Electron or offline mode
+    if (typeof window !== 'undefined' && (window as any).TESSERACT_CONFIG) {
+      const config = (window as any).TESSERACT_CONFIG;
+      workerConfig.langPath = config.langPath || './tessdata/';
+      workerConfig.corePath = config.corePath || './tesseract/';
+      workerConfig.workerPath = config.workerPath || './tesseract/worker.min.js';
+      console.log('🔧 Using local Tesseract assets for comprehensive worker');
+    }
+
+    const worker = await createWorker(comprehensiveLanguages, 1, workerConfig);
+
+    // Cache the comprehensive worker
+    this.comprehensiveWorker = {
+      worker,
+      lastUsed: Date.now(),
+      useCount: 1,
+      languages: comprehensiveLanguages
+    };
+
+    console.log('✅ Comprehensive OCR worker initialized and cached');
+    return worker;
+  }
+
+  /**
+   * Check combined cache for both text and language results
+   */
+  private static async checkCombinedCache(imageFile: File | Blob): Promise<{
+    text: string;
+    detectedLanguages: OCRLanguage[];
+    extractionTime: number;
+  } | null> {
+    try {
+      const cacheKey = await this.generateCacheKey(imageFile);
+      const cached = this.combinedCache.get(cacheKey);
+
+      if (cached) {
+        const now = Date.now();
+        if (now - cached.timestamp < this.COMBINED_CACHE_EXPIRY_MS) {
+          cached.hitCount++;
+          console.log(`🎯 Combined cache hit (hit #${cached.hitCount})`);
+          return {
+            text: cached.text,
+            detectedLanguages: cached.detectedLanguages,
+            extractionTime: cached.extractionTime
+          };
+        } else {
+          this.combinedCache.delete(cacheKey);
+          console.log('⏰ Combined cache entry expired');
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.warn('Failed to check combined cache:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Store combined result in cache
+   */
+  private static async storeCombinedCache(
+    imageFile: File | Blob,
+    text: string,
+    detectedLanguages: OCRLanguage[],
+    extractionTime: number
+  ): Promise<void> {
+    try {
+      const cacheKey = await this.generateCacheKey(imageFile);
+
+      this.combinedCache.set(cacheKey, {
+        text,
+        detectedLanguages: [...detectedLanguages], // Clone array
+        timestamp: Date.now(),
+        hitCount: 0,
+        extractionTime
+      });
+
+      console.log('💾 Combined result cached for future use');
+
+      // Cleanup if cache is too large
+      if (this.combinedCache.size > this.MAX_COMBINED_CACHE_ENTRIES) {
+        this.cleanupCombinedCache();
+      }
+    } catch (error) {
+      console.warn('Failed to store combined cache:', error);
+    }
+  }
+
+  /**
+   * Generate cache key for combined results
+   */
+  private static async generateCacheKey(imageFile: File | Blob): Promise<string> {
+    const size = imageFile.size;
+
+    if (imageFile instanceof File) {
+      const modifiedDate = imageFile.lastModified || 0;
+      const name = imageFile.name || 'unknown';
+      return `combined_${size}_${modifiedDate}_${name}`;
+    } else {
+      // For Blob objects: use size + content hash
+      const arrayBuffer = await imageFile.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16);
+      return `combined_blob_${size}_${hashHex}`;
+    }
+  }
+
+  /**
+   * Cleanup combined cache
+   */
+  private static cleanupCombinedCache(): void {
+    const now = Date.now();
+    const expiredKeys: string[] = [];
+
+    // Find expired entries
+    for (const [key, entry] of this.combinedCache.entries()) {
+      if (now - entry.timestamp > this.COMBINED_CACHE_EXPIRY_MS) {
+        expiredKeys.push(key);
+      }
+    }
+
+    // Remove expired entries
+    for (const key of expiredKeys) {
+      this.combinedCache.delete(key);
+    }
+
+    // If still too large, remove least recently used
+    if (this.combinedCache.size > this.MAX_COMBINED_CACHE_ENTRIES) {
+      const sortedEntries = Array.from(this.combinedCache.entries())
+        .sort(([, a], [, b]) => {
+          if (a.hitCount !== b.hitCount) {
+            return a.hitCount - b.hitCount;
+          }
+          return a.timestamp - b.timestamp;
+        });
+
+      const toRemove = sortedEntries.slice(0, this.combinedCache.size - this.MAX_COMBINED_CACHE_ENTRIES);
+      for (const [key] of toRemove) {
+        this.combinedCache.delete(key);
+      }
+    }
+
+    console.log(`🧹 Combined cache cleaned up, ${this.combinedCache.size} entries remaining`);
+  }
+
+  /**
+   * Post-process text using detected languages
+   */
+  private static postProcessText(text: string, detectedLanguages: OCRLanguage[]): string {
+    // RESTORED: Use 3be3ff2's capability-based language selection for post-processing
+    const primaryLanguage = this.selectPrimaryLanguage(detectedLanguages);
+    console.log('🧘 Post-processing with primary language:', primaryLanguage);
+
+    // Apply basic universal preservation (keep current enhancements)
+    let processed = this.gentleUniversalPreservation(text);
+
+    // Remove single spaces between CJK characters (3be3ff2's approach)
+    const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
+    const cjkSpaceRegex = new RegExp(`(${cjk}) (${cjk})`, 'g');
+    let previousText;
+    do {
+      previousText = processed;
+      processed = processed.replace(cjkSpaceRegex, '$1$2');
+    } while (processed !== previousText);
+
+    return processed;
+  }
+
+  /**
+   * RESTORED: 3be3ff2's capability-based primary language selection
+   */
+  private static selectPrimaryLanguage(detectedLanguages: OCRLanguage[]): OCRLanguage {
+    // RESTORED: 3be3ff2's exact capability-based priority
+    const capabilityPriority: OCRLanguage[] = [
+      'chi_sim', 'chi_tra', 'jpn', 'kor', 'ara', 'rus', // Complex scripts first
+      'eng', 'fra', 'deu', 'spa' // Latin scripts
+    ];
+
+    for (const lang of capabilityPriority) {
+      if (detectedLanguages.includes(lang)) {
+        console.log(`🎯 Primary language selected: ${lang} from detected: [${detectedLanguages.join(', ')}]`);
+        return lang;
+      }
+    }
+
+    console.log(`🔄 No priority language found, defaulting to English from: [${detectedLanguages.join(', ')}]`);
+    return 'eng';
+  }
+
+  /**
+   * Universal text preservation (basic cleanup)
+   */
+  private static gentleUniversalPreservation(text: string): string {
+    return text
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\s{2,}/g, ' ') // Multiple spaces to single
+      .replace(/\n{3,}/g, '\n\n') // Multiple newlines to double
+      .trim();
+  }
+
+  /**
+   * Logger for Tesseract operations
+   */
+  private static createLogger() {
+    return (m: any) => {
+      // Suppress most logging to reduce console noise, show progress for important operations
+      if (m.status === 'recognizing text' && m.progress) {
+        console.log(`OCR progress: ${Math.round(m.progress * 100)}%`);
+      }
+    };
   }
 
   /**

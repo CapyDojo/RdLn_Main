@@ -118,11 +118,126 @@ export class OCROrchestrator {
     };
 
     try {
+      // OPTIMIZATION: Try single-phase OCR first if auto-detection is enabled
+      if (options.autoDetect !== false) {
+        try {
+          console.log('🔍 Attempting single-phase OCR (detection + extraction)...');
+          const singlePhaseStart = performance.now();
+          
+          const singlePhaseResult = await LanguageDetectionService.extractTextWithLanguageDetection(imageFile, {
+            autoDetect: options.autoDetect,
+            languages: options.languages,
+            primaryLanguage: options.primaryLanguage
+          });
+          
+          const singlePhaseTime = performance.now() - singlePhaseStart;
+          
+          // Single-phase succeeded - use its results
+          detectedLanguages = singlePhaseResult.detectedLanguages;
+          extractionTime = singlePhaseResult.extractionTime;
+          
+          // Skip traditional phases since we have both detection and extraction
+          performanceMetrics.languageDetectionMs = singlePhaseTime * 0.3; // Estimate detection portion
+          performanceMetrics.ocrExtractionMs = singlePhaseResult.extractionTime;
+          
+          console.log('✅ Single-phase OCR successful, skipping traditional phases');
+          console.log('📝 Single-phase detected languages:', detectedLanguages.map(lang => 
+            SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
+          ).join(', '));
+          
+          // Apply primary language priority if specified
+          if (options.primaryLanguage && detectedLanguages.includes(options.primaryLanguage)) {
+            detectedLanguages = [
+              options.primaryLanguage,
+              ...detectedLanguages.filter(lang => lang !== options.primaryLanguage)
+            ];
+            console.log('🎯 Primary language prioritized:', detectedLanguages.join(', '));
+          }
+
+          // Jump to Phase 4: Text Processing (skip phases 2-3)
+          const textProcessingStart = performance.now();
+          console.log('🧘 Processing extracted text...');
+
+          const textProcessingOptions = options.textProcessing || {};
+          const textResult = await safeAsync(
+            () => {
+              return OCRTextCleanupService.processText(
+                singlePhaseResult.text,
+                detectedLanguages,
+                textProcessingOptions
+              );
+            },
+            ErrorCategory.OCR,
+            'Text processing failed'
+          );
+          
+          let processingResult;
+          if (textResult.success) {
+            processingResult = textResult.data;
+          } else {
+            // Text processing failed, throw error to trigger fallback
+            throw new Error('Text processing failed: ' + textResult.error.message);
+          }
+
+          // Phase 5: Final Paragraph Formatting
+          const paragraphFormattingStart = performance.now();
+          const finalText = formatPastedText(processingResult.processedText);
+          performanceMetrics.paragraphFormattingMs = performance.now() - paragraphFormattingStart;
+
+          processingTime = processingResult.processingTime;
+          appliedProcessors = processingResult.appliedProcessors;
+          performanceMetrics.textProcessingMs = processingTime;
+
+          const totalTime = performance.now() - startTime;
+
+          console.log(`✅ Single-phase OCR orchestration completed in ${totalTime}ms (single-phase: ${singlePhaseTime}ms, processing: ${processingTime}ms)`);
+          
+          // Track completion metrics
+          this.performanceMonitor.recordMetric(
+            'ocr_operation_completed',
+            totalTime,
+            'ocr' as MetricCategory,
+            {
+              operationId,
+              totalTime,
+              extractionTime,
+              processingTime,
+              textLength: processingResult.processedText.length,
+              detectedLanguages,
+              cacheHit: false, // Single-phase manages its own caching
+              backgroundLoaderUsed: false, // Single-phase uses comprehensive worker
+              appliedProcessors,
+              imageSize: imageFile.size,
+              performanceMetrics,
+              singlePhase: true,
+              timestamp: Date.now()
+            }
+          );
+
+          return {
+            text: finalText,
+            detectedLanguages,
+            extractionTime,
+            processingTime,
+            totalTime,
+            cacheHit: false,
+            backgroundLoaderUsed: false,
+            appliedProcessors,
+            performanceMetrics
+          };
+
+        } catch (singlePhaseError) {
+          console.warn('⚠️ Single-phase OCR failed, falling back to traditional dual-phase approach:', singlePhaseError);
+          // Fall through to traditional approach
+        }
+      }
+
+      // FALLBACK: Traditional dual-phase approach
       // Phase 1: Language Detection
       const languageDetectionStart = performance.now();
       
       if (options.autoDetect !== false) {
-        console.log('🔍 Starting language detection workflow...');
+        console.log('🔍 Starting traditional language detection workflow...');
         const languageResult = await safeAsync(
           () => LanguageDetectionService.detectLanguage(imageFile),
           ErrorCategory.OCR,
