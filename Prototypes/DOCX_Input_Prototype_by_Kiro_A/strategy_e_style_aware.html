@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Text Extractor - Strategy E (Style-Aware)</title>
+    <script src="https://unpkg.com/pizzip@3.2.0/dist/pizzip.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #8e44ad 0%, #3498db 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .strategy-badge {
+            display: inline-block;
+            background: #8e44ad;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .drop-zone.dragover {
+            border-color: #8e44ad;
+            background-color: rgba(142, 68, 173, 0.1);
+        }
+        
+        .drop-zone h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .drop-zone p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: #8e44ad;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px 5px;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #7d3c98;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .results-panel {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .results-header h3 {
+            color: #333;
+            font-size: 1.3rem;
+        }
+        
+        .char-count {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .text-output {
+            width: 100%;
+            height: 400px;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            resize: vertical;
+            background: #f9f9f9;
+        }
+        
+        .status {
+            margin: 15px 0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.processing {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .features {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .features h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .features ul {
+            color: #666;
+            padding-left: 20px;
+        }
+        
+        .features li {
+            margin-bottom: 5px;
+        }
+        
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4fd;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="strategy-badge">Strategy E: Style-Aware List Detection</div>
+            <h1>DOCX Text Extractor</h1>
+            <p>Handles both numbering elements AND style-based lists (ListNumber, ListNumber2, etc.)</p>
+        </div>
+        
+        <div class="drop-zone" id="dropZone">
+            <h3>📄 Drop DOCX File Here</h3>
+            <p>Or click to browse files</p>
+            <input type="file" id="fileInput" class="file-input" accept=".docx">
+        </div>
+        
+        <div id="status"></div>
+        
+        <div class="results-panel" id="resultsPanel">
+            <div class="results-header">
+                <h3>Extracted Text</h3>
+                <div class="char-count" id="charCount">0 characters</div>
+            </div>
+            <textarea id="textOutput" class="text-output" readonly placeholder="Extracted text will appear here..."></textarea>
+            <button id="copyBtn" class="btn">📋 Copy to Clipboard</button>
+            <button id="downloadBtn" class="btn">💾 Download as TXT</button>
+            
+            <div id="debugInfo" class="debug-info" style="display: none;"></div>
+            <button id="toggleDebug" class="btn" style="background: #666;">🔍 Toggle Debug Info</button>
+        </div>
+        
+        <div class="features">
+            <h4>Strategy E Features:</h4>
+            <ul>
+                <li>Detects both w:numPr numbering AND style-based lists</li>
+                <li>Handles ListNumber, ListNumber2, ListNumber3 styles</li>
+                <li>Proper indentation based on style hierarchy</li>
+                <li>Maintains list counters across different styles</li>
+                <li>Debug mode to show detection logic</li>
+                <li>Matches Word's "select all, copy, paste" behavior</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        class StyleAwareDocxExtractor {
+            constructor() {
+                this.setupEventListeners();
+                this.numberingMap = new Map();
+                this.abstractNumMap = new Map();
+                this.listCounters = new Map();
+                this.styleCounters = new Map();
+                this.debugLog = [];
+            }
+            
+            setupEventListeners() {
+                const dropZone = document.getElementById('dropZone');
+                const fileInput = document.getElementById('fileInput');
+                const copyBtn = document.getElementById('copyBtn');
+                const downloadBtn = document.getElementById('downloadBtn');
+                const toggleDebug = document.getElementById('toggleDebug');
+                
+                // Drop zone events
+                dropZone.addEventListener('click', () => fileInput.click());
+                dropZone.addEventListener('dragover', this.handleDragOver.bind(this));
+                dropZone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                dropZone.addEventListener('drop', this.handleDrop.bind(this));
+                
+                // File input
+                fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+                
+                // Buttons
+                copyBtn.addEventListener('click', this.copyToClipboard.bind(this));
+                downloadBtn.addEventListener('click', this.downloadText.bind(this));
+                toggleDebug.addEventListener('click', this.toggleDebugInfo.bind(this));
+            }
+            
+            handleDragOver(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.add('dragover');
+            }
+            
+            handleDragLeave(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.remove('dragover');
+            }
+            
+            handleDrop(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.processFile(files[0]);
+                }
+            }
+            
+            handleFileSelect(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    this.processFile(files[0]);
+                }
+            }
+            
+            showStatus(message, type = 'processing') {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            }
+            
+            log(message) {
+                this.debugLog.push(message);
+                console.log(message);
+            }
+            
+            async processFile(file) {
+                if (!file.name.toLowerCase().endsWith('.docx')) {
+                    this.showStatus('Please select a DOCX file.', 'error');
+                    return;
+                }
+                
+                this.showStatus('Processing DOCX file...', 'processing');
+                this.debugLog = [];
+                
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const zip = new PizZip(arrayBuffer);
+                    
+                    // Extract XML files
+                    const documentXml = zip.file('word/document.xml')?.asText();
+                    const numberingXml = zip.file('word/numbering.xml')?.asText();
+                    const stylesXml = zip.file('word/styles.xml')?.asText();
+                    
+                    if (!documentXml) {
+                        throw new Error('Could not find document.xml in DOCX file');
+                    }
+                    
+                    this.log('Found document.xml');
+                    if (numberingXml) this.log('Found numbering.xml');
+                    if (stylesXml) this.log('Found styles.xml');
+                    
+                    // Parse numbering data if available
+                    if (numberingXml) {
+                        this.parseNumberingXml(numberingXml);
+                    }
+                    
+                    // Extract text
+                    const extractedText = this.extractTextFromXml(documentXml);
+                    
+                    this.displayResults(extractedText);
+                    this.showStatus(`Successfully extracted ${extractedText.length} characters`, 'success');
+                    
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    this.showStatus(`Error: ${error.message}`, 'error');
+                }
+            }
+            
+            parseNumberingXml(xml) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(xml, 'text/xml');
+                
+                // Parse abstract numbering definitions
+                const abstractNums = doc.querySelectorAll('abstractNum');
+                abstractNums.forEach(abstractNum => {
+                    const abstractNumId = abstractNum.getAttribute('w:abstractNumId');
+                    const levels = [];
+                    
+                    const lvls = abstractNum.querySelectorAll('lvl');
+                    lvls.forEach(lvl => {
+                        const ilvl = parseInt(lvl.getAttribute('w:ilvl'));
+                        const numFmt = lvl.querySelector('numFmt')?.getAttribute('w:val') || 'bullet';
+                        const lvlText = lvl.querySelector('lvlText')?.getAttribute('w:val') || '•';
+                        const start = parseInt(lvl.querySelector('start')?.getAttribute('w:val') || '1');
+                        
+                        levels[ilvl] = { numFmt, lvlText, start };
+                    });
+                    
+                    this.abstractNumMap.set(abstractNumId, levels);
+                    this.log(`Parsed abstractNum ${abstractNumId} with ${levels.length} levels`);
+                });
+                
+                // Parse numbering instances
+                const nums = doc.querySelectorAll('num');
+                nums.forEach(num => {
+                    const numId = num.getAttribute('w:numId');
+                    const abstractNumId = num.querySelector('abstractNumId')?.getAttribute('w:val');
+                    if (numId && abstractNumId) {
+                        this.numberingMap.set(numId, abstractNumId);
+                        this.log(`Mapped numId ${numId} to abstractNumId ${abstractNumId}`);
+                    }
+                });
+            }
+            
+            extractTextFromXml(xml) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(xml, 'text/xml');
+                
+                let result = '';
+                const paragraphs = doc.querySelectorAll('w\\:p, p');
+                
+                this.log(`Processing ${paragraphs.length} paragraphs`);
+                
+                paragraphs.forEach((paragraph, index) => {
+                    const paragraphResult = this.processParagraph(paragraph, index + 1);
+                    if (paragraphResult !== null) {
+                        result += paragraphResult + '\r\n';
+                    }
+                });
+                
+                return result;
+            }
+            
+            processParagraph(paragraph, paragraphNumber) {
+                let text = '';
+                let listPrefix = '';
+                let indentLevel = 0;
+                
+                // Extract paragraph style
+                const pPr = paragraph.querySelector('w\\:pPr, pPr');
+                let style = null;
+                if (pPr) {
+                    const pStyle = pPr.querySelector('w\\:pStyle, pStyle');
+                    if (pStyle) {
+                        style = pStyle.getAttribute('w:val');
+                    }
+                }
+                
+                this.log(`Paragraph ${paragraphNumber}: style="${style}"`);
+                
+                // Check for numbering properties first
+                const numPr = paragraph.querySelector('w\\:numPr, numPr');
+                if (numPr) {
+                    const numId = numPr.querySelector('w\\:numId, numId')?.getAttribute('w:val');
+                    const ilvl = parseInt(numPr.querySelector('w\\:ilvl, ilvl')?.getAttribute('w:val') || '0');
+                    
+                    if (numId) {
+                        listPrefix = this.generateListPrefix(numId, ilvl);
+                        indentLevel = ilvl;
+                        this.log(`  Found numPr: numId=${numId}, ilvl=${ilvl}, prefix="${listPrefix}"`);
+                    }
+                }
+                // Check for style-based lists
+                else if (style && this.isListStyle(style)) {
+                    const styleInfo = this.getStyleInfo(style);
+                    listPrefix = this.generateStyleBasedPrefix(style, styleInfo);
+                    indentLevel = styleInfo.level;
+                    this.log(`  Found list style: ${style}, level=${styleInfo.level}, prefix="${listPrefix}"`);
+                }
+                
+                // Extract text from runs
+                const runs = paragraph.querySelectorAll('w\\:r, r');
+                runs.forEach(run => {
+                    // Extract text elements
+                    const textElements = run.querySelectorAll('w\\:t, t');
+                    textElements.forEach(textEl => {
+                        text += textEl.textContent || '';
+                    });
+                    
+                    // Handle tabs
+                    const tabs = run.querySelectorAll('w\\:tab, tab');
+                    tabs.forEach(() => {
+                        text += '\t';
+                    });
+                    
+                    // Handle line breaks
+                    const breaks = run.querySelectorAll('w\\:br, br');
+                    breaks.forEach(() => {
+                        text += '\n';
+                    });
+                });
+                
+                // Format the paragraph
+                if (text.trim() || listPrefix) {
+                    const indent = '  '.repeat(indentLevel);
+                    const result = indent + listPrefix + text.trim();
+                    this.log(`  Result: "${result}"`);
+                    return result;
+                } else if (text === '' && !listPrefix) {
+                    return ''; // Empty line
+                }
+                
+                return null; // Skip this paragraph
+            }
+            
+            isListStyle(style) {
+                const listStyles = [
+                    'ListNumber', 'ListNumber2', 'ListNumber3', 'ListNumber4', 'ListNumber5',
+                    'ListBullet', 'ListBullet2', 'ListBullet3', 'ListBullet4', 'ListBullet5',
+                    'AARHeading3', 'AARHeading4' // Based on your sample data
+                ];
+                return listStyles.includes(style);
+            }
+            
+            getStyleInfo(style) {
+                const styleMap = {
+                    'ListNumber': { level: 0, type: 'decimal', format: '%1.' },
+                    'ListNumber2': { level: 1, type: 'lowerLetter', format: '%1.' },
+                    'ListNumber3': { level: 2, type: 'lowerRoman', format: '%1.' },
+                    'ListNumber4': { level: 3, type: 'decimal', format: '%1.' },
+                    'ListNumber5': { level: 4, type: 'lowerLetter', format: '%1.' },
+                    'ListBullet': { level: 0, type: 'bullet', format: '•' },
+                    'ListBullet2': { level: 1, type: 'bullet', format: '◦' },
+                    'ListBullet3': { level: 2, type: 'bullet', format: '▪' },
+                    'ListBullet4': { level: 3, type: 'bullet', format: '•' },
+                    'ListBullet5': { level: 4, type: 'bullet', format: '◦' },
+                    'AARHeading3': { level: 0, type: 'lowerLetter', format: '%1.' },
+                    'AARHeading4': { level: 1, type: 'lowerRoman', format: '%1.' }
+                };
+                
+                return styleMap[style] || { level: 0, type: 'bullet', format: '•' };
+            }
+            
+            generateStyleBasedPrefix(style, styleInfo) {
+                if (styleInfo.type === 'bullet') {
+                    return styleInfo.format + ' ';
+                }
+                
+                // Get or initialize counter for this style
+                if (!this.styleCounters.has(style)) {
+                    this.styleCounters.set(style, 0);
+                }
+                
+                const counter = this.styleCounters.get(style) + 1;
+                this.styleCounters.set(style, counter);
+                
+                let prefix = styleInfo.format;
+                
+                // Replace numbering placeholders
+                switch (styleInfo.type) {
+                    case 'decimal':
+                        prefix = prefix.replace('%1', counter.toString());
+                        break;
+                    case 'lowerLetter':
+                        prefix = prefix.replace('%1', this.numberToLetter(counter, false));
+                        break;
+                    case 'upperLetter':
+                        prefix = prefix.replace('%1', this.numberToLetter(counter, true));
+                        break;
+                    case 'lowerRoman':
+                        prefix = prefix.replace('%1', this.toRoman(counter).toLowerCase());
+                        break;
+                    case 'upperRoman':
+                        prefix = prefix.replace('%1', this.toRoman(counter));
+                        break;
+                    default:
+                        prefix = prefix.replace('%1', counter.toString());
+                }
+                
+                return prefix + ' ';
+            }
+            
+            generateListPrefix(numId, level) {
+                const abstractNumId = this.numberingMap.get(numId);
+                if (!abstractNumId) {
+                    return this.getFallbackListPrefix(level);
+                }
+                
+                const levels = this.abstractNumMap.get(abstractNumId);
+                if (!levels || !levels[level]) {
+                    return this.getFallbackListPrefix(level);
+                }
+                
+                const levelDef = levels[level];
+                const counterKey = `${numId}-${level}`;
+                
+                // Handle bullet lists
+                if (levelDef.numFmt === 'bullet') {
+                    return levelDef.lvlText + ' ';
+                }
+                
+                // Handle numbered lists
+                if (!this.listCounters.has(counterKey)) {
+                    this.listCounters.set(counterKey, levelDef.start - 1);
+                }
+                
+                const counter = this.listCounters.get(counterKey) + 1;
+                this.listCounters.set(counterKey, counter);
+                
+                let prefix = levelDef.lvlText;
+                
+                // Replace numbering placeholders
+                switch (levelDef.numFmt) {
+                    case 'decimal':
+                        prefix = prefix.replace('%1', counter.toString());
+                        break;
+                    case 'lowerLetter':
+                        prefix = prefix.replace('%1', this.numberToLetter(counter, false));
+                        break;
+                    case 'upperLetter':
+                        prefix = prefix.replace('%1', this.numberToLetter(counter, true));
+                        break;
+                    case 'lowerRoman':
+                        prefix = prefix.replace('%1', this.toRoman(counter).toLowerCase());
+                        break;
+                    case 'upperRoman':
+                        prefix = prefix.replace('%1', this.toRoman(counter));
+                        break;
+                    default:
+                        prefix = prefix.replace('%1', counter.toString());
+                }
+                
+                return prefix + ' ';
+            }
+            
+            getFallbackListPrefix(level) {
+                if (level === 0) {
+                    return '1. ';
+                } else if (level === 1) {
+                    return 'a. ';
+                } else {
+                    return '• ';
+                }
+            }
+            
+            numberToLetter(num, uppercase = false) {
+                let result = '';
+                while (num > 0) {
+                    num--;
+                    result = String.fromCharCode((uppercase ? 65 : 97) + (num % 26)) + result;
+                    num = Math.floor(num / 26);
+                }
+                return result;
+            }
+            
+            toRoman(num) {
+                const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+                const symbols = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'];
+                let result = '';
+                
+                for (let i = 0; i < values.length; i++) {
+                    while (num >= values[i]) {
+                        result += symbols[i];
+                        num -= values[i];
+                    }
+                }
+                
+                return result;
+            }
+            
+            displayResults(text) {
+                const resultsPanel = document.getElementById('resultsPanel');
+                const textOutput = document.getElementById('textOutput');
+                const charCount = document.getElementById('charCount');
+                const debugInfo = document.getElementById('debugInfo');
+                
+                textOutput.value = text;
+                charCount.textContent = `${text.length} characters`;
+                debugInfo.innerHTML = this.debugLog.join('<br>');
+                resultsPanel.style.display = 'block';
+            }
+            
+            toggleDebugInfo() {
+                const debugInfo = document.getElementById('debugInfo');
+                debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+            }
+            
+            async copyToClipboard() {
+                const textOutput = document.getElementById('textOutput');
+                try {
+                    await navigator.clipboard.writeText(textOutput.value);
+                    this.showStatus('Text copied to clipboard!', 'success');
+                } catch (error) {
+                    // Fallback for older browsers
+                    textOutput.select();
+                    document.execCommand('copy');
+                    this.showStatus('Text copied to clipboard!', 'success');
+                }
+            }
+            
+            downloadText() {
+                const textOutput = document.getElementById('textOutput');
+                const blob = new Blob([textOutput.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'extracted_text.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.showStatus('Text file downloaded!', 'success');
+            }
+        }
+        
+        // Initialize the extractor
+        new StyleAwareDocxExtractor();
+    </script>
+</body>
+</html>

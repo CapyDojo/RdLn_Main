@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX XML Dump - Diagnostic Tool</title>
+    <script src="https://unpkg.com/pizzip@3.2.0/dist/pizzip.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .strategy-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .drop-zone.dragover {
+            border-color: #e74c3c;
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+        
+        .drop-zone h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .drop-zone p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px 5px;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #c0392b;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .results-panel {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .xml-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .xml-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .xml-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .xml-output {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.3;
+            resize: vertical;
+            background: white;
+            overflow: auto;
+        }
+        
+        .parsed-structure {
+            margin-top: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .parsed-structure h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .paragraph-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .paragraph-meta {
+            background: #e3f2fd;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin-bottom: 5px;
+            font-size: 11px;
+            color: #1976d2;
+        }
+        
+        .paragraph-text {
+            padding: 5px 0;
+            color: #333;
+        }
+        
+        .status {
+            margin: 15px 0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.processing {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .features {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .features h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .features ul {
+            color: #666;
+            padding-left: 20px;
+        }
+        
+        .features li {
+            margin-bottom: 5px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="strategy-badge">Strategy D: XML Diagnostic Dump</div>
+            <h1>DOCX XML Structure Analyzer</h1>
+            <p>Dumps raw XML structure to understand how lists and formatting are stored in DOCX files</p>
+        </div>
+        
+        <div class="drop-zone" id="dropZone">
+            <h3>📄 Drop DOCX File Here</h3>
+            <p>Or click to browse files</p>
+            <input type="file" id="fileInput" class="file-input" accept=".docx">
+        </div>
+        
+        <div id="status"></div>
+        
+        <div class="results-panel" id="resultsPanel">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('raw-xml')">Raw XML</button>
+                <button class="tab" onclick="showTab('parsed-structure')">Parsed Structure</button>
+                <button class="tab" onclick="showTab('file-list')">File Contents</button>
+            </div>
+            
+            <div id="raw-xml" class="tab-content active">
+                <div class="xml-sections">
+                    <div class="xml-section">
+                        <h3>document.xml</h3>
+                        <textarea id="documentXml" class="xml-output" readonly placeholder="Document XML will appear here..."></textarea>
+                        <button onclick="copyToClipboard('documentXml')" class="btn">📋 Copy Document XML</button>
+                    </div>
+                    
+                    <div class="xml-section">
+                        <h3>numbering.xml</h3>
+                        <textarea id="numberingXml" class="xml-output" readonly placeholder="Numbering XML will appear here (if exists)..."></textarea>
+                        <button onclick="copyToClipboard('numberingXml')" class="btn">📋 Copy Numbering XML</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="parsed-structure" class="tab-content">
+                <div class="parsed-structure">
+                    <h3>Parsed Paragraph Structure</h3>
+                    <div id="parsedParagraphs"></div>
+                </div>
+            </div>
+            
+            <div id="file-list" class="tab-content">
+                <div class="parsed-structure">
+                    <h3>DOCX Archive Contents</h3>
+                    <div id="fileList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <h4>Diagnostic Features:</h4>
+            <ul>
+                <li>Raw XML dump of document.xml and numbering.xml</li>
+                <li>Parsed paragraph structure with metadata</li>
+                <li>Complete DOCX archive file listing</li>
+                <li>Detailed numbering and list information</li>
+                <li>Copy functionality for further analysis</li>
+                <li>Helps understand actual DOCX structure</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        class DocxXmlDumper {
+            constructor() {
+                this.setupEventListeners();
+                this.zipContents = null;
+            }
+            
+            setupEventListeners() {
+                const dropZone = document.getElementById('dropZone');
+                const fileInput = document.getElementById('fileInput');
+                
+                // Drop zone events
+                dropZone.addEventListener('click', () => fileInput.click());
+                dropZone.addEventListener('dragover', this.handleDragOver.bind(this));
+                dropZone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                dropZone.addEventListener('drop', this.handleDrop.bind(this));
+                
+                // File input
+                fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+            }
+            
+            handleDragOver(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.add('dragover');
+            }
+            
+            handleDragLeave(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.remove('dragover');
+            }
+            
+            handleDrop(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.processFile(files[0]);
+                }
+            }
+            
+            handleFileSelect(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    this.processFile(files[0]);
+                }
+            }
+            
+            showStatus(message, type = 'processing') {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            }
+            
+            async processFile(file) {
+                if (!file.name.toLowerCase().endsWith('.docx')) {
+                    this.showStatus('Please select a DOCX file.', 'error');
+                    return;
+                }
+                
+                this.showStatus('Analyzing DOCX structure...', 'processing');
+                
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const zip = new PizZip(arrayBuffer);
+                    this.zipContents = zip;
+                    
+                    // Extract XML files
+                    const documentXml = zip.file('word/document.xml')?.asText();
+                    const numberingXml = zip.file('word/numbering.xml')?.asText();
+                    
+                    if (!documentXml) {
+                        throw new Error('Could not find document.xml in DOCX file');
+                    }
+                    
+                    // Display raw XML
+                    this.displayRawXml(documentXml, numberingXml);
+                    
+                    // Parse and display structure
+                    this.displayParsedStructure(documentXml, numberingXml);
+                    
+                    // Display file list
+                    this.displayFileList(zip);
+                    
+                    document.getElementById('resultsPanel').style.display = 'block';
+                    this.showStatus(`Successfully analyzed DOCX structure`, 'success');
+                    
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    this.showStatus(`Error: ${error.message}`, 'error');
+                }
+            }
+            
+            displayRawXml(documentXml, numberingXml) {
+                // Format XML for better readability
+                const formattedDocumentXml = this.formatXml(documentXml);
+                const formattedNumberingXml = numberingXml ? this.formatXml(numberingXml) : 'No numbering.xml found in this document';
+                
+                document.getElementById('documentXml').value = formattedDocumentXml;
+                document.getElementById('numberingXml').value = formattedNumberingXml;
+            }
+            
+            displayParsedStructure(documentXml, numberingXml) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(documentXml, 'text/xml');
+                
+                const paragraphsContainer = document.getElementById('parsedParagraphs');
+                paragraphsContainer.innerHTML = '';
+                
+                const paragraphs = doc.querySelectorAll('w\\:p, p');
+                
+                paragraphs.forEach((paragraph, index) => {
+                    const paragraphDiv = document.createElement('div');
+                    paragraphDiv.className = 'paragraph-item';
+                    
+                    // Extract metadata
+                    const meta = this.extractParagraphMetadata(paragraph);
+                    const text = this.extractParagraphText(paragraph);
+                    
+                    // Create metadata display
+                    const metaDiv = document.createElement('div');
+                    metaDiv.className = 'paragraph-meta';
+                    metaDiv.textContent = `Paragraph ${index + 1}: ${JSON.stringify(meta)}`;
+                    
+                    // Create text display
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'paragraph-text';
+                    textDiv.textContent = `Text: "${text}"`;
+                    
+                    // Create raw XML display
+                    const xmlDiv = document.createElement('div');
+                    xmlDiv.style.fontSize = '10px';
+                    xmlDiv.style.color = '#666';
+                    xmlDiv.style.marginTop = '5px';
+                    xmlDiv.style.maxHeight = '100px';
+                    xmlDiv.style.overflow = 'auto';
+                    xmlDiv.textContent = `Raw XML: ${paragraph.outerHTML}`;
+                    
+                    paragraphDiv.appendChild(metaDiv);
+                    paragraphDiv.appendChild(textDiv);
+                    paragraphDiv.appendChild(xmlDiv);
+                    
+                    paragraphsContainer.appendChild(paragraphDiv);
+                });
+            }
+            
+            extractParagraphMetadata(paragraph) {
+                const meta = {};
+                
+                // Check for numbering properties
+                const numPr = paragraph.querySelector('w\\:numPr, numPr');
+                if (numPr) {
+                    const numId = numPr.querySelector('w\\:numId, numId')?.getAttribute('w:val');
+                    const ilvl = numPr.querySelector('w\\:ilvl, ilvl')?.getAttribute('w:val');
+                    meta.numbering = { numId, ilvl };
+                }
+                
+                // Check for paragraph properties
+                const pPr = paragraph.querySelector('w\\:pPr, pPr');
+                if (pPr) {
+                    const pStyle = pPr.querySelector('w\\:pStyle, pStyle')?.getAttribute('w:val');
+                    if (pStyle) meta.style = pStyle;
+                    
+                    const ind = pPr.querySelector('w\\:ind, ind');
+                    if (ind) {
+                        meta.indentation = {
+                            left: ind.getAttribute('w:left'),
+                            hanging: ind.getAttribute('w:hanging'),
+                            firstLine: ind.getAttribute('w:firstLine')
+                        };
+                    }
+                }
+                
+                return meta;
+            }
+            
+            extractParagraphText(paragraph) {
+                let text = '';
+                const runs = paragraph.querySelectorAll('w\\:r, r');
+                runs.forEach(run => {
+                    const textElements = run.querySelectorAll('w\\:t, t');
+                    textElements.forEach(textEl => {
+                        text += textEl.textContent || '';
+                    });
+                });
+                return text;
+            }
+            
+            displayFileList(zip) {
+                const fileListContainer = document.getElementById('fileList');
+                fileListContainer.innerHTML = '';
+                
+                const files = Object.keys(zip.files);
+                files.forEach(fileName => {
+                    const fileDiv = document.createElement('div');
+                    fileDiv.className = 'paragraph-item';
+                    
+                    const file = zip.files[fileName];
+                    const isDir = file.dir;
+                    const size = file._data ? file._data.uncompressedSize : 0;
+                    
+                    fileDiv.innerHTML = `
+                        <strong>${fileName}</strong> ${isDir ? '(directory)' : `(${size} bytes)`}
+                        ${!isDir ? `<button onclick="viewFile('${fileName}')" class="btn" style="margin-left: 10px; padding: 5px 10px; font-size: 12px;">View</button>` : ''}
+                    `;
+                    
+                    fileListContainer.appendChild(fileDiv);
+                });
+            }
+            
+            formatXml(xml) {
+                // Simple XML formatting for better readability
+                let formatted = xml.replace(/></g, '>\n<');
+                let indent = 0;
+                const lines = formatted.split('\n');
+                
+                return lines.map(line => {
+                    if (line.includes('</') && !line.includes('</'+ line.split('</')[1].split('>')[0] + '>')) {
+                        indent--;
+                    }
+                    const indentedLine = '  '.repeat(Math.max(0, indent)) + line.trim();
+                    if (line.includes('<') && !line.includes('</') && !line.includes('/>')) {
+                        indent++;
+                    }
+                    return indentedLine;
+                }).join('\n');
+            }
+        }
+        
+        // Global functions for UI
+        function showTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+        
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+            
+            // Show feedback
+            const dumper = window.docxDumper;
+            if (dumper) {
+                dumper.showStatus('Content copied to clipboard!', 'success');
+            }
+        }
+        
+        function viewFile(fileName) {
+            const dumper = window.docxDumper;
+            if (dumper && dumper.zipContents) {
+                const file = dumper.zipContents.file(fileName);
+                if (file) {
+                    const content = file.asText();
+                    const newWindow = window.open('', '_blank');
+                    newWindow.document.write(`
+                        <html>
+                            <head><title>${fileName}</title></head>
+                            <body>
+                                <h2>${fileName}</h2>
+                                <pre style="white-space: pre-wrap; font-family: monospace; font-size: 12px;">${content}</pre>
+                            </body>
+                        </html>
+                    `);
+                }
+            }
+        }
+        
+        // Initialize the dumper
+        window.docxDumper = new DocxXmlDumper();
+    </script>
+</body>
+</html>
