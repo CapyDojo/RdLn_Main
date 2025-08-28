@@ -341,7 +341,7 @@ export class LanguageDetectionService {
     const expiredKeys: string[] = [];
 
     // Find expired entries
-    for (const [key, entry] of this.combinedCache.entries()) {
+    for (const [key, entry] of Array.from(this.combinedCache.entries())) {
       if (now - entry.timestamp > this.COMBINED_CACHE_EXPIRY_MS) {
         expiredKeys.push(key);
       }
@@ -623,7 +623,7 @@ export class LanguageDetectionService {
 
     console.log(`🔤 OSD Script detected: ${script} (confidence: ${confidence}%)`);
 
-    // Map common script codes to language codes
+    // Map common script codes to language codes (only supported languages)
     const scriptToLanguageMap: Record<string, OCRLanguage[]> = {
       'Han': ['chi_sim', 'chi_tra', 'jpn', 'kor'],
       'Hani': ['chi_sim', 'chi_tra', 'jpn', 'kor'],
@@ -634,11 +634,8 @@ export class LanguageDetectionService {
       'Hangul': ['kor'],
       'Latin': ['eng', 'spa', 'fra', 'deu'],
       'Cyrillic': ['rus'],
-      'Arabic': ['ara'],
-      'Devanagari': ['hin'],
-      'Thai': ['tha'],
-      'Greek': ['ell'],
-      'Hebrew': ['heb']
+      'Arabic': ['ara']
+      // Note: hin, tha, ell, heb not included as they're not in OCRLanguage type
     };
 
     // Handle specific script patterns
@@ -657,22 +654,14 @@ export class LanguageDetectionService {
     } else if (script.includes('latin')) {
       // For Latin script, include common European languages
       languages.push('eng', 'spa', 'fra', 'deu');
-    } else if (script.includes('devanagari')) {
-      languages.push('hin');
-    } else if (script.includes('thai')) {
-      languages.push('tha');
-    } else if (script.includes('greek')) {
-      languages.push('ell');
-    } else if (script.includes('hebrew')) {
-      languages.push('heb');
     } else {
       // Fallback to English for unknown scripts
       console.warn(`⚠️ Unknown script: ${script}, defaulting to English`);
       languages.push('eng');
     }
 
-    // Remove duplicates and ensure we have at least English
-    const uniqueLanguages = [...new Set(languages)];
+    // Remove duplicates and ensure we have at least English  
+    const uniqueLanguages = Array.from(new Set(languages));
     if (uniqueLanguages.length === 0) {
       uniqueLanguages.push('eng');
     }
