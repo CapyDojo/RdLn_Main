@@ -1,0 +1,3127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced DOCX Text Extraction Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .strategy-panel {
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .strategy-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-color);
+        }
+
+        .strategy-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .strategy-1 {
+            --accent-color: #3498db;
+        }
+
+        .strategy-2 {
+            --accent-color: #27ae60;
+        }
+
+        .strategy-3 {
+            --accent-color: #9b59b6;
+        }
+
+        .strategy-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .strategy-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: var(--accent-color);
+        }
+
+        .strategy-description {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .drop-zone {
+            border: 3px dashed var(--accent-color);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: var(--accent-color);
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.2);
+        }
+
+        .drop-zone.dragover {
+            background: rgba(52, 152, 219, 0.15);
+            border-style: solid;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .drop-zone-icon {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+
+        .drop-zone-text {
+            font-size: 1.1rem;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .drop-zone-subtext {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .file-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .processing {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .processing.visible {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-info {
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .file-info.visible {
+            display: block;
+        }
+
+        .output-panel {
+            background: #f8f9fa;
+            border: 1px solid #e1e8ed;
+            border-radius: 6px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .output-header {
+            background: var(--accent-color);
+            color: white;
+            padding: 10px 15px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .output-content {
+            padding: 15px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            min-height: 100px;
+            color: #2c3e50;
+        }
+
+        .copy-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .copy-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .copy-button.copied {
+            background: #27ae60;
+            border-color: #27ae60;
+        }
+
+        .metrics {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .metric {
+            background: rgba(52, 152, 219, 0.1);
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .metric-label {
+            display: block;
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .comparison-section {
+            margin-top: 40px;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            border: 2px solid #e1e8ed;
+        }
+
+        .comparison-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .comparison-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .instructions {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .instructions h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        /* Enhanced comparison styles */
+        .performance-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(52, 152, 219, 0.05);
+            border-radius: 4px;
+        }
+
+        .metric-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .metric-badge.fast {
+            background: #27ae60;
+            color: white;
+        }
+
+        .metric-badge.medium {
+            background: #f39c12;
+            color: white;
+        }
+
+        .metric-badge.slow {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .performance-insight {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(39, 174, 96, 0.1);
+            border-left: 4px solid #27ae60;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .accuracy-analysis {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .accuracy-strategy {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .accuracy-strategy h5 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+
+        .accuracy-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .accuracy-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .score-1 { color: #e74c3c; }
+        .score-2 { color: #e67e22; }
+        .score-3 { color: #f39c12; }
+        .score-4 { color: #27ae60; }
+        .score-5 { color: #2ecc71; }
+
+        .complexity-analysis {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .complexity-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .complexity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .strategy-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .complexity-score {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .complexity-description {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .comparison-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        .recommendation {
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.1), rgba(46, 204, 113, 0.1));
+            border-radius: 8px;
+            border: 1px solid rgba(39, 174, 96, 0.2);
+        }
+
+        .recommended-strategy h5 {
+            margin: 0 0 8px 0;
+            color: #27ae60;
+            font-size: 1.1rem;
+        }
+
+        .recommended-strategy p {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            line-height: 1.5;
+        }
+
+        .use-cases h6 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+        }
+
+        .use-cases ul {
+            margin: 0 0 15px 0;
+            padding-left: 20px;
+        }
+
+        .use-cases li {
+            margin-bottom: 4px;
+            color: #34495e;
+            line-height: 1.4;
+        }
+
+        .overall-score {
+            text-align: center;
+            font-weight: 600;
+            color: #27ae60;
+            font-size: 1.1rem;
+        }
+
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .export-button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .export-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .export-description {
+            text-align: center;
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+
+        .comparison-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e1e8ed;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-card h4 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .performance-card {
+            border-left: 4px solid #3498db;
+        }
+
+        .accuracy-card {
+            border-left: 4px solid #27ae60;
+        }
+
+        .complexity-card {
+            border-left: 4px solid #9b59b6;
+        }
+
+        .content-card {
+            border-left: 4px solid #f39c12;
+        }
+
+        .recommendation-card {
+            border-left: 4px solid #27ae60;
+        }
+
+        .download-card {
+            border-left: 4px solid #e74c3c;
+        }
+
+        /* Responsive design for comparison */
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .export-options {
+                gap: 8px;
+            }
+            
+            .export-button {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+            }
+            
+            .comparison-table {
+                font-size: 0.8rem;
+            }
+            
+            .comparison-table th,
+            .comparison-table td {
+                padding: 6px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Advanced DOCX Text Extraction Prototype</h1>
+            <p>Multiple strategies for accurate text extraction with list formatting preservation</p>
+        </div>
+
+        <div class="main-content">
+            <div class="instructions">
+                <h3>📋 How to Use</h3>
+                <ul>
+                    <li>Drag and drop a DOCX file onto any strategy panel below</li>
+                    <li>Or click "Choose File" to select a DOCX file</li>
+                    <li>Compare the outputs from different extraction strategies</li>
+                    <li>Use "Copy to Clipboard" to copy the extracted text</li>
+                    <li>Review performance metrics and choose the best strategy for your needs</li>
+                </ul>
+            </div>
+
+            <div class="strategy-grid">
+                <!-- Strategy 1: Enhanced Mammoth.js -->
+                <div class="strategy-panel strategy-1">
+                    <div class="strategy-title">
+                        <div class="strategy-icon"></div>
+                        Strategy 1: Enhanced Mammoth
+                    </div>
+                    <div class="strategy-description">
+                        Uses mammoth.js with intelligent post-processing to detect and reconstruct list formatting. 
+                        Fast and reliable with pattern-based list enhancement.
+                    </div>
+                    
+                    <div class="drop-zone" id="dropZone1">
+                        <div class="drop-zone-icon">📄</div>
+                        <div class="drop-zone-text">Drop DOCX file here</div>
+                        <div class="drop-zone-subtext">or click to browse files</div>
+                        <button class="file-button" onclick="document.getElementById('fileInput1').click()">
+                            Choose File
+                        </button>
+                        <input type="file" id="fileInput1" class="file-input" accept=".docx" />
+                    </div>
+
+                    <div class="file-info" id="fileInfo1"></div>
+                    
+                    <div class="processing" id="processing1">
+                        <div class="spinner"></div>
+                        <div>Processing with Enhanced Mammoth...</div>
+                    </div>
+
+                    <div class="output-panel" id="output1" style="display: none;">
+                        <div class="output-header">
+                            <span>Extracted Text</span>
+                            <button class="copy-button" id="copyBtn1">Copy</button>
+                        </div>
+                        <div class="output-content" id="content1"></div>
+                    </div>
+
+                    <div class="metrics" id="metrics1" style="display: none;">
+                        <div class="metric">
+                            <span class="metric-label">Processing Time</span>
+                            <span class="metric-value" id="time1">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Character Count</span>
+                            <span class="metric-value" id="chars1">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Lists Detected</span>
+                            <span class="metric-value" id="lists1">-</span>
+                        </div>
+                    </div>
+
+                    <div class="error" id="error1" style="display: none;"></div>
+                </div>
+
+                <!-- Strategy 2: Direct XML Parsing -->
+                <div class="strategy-panel strategy-2">
+                    <div class="strategy-title">
+                        <div class="strategy-icon"></div>
+                        Strategy 2: Direct XML Parser
+                    </div>
+                    <div class="strategy-description">
+                        Parses DOCX XML structure directly for maximum fidelity. Preserves exact numbering formats, 
+                        nested lists, and complex formatting structures.
+                    </div>
+                    
+                    <div class="drop-zone" id="dropZone2">
+                        <div class="drop-zone-icon">🔧</div>
+                        <div class="drop-zone-text">Drop DOCX file here</div>
+                        <div class="drop-zone-subtext">or click to browse files</div>
+                        <button class="file-button" onclick="document.getElementById('fileInput2').click()">
+                            Choose File
+                        </button>
+                        <input type="file" id="fileInput2" class="file-input" accept=".docx" />
+                    </div>
+
+                    <div class="file-info" id="fileInfo2"></div>
+                    
+                    <div class="processing" id="processing2">
+                        <div class="spinner"></div>
+                        <div>Processing with Direct XML Parser...</div>
+                    </div>
+
+                    <div class="output-panel" id="output2" style="display: none;">
+                        <div class="output-header">
+                            <span>Extracted Text</span>
+                            <button class="copy-button" id="copyBtn2">Copy</button>
+                        </div>
+                        <div class="output-content" id="content2"></div>
+                    </div>
+
+                    <div class="metrics" id="metrics2" style="display: none;">
+                        <div class="metric">
+                            <span class="metric-label">Processing Time</span>
+                            <span class="metric-value" id="time2">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Character Count</span>
+                            <span class="metric-value" id="chars2">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">XML Elements</span>
+                            <span class="metric-value" id="elements2">-</span>
+                        </div>
+                    </div>
+
+                    <div class="error" id="error2" style="display: none;"></div>
+                </div>
+
+                <!-- Strategy 3: Hybrid Approach -->
+                <div class="strategy-panel strategy-3">
+                    <div class="strategy-title">
+                        <div class="strategy-icon"></div>
+                        Strategy 3: Hybrid HTML+Pattern
+                    </div>
+                    <div class="strategy-description">
+                        Combines HTML conversion with advanced pattern matching. Uses mammoth HTML output 
+                        to detect structure, then applies intelligent formatting reconstruction.
+                    </div>
+                    
+                    <div class="drop-zone" id="dropZone3">
+                        <div class="drop-zone-icon">⚡</div>
+                        <div class="drop-zone-text">Drop DOCX file here</div>
+                        <div class="drop-zone-subtext">or click to browse files</div>
+                        <button class="file-button" onclick="document.getElementById('fileInput3').click()">
+                            Choose File
+                        </button>
+                        <input type="file" id="fileInput3" class="file-input" accept=".docx" />
+                    </div>
+
+                    <div class="file-info" id="fileInfo3"></div>
+                    
+                    <div class="processing" id="processing3">
+                        <div class="spinner"></div>
+                        <div>Processing with Hybrid Approach...</div>
+                    </div>
+
+                    <div class="output-panel" id="output3" style="display: none;">
+                        <div class="output-header">
+                            <span>Extracted Text</span>
+                            <button class="copy-button" id="copyBtn3">Copy</button>
+                        </div>
+                        <div class="output-content" id="content3"></div>
+                    </div>
+
+                    <div class="metrics" id="metrics3" style="display: none;">
+                        <div class="metric">
+                            <span class="metric-label">Processing Time</span>
+                            <span class="metric-value" id="time3">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Character Count</span>
+                            <span class="metric-value" id="chars3">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">HTML Elements</span>
+                            <span class="metric-value" id="html3">-</span>
+                        </div>
+                    </div>
+
+                    <div class="error" id="error3" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h2 class="comparison-title">📊 Strategy Comparison & Analysis</h2>
+                <div class="comparison-grid" id="comparisonGrid">
+                    <div class="comparison-card">
+                        <h4>Performance Comparison</h4>
+                        <p>Processing times and efficiency metrics will appear here after testing files.</p>
+                    </div>
+                    <div class="comparison-card">
+                        <h4>List Accuracy Analysis</h4>
+                        <p>List formatting preservation quality will be analyzed and compared here.</p>
+                    </div>
+                    <div class="comparison-card">
+                        <h4>Implementation Complexity</h4>
+                        <p>Development effort and maintenance considerations for each strategy.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Main application class
+        class DocxExtractionTester {
+            constructor() {
+                this.strategies = ['1', '2', '3'];
+                this.results = {};
+                this.mammothLoaded = false;
+                this.jszipLoaded = false;
+                this.initializeEventListeners();
+                this.preloadLibraries(); // Preload libraries for faster processing
+                
+                // Test drag and drop after a short delay to ensure DOM is ready
+                setTimeout(() => {
+                    this.testDragAndDrop();
+                }, 500);
+            }
+
+            // Preload both mammoth and JSZip libraries for better user experience
+            async preloadLibraries() {
+                // Preload mammoth
+                try {
+                    await this.loadMammothLibrary();
+                    this.mammothLoaded = true;
+                    console.log('✅ Mammoth library preloaded successfully');
+                } catch (error) {
+                    console.warn('⚠️ Failed to preload mammoth library:', error.message);
+                    this.mammothLoaded = false;
+                }
+                
+                // Preload JSZip
+                try {
+                    await this.loadJSZipLibrary();
+                    this.jszipLoaded = true;
+                    console.log('✅ JSZip library preloaded successfully');
+                } catch (error) {
+                    console.warn('⚠️ Failed to preload JSZip library:', error.message);
+                    this.jszipLoaded = false;
+                }
+            }
+
+            initializeEventListeners() {
+                console.log('🔧 Initializing event listeners...');
+                
+                this.strategies.forEach(strategyId => {
+                    console.log(`Setting up strategy ${strategyId}`);
+                    
+                    // Verify elements exist
+                    const dropZone = document.getElementById(`dropZone${strategyId}`);
+                    const fileInput = document.getElementById(`fileInput${strategyId}`);
+                    const copyBtn = document.getElementById(`copyBtn${strategyId}`);
+                    
+                    if (!dropZone) {
+                        console.error(`❌ Drop zone not found: dropZone${strategyId}`);
+                        return;
+                    }
+                    if (!fileInput) {
+                        console.error(`❌ File input not found: fileInput${strategyId}`);
+                        return;
+                    }
+                    if (!copyBtn) {
+                        console.error(`❌ Copy button not found: copyBtn${strategyId}`);
+                        return;
+                    }
+                    
+                    this.setupDropZone(strategyId);
+                    this.setupFileInput(strategyId);
+                    this.setupCopyButton(strategyId);
+                    
+                    console.log(`✅ Strategy ${strategyId} setup complete`);
+                });
+                
+                console.log('✅ All event listeners initialized');
+            }
+
+            setupDropZone(strategyId) {
+                const dropZone = document.getElementById(`dropZone${strategyId}`);
+                
+                if (!dropZone) {
+                    console.error(`Drop zone not found: dropZone${strategyId}`);
+                    return;
+                }
+                
+                // Prevent default drag behaviors
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, false);
+                });
+                
+                // Highlight drop zone when item is dragged over it
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, () => {
+                        dropZone.classList.add('dragover');
+                    }, false);
+                });
+                
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, () => {
+                        dropZone.classList.remove('dragover');
+                    }, false);
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const files = e.dataTransfer.files;
+                    console.log(`Files dropped on strategy ${strategyId}:`, files.length);
+                    
+                    if (files.length > 0) {
+                        this.handleFile(files[0], strategyId);
+                    } else {
+                        console.warn('No files in drop event');
+                    }
+                }, false);
+                
+                // Also make the drop zone clickable
+                dropZone.addEventListener('click', () => {
+                    document.getElementById(`fileInput${strategyId}`).click();
+                });
+            }
+
+            setupFileInput(strategyId) {
+                const fileInput = document.getElementById(`fileInput${strategyId}`);
+                
+                if (!fileInput) {
+                    console.error(`File input not found: fileInput${strategyId}`);
+                    return;
+                }
+                
+                fileInput.addEventListener('change', (e) => {
+                    console.log(`File selected via input for strategy ${strategyId}`);
+                    
+                    if (e.target.files && e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        console.log(`Selected file: ${file.name}, size: ${file.size}`);
+                        this.handleFile(file, strategyId);
+                    } else {
+                        console.warn('No file selected');
+                    }
+                    
+                    // Reset the input so the same file can be selected again
+                    e.target.value = '';
+                });
+            }
+
+            setupCopyButton(strategyId) {
+                const copyBtn = document.getElementById(`copyBtn${strategyId}`);
+                copyBtn.addEventListener('click', () => {
+                    this.copyToClipboard(strategyId);
+                });
+            }
+
+            // Load mammoth.js library using script tag for better compatibility
+            async loadMammothLibrary() {
+                // Check if mammoth is already loaded globally
+                if (window.mammoth && typeof window.mammoth.extractRawText === 'function') {
+                    return window.mammoth;
+                }
+                
+                return new Promise((resolve, reject) => {
+                    // Try different CDN URLs
+                    const cdnUrls = [
+                        'https://cdn.jsdelivr.net/npm/mammoth@1.7.2/mammoth.browser.min.js',
+                        'https://unpkg.com/mammoth@1.7.2/mammoth.browser.min.js',
+                        'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.7.2/mammoth.browser.min.js'
+                    ];
+                    
+                    let currentIndex = 0;
+                    
+                    const tryLoadScript = () => {
+                        if (currentIndex >= cdnUrls.length) {
+                            reject(new Error('Failed to load mammoth.js from all CDN sources'));
+                            return;
+                        }
+                        
+                        const script = document.createElement('script');
+                        script.src = cdnUrls[currentIndex];
+                        script.async = true;
+                        
+                        script.onload = () => {
+                            console.log(`Mammoth loaded from: ${cdnUrls[currentIndex]}`);
+                            
+                            // Check if mammoth is available globally
+                            if (window.mammoth && typeof window.mammoth.extractRawText === 'function') {
+                                resolve(window.mammoth);
+                            } else {
+                                // Try next CDN
+                                currentIndex++;
+                                document.head.removeChild(script);
+                                tryLoadScript();
+                            }
+                        };
+                        
+                        script.onerror = () => {
+                            console.warn(`Failed to load mammoth from: ${cdnUrls[currentIndex]}`);
+                            document.head.removeChild(script);
+                            currentIndex++;
+                            tryLoadScript();
+                        };
+                        
+                        document.head.appendChild(script);
+                    };
+                    
+                    tryLoadScript();
+                });
+            }
+
+            // Load JSZip library using script tag for better compatibility
+            async loadJSZipLibrary() {
+                // Check if JSZip is already loaded globally
+                if (window.JSZip && typeof window.JSZip === 'function') {
+                    return window.JSZip;
+                }
+                
+                return new Promise((resolve, reject) => {
+                    // Try different CDN URLs
+                    const cdnUrls = [
+                        'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+                        'https://unpkg.com/jszip@3.10.1/dist/jszip.min.js',
+                        'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
+                    ];
+                    
+                    let currentIndex = 0;
+                    
+                    const tryLoadScript = () => {
+                        if (currentIndex >= cdnUrls.length) {
+                            reject(new Error('Failed to load JSZip from all CDN sources'));
+                            return;
+                        }
+                        
+                        const script = document.createElement('script');
+                        script.src = cdnUrls[currentIndex];
+                        script.async = true;
+                        
+                        script.onload = () => {
+                            console.log(`JSZip loaded from: ${cdnUrls[currentIndex]}`);
+                            
+                            // Check if JSZip is available globally
+                            if (window.JSZip && typeof window.JSZip === 'function') {
+                                resolve(window.JSZip);
+                            } else {
+                                // Try next CDN
+                                currentIndex++;
+                                document.head.removeChild(script);
+                                tryLoadScript();
+                            }
+                        };
+                        
+                        script.onerror = () => {
+                            console.warn(`Failed to load JSZip from: ${cdnUrls[currentIndex]}`);
+                            document.head.removeChild(script);
+                            currentIndex++;
+                            tryLoadScript();
+                        };
+                        
+                        document.head.appendChild(script);
+                    };
+                    
+                    tryLoadScript();
+                });
+            }
+
+            // Fallback method using JSZip if mammoth fails completely
+            async extractTextWithJSZipFallback(file) {
+                try {
+                    // Import JSZip using robust loading method
+                    const JSZip = await this.loadJSZipLibrary();
+                    
+                    // Convert file to array buffer
+                    const arrayBuffer = await file.arrayBuffer();
+                    
+                    // Parse the DOCX file as a ZIP archive
+                    const zip = new JSZip();
+                    const zipContent = await zip.loadAsync(arrayBuffer);
+                    
+                    // Extract document.xml
+                    const documentXml = await zipContent.file('word/document.xml')?.async('string');
+                    if (!documentXml) {
+                        throw new Error('Invalid DOCX file: Could not find document.xml');
+                    }
+                    
+                    // Simple text extraction from XML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(documentXml, 'application/xml');
+                    
+                    // Extract all text elements
+                    const textElements = doc.querySelectorAll('w\\:t, t');
+                    let text = '';
+                    textElements.forEach(el => {
+                        text += el.textContent || '';
+                    });
+                    
+                    return text;
+                } catch (error) {
+                    throw new Error(`Fallback text extraction failed: ${error.message}`);
+                }
+            }
+
+            async handleFile(file, strategyId) {
+                // Reset UI state
+                this.resetUIState(strategyId);
+                
+                // Validate file
+                if (!this.validateFile(file, strategyId)) {
+                    return;
+                }
+
+                // Show file info
+                this.showFileInfo(file, strategyId);
+                
+                // Show processing state
+                this.showProcessing(strategyId);
+
+                try {
+                    let result;
+                    switch (strategyId) {
+                        case '1':
+                            result = await this.processWithEnhancedMammoth(file);
+                            break;
+                        case '2':
+                            result = await this.processWithDirectXML(file);
+                            break;
+                        case '3':
+                            result = await this.processWithHybridApproach(file);
+                            break;
+                    }
+
+                    this.showResults(result, strategyId);
+                    this.results[strategyId] = result;
+                    this.updateComparison();
+
+                } catch (error) {
+                    this.showError(error, strategyId);
+                } finally {
+                    this.hideProcessing(strategyId);
+                }
+            }
+
+            validateFile(file, strategyId) {
+                if (!file.name.toLowerCase().endsWith('.docx')) {
+                    this.showError(new Error('Please select a DOCX file. Legacy DOC files are not supported.'), strategyId);
+                    return false;
+                }
+
+                if (file.size > 50 * 1024 * 1024) { // 50MB limit
+                    this.showError(new Error('File is too large. Please select a file smaller than 50MB.'), strategyId);
+                    return false;
+                }
+
+                return true;
+            }
+
+            showFileInfo(file, strategyId) {
+                const fileInfo = document.getElementById(`fileInfo${strategyId}`);
+                const sizeStr = this.formatFileSize(file.size);
+                fileInfo.innerHTML = `
+                    <strong>📄 ${file.name}</strong><br>
+                    <small>Size: ${sizeStr} | Type: ${file.type}</small>
+                `;
+                fileInfo.classList.add('visible');
+            }
+
+            showProcessing(strategyId) {
+                document.getElementById(`processing${strategyId}`).classList.add('visible');
+            }
+
+            hideProcessing(strategyId) {
+                document.getElementById(`processing${strategyId}`).classList.remove('visible');
+            }
+
+            showLoadingStatus(message, strategyId) {
+                const processingDiv = document.getElementById(`processing${strategyId}`);
+                const textDiv = processingDiv.querySelector('div:last-child');
+                if (textDiv) {
+                    textDiv.textContent = message;
+                }
+                processingDiv.classList.add('visible');
+            }
+
+            clearLoadingStatus(strategyId) {
+                const processingDiv = document.getElementById(`processing${strategyId}`);
+                const textDiv = processingDiv.querySelector('div:last-child');
+                if (textDiv) {
+                    // Reset to original message based on strategy
+                    const messages = {
+                        '1': 'Processing with Enhanced Mammoth...',
+                        '2': 'Processing with Direct XML Parser...',
+                        '3': 'Processing with Hybrid Approach...'
+                    };
+                    textDiv.textContent = messages[strategyId] || 'Processing...';
+                }
+            }
+
+            showResults(result, strategyId) {
+                // Show output panel
+                const outputPanel = document.getElementById(`output${strategyId}`);
+                const content = document.getElementById(`content${strategyId}`);
+                
+                content.textContent = result.content;
+                outputPanel.style.display = 'block';
+
+                // Show metrics
+                this.updateMetrics(result, strategyId);
+            }
+
+            updateMetrics(result, strategyId) {
+                const metrics = document.getElementById(`metrics${strategyId}`);
+                
+                document.getElementById(`time${strategyId}`).textContent = `${result.processingTime}ms`;
+                document.getElementById(`chars${strategyId}`).textContent = result.content.length.toLocaleString();
+                
+                // Strategy-specific metrics
+                if (strategyId === '1') {
+                    document.getElementById(`lists${strategyId}`).textContent = result.listsDetected || 0;
+                } else if (strategyId === '2') {
+                    document.getElementById(`elements${strategyId}`).textContent = result.xmlElements || 0;
+                } else if (strategyId === '3') {
+                    document.getElementById(`html${strategyId}`).textContent = result.htmlElements || 0;
+                }
+
+                metrics.style.display = 'flex';
+            }
+
+            showError(error, strategyId) {
+                const errorDiv = document.getElementById(`error${strategyId}`);
+                errorDiv.textContent = `❌ Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+
+            resetUIState(strategyId) {
+                // Hide all result elements
+                document.getElementById(`output${strategyId}`).style.display = 'none';
+                document.getElementById(`metrics${strategyId}`).style.display = 'none';
+                document.getElementById(`error${strategyId}`).style.display = 'none';
+                document.getElementById(`fileInfo${strategyId}`).classList.remove('visible');
+            }
+
+            async copyToClipboard(strategyId) {
+                const content = document.getElementById(`content${strategyId}`).textContent;
+                const copyBtn = document.getElementById(`copyBtn${strategyId}`);
+                
+                try {
+                    await navigator.clipboard.writeText(content);
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                } catch (error) {
+                    console.error('Failed to copy to clipboard:', error);
+                    copyBtn.textContent = 'Failed';
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy';
+                    }, 2000);
+                }
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            updateComparison() {
+                const comparisonGrid = document.getElementById('comparisonGrid');
+                const strategies = Object.keys(this.results);
+                
+                if (strategies.length === 0) {
+                    return;
+                }
+                
+                // Generate comprehensive comparison
+                const comparison = this.generateComparisonAnalysis();
+                
+                comparisonGrid.innerHTML = `
+                    <div class="comparison-card performance-card">
+                        <h4>⚡ Performance Analysis</h4>
+                        ${this.generatePerformanceComparison(comparison.performance)}
+                    </div>
+                    
+                    <div class="comparison-card accuracy-card">
+                        <h4>🎯 List Accuracy Analysis</h4>
+                        ${this.generateAccuracyComparison(comparison.accuracy)}
+                    </div>
+                    
+                    <div class="comparison-card complexity-card">
+                        <h4>⚙️ Implementation Complexity</h4>
+                        ${this.generateComplexityComparison(comparison.complexity)}
+                    </div>
+                    
+                    <div class="comparison-card content-card">
+                        <h4>📄 Content Analysis</h4>
+                        ${this.generateContentComparison(comparison.content)}
+                    </div>
+                    
+                    <div class="comparison-card recommendation-card">
+                        <h4>🏆 Recommendation</h4>
+                        ${this.generateRecommendation(comparison)}
+                    </div>
+                    
+                    <div class="comparison-card download-card">
+                        <h4>💾 Export Results</h4>
+                        ${this.generateExportOptions()}
+                    </div>
+                `;
+                
+                // Add export functionality
+                this.setupExportButtons();
+            }
+
+            generateComparisonAnalysis() {
+                const strategies = Object.keys(this.results);
+                const comparison = {
+                    performance: {},
+                    accuracy: {},
+                    complexity: {},
+                    content: {}
+                };
+                
+                // Performance analysis
+                strategies.forEach(strategyId => {
+                    const result = this.results[strategyId];
+                    comparison.performance[strategyId] = {
+                        processingTime: result.processingTime,
+                        speed: this.categorizeSpeed(result.processingTime),
+                        efficiency: this.calculateEfficiency(result)
+                    };
+                });
+                
+                // Content analysis
+                strategies.forEach(strategyId => {
+                    const result = this.results[strategyId];
+                    comparison.content[strategyId] = {
+                        length: result.content.length,
+                        lineCount: result.content.split('\n').length,
+                        listItems: this.countListItems(result.content),
+                        wordCount: this.countWords(result.content),
+                        uniqueWords: this.countUniqueWords(result.content)
+                    };
+                });
+                
+                // Accuracy analysis (based on list detection)
+                strategies.forEach(strategyId => {
+                    const result = this.results[strategyId];
+                    comparison.accuracy[strategyId] = {
+                        listDetection: this.analyzeListDetection(result.content),
+                        structurePreservation: this.analyzeStructurePreservation(result.content),
+                        formattingQuality: this.analyzeFormattingQuality(result.content)
+                    };
+                });
+                
+                // Complexity analysis
+                comparison.complexity = {
+                    '1': { score: 3, description: 'Medium - Uses existing library with enhancements' },
+                    '2': { score: 5, description: 'High - Direct XML parsing requires DOCX knowledge' },
+                    '3': { score: 4, description: 'Medium-High - Hybrid approach with multiple algorithms' }
+                };
+                
+                return comparison;
+            }
+
+            generatePerformanceComparison(performanceData) {
+                const strategies = Object.keys(performanceData);
+                let html = '<div class="performance-metrics">';
+                
+                strategies.forEach(strategyId => {
+                    const data = performanceData[strategyId];
+                    const strategyName = this.getStrategyName(strategyId);
+                    
+                    html += `
+                        <div class="metric-row">
+                            <span class="metric-label">${strategyName}:</span>
+                            <span class="metric-value">${data.processingTime}ms</span>
+                            <span class="metric-badge ${data.speed}">${data.speed}</span>
+                        </div>
+                    `;
+                });
+                
+                // Add performance insights
+                const fastest = strategies.reduce((a, b) => 
+                    performanceData[a].processingTime < performanceData[b].processingTime ? a : b
+                );
+                
+                html += `
+                    </div>
+                    <div class="performance-insight">
+                        <strong>Winner:</strong> ${this.getStrategyName(fastest)} 
+                        (${performanceData[fastest].processingTime}ms)
+                    </div>
+                `;
+                
+                return html;
+            }
+
+            generateAccuracyComparison(accuracyData) {
+                const strategies = Object.keys(accuracyData);
+                let html = '<div class="accuracy-analysis">';
+                
+                strategies.forEach(strategyId => {
+                    const data = accuracyData[strategyId];
+                    const strategyName = this.getStrategyName(strategyId);
+                    
+                    html += `
+                        <div class="accuracy-strategy">
+                            <h5>${strategyName}</h5>
+                            <div class="accuracy-metrics">
+                                <div class="accuracy-metric">
+                                    <span>List Detection:</span>
+                                    <span class="score-${data.listDetection.score}">${data.listDetection.count} items</span>
+                                </div>
+                                <div class="accuracy-metric">
+                                    <span>Structure Quality:</span>
+                                    <span class="score-${data.structurePreservation.score}">${data.structurePreservation.score}/5</span>
+                                </div>
+                                <div class="accuracy-metric">
+                                    <span>Formatting:</span>
+                                    <span class="score-${data.formattingQuality.score}">${data.formattingQuality.score}/5</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                return html;
+            }
+
+            generateComplexityComparison(complexityData) {
+                let html = '<div class="complexity-analysis">';
+                
+                Object.keys(complexityData).forEach(strategyId => {
+                    const data = complexityData[strategyId];
+                    const strategyName = this.getStrategyName(strategyId);
+                    
+                    html += `
+                        <div class="complexity-item">
+                            <div class="complexity-header">
+                                <span class="strategy-name">${strategyName}</span>
+                                <span class="complexity-score score-${data.score}">${data.score}/5</span>
+                            </div>
+                            <div class="complexity-description">${data.description}</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                return html;
+            }
+
+            generateContentComparison(contentData) {
+                const strategies = Object.keys(contentData);
+                let html = '<div class="content-comparison">';
+                
+                // Create comparison table
+                html += `
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                ${strategies.map(id => `<th>${this.getStrategyName(id)}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Character Count</td>
+                                ${strategies.map(id => `<td>${contentData[id].length.toLocaleString()}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td>Line Count</td>
+                                ${strategies.map(id => `<td>${contentData[id].lineCount}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td>List Items</td>
+                                ${strategies.map(id => `<td>${contentData[id].listItems}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td>Word Count</td>
+                                ${strategies.map(id => `<td>${contentData[id].wordCount.toLocaleString()}</td>`).join('')}
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+                
+                html += '</div>';
+                return html;
+            }
+
+            generateRecommendation(comparison) {
+                const recommendation = this.calculateRecommendation(comparison);
+                
+                return `
+                    <div class="recommendation">
+                        <div class="recommended-strategy">
+                            <h5>Recommended: ${this.getStrategyName(recommendation.best)}</h5>
+                            <p>${recommendation.reason}</p>
+                        </div>
+                        <div class="use-cases">
+                            <h6>Best Use Cases:</h6>
+                            <ul>
+                                ${recommendation.useCases.map(useCase => `<li>${useCase}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="overall-score">
+                            <span>Overall Score: ${recommendation.score}/10</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            generateExportOptions() {
+                return `
+                    <div class="export-options">
+                        <button class="export-button" id="exportCSV">
+                            📊 Export CSV Report
+                        </button>
+                        <button class="export-button" id="exportJSON">
+                            📄 Export JSON Data
+                        </button>
+                        <button class="export-button" id="exportAllTexts">
+                            📝 Export All Extracted Texts
+                        </button>
+                    </div>
+                    <div class="export-description">
+                        <small>Export comparison results and extracted content for further analysis</small>
+                    </div>
+                `;
+            }
+
+            // Analysis helper methods
+            categorizeSpeed(processingTime) {
+                if (processingTime < 500) return 'fast';
+                if (processingTime < 2000) return 'medium';
+                return 'slow';
+            }
+
+            calculateEfficiency(result) {
+                // Simple efficiency metric based on content per time
+                return Math.round(result.content.length / result.processingTime);
+            }
+
+            countWords(text) {
+                return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+            }
+
+            countUniqueWords(text) {
+                const words = text.toLowerCase().trim().split(/\s+/);
+                return new Set(words.filter(word => word.length > 0)).size;
+            }
+
+            analyzeListDetection(content) {
+                const listItems = this.countListItems(content);
+                const lines = content.split('\n');
+                const nonEmptyLines = lines.filter(line => line.trim().length > 0).length;
+                const listRatio = nonEmptyLines > 0 ? listItems / nonEmptyLines : 0;
+                
+                let score;
+                if (listRatio > 0.5) score = 5;
+                else if (listRatio > 0.3) score = 4;
+                else if (listRatio > 0.1) score = 3;
+                else if (listRatio > 0) score = 2;
+                else score = 1;
+                
+                return { count: listItems, ratio: listRatio, score };
+            }
+
+            analyzeStructurePreservation(content) {
+                const lines = content.split('\n');
+                let score = 3; // Base score
+                
+                // Check for proper indentation
+                const indentedLines = lines.filter(line => line.match(/^\s+/)).length;
+                if (indentedLines > 0) score += 1;
+                
+                // Check for consistent numbering
+                const numberedLines = lines.filter(line => line.match(/^\s*\d+\./)).length;
+                if (numberedLines > 2) {
+                    const isConsistent = this.checkNumberingConsistency(lines);
+                    if (isConsistent) score += 1;
+                }
+                
+                return { score: Math.min(5, score) };
+            }
+
+            analyzeFormattingQuality(content) {
+                let score = 3; // Base score
+                
+                // Check for proper spacing
+                if (!content.includes('\n\n\n')) score += 1; // No excessive spacing
+                
+                // Check for mixed list formats
+                const hasBullets = content.includes('•');
+                const hasNumbers = /\d+\./.test(content);
+                const hasLetters = /[a-z]\)/.test(content);
+                
+                if ((hasBullets && hasNumbers) || hasLetters) score += 1;
+                
+                return { score: Math.min(5, score) };
+            }
+
+            checkNumberingConsistency(lines) {
+                const numberedLines = lines.filter(line => line.match(/^\s*\d+\./));
+                if (numberedLines.length < 2) return true;
+                
+                let expectedNumber = 1;
+                for (const line of numberedLines) {
+                    const match = line.match(/^\s*(\d+)\./); 
+                    if (match && parseInt(match[1]) === expectedNumber) {
+                        expectedNumber++;
+                    } else {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            calculateRecommendation(comparison) {
+                const strategies = Object.keys(this.results);
+                const scores = {};
+                
+                // Calculate weighted scores for each strategy
+                strategies.forEach(strategyId => {
+                    let score = 0;
+                    
+                    // Performance weight: 20%
+                    const perfScore = this.normalizePerformanceScore(comparison.performance[strategyId].processingTime);
+                    score += perfScore * 0.2;
+                    
+                    // Accuracy weight: 50%
+                    const accScore = (
+                        comparison.accuracy[strategyId].listDetection.score +
+                        comparison.accuracy[strategyId].structurePreservation.score +
+                        comparison.accuracy[strategyId].formattingQuality.score
+                    ) / 3;
+                    score += accScore * 0.5;
+                    
+                    // Complexity weight: 20% (lower complexity is better)
+                    const complexityScore = 6 - comparison.complexity[strategyId].score;
+                    score += complexityScore * 0.2;
+                    
+                    // Content completeness weight: 10%
+                    const contentScore = this.normalizeContentScore(comparison.content[strategyId].length);
+                    score += contentScore * 0.1;
+                    
+                    scores[strategyId] = score;
+                });
+                
+                // Find best strategy
+                const best = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+                
+                const recommendations = {
+                    '1': {
+                        reason: 'Fast processing with good list detection for most documents.',
+                        useCases: ['Standard business documents', 'Quick processing needs', 'Simple to medium complexity lists']
+                    },
+                    '2': {
+                        reason: 'Maximum fidelity for complex documents with sophisticated list structures.',
+                        useCases: ['Legal documents', 'Complex nested lists', 'Custom numbering formats']
+                    },
+                    '3': {
+                        reason: 'Best balance of accuracy and flexibility with intelligent pattern recognition.',
+                        useCases: ['Mixed document types', 'Unknown document complexity', 'Production environments']
+                    }
+                };
+                
+                return {
+                    best,
+                    score: Math.round(scores[best] * 2), // Scale to 10
+                    reason: recommendations[best].reason,
+                    useCases: recommendations[best].useCases
+                };
+            }
+
+            normalizePerformanceScore(processingTime) {
+                // Faster is better, normalize to 1-5 scale
+                if (processingTime < 500) return 5;
+                if (processingTime < 1000) return 4;
+                if (processingTime < 2000) return 3;
+                if (processingTime < 3000) return 2;
+                return 1;
+            }
+
+            normalizeContentScore(length) {
+                // More content generally better (within reason)
+                if (length > 10000) return 5;
+                if (length > 5000) return 4;
+                if (length > 1000) return 3;
+                if (length > 100) return 2;
+                return 1;
+            }
+
+            getStrategyName(strategyId) {
+                const names = {
+                    '1': 'Enhanced Mammoth',
+                    '2': 'Direct XML Parser',
+                    '3': 'Hybrid HTML+Pattern'
+                };
+                return names[strategyId] || `Strategy ${strategyId}`;
+            }
+
+            setupExportButtons() {
+                document.getElementById('exportCSV')?.addEventListener('click', () => this.exportCSV());
+                document.getElementById('exportJSON')?.addEventListener('click', () => this.exportJSON());
+                document.getElementById('exportAllTexts')?.addEventListener('click', () => this.exportAllTexts());
+            }
+
+            exportCSV() {
+                const strategies = Object.keys(this.results);
+                let csv = 'Strategy,Processing Time (ms),Character Count,List Items,Word Count\n';
+                
+                strategies.forEach(strategyId => {
+                    const result = this.results[strategyId];
+                    const name = this.getStrategyName(strategyId);
+                    const chars = result.content.length;
+                    const lists = this.countListItems(result.content);
+                    const words = this.countWords(result.content);
+                    
+                    csv += `"${name}",${result.processingTime},${chars},${lists},${words}\n`;
+                });
+                
+                this.downloadFile(csv, 'docx-extraction-comparison.csv', 'text/csv');
+            }
+
+            exportJSON() {
+                const exportData = {
+                    timestamp: new Date().toISOString(),
+                    results: this.results,
+                    analysis: this.generateComparisonAnalysis()
+                };
+                
+                const json = JSON.stringify(exportData, null, 2);
+                this.downloadFile(json, 'docx-extraction-analysis.json', 'application/json');
+            }
+
+            exportAllTexts() {
+                const strategies = Object.keys(this.results);
+                let allTexts = 'DOCX Text Extraction Comparison Results\n';
+                allTexts += '=' + '='.repeat(50) + '\n\n';
+                
+                strategies.forEach(strategyId => {
+                    const result = this.results[strategyId];
+                    const name = this.getStrategyName(strategyId);
+                    
+                    allTexts += `\n\n--- ${name} ---\n`;
+                    allTexts += `Processing Time: ${result.processingTime}ms\n`;
+                    allTexts += `Character Count: ${result.content.length}\n`;
+                    allTexts += '\nExtracted Text:\n';
+                    allTexts += '-'.repeat(30) + '\n';
+                    allTexts += result.content;
+                    allTexts += '\n' + '-'.repeat(30);
+                });
+                
+                this.downloadFile(allTexts, 'docx-extracted-texts.txt', 'text/plain');
+            }
+
+            downloadFile(content, filename, mimeType) {
+                const blob = new Blob([content], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // Test drag and drop functionality
+            testDragAndDrop() {
+                console.log('🧪 Testing drag and drop setup...');
+                
+                this.strategies.forEach(strategyId => {
+                    const dropZone = document.getElementById(`dropZone${strategyId}`);
+                    if (dropZone) {
+                        console.log(`✅ Drop zone ${strategyId}: Found`);
+                        
+                        // Test if event listeners are attached
+                        const hasListeners = dropZone.ondrop !== null || 
+                                           dropZone.getAttribute('data-has-listeners') === 'true';
+                        console.log(`   Event listeners: ${hasListeners ? '✅ Set' : '❌ Missing'}`);
+                        
+                        // Add a data attribute to track listener setup
+                        dropZone.setAttribute('data-has-listeners', 'true');
+                    } else {
+                        console.error(`❌ Drop zone ${strategyId}: Not found`);
+                    }
+                });
+                
+                // Test file API support
+                if (window.File && window.FileReader && window.FileList && window.Blob) {
+                    console.log('✅ File API: Supported');
+                } else {
+                    console.error('❌ File API: Not supported');
+                }
+                
+                // Test drag and drop API support
+                if ('draggable' in document.createElement('div')) {
+                    console.log('✅ Drag and Drop API: Supported');
+                } else {
+                    console.error('❌ Drag and Drop API: Not supported');
+                }
+                
+                // Test library loading status
+                console.log(`Library Status:`);
+                console.log(`  Mammoth: ${this.mammothLoaded ? '✅ Loaded' : '❌ Not loaded'}`);
+                console.log(`  JSZip: ${this.jszipLoaded ? '✅ Loaded' : '❌ Not loaded'}`);
+            }
+
+            // Strategy 1: Enhanced Mammoth.js with List Detection
+            async processWithEnhancedMammoth(file) {
+                const startTime = Date.now();
+                
+                try {
+                    // Show loading status if mammoth not preloaded
+                    if (!this.mammothLoaded) {
+                        this.showLoadingStatus('Loading mammoth.js library...', '1');
+                    }
+                    
+                    // Import mammoth.js using script tag approach for better compatibility
+                    const mammoth = await this.loadMammothLibrary();
+                    
+                    // Verify mammoth functions are available
+                    if (!mammoth || typeof mammoth.extractRawText !== 'function') {
+                        throw new Error('Mammoth library not properly loaded or missing extractRawText function');
+                    }
+                    
+                    // Clear loading status
+                    this.clearLoadingStatus('1');
+                    
+                    // Convert file to array buffer
+                    const arrayBuffer = await file.arrayBuffer();
+                    
+                    // Extract raw text first
+                    const rawResult = await mammoth.extractRawText({ arrayBuffer });
+                    let rawText = rawResult.value;
+                    
+                    // Also get HTML to analyze structure
+                    const htmlResult = await mammoth.convertToHtml({ arrayBuffer });
+                    const htmlContent = htmlResult.value;
+                    
+                    // Apply enhanced list detection and reconstruction
+                    const enhancedText = this.enhanceListFormatting(rawText, htmlContent);
+                    
+                    const processingTime = Date.now() - startTime;
+                    const listsDetected = this.countListItems(enhancedText);
+                    
+                    return {
+                        content: enhancedText,
+                        processingTime,
+                        listsDetected,
+                        originalLength: rawText.length,
+                        enhancedLength: enhancedText.length,
+                        method: 'Enhanced Mammoth'
+                    };
+                    
+                } catch (error) {
+                    console.error('Enhanced Mammoth processing error:', error);
+                    
+                    // Try fallback method if mammoth loading failed
+                    if (error.message && error.message.includes('mammoth')) {
+                        try {
+                            console.warn('Attempting fallback text extraction...');
+                            this.showLoadingStatus('Using fallback extraction method...', '1');
+                            
+                            const fallbackText = await this.extractTextWithJSZipFallback(file);
+                            const processingTime = Date.now() - startTime;
+                            
+                            return {
+                                content: fallbackText,
+                                processingTime,
+                                listsDetected: 0,
+                                originalLength: fallbackText.length,
+                                enhancedLength: fallbackText.length,
+                                method: 'Enhanced Mammoth (Fallback)'
+                            };
+                        } catch (fallbackError) {
+                            throw new Error(`Both mammoth and fallback extraction failed: ${fallbackError.message}`);
+                        }
+                    }
+                    
+                    // Provide more specific error messages
+                    if (error.message && error.message.includes('import')) {
+                        throw new Error('Failed to load mammoth.js library from CDN. Please check your internet connection.');
+                    } else {
+                        throw new Error(`Enhanced Mammoth processing failed: ${error.message || 'Unknown error'}`);
+                    }
+                }
+            }
+
+            // Enhanced list formatting algorithm
+            enhanceListFormatting(rawText, htmlContent) {
+                let enhanced = rawText;
+                
+                // Create temporary DOM to analyze HTML structure
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                
+                // Extract list information from HTML
+                const listInfo = this.extractListStructure(tempDiv);
+                
+                // Apply intelligent list reconstruction
+                enhanced = this.reconstructLists(enhanced, listInfo);
+                
+                // Apply pattern-based enhancements
+                enhanced = this.applyPatternBasedEnhancements(enhanced);
+                
+                return enhanced;
+            }
+
+            // Extract list structure from mammoth HTML output
+            extractListStructure(htmlElement) {
+                const listInfo = {
+                    orderedLists: [],
+                    unorderedLists: [],
+                    listItems: []
+                };
+                
+                // Find ordered lists
+                const orderedLists = htmlElement.querySelectorAll('ol');
+                orderedLists.forEach((ol, index) => {
+                    const items = Array.from(ol.querySelectorAll('li')).map(li => li.textContent.trim());
+                    listInfo.orderedLists.push({
+                        index,
+                        items,
+                        startValue: ol.getAttribute('start') || 1,
+                        type: ol.getAttribute('type') || '1'
+                    });
+                });
+                
+                // Find unordered lists
+                const unorderedLists = htmlElement.querySelectorAll('ul');
+                unorderedLists.forEach((ul, index) => {
+                    const items = Array.from(ul.querySelectorAll('li')).map(li => li.textContent.trim());
+                    listInfo.unorderedLists.push({
+                        index,
+                        items,
+                        bulletType: this.determineBulletType(ul)
+                    });
+                });
+                
+                return listInfo;
+            }
+
+            // Reconstruct lists with proper formatting
+            reconstructLists(text, listInfo) {
+                let result = text;
+                
+                // Process ordered lists
+                listInfo.orderedLists.forEach(list => {
+                    list.items.forEach((item, index) => {
+                        const currentNumber = parseInt(list.startValue) + index;
+                        const numberedItem = this.formatOrderedListItem(item, currentNumber, list.type);
+                        
+                        // Find and replace the plain text version
+                        const regex = new RegExp(this.escapeRegex(item.trim()), 'g');
+                        result = result.replace(regex, numberedItem);
+                    });
+                });
+                
+                // Process unordered lists
+                listInfo.unorderedLists.forEach(list => {
+                    list.items.forEach(item => {
+                        const bulletedItem = this.formatUnorderedListItem(item, list.bulletType);
+                        
+                        // Find and replace the plain text version
+                        const regex = new RegExp(this.escapeRegex(item.trim()), 'g');
+                        result = result.replace(regex, bulletedItem);
+                    });
+                });
+                
+                return result;
+            }
+
+            // Apply pattern-based enhancements for missed lists
+            applyPatternBasedEnhancements(text) {
+                let enhanced = text;
+                
+                // Split into lines for processing
+                const lines = enhanced.split('\n');
+                const processedLines = [];
+                
+                let inList = false;
+                let listCounter = 1;
+                let listType = null;
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    
+                    if (line === '') {
+                        processedLines.push('');
+                        inList = false;
+                        listCounter = 1;
+                        continue;
+                    }
+                    
+                    // Detect potential list patterns
+                    const listPattern = this.detectListPattern(line);
+                    
+                    if (listPattern.isListItem) {
+                        if (!inList || listPattern.type !== listType) {
+                            inList = true;
+                            listType = listPattern.type;
+                            listCounter = listPattern.startNumber || 1;
+                        }
+                        
+                        const formattedLine = this.formatDetectedListItem(line, listPattern, listCounter);
+                        processedLines.push(formattedLine);
+                        
+                        if (listPattern.type === 'ordered') {
+                            listCounter++;
+                        }
+                    } else {
+                        processedLines.push(line);
+                        inList = false;
+                        listCounter = 1;
+                    }
+                }
+                
+                return processedLines.join('\n');
+            }
+
+            // Detect list patterns in text
+            detectListPattern(line) {
+                const patterns = {
+                    // Numbered lists: "1. ", "1) ", "(1) ", "[1] "
+                    numbered: /^\s*(\d+)[.)]\s+(.+)$/,
+                    parenthesized: /^\s*\((\d+)\)\s+(.+)$/,
+                    bracketed: /^\s*\[(\d+)\]\s+(.+)$/,
+                    // Lettered lists: "a. ", "A. ", "i. ", "I. "
+                    lettered: /^\s*([a-zA-Z])[.)]\s+(.+)$/,
+                    roman: /^\s*([ivxlcdm]+|[IVXLCDM]+)[.)]\s+(.+)$/,
+                    // Bulleted lists: "• ", "- ", "* ", "○ "
+                    bullet: /^\s*[•\-\*○◦▪▫]\s+(.+)$/,
+                    // Dash lists
+                    dash: /^\s*[-–—]\s+(.+)$/
+                };
+                
+                for (const [type, pattern] of Object.entries(patterns)) {
+                    const match = line.match(pattern);
+                    if (match) {
+                        return {
+                            isListItem: true,
+                            type: ['numbered', 'parenthesized', 'bracketed', 'lettered', 'roman'].includes(type) ? 'ordered' : 'unordered',
+                            subtype: type,
+                            content: match[match.length - 1], // Last capturing group is always content
+                            startNumber: match[1] && !isNaN(match[1]) ? parseInt(match[1]) : null,
+                            originalMarker: match[0].split(match[match.length - 1])[0].trim()
+                        };
+                    }
+                }
+                
+                return { isListItem: false };
+            }
+
+            // Format ordered list items
+            formatOrderedListItem(text, number, type = '1') {
+                switch (type) {
+                    case 'a':
+                        return `${this.numberToLetter(number, false)}. ${text}`;
+                    case 'A':
+                        return `${this.numberToLetter(number, true)}. ${text}`;
+                    case 'i':
+                        return `${this.numberToRoman(number, false)}. ${text}`;
+                    case 'I':
+                        return `${this.numberToRoman(number, true)}. ${text}`;
+                    default:
+                        return `${number}. ${text}`;
+                }
+            }
+
+            // Format unordered list items
+            formatUnorderedListItem(text, bulletType = '•') {
+                return `${bulletType} ${text}`;
+            }
+
+            // Format detected list items
+            formatDetectedListItem(line, pattern, counter) {
+                if (pattern.type === 'ordered') {
+                    return `${counter}. ${pattern.content}`;
+                } else {
+                    return `• ${pattern.content}`;
+                }
+            }
+
+            // Utility functions
+            determineBulletType(ulElement) {
+                // Try to determine bullet type from CSS or content
+                const style = ulElement.getAttribute('style') || '';
+                if (style.includes('list-style-type: disc')) return '•';
+                if (style.includes('list-style-type: circle')) return '○';
+                if (style.includes('list-style-type: square')) return '▪';
+                return '•'; // Default
+            }
+
+            escapeRegex(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            numberToLetter(num, uppercase = false) {
+                let result = '';
+                while (num > 0) {
+                    num--;
+                    result = String.fromCharCode((uppercase ? 65 : 97) + (num % 26)) + result;
+                    num = Math.floor(num / 26);
+                }
+                return result;
+            }
+
+            numberToRoman(num, uppercase = false) {
+                const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+                const numerals = uppercase 
+                    ? ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I']
+                    : ['m', 'cm', 'd', 'cd', 'c', 'xc', 'l', 'xl', 'x', 'ix', 'v', 'iv', 'i'];
+                
+                let result = '';
+                for (let i = 0; i < values.length; i++) {
+                    while (num >= values[i]) {
+                        result += numerals[i];
+                        num -= values[i];
+                    }
+                }
+                return result;
+            }
+
+            countListItems(text) {
+                const lines = text.split('\n');
+                let count = 0;
+                
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (trimmed.match(/^\s*(\d+[.)]|[a-zA-Z][.)]|[ivxlcdm]+[.)]|[•\-\*○◦▪▫]|[-–—])\s+/)) {
+                        count++;
+                    }
+                });
+                
+                return count;
+            }
+
+            // Strategy 2: Direct XML Parsing for Maximum Fidelity
+            async processWithDirectXML(file) {
+                const startTime = Date.now();
+                
+                try {
+                    // Show loading status if JSZip not preloaded
+                    if (!this.jszipLoaded) {
+                        this.showLoadingStatus('Loading JSZip library...', '2');
+                    }
+                    
+                    // Import JSZip using robust loading method
+                    const JSZip = await this.loadJSZipLibrary();
+                    
+                    // Clear loading status
+                    this.clearLoadingStatus('2');
+                    
+                    // Convert file to array buffer
+                    const arrayBuffer = await file.arrayBuffer();
+                    
+                    // Parse the DOCX file as a ZIP archive
+                    const zip = new JSZip();
+                    const zipContent = await zip.loadAsync(arrayBuffer);
+                    
+                    // Extract key XML files
+                    const documentXml = await zipContent.file('word/document.xml')?.async('string');
+                    if (!documentXml) {
+                        throw new Error('Invalid DOCX file: Could not find document.xml');
+                    }
+                    
+                    // Extract numbering.xml (for list definitions)
+                    let numberingXml = null;
+                    try {
+                        numberingXml = await zipContent.file('word/numbering.xml')?.async('string');
+                    } catch (e) {
+                        console.log('No numbering.xml found in document');
+                    }
+                    
+                    // Extract styles.xml (for style definitions)
+                    let stylesXml = null;
+                    try {
+                        stylesXml = await zipContent.file('word/styles.xml')?.async('string');
+                    } catch (e) {
+                        console.log('No styles.xml found in document');
+                    }
+                    
+                    // Parse XML documents
+                    const parser = new DOMParser();
+                    const documentDoc = parser.parseFromString(documentXml, 'application/xml');
+                    
+                    // Check for parsing errors
+                    if (documentDoc.querySelector('parsererror')) {
+                        throw new Error('Failed to parse document.xml');
+                    }
+                    
+                    // Parse numbering definitions if available
+                    let numberingDefs = {};
+                    let xmlElements = 0;
+                    
+                    if (numberingXml) {
+                        const numberingDoc = parser.parseFromString(numberingXml, 'application/xml');
+                        numberingDefs = this.extractNumberingDefinitions(numberingDoc);
+                        xmlElements += numberingDoc.querySelectorAll('*').length;
+                    }
+                    
+                    // Count total XML elements for metrics
+                    xmlElements += documentDoc.querySelectorAll('*').length;
+                    
+                    // Extract text with proper formatting using direct XML parsing
+                    const extractedText = this.extractFormattedTextFromXML(documentDoc, numberingDefs);
+                    
+                    const processingTime = Date.now() - startTime;
+                    
+                    return {
+                        content: extractedText,
+                        processingTime,
+                        xmlElements,
+                        hasNumbering: Object.keys(numberingDefs).length > 0,
+                        numberingDefsCount: Object.keys(numberingDefs).length,
+                        method: 'Direct XML Parsing'
+                    };
+                    
+                } catch (error) {
+                    console.error('Direct XML processing error:', error);
+                    throw new Error(`Direct XML processing failed: ${error.message}`);
+                }
+            }
+
+            // Extract numbering definitions from numbering.xml
+            extractNumberingDefinitions(numberingXml) {
+                const defs = {};
+                
+                try {
+                    // Parse abstract numbering definitions
+                    const abstractNums = numberingXml.querySelectorAll('w\\:abstractNum, abstractNum');
+                    abstractNums.forEach(abstractNum => {
+                        const abstractNumId = abstractNum.getAttribute('w:abstractNumId') || abstractNum.getAttribute('abstractNumId');
+                        if (!abstractNumId) return;
+                        
+                        const levels = {};
+                        
+                        // Get numbering levels and formats
+                        const lvlElements = abstractNum.querySelectorAll('w\\:lvl, lvl');
+                        lvlElements.forEach(lvl => {
+                            const ilvl = lvl.getAttribute('w:ilvl') || lvl.getAttribute('ilvl') || '0';
+                            const numFmtEl = lvl.querySelector('w\\:numFmt, numFmt');
+                            const lvlTextEl = lvl.querySelector('w\\:lvlText, lvlText');
+                            const startEl = lvl.querySelector('w\\:start, start');
+                            
+                            const numFmt = numFmtEl?.getAttribute('w:val') || numFmtEl?.getAttribute('val') || 'decimal';
+                            const lvlText = lvlTextEl?.getAttribute('w:val') || lvlTextEl?.getAttribute('val') || '%1.';
+                            const start = startEl?.getAttribute('w:val') || startEl?.getAttribute('val') || '1';
+                            
+                            levels[ilvl] = {
+                                format: numFmt,      // decimal, lowerLetter, upperRoman, etc.
+                                text: lvlText,       // Pattern like "%1.", "(%1)", etc.
+                                start: parseInt(start) || 1,  // Starting number
+                                level: parseInt(ilvl) || 0
+                            };
+                        });
+                        
+                        defs[abstractNumId] = levels;
+                    });
+                    
+                    // Map concrete numbering to abstract numbering
+                    const numElements = numberingXml.querySelectorAll('w\\:num, num');
+                    numElements.forEach(num => {
+                        const numId = num.getAttribute('w:numId') || num.getAttribute('numId');
+                        const abstractNumIdEl = num.querySelector('w\\:abstractNumId, abstractNumId');
+                        const abstractNumId = abstractNumIdEl?.getAttribute('w:val') || abstractNumIdEl?.getAttribute('val');
+                        
+                        if (numId && abstractNumId && defs[abstractNumId]) {
+                            defs[numId] = defs[abstractNumId];
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error parsing numbering definitions:', error);
+                }
+                
+                return defs;
+            }
+
+            // Extract formatted text with proper list handling from XML
+            extractFormattedTextFromXML(documentXml, numberingDefs) {
+                let result = '';
+                let listState = {}; // Track current list counters per level
+                let listStack = []; // Track nested list context
+                
+                try {
+                    // Process body content
+                    const body = documentXml.querySelector('w\\:body, body');
+                    if (!body) {
+                        throw new Error('Could not find document body');
+                    }
+                    
+                    // Process all paragraphs
+                    const paragraphs = body.querySelectorAll('w\\:p, p');
+                    paragraphs.forEach((paragraph, index) => {
+                        if (index > 0) result += '\n';
+                        
+                        // Check for numbering properties
+                        const pPr = paragraph.querySelector('w\\:pPr, pPr');
+                        const numPr = pPr?.querySelector('w\\:numPr, numPr');
+                        
+                        if (numPr) {
+                            const numIdEl = numPr.querySelector('w\\:numId, numId');
+                            const ilvlEl = numPr.querySelector('w\\:ilvl, ilvl');
+                            
+                            const numId = numIdEl?.getAttribute('w:val') || numIdEl?.getAttribute('val');
+                            const ilvl = ilvlEl?.getAttribute('w:val') || ilvlEl?.getAttribute('val') || '0';
+                            
+                            if (numId && numberingDefs[numId] && numberingDefs[numId][ilvl]) {
+                                // Generate proper list marker using numbering definitions
+                                const listMarker = this.generateListMarkerFromXML(numberingDefs[numId][ilvl], listState, parseInt(ilvl), listStack);
+                                result += listMarker + ' ';
+                            } else {
+                                // Fallback numbering when definitions are missing
+                                const level = parseInt(ilvl) || 0;
+                                result += this.generateFallbackListMarker(level, listState) + ' ';
+                            }
+                        }
+                        
+                        // Extract paragraph text content
+                        result += this.extractParagraphText(paragraph);
+                    });
+                    
+                } catch (error) {
+                    console.error('Error extracting formatted text:', error);
+                    // Fallback to simple text extraction
+                    result = 'Error processing document structure. Extracting raw text...\n';
+                    const textElements = documentXml.querySelectorAll('w\\:t, t');
+                    textElements.forEach(textEl => {
+                        result += textEl.textContent || '';
+                    });
+                }
+                
+                return result;
+            }
+
+            // Extract text content from a paragraph element
+            extractParagraphText(paragraph) {
+                let text = '';
+                
+                // Process all text runs in the paragraph
+                const runs = paragraph.querySelectorAll('w\\:r, r');
+                runs.forEach(run => {
+                    const textElements = run.querySelectorAll('w\\:t, t');
+                    textElements.forEach(textEl => {
+                        text += textEl.textContent || '';
+                    });
+                    
+                    // Handle tabs and breaks
+                    const tabs = run.querySelectorAll('w\\:tab, tab');
+                    tabs.forEach(() => {
+                        text += '\t';
+                    });
+                    
+                    const breaks = run.querySelectorAll('w\\:br, br');
+                    breaks.forEach(() => {
+                        text += '\n';
+                    });
+                });
+                
+                return text;
+            }
+
+            // Generate list marker based on XML numbering definition
+            generateListMarkerFromXML(numberingDef, listState, level, listStack) {
+                try {
+                    // Manage list stack for nested lists
+                    this.updateListStack(listStack, level, numberingDef);
+                    
+                    // Reset counters for deeper levels when moving to a new list item
+                    for (let i = level + 1; i <= 9; i++) {
+                        if (listState[i]) delete listState[i];
+                    }
+                    
+                    // Initialize or increment counter for current level
+                    const stateKey = `${level}_${numberingDef.format}`;
+                    if (!listState[stateKey]) {
+                        listState[stateKey] = numberingDef.start;
+                    } else {
+                        listState[stateKey]++;
+                    }
+                    
+                    // Generate marker based on format
+                    const counter = listState[stateKey];
+                    const format = numberingDef.format;
+                    const pattern = numberingDef.text || '%1.';
+                    
+                    let marker;
+                    switch (format) {
+                        case 'decimal':
+                            marker = pattern.replace('%1', counter.toString());
+                            break;
+                        case 'lowerLetter':
+                            marker = pattern.replace('%1', this.numberToLetter(counter, false));
+                            break;
+                        case 'upperLetter':
+                            marker = pattern.replace('%1', this.numberToLetter(counter, true));
+                            break;
+                        case 'lowerRoman':
+                            marker = pattern.replace('%1', this.numberToRoman(counter, false));
+                            break;
+                        case 'upperRoman':
+                            marker = pattern.replace('%1', this.numberToRoman(counter, true));
+                            break;
+                        case 'bullet':
+                            marker = '•';
+                            break;
+                        case 'none':
+                            marker = '';
+                            break;
+                        default:
+                            marker = pattern.replace('%1', counter.toString());
+                    }
+                    
+                    // Add indentation for nested lists
+                    const indent = '  '.repeat(level);
+                    return indent + marker;
+                    
+                } catch (error) {
+                    console.error('Error generating list marker:', error);
+                    return `${level + 1}.`; // Fallback
+                }
+            }
+
+            // Update list stack for nested list management
+            updateListStack(listStack, currentLevel, numberingDef) {
+                // Trim stack to current level
+                while (listStack.length > currentLevel) {
+                    listStack.pop();
+                }
+                
+                // Ensure stack has entries up to current level
+                while (listStack.length <= currentLevel) {
+                    listStack.push({
+                        level: listStack.length,
+                        format: numberingDef.format,
+                        counter: numberingDef.start
+                    });
+                }
+                
+                // Update current level info
+                if (listStack[currentLevel]) {
+                    listStack[currentLevel].format = numberingDef.format;
+                }
+            }
+
+            // Generate fallback list marker when numbering definitions are missing
+            generateFallbackListMarker(level, listState) {
+                const stateKey = `fallback_${level}`;
+                if (!listState[stateKey]) {
+                    listState[stateKey] = 1;
+                } else {
+                    listState[stateKey]++;
+                }
+                
+                const indent = '  '.repeat(level);
+                
+                // Use different formats for different levels
+                switch (level % 4) {
+                    case 0:
+                        return `${indent}${listState[stateKey]}.`;
+                    case 1:
+                        return `${indent}${this.numberToLetter(listState[stateKey], false)}.`;
+                    case 2:
+                        return `${indent}${this.numberToRoman(listState[stateKey], false)}.`;
+                    case 3:
+                        return `${indent}•`;
+                    default:
+                        return `${indent}${listState[stateKey]}.`;
+                }
+            }
+
+            // Strategy 3: Hybrid HTML+Pattern Approach
+            async processWithHybridApproach(file) {
+                const startTime = Date.now();
+                
+                try {
+                    // Import mammoth.js using script tag approach for better compatibility
+                    const mammoth = await this.loadMammothLibrary();
+                    
+                    // Verify mammoth functions are available
+                    if (!mammoth || typeof mammoth.convertToHtml !== 'function') {
+                        throw new Error('Mammoth library not properly loaded or missing convertToHtml function');
+                    }
+                    
+                    // Convert file to array buffer
+                    const arrayBuffer = await file.arrayBuffer();
+                    
+                    // Get HTML conversion with style mapping
+                    const htmlResult = await mammoth.convertToHtml({
+                        arrayBuffer,
+                        styleMap: this.createAdvancedStyleMap()
+                    });
+                    
+                    // Also get raw text for comparison
+                    const rawResult = await mammoth.extractRawText({ arrayBuffer });
+                    
+                    // Create DOM from HTML for analysis
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = htmlResult.value;
+                    
+                    // Analyze document structure
+                    const structureAnalysis = this.analyzeDocumentStructure(tempDiv);
+                    
+                    // Apply hybrid processing
+                    const hybridText = this.processHybridApproach(tempDiv, rawResult.value, structureAnalysis);
+                    
+                    const processingTime = Date.now() - startTime;
+                    
+                    return {
+                        content: hybridText,
+                        processingTime,
+                        htmlElements: tempDiv.querySelectorAll('*').length,
+                        structureScore: structureAnalysis.complexityScore,
+                        listTypes: structureAnalysis.listTypes,
+                        warnings: htmlResult.messages || [],
+                        method: 'Hybrid HTML+Pattern'
+                    };
+                    
+                } catch (error) {
+                    console.error('Hybrid processing error:', error);
+                    throw new Error(`Hybrid processing failed: ${error.message}`);
+                }
+            }
+
+            // Create advanced style mapping for mammoth
+            createAdvancedStyleMap() {
+                return [
+                    // Preserve list structures
+                    "p[style-name='List Paragraph'] => ol > li:fresh",
+                    "p[style-name='List Bullet'] => ul > li:fresh",
+                    "p[style-name='List Number'] => ol > li:fresh",
+                    "p[style-name='List Continue'] => li:fresh",
+                    
+                    // Handle numbered paragraphs
+                    "p[style-name*='Heading'] => h:fresh",
+                    "p[style-name*='Title'] => h1:fresh",
+                    
+                    // Preserve indentation hints
+                    "p[style-name*='Indent'] => blockquote > p:fresh",
+                    
+                    // Default paragraph handling
+                    "p => p:fresh"
+                ].join('\n');
+            }
+
+            // Analyze document structure for intelligent processing
+            analyzeDocumentStructure(htmlElement) {
+                const analysis = {
+                    paragraphs: 0,
+                    lists: {
+                        ordered: 0,
+                        unordered: 0,
+                        nested: 0
+                    },
+                    headings: 0,
+                    listTypes: new Set(),
+                    indentationLevels: new Set(),
+                    complexityScore: 0,
+                    patterns: {
+                        numberedParagraphs: 0,
+                        bulletedParagraphs: 0,
+                        indentedContent: 0
+                    }
+                };
+                
+                // Analyze basic structure
+                analysis.paragraphs = htmlElement.querySelectorAll('p').length;
+                analysis.lists.ordered = htmlElement.querySelectorAll('ol').length;
+                analysis.lists.unordered = htmlElement.querySelectorAll('ul').length;
+                analysis.headings = htmlElement.querySelectorAll('h1, h2, h3, h4, h5, h6').length;
+                
+                // Analyze list nesting
+                const nestedLists = htmlElement.querySelectorAll('li ol, li ul');
+                analysis.lists.nested = nestedLists.length;
+                
+                // Detect list patterns in paragraphs
+                const paragraphs = htmlElement.querySelectorAll('p');
+                paragraphs.forEach(p => {
+                    const text = p.textContent.trim();
+                    if (this.isNumberedPattern(text)) {
+                        analysis.patterns.numberedParagraphs++;
+                        analysis.listTypes.add('numbered-paragraph');
+                    }
+                    if (this.isBulletedPattern(text)) {
+                        analysis.patterns.bulletedParagraphs++;
+                        analysis.listTypes.add('bulleted-paragraph');
+                    }
+                    
+                    // Check for indentation hints
+                    const style = p.getAttribute('style') || '';
+                    if (style.includes('margin-left') || style.includes('text-indent')) {
+                        analysis.patterns.indentedContent++;
+                        const marginMatch = style.match(/margin-left:\s*(\d+)/);
+                        if (marginMatch) {
+                            analysis.indentationLevels.add(parseInt(marginMatch[1]));
+                        }
+                    }
+                });
+                
+                // Calculate complexity score
+                analysis.complexityScore = this.calculateComplexityScore(analysis);
+                
+                return analysis;
+            }
+
+            // Process using hybrid approach
+            processHybridApproach(htmlElement, rawText, structureAnalysis) {
+                let result = '';
+                
+                // Choose processing strategy based on structure analysis
+                if (structureAnalysis.complexityScore > 0.7) {
+                    // High complexity: use advanced HTML-based processing
+                    result = this.processComplexDocument(htmlElement, structureAnalysis);
+                } else if (structureAnalysis.complexityScore > 0.3) {
+                    // Medium complexity: hybrid approach
+                    result = this.processMediumComplexityDocument(htmlElement, rawText, structureAnalysis);
+                } else {
+                    // Low complexity: enhanced pattern matching
+                    result = this.processSimpleDocument(rawText, structureAnalysis);
+                }
+                
+                // Apply final cleanup and enhancement
+                result = this.applyFinalEnhancements(result, structureAnalysis);
+                
+                return result;
+            }
+
+            // Process high complexity documents
+            processComplexDocument(htmlElement, analysis) {
+                let result = '';
+                const elements = this.getDocumentOrder(htmlElement);
+                
+                elements.forEach((element, index) => {
+                    if (index > 0) result += '\n';
+                    
+                    switch (element.tagName.toLowerCase()) {
+                        case 'ol':
+                            result += this.processOrderedList(element, 0);
+                            break;
+                        case 'ul':
+                            result += this.processUnorderedList(element, 0);
+                            break;
+                        case 'p':
+                            result += this.processParagraphWithContext(element, analysis);
+                            break;
+                        case 'h1':
+                        case 'h2':
+                        case 'h3':
+                        case 'h4':
+                        case 'h5':
+                        case 'h6':
+                            result += this.processHeading(element);
+                            break;
+                        default:
+                            result += element.textContent.trim();
+                    }
+                });
+                
+                return result;
+            }
+
+            // Process medium complexity documents
+            processMediumComplexityDocument(htmlElement, rawText, analysis) {
+                // Start with HTML structure
+                let htmlBased = this.processComplexDocument(htmlElement, analysis);
+                
+                // Get pattern-enhanced version of raw text
+                let patternBased = this.applyAdvancedPatternMatching(rawText, analysis);
+                
+                // Intelligent merging of both approaches
+                return this.mergeProcessingResults(htmlBased, patternBased, analysis);
+            }
+
+            // Process simple documents with enhanced patterns
+            processSimpleDocument(rawText, analysis) {
+                return this.applyAdvancedPatternMatching(rawText, analysis);
+            }
+
+            // Advanced pattern matching with ML-like heuristics
+            applyAdvancedPatternMatching(text, analysis) {
+                const lines = text.split('\n');
+                const processedLines = [];
+                const context = {
+                    listContext: null,
+                    listCounter: 1,
+                    indentLevel: 0,
+                    lastPattern: null
+                };
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const trimmed = line.trim();
+                    
+                    if (trimmed === '') {
+                        processedLines.push('');
+                        this.resetContext(context);
+                        continue;
+                    }
+                    
+                    // Advanced pattern detection with context
+                    const pattern = this.detectAdvancedPattern(line, context, analysis, i, lines);
+                    const processedLine = this.processLineWithPattern(line, pattern, context);
+                    
+                    processedLines.push(processedLine);
+                    this.updateContext(context, pattern);
+                }
+                
+                return processedLines.join('\n');
+            }
+
+            // Detect advanced patterns with contextual awareness
+            detectAdvancedPattern(line, context, analysis, lineIndex, allLines) {
+                const trimmed = line.trim();
+                const basePattern = this.detectListPattern(trimmed);
+                
+                if (basePattern.isListItem) {
+                    return basePattern;
+                }
+                
+                // Look for implicit list patterns based on context
+                const implicitPattern = this.detectImplicitListPattern(line, context, lineIndex, allLines);
+                if (implicitPattern.isListItem) {
+                    return implicitPattern;
+                }
+                
+                // Check for heading patterns
+                const headingPattern = this.detectHeadingPattern(trimmed, analysis);
+                if (headingPattern.isHeading) {
+                    return headingPattern;
+                }
+                
+                // Check for indented content
+                const indentPattern = this.detectIndentationPattern(line, analysis);
+                if (indentPattern.isIndented) {
+                    return indentPattern;
+                }
+                
+                return { isListItem: false, isHeading: false, isIndented: false };
+            }
+
+            // Detect implicit list patterns using contextual clues
+            detectImplicitListPattern(line, context, lineIndex, allLines) {
+                const trimmed = line.trim();
+                
+                // Look for content that starts sentences in a list-like way
+                const sentencePatterns = [
+                    /^(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|Ninth|Tenth)\b/i,
+                    /^(Initially|Subsequently|Finally|Additionally|Furthermore|Moreover)\b/i,
+                    /^(The first|The second|The third|The fourth|The fifth)\b/i
+                ];
+                
+                for (const pattern of sentencePatterns) {
+                    if (pattern.test(trimmed)) {
+                        return {
+                            isListItem: true,
+                            type: 'ordered',
+                            subtype: 'implicit-sequence',
+                            content: trimmed,
+                            confidence: 0.8
+                        };
+                    }
+                }
+                
+                // Look for parallel structure patterns
+                if (lineIndex > 0 && lineIndex < allLines.length - 1) {
+                    const prevLine = allLines[lineIndex - 1].trim();
+                    const nextLine = allLines[lineIndex + 1].trim();
+                    
+                    if (this.hasParallelStructure(prevLine, trimmed, nextLine)) {
+                        return {
+                            isListItem: true,
+                            type: 'unordered',
+                            subtype: 'parallel-structure',
+                            content: trimmed,
+                            confidence: 0.6
+                        };
+                    }
+                }
+                
+                return { isListItem: false };
+            }
+
+            // Utility functions for hybrid processing
+            calculateComplexityScore(analysis) {
+                let score = 0;
+                
+                // Factor in different types of complexity
+                score += (analysis.lists.ordered + analysis.lists.unordered) * 0.2;
+                score += analysis.lists.nested * 0.3;
+                score += analysis.patterns.numberedParagraphs * 0.1;
+                score += analysis.patterns.bulletedParagraphs * 0.1;
+                score += analysis.indentationLevels.size * 0.1;
+                score += analysis.listTypes.size * 0.1;
+                
+                return Math.min(score, 1.0); // Cap at 1.0
+            }
+
+            isNumberedPattern(text) {
+                return /^\s*(\d+[.)]|\([0-9]+\)|\[[0-9]+\])\s+/.test(text);
+            }
+
+            isBulletedPattern(text) {
+                return /^\s*[•\-\*○◦▪▫–—]\s+/.test(text);
+            }
+
+            getDocumentOrder(htmlElement) {
+                const walker = document.createTreeWalker(
+                    htmlElement,
+                    NodeFilter.SHOW_ELEMENT,
+                    {
+                        acceptNode: (node) => {
+                            const tagName = node.tagName.toLowerCase();
+                            return ['p', 'ol', 'ul', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'].includes(tagName)
+                                ? NodeFilter.FILTER_ACCEPT
+                                : NodeFilter.FILTER_SKIP;
+                        }
+                    },
+                    false
+                );
+                
+                const elements = [];
+                let node;
+                while (node = walker.nextNode()) {
+                    elements.push(node);
+                }
+                
+                return elements;
+            }
+
+            processOrderedList(olElement, level) {
+                let result = '';
+                const items = olElement.querySelectorAll(':scope > li');
+                const start = parseInt(olElement.getAttribute('start')) || 1;
+                
+                items.forEach((li, index) => {
+                    const indent = '  '.repeat(level);
+                    const number = start + index;
+                    result += `${indent}${number}. ${li.textContent.trim()}\n`;
+                    
+                    // Handle nested lists
+                    const nestedOL = li.querySelector('ol');
+                    const nestedUL = li.querySelector('ul');
+                    if (nestedOL) {
+                        result += this.processOrderedList(nestedOL, level + 1);
+                    }
+                    if (nestedUL) {
+                        result += this.processUnorderedList(nestedUL, level + 1);
+                    }
+                });
+                
+                return result;
+            }
+
+            processUnorderedList(ulElement, level) {
+                let result = '';
+                const items = ulElement.querySelectorAll(':scope > li');
+                
+                items.forEach(li => {
+                    const indent = '  '.repeat(level);
+                    result += `${indent}• ${li.textContent.trim()}\n`;
+                    
+                    // Handle nested lists
+                    const nestedOL = li.querySelector('ol');
+                    const nestedUL = li.querySelector('ul');
+                    if (nestedOL) {
+                        result += this.processOrderedList(nestedOL, level + 1);
+                    }
+                    if (nestedUL) {
+                        result += this.processUnorderedList(nestedUL, level + 1);
+                    }
+                });
+                
+                return result;
+            }
+
+            processParagraphWithContext(pElement, analysis) {
+                const text = pElement.textContent.trim();
+                if (!text) return '';
+                
+                // Check if this looks like a list item that wasn't properly detected
+                const listPattern = this.detectListPattern(text);
+                if (listPattern.isListItem) {
+                    return this.formatDetectedListItem(text, listPattern, 1);
+                }
+                
+                return text;
+            }
+
+            processHeading(hElement) {
+                const level = parseInt(hElement.tagName.charAt(1));
+                const text = hElement.textContent.trim();
+                const prefix = '#'.repeat(level);
+                return `${prefix} ${text}`;
+            }
+
+            detectHeadingPattern(text, analysis) {
+                // Look for common heading patterns
+                const headingPatterns = [
+                    /^(Chapter|Section|Part)\s+\d+/i,
+                    /^\d+\.\s*[A-Z][^.]*$/,
+                    /^[A-Z][A-Z\s]+$/,  // ALL CAPS
+                    /^[A-Z][a-z\s]*:$/   // Title Case with colon
+                ];
+                
+                for (const pattern of headingPatterns) {
+                    if (pattern.test(text)) {
+                        return {
+                            isHeading: true,
+                            level: this.estimateHeadingLevel(text),
+                            content: text
+                        };
+                    }
+                }
+                
+                return { isHeading: false };
+            }
+
+            detectIndentationPattern(line, analysis) {
+                const leadingSpaces = line.length - line.trimStart().length;
+                if (leadingSpaces >= 4) {
+                    return {
+                        isIndented: true,
+                        level: Math.floor(leadingSpaces / 4),
+                        content: line.trim()
+                    };
+                }
+                return { isIndented: false };
+            }
+
+            hasParallelStructure(prev, current, next) {
+                const patterns = [
+                    /^[A-Z][a-z]+ /,  // Starts with capitalized word
+                    /^\w+ing /,       // Starts with gerund
+                    /^(To|In|By|For|With) /i  // Starts with preposition
+                ];
+                
+                return patterns.some(pattern => 
+                    pattern.test(prev) && pattern.test(current) && pattern.test(next)
+                );
+            }
+
+            mergeProcessingResults(htmlBased, patternBased, analysis) {
+                // Simple merge strategy - could be enhanced with more sophisticated logic
+                const htmlLines = htmlBased.split('\n');
+                const patternLines = patternBased.split('\n');
+                
+                const merged = [];
+                const maxLength = Math.max(htmlLines.length, patternLines.length);
+                
+                for (let i = 0; i < maxLength; i++) {
+                    const htmlLine = htmlLines[i] || '';
+                    const patternLine = patternLines[i] || '';
+                    
+                    // Choose the better line based on heuristics
+                    if (this.isListPattern(htmlLine) && !this.isListPattern(patternLine)) {
+                        merged.push(htmlLine);
+                    } else if (!this.isListPattern(htmlLine) && this.isListPattern(patternLine)) {
+                        merged.push(patternLine);
+                    } else if (htmlLine.length > patternLine.length) {
+                        merged.push(htmlLine);
+                    } else {
+                        merged.push(patternLine);
+                    }
+                }
+                
+                return merged.join('\n');
+            }
+
+            isListPattern(line) {
+                return /^\s*(\d+[.)]|[•\-\*○◦▪▫]|[a-zA-Z][.)])\s+/.test(line);
+            }
+
+            applyFinalEnhancements(text, analysis) {
+                let enhanced = text;
+                
+                // Remove excessive blank lines
+                enhanced = enhanced.replace(/\n\n\n+/g, '\n\n');
+                
+                // Ensure proper spacing around headings
+                enhanced = enhanced.replace(/(^|\n)(#{1,6}\s+[^\n]+)/g, '$1\n$2\n');
+                
+                // Clean up list formatting
+                enhanced = this.cleanupListFormatting(enhanced);
+                
+                return enhanced.trim();
+            }
+
+            cleanupListFormatting(text) {
+                const lines = text.split('\n');
+                const cleaned = [];
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const trimmed = line.trim();
+                    
+                    // Skip empty lines between list items of the same type
+                    if (trimmed === '' && i > 0 && i < lines.length - 1) {
+                        const prevLine = lines[i - 1].trim();
+                        const nextLine = lines[i + 1].trim();
+                        
+                        if (this.isListPattern(prevLine) && this.isListPattern(nextLine)) {
+                            continue; // Skip this empty line
+                        }
+                    }
+                    
+                    cleaned.push(line);
+                }
+                
+                return cleaned.join('\n');
+            }
+
+            estimateHeadingLevel(text) {
+                if (text.match(/^(Chapter|Part)/i)) return 1;
+                if (text.match(/^Section/i)) return 2;
+                if (text.match(/^\d+\.\d+/)) return 3;
+                return 2; // Default
+            }
+
+            resetContext(context) {
+                context.listContext = null;
+                context.listCounter = 1;
+                context.indentLevel = 0;
+                context.lastPattern = null;
+            }
+
+            updateContext(context, pattern) {
+                if (pattern.isListItem) {
+                    context.listContext = pattern.type;
+                    context.lastPattern = pattern;
+                    if (pattern.type === 'ordered') {
+                        context.listCounter++;
+                    }
+                } else {
+                    context.listContext = null;
+                    context.listCounter = 1;
+                }
+            }
+
+            processLineWithPattern(line, pattern, context) {
+                if (pattern.isListItem) {
+                    return this.formatDetectedListItem(line, pattern, context.listCounter);
+                }
+                if (pattern.isHeading) {
+                    return `${'#'.repeat(pattern.level)} ${pattern.content}`;
+                }
+                if (pattern.isIndented) {
+                    return '  '.repeat(pattern.level) + pattern.content;
+                }
+                return line;
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new DocxExtractionTester();
+        });
+    </script>
+</body>
+</html>

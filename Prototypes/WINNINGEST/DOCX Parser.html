@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DOCX Numbering Resolver – Minimal Prototype (No External XML Parser)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#0b0f14; color: #e8eef6; }
+    header { padding: 16px 20px; border-bottom: 1px solid #1c2430; position: sticky; top: 0; background: #0b0f14; z-index: 10; }
+    h1 { font-size: 18px; margin: 0; letter-spacing: 0.2px; }
+    .bar { display: flex; gap: 12px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    input[type="file"] { padding: 8px; background: #101821; border: 1px solid #223041; border-radius: 10px; color: #cfe2ff; }
+    button { padding: 10px 14px; border-radius: 10px; border: 1px solid #263447; background: #13202d; color: #e8eef6; cursor: pointer; }
+    button:hover { background: #172736; }
+    main { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 80px); }
+    aside { border-right: 1px solid #1c2430; padding: 16px; }
+    .panel { background: #0f1620; border: 1px solid #1e2a3a; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+    .panel h3 { margin: 0 0 8px 0; font-size: 14px; color: #9fb7d7; }
+    .kv { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #b7c8de; }
+    .status { padding: 6px 10px; border-radius: 10px; background: #13202d; border: 1px solid #263447; font-size: 12px; color: #9fd7a5; display: inline-block; }
+    section#output { padding: 16px; }
+    .para { display: grid; grid-template-columns: 200px 1fr; gap: 12px; padding: 10px 12px; border-bottom: 1px dashed #1d2735; }
+    .para .label { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e6b86b; white-space: pre; }
+    .para .text { white-space: pre-wrap; }
+    .debug { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #9fb7d7; font-size: 12px; }
+    .muted { color: #6f8199; }
+    .small { font-size: 12px; }
+    code { color: #d8e6ff; }
+  </style>
+  <!-- External libs via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>DOCX Numbering Resolver — Minimal, Deterministic Prototype</h1>
+    <div class="bar">
+      <input id="docx" type="file" accept=".docx" />
+      <button id="runBtn">Parse & Resolve</button>
+      <span id="status" class="status">idle</span>
+    </div>
+  </header>
+  <main>
+    <aside>
+      <div class="panel">
+        <h3>How to use</h3>
+        <ol class="small">
+          <li>Choose a <b>.docx</b> file with numbered lists or outline headings.</li>
+          <li>Click <b>Parse & Resolve</b>.</li>
+          <li>Right pane prints paragraphs with computed labels (like Word → Notepad).</li>
+        </ol>
+      </div>
+      <div class="panel">
+        <h3>Assumptions</h3>
+        <ul class="small">
+          <li>Final-view semantics (treat changes as accepted).</li>
+          <li>Resolves list numbering from <code>numbering.xml</code> + style-linked numbering.</li>
+          <li>No field evaluation (e.g. <code>SEQ</code>) in this minimal build.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Debug</h3>
+        <div id="debug" class="kv">—</div>
+      </div>
+    </aside>
+    <section id="output">
+      <div class="muted">No output yet.</div>
+    </section>
+  </main>
+
+<script>
+(function(){
+  const statusEl = document.getElementById('status');
+  const outEl = document.getElementById('output');
+  const debugEl = document.getElementById('debug');
+
+  const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+
+  function setStatus(s){ statusEl.textContent = s; }
+  function ensureArray(x){ return x == null ? [] : (Array.isArray(x) ? x : [x]); }
+
+  function parseXML(xmlStr){
+    const p = new DOMParser();
+    const doc = p.parseFromString(xmlStr, 'application/xml');
+    const parsererror = doc.getElementsByTagName('parsererror')[0];
+    if (parsererror) {
+      throw new Error('XML parse error: ' + parsererror.textContent);
+    }
+    return doc;
+  }
+
+  // ---------- numbering.xml ----------
+  function parseNumberingXML(doc){
+    const out = { abstractNums: {}, nums: {} };
+    const absList = doc.getElementsByTagNameNS(W_NS, 'abstractNum');
+    for (const an of absList) {
+      const absId = an.getAttributeNS(W_NS, 'abstractNumId') || an.getAttribute('w:abstractNumId') || an.getAttribute('abstractNumId') || ''+Math.random();
+      const levels = {};
+      const lvlList = an.getElementsByTagNameNS(W_NS, 'lvl');
+      for (const lvl of lvlList) {
+        const ilvl = parseInt(lvl.getAttributeNS(W_NS, 'ilvl') || lvl.getAttribute('w:ilvl') || lvl.getAttribute('ilvl') || '0', 10);
+        const numFmtEl = lvl.getElementsByTagNameNS(W_NS, 'numFmt')[0];
+        const lvlTextEl = lvl.getElementsByTagNameNS(W_NS, 'lvlText')[0];
+        const startEl = lvl.getElementsByTagNameNS(W_NS, 'start')[0];
+        const suffEl = lvl.getElementsByTagNameNS(W_NS, 'suff')[0];
+        const lvlRestartEl = lvl.getElementsByTagNameNS(W_NS, 'lvlRestart')[0];
+        const numFmt = numFmtEl ? (numFmtEl.getAttributeNS(W_NS, 'val') || numFmtEl.getAttribute('w:val') || numFmtEl.getAttribute('val')) : 'decimal';
+        const lvlText = lvlTextEl ? (lvlTextEl.getAttributeNS(W_NS, 'val') || lvlTextEl.getAttribute('w:val') || lvlTextEl.getAttribute('val')) : '%1.';
+        const start = startEl ? parseInt(startEl.getAttributeNS(W_NS, 'val') || startEl.getAttribute('w:val') || startEl.getAttribute('val') || '1', 10) : 1;
+        const suff = suffEl ? (suffEl.getAttributeNS(W_NS, 'val') || suffEl.getAttribute('w:val') || suffEl.getAttribute('val')) : 'space';
+        const lvlRestart = !!(lvlRestartEl && ((lvlRestartEl.getAttributeNS(W_NS,'val')||lvlRestartEl.getAttribute('w:val')||lvlRestartEl.getAttribute('val'))==='1'));
+        levels[ilvl] = { ilvl, numFmt, lvlText, start, suff, lvlRestart };
+      }
+      out.abstractNums[absId] = { id: absId, levels };
+    }
+
+    const numList = doc.getElementsByTagNameNS(W_NS, 'num');
+    for (const n of numList) {
+      const numId = n.getAttributeNS(W_NS, 'numId') || n.getAttribute('w:numId') || n.getAttribute('numId');
+      const abstractNumIdEl = n.getElementsByTagNameNS(W_NS, 'abstractNumId')[0];
+      const abstractNumId = abstractNumIdEl ? (abstractNumIdEl.getAttributeNS(W_NS, 'val') || abstractNumIdEl.getAttribute('w:val') || abstractNumIdEl.getAttribute('val')) : null;
+      const overrides = {};
+      const ovList = n.getElementsByTagNameNS(W_NS, 'lvlOverride');
+      for (const ov of ovList) {
+        const level = parseInt(ov.getAttributeNS(W_NS, 'ilvl') || ov.getAttribute('w:ilvl') || ov.getAttribute('ilvl') || '0', 10);
+        const so = ov.getElementsByTagNameNS(W_NS, 'startOverride')[0];
+        const startOverride = so ? parseInt(so.getAttributeNS(W_NS,'val')||so.getAttribute('w:val')||so.getAttribute('val')||'1',10) : undefined;
+        overrides[level] = { level, startOverride };
+      }
+      if (numId && abstractNumId) {
+        out.nums[numId] = { id: numId, abstractNumId, overrides };
+      }
+    }
+    return out;
+  }
+
+  // ---------- styles.xml ----------
+  function parseStylesXML(doc){
+    const map = {}; // styleId -> { basedOn, numPr }
+    const styles = doc.getElementsByTagNameNS(W_NS, 'style');
+    for (const s of styles) {
+      const styleId = s.getAttributeNS(W_NS, 'styleId') || s.getAttribute('w:styleId') || s.getAttribute('styleId');
+      const basedOnEl = s.getElementsByTagNameNS(W_NS, 'basedOn')[0];
+      const basedOn = basedOnEl ? (basedOnEl.getAttributeNS(W_NS,'val')||basedOnEl.getAttribute('w:val')||basedOnEl.getAttribute('val')) : undefined;
+      let numPr = null;
+      const pPr = s.getElementsByTagNameNS(W_NS, 'pPr')[0];
+      if (pPr) {
+        const np = pPr.getElementsByTagNameNS(W_NS, 'numPr')[0];
+        if (np) {
+          const numIdEl = np.getElementsByTagNameNS(W_NS, 'numId')[0];
+          const ilvlEl = np.getElementsByTagNameNS(W_NS, 'ilvl')[0];
+          const numIdVal = numIdEl ? (numIdEl.getAttributeNS(W_NS,'val')||numIdEl.getAttribute('w:val')||numIdEl.getAttribute('val')) : null;
+          const ilvlVal = ilvlEl ? (ilvlEl.getAttributeNS(W_NS,'val')||ilvlEl.getAttribute('w:val')||ilvlEl.getAttribute('val')) : '0';
+          if (numIdVal!=null) numPr = { numId: String(parseInt(numIdVal,10)), level: parseInt(ilvlVal||'0',10) };
+        }
+      }
+      if (styleId) map[styleId] = { basedOn, numPr };
+    }
+    return map;
+  }
+
+  // ---------- document.xml paragraphs ----------
+  function parseDocumentXML(doc){
+    const body = doc.getElementsByTagNameNS(W_NS, 'body')[0];
+    const paras = body ? body.getElementsByTagNameNS(W_NS, 'p') : [];
+    const out = [];
+    let idx = 0;
+    for (const p of paras) {
+      const pPr = p.getElementsByTagNameNS(W_NS, 'pPr')[0];
+      const pStyleEl = pPr ? pPr.getElementsByTagNameNS(W_NS, 'pStyle')[0] : null;
+      const styleId = pStyleEl ? (pStyleEl.getAttributeNS(W_NS,'val')||pStyleEl.getAttribute('w:val')||pStyleEl.getAttribute('val')) : undefined;
+      let numPr = null;
+      if (pPr) {
+        const np = pPr.getElementsByTagNameNS(W_NS, 'numPr')[0];
+        if (np) {
+          const numIdEl = np.getElementsByTagNameNS(W_NS, 'numId')[0];
+          const ilvlEl = np.getElementsByTagNameNS(W_NS, 'ilvl')[0];
+          const numIdVal = numIdEl ? (numIdEl.getAttributeNS(W_NS,'val')||numIdEl.getAttribute('w:val')||numIdEl.getAttribute('val')) : null;
+          const ilvlVal = ilvlEl ? (ilvlEl.getAttributeNS(W_NS,'val')||ilvlEl.getAttribute('w:val')||ilvlEl.getAttribute('val')) : '0';
+          if (numIdVal!=null) numPr = { numId: String(parseInt(numIdVal,10)), level: parseInt(ilvlVal||'0',10) };
+        }
+      }
+
+      const text = paragraphText(p);
+      out.push({ idx: idx++, text, styleId, directNumPr: numPr });
+    }
+    return out;
+  }
+
+  function paragraphText(p){
+    // Concatenate all w:t descendants (simple but effective)
+    const tNodes = p.getElementsByTagNameNS(W_NS, 't');
+    let s = '';
+    for (const t of tNodes) s += t.textContent;
+    return s;
+  }
+
+  // ---------- style-linked numbering ----------
+  function resolveEffectiveNumPrFor(par, styleMap){
+    if (par.directNumPr) return par.directNumPr;
+    let sid = par.styleId;
+    const seen = new Set();
+    let depth = 0;
+    while (sid && depth < 20) {
+      if (seen.has(sid)) break; seen.add(sid);
+      const s = styleMap[sid];
+      if (!s) break;
+      if (s.numPr) return s.numPr;
+      sid = s.basedOn; depth++;
+    }
+    return null;
+  }
+
+  // ---------- numbering resolver ----------
+  function toRoman(n, upper=true){
+    const vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+    const syms = ["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
+    let res = ""; let num = n;
+    for (let i=0;i<vals.length;i++){
+      while (num >= vals[i]) { res += syms[i]; num -= vals[i]; }
+    }
+    return upper ? res : res.toLowerCase();
+  }
+  function toLetter(n, upper=true){
+    let res = ""; let num = n;
+    while (num > 0) { num--; res = String.fromCharCode(65 + (num % 26)) + res; num = Math.floor(num / 26); }
+    return upper ? res : res.toLowerCase();
+  }
+  function formatBy(fmt, n){
+    switch(fmt){
+      case 'decimal': return String(n);
+      case 'upperRoman': return toRoman(n,true);
+      case 'lowerRoman': return toRoman(n,false);
+      case 'upperLetter': return toLetter(n,true);
+      case 'lowerLetter': return toLetter(n,false);
+      case 'bullet': return '•';
+      default: return String(n);
+    }
+  }
+
+  function resolveNumbering(model){
+    const results = new Array(model.paragraphs.length);
+    const states = new Map(); // numId -> { counters: (number|null)[], lastHigher: (number|null)[] }
+
+    function resolveStart(num, abs, level){
+      const def = abs.levels[level];
+      const base = def ? def.start : 1;
+      const ov = num.overrides[level];
+      return (ov && ov.startOverride!=null) ? ov.startOverride : base;
+    }
+
+    function buildLabel(abs, state, level){
+      const def = abs.levels[level];
+      if (!def) return '';
+      let s = def.lvlText || '%1.';
+      for (let k=1;k<=9;k++){
+        const idx = k-1;
+        const val = state.counters[idx];
+        const fmt = abs.levels[idx]?.numFmt || 'decimal';
+        s = s.replace(new RegExp('%'+k,'g'), val==null? '' : formatBy(fmt, val));
+      }
+      return s;
+    }
+
+    for (const p of model.paragraphs) {
+      if (!p.effectiveNumPr) { results[p.idx] = { label: '', suff: '', text: p.text }; continue; }
+      const { numId, level } = p.effectiveNumPr;
+      const num = model.nums[numId];
+      const abs = num ? model.abstractNums[num.abstractNumId] : null;
+      if (!num || !abs) { results[p.idx] = { label: '', suff: '', text: p.text }; continue; }
+
+      let st = states.get(numId);
+      if (!st) { st = { counters: Array(9).fill(null), lastHigher: Array(9).fill(null) }; states.set(numId, st); }
+
+      // Clear deeper on upward jump
+      for (let lv = level+1; lv < 9; lv++) st.counters[lv] = null;
+
+      const def = abs.levels[level] || { start:1, suff:'space' };
+      const start = resolveStart(num, abs, level);
+
+      // Detect higher-level changes
+      let higherChanged = false;
+      for (let h=0; h<level; h++) {
+        if (st.counters[h] !== st.lastHigher[h]) { higherChanged = true; break; }
+      }
+
+      const needsInit = (st.counters[level] == null);
+      const needsRestart = !!def.lvlRestart && higherChanged;
+      if (needsInit || needsRestart) {
+        st.counters[level] = start - 1;
+        for (let h=0; h<level; h++) st.lastHigher[h] = st.counters[h];
+      }
+
+      // Increment current level
+      st.counters[level] = (st.counters[level] ?? (start-1)) + 1;
+      for (let h=0; h<level; h++) st.lastHigher[h] = st.counters[h];
+
+      const label = buildLabel(abs, st, level);
+      const suff = def.suff || 'space';
+      results[p.idx] = { label, suff, text: p.text };
+    }
+
+    return results;
+  }
+
+  async function parseAndResolve(file){
+    setStatus('reading .docx ...');
+    const zip = await JSZip.loadAsync(file);
+
+    async function readXML(path){
+      const f = zip.file(path);
+      if (!f) return null;
+      const xml = await f.async('string');
+      return parseXML(xml);
+    }
+
+    const [numberingDoc, stylesDoc, docDoc] = await Promise.all([
+      readXML('word/numbering.xml'),
+      readXML('word/styles.xml'),
+      readXML('word/document.xml')
+    ]);
+
+    if (!docDoc) { throw new Error('word/document.xml not found — is this a valid .docx?'); }
+
+    setStatus('parsing parts ...');
+    const numbering = numberingDoc ? parseNumberingXML(numberingDoc) : { abstractNums:{}, nums:{} };
+    const styles = stylesDoc ? parseStylesXML(stylesDoc) : {};
+    const paragraphsRaw = parseDocumentXML(docDoc);
+
+    setStatus('resolving effective numbering ...');
+    const paragraphs = paragraphsRaw.map(p => ({
+      idx: p.idx,
+      text: p.text,
+      effectiveNumPr: resolveEffectiveNumPrFor(p, styles)
+    }));
+
+    const model = { abstractNums: numbering.abstractNums, nums: numbering.nums, paragraphs };
+
+    setStatus('computing labels ...');
+    const resolved = resolveNumbering(model);
+
+    // Render
+    outEl.innerHTML = '';
+    if (!resolved.length) {
+      outEl.innerHTML = '<div class="muted">No paragraphs found. Is this a valid .docx with body text?</div>';
+    } else {
+      resolved.forEach((r, i) => {
+        const row = document.createElement('div'); row.className = 'para';
+        const lab = document.createElement('div'); lab.className = 'label';
+        const txt = document.createElement('div'); txt.className = 'text';
+        const suff = (r.suff === 'tab') ? '\t' : (r.suff === 'space' ? ' ' : '');
+        lab.textContent = r.label ? r.label + suff : '';
+        txt.textContent = r.text || '';
+        row.appendChild(lab); row.appendChild(txt); outEl.appendChild(row);
+      });
+    }
+
+    debugEl.textContent = JSON.stringify({
+      abstractNumCount: Object.keys(numbering.abstractNums).length,
+      numCount: Object.keys(numbering.nums).length,
+      paragraphCount: paragraphs.length
+    }, null, 2);
+
+    setStatus('done');
+  }
+
+  document.getElementById('runBtn').addEventListener('click', async () => {
+    const inp = document.getElementById('docx');
+    const file = inp && inp.files && inp.files[0];
+    if (!file) { alert('Pick a .docx file first.'); return; }
+    try {
+      await parseAndResolve(file);
+    } catch (e) {
+      console.error(e);
+      setStatus('error');
+      outEl.innerHTML = '<div class="debug">'+(e?.stack||e?.message||String(e))+'</div>';
+    }
+  });
+})();
+</script>
+</body>
+</html>

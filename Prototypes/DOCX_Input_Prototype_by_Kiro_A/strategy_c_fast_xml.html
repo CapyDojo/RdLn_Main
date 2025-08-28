@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Text Extractor - Strategy C (Fast XML Parser)</title>
+    <script src="https://unpkg.com/pizzip@3.2.0/dist/pizzip.js"></script>
+    <script src="https://unpkg.com/fast-xml-parser@4.3.2/lib/fxp.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .strategy-badge {
+            display: inline-block;
+            background: #6a11cb;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .drop-zone.dragover {
+            border-color: #6a11cb;
+            background-color: rgba(106, 17, 203, 0.1);
+        }
+        
+        .drop-zone h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .drop-zone p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: #6a11cb;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px 5px;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #5a0fb5;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .results-panel {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .results-header h3 {
+            color: #333;
+            font-size: 1.3rem;
+        }
+        
+        .char-count {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .text-output {
+            width: 100%;
+            height: 400px;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            resize: vertical;
+            background: #f9f9f9;
+        }
+        
+        .status {
+            margin: 15px 0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.processing {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .features {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .features h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .features ul {
+            color: #666;
+            padding-left: 20px;
+        }
+        
+        .features li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="strategy-badge">Strategy C: Fast XML Parser</div>
+            <h1>DOCX Text Extractor</h1>
+            <p>Advanced XML parsing with structured list handling</p>
+        </div>
+        
+        <div class="drop-zone" id="dropZone">
+            <h3>📄 Drop DOCX File Here</h3>
+            <p>Or click to browse files</p>
+            <input type="file" id="fileInput" class="file-input" accept=".docx">
+        </div>
+        
+        <div id="status"></div>
+        
+        <div class="results-panel" id="resultsPanel">
+            <div class="results-header">
+                <h3>Extracted Text</h3>
+                <div class="char-count" id="charCount">0 characters</div>
+            </div>
+            <textarea id="textOutput" class="text-output" readonly placeholder="Extracted text will appear here..."></textarea>
+            <button id="copyBtn" class="btn">📋 Copy to Clipboard</button>
+            <button id="downloadBtn" class="btn">💾 Download as TXT</button>
+        </div>
+        
+        <div class="features">
+            <h4>Strategy C Features:</h4>
+            <ul>
+                <li>Uses Fast XML Parser for robust XML processing</li>
+                <li>Structured approach to document parsing</li>
+                <li>Advanced list detection and numbering</li>
+                <li>Handles complex nested structures</li>
+                <li>Preserves document hierarchy and formatting</li>
+                <li>Better error handling and edge case support</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        class FastXmlDocxExtractor {
+            constructor() {
+                this.setupEventListeners();
+                
+                // Check if fast-xml-parser is available
+                if (typeof fxp === 'undefined' && typeof XMLParser === 'undefined') {
+                    this.showStatus('Fast XML Parser library failed to load. Please refresh the page.', 'error');
+                    return;
+                }
+                
+                // Try different ways to access the XMLParser
+                let XMLParserClass;
+                if (typeof fxp !== 'undefined' && fxp.XMLParser) {
+                    XMLParserClass = fxp.XMLParser;
+                } else if (typeof XMLParser !== 'undefined') {
+                    XMLParserClass = XMLParser;
+                } else if (typeof window.fxp !== 'undefined') {
+                    XMLParserClass = window.fxp.XMLParser;
+                } else {
+                    this.showStatus('XMLParser not found. Using fallback DOM parser.', 'error');
+                    this.useFallback = true;
+                    this.numberingData = {};
+                    this.listCounters = {};
+                    return;
+                }
+                
+                this.parser = new XMLParserClass({
+                    ignoreAttributes: false,
+                    attributeNamePrefix: '@_',
+                    textNodeName: '#text',
+                    ignoreNameSpace: false,
+                    removeNSPrefix: false,
+                    parseTagValue: false,
+                    parseNodeValue: false,
+                    parseTrueNumberOnly: false,
+                    arrayMode: false,
+                    trimValues: true
+                });
+                this.numberingData = {};
+                this.listCounters = {};
+            }
+            
+            setupEventListeners() {
+                const dropZone = document.getElementById('dropZone');
+                const fileInput = document.getElementById('fileInput');
+                const copyBtn = document.getElementById('copyBtn');
+                const downloadBtn = document.getElementById('downloadBtn');
+                
+                // Drop zone events
+                dropZone.addEventListener('click', () => fileInput.click());
+                dropZone.addEventListener('dragover', this.handleDragOver.bind(this));
+                dropZone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                dropZone.addEventListener('drop', this.handleDrop.bind(this));
+                
+                // File input
+                fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+                
+                // Buttons
+                copyBtn.addEventListener('click', this.copyToClipboard.bind(this));
+                downloadBtn.addEventListener('click', this.downloadText.bind(this));
+            }
+            
+            handleDragOver(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.add('dragover');
+            }
+            
+            handleDragLeave(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.remove('dragover');
+            }
+            
+            handleDrop(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.processFile(files[0]);
+                }
+            }
+            
+            handleFileSelect(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    this.processFile(files[0]);
+                }
+            }
+            
+            showStatus(message, type = 'processing') {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            }
+            
+            async processFile(file) {
+                if (!file.name.toLowerCase().endsWith('.docx')) {
+                    this.showStatus('Please select a DOCX file.', 'error');
+                    return;
+                }
+                
+                this.showStatus('Processing DOCX file...', 'processing');
+                
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const zip = new PizZip(arrayBuffer);
+                    
+                    // Extract XML files
+                    const documentXml = zip.file('word/document.xml')?.asText();
+                    const numberingXml = zip.file('word/numbering.xml')?.asText();
+                    
+                    if (!documentXml) {
+                        throw new Error('Could not find document.xml in DOCX file');
+                    }
+                    
+                    // Parse numbering data if available
+                    if (numberingXml) {
+                        this.parseNumberingData(numberingXml);
+                    }
+                    
+                    // Parse and extract text
+                    const extractedText = this.extractTextWithFastXml(documentXml);
+                    
+                    this.displayResults(extractedText);
+                    this.showStatus(`Successfully extracted ${extractedText.length} characters`, 'success');
+                    
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    this.showStatus(`Error: ${error.message}`, 'error');
+                }
+            }
+            
+            parseNumberingData(xml) {
+                if (this.useFallback) {
+                    // Skip complex numbering parsing in fallback mode
+                    return;
+                }
+                
+                try {
+                    const parsed = this.parser.parse(xml);
+                    const numbering = parsed['w:numbering'];
+                    
+                    if (numbering) {
+                        // Parse abstract numbering definitions
+                        const abstractNums = this.ensureArray(numbering['w:abstractNum']);
+                        abstractNums.forEach(abstractNum => {
+                            const abstractNumId = abstractNum['@_w:abstractNumId'];
+                            const levels = {};
+                            
+                            const lvls = this.ensureArray(abstractNum['w:lvl']);
+                            lvls.forEach(lvl => {
+                                const ilvl = parseInt(lvl['@_w:ilvl']);
+                                const numFmt = lvl['w:numFmt']?.['@_w:val'] || 'bullet';
+                                const lvlText = lvl['w:lvlText']?.['@_w:val'] || '•';
+                                
+                                levels[ilvl] = { numFmt, lvlText };
+                            });
+                            
+                            this.numberingData[abstractNumId] = { levels };
+                        });
+                        
+                        // Parse numbering instances
+                        const nums = this.ensureArray(numbering['w:num']);
+                        nums.forEach(num => {
+                            const numId = num['@_w:numId'];
+                            const abstractNumId = num['w:abstractNumId']?.['@_w:val'];
+                            
+                            if (numId && abstractNumId && this.numberingData[abstractNumId]) {
+                                this.numberingData[numId] = this.numberingData[abstractNumId];
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.warn('Could not parse numbering data, using fallback:', error);
+                    this.useFallback = true;
+                }
+            }
+            
+            extractTextWithFastXml(xml) {
+                if (this.useFallback) {
+                    return this.extractTextWithDomParser(xml);
+                }
+                
+                try {
+                    const parsed = this.parser.parse(xml);
+                    const document = parsed['w:document'];
+                    const body = document['w:body'];
+                    
+                    let result = '';
+                    const paragraphs = this.ensureArray(body['w:p']);
+                    
+                    paragraphs.forEach((paragraph) => {
+                        const paragraphText = this.processParagraph(paragraph);
+                        if (paragraphText !== null) {
+                            result += paragraphText + '\r\n';
+                        }
+                    });
+                    
+                    return result;
+                } catch (error) {
+                    console.error('Error parsing XML with fast-xml-parser, falling back to DOM parser:', error);
+                    return this.extractTextWithDomParser(xml);
+                }
+            }
+            
+            extractTextWithDomParser(xml) {
+                // Fallback to DOM parser (similar to Strategy A)
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(xml, 'text/xml');
+                
+                let result = '';
+                const paragraphs = doc.querySelectorAll('w\\:p, p');
+                
+                paragraphs.forEach((paragraph) => {
+                    let paragraphText = '';
+                    let listPrefix = '';
+                    
+                    // Check for list numbering
+                    const numPr = paragraph.querySelector('w\\:numPr, numPr');
+                    if (numPr) {
+                        const numId = numPr.querySelector('w\\:numId, numId')?.getAttribute('w:val');
+                        const ilvl = parseInt(numPr.querySelector('w\\:ilvl, ilvl')?.getAttribute('w:val') || '0');
+                        
+                        if (numId) {
+                            listPrefix = this.generateSimpleListPrefix(numId, ilvl);
+                        }
+                    }
+                    
+                    // Extract text from runs
+                    const runs = paragraph.querySelectorAll('w\\:r, r');
+                    runs.forEach(run => {
+                        const textElements = run.querySelectorAll('w\\:t, t');
+                        textElements.forEach(textEl => {
+                            paragraphText += textEl.textContent || '';
+                        });
+                    });
+                    
+                    // Add paragraph to result
+                    if (paragraphText.trim() || listPrefix) {
+                        const indent = '  '.repeat(this.getSimpleIndentLevel(paragraph));
+                        result += indent + listPrefix + paragraphText.trim() + '\r\n';
+                    } else if (paragraphText === '' && !listPrefix) {
+                        result += '\r\n';
+                    }
+                });
+                
+                return result;
+            }
+            
+            generateSimpleListPrefix(numId, level) {
+                // Simple fallback list prefix generation
+                if (level === 0) {
+                    return '1. ';
+                } else if (level === 1) {
+                    return 'a. ';
+                } else {
+                    return '• ';
+                }
+            }
+            
+            getSimpleIndentLevel(paragraph) {
+                const pPr = paragraph.querySelector('w\\:pPr, pPr');
+                if (pPr) {
+                    const numPr = pPr.querySelector('w\\:numPr, numPr');
+                    if (numPr) {
+                        const ilvl = numPr.querySelector('w\\:ilvl, ilvl')?.getAttribute('w:val');
+                        return parseInt(ilvl) || 0;
+                    }
+                }
+                return 0;
+            }
+            
+            processParagraph(paragraph) {
+                let text = '';
+                let listPrefix = '';
+                let indentLevel = 0;
+                
+                // Check for numbering properties
+                const pPr = paragraph['w:pPr'];
+                if (pPr && pPr['w:numPr']) {
+                    const numPr = pPr['w:numPr'];
+                    const numId = numPr['w:numId']?.['@_w:val'];
+                    const ilvl = parseInt(numPr['w:ilvl']?.['@_w:val'] || '0');
+                    
+                    if (numId && this.numberingData[numId]) {
+                        listPrefix = this.generateListPrefix(numId, ilvl);
+                        indentLevel = ilvl;
+                    }
+                }
+                
+                // Extract text from runs
+                const runs = this.ensureArray(paragraph['w:r']);
+                runs.forEach(run => {
+                    if (run['w:t']) {
+                        const textElements = this.ensureArray(run['w:t']);
+                        textElements.forEach(textEl => {
+                            if (typeof textEl === 'string') {
+                                text += textEl;
+                            } else if (textEl['#text']) {
+                                text += textEl['#text'];
+                            }
+                        });
+                    }
+                    
+                    // Handle tabs
+                    if (run['w:tab']) {
+                        text += '\t';
+                    }
+                    
+                    // Handle line breaks
+                    if (run['w:br']) {
+                        text += '\n';
+                    }
+                });
+                
+                // Format the paragraph
+                if (text.trim() || listPrefix) {
+                    const indent = '  '.repeat(indentLevel);
+                    return indent + listPrefix + text.trim();
+                } else if (text === '' && !listPrefix) {
+                    return ''; // Empty line
+                }
+                
+                return null; // Skip this paragraph
+            }
+            
+            generateListPrefix(numId, level) {
+                const numberingDef = this.numberingData[numId];
+                if (!numberingDef || !numberingDef.levels[level]) {
+                    return '• ';
+                }
+                
+                const levelDef = numberingDef.levels[level];
+                const counterKey = `${numId}-${level}`;
+                
+                if (levelDef.numFmt === 'bullet') {
+                    return levelDef.lvlText + ' ';
+                }
+                
+                // Handle numbered lists
+                if (!this.listCounters[counterKey]) {
+                    this.listCounters[counterKey] = 0;
+                }
+                
+                this.listCounters[counterKey]++;
+                const counter = this.listCounters[counterKey];
+                
+                let prefix = levelDef.lvlText;
+                
+                // Replace numbering placeholders
+                switch (levelDef.numFmt) {
+                    case 'decimal':
+                        prefix = prefix.replace('%1', counter.toString());
+                        break;
+                    case 'lowerLetter':
+                        prefix = prefix.replace('%1', String.fromCharCode(96 + counter));
+                        break;
+                    case 'upperLetter':
+                        prefix = prefix.replace('%1', String.fromCharCode(64 + counter));
+                        break;
+                    case 'lowerRoman':
+                        prefix = prefix.replace('%1', this.toRoman(counter).toLowerCase());
+                        break;
+                    case 'upperRoman':
+                        prefix = prefix.replace('%1', this.toRoman(counter));
+                        break;
+                    default:
+                        prefix = prefix.replace('%1', counter.toString());
+                }
+                
+                return prefix + ' ';
+            }
+            
+            toRoman(num) {
+                const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+                const symbols = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'];
+                let result = '';
+                
+                for (let i = 0; i < values.length; i++) {
+                    while (num >= values[i]) {
+                        result += symbols[i];
+                        num -= values[i];
+                    }
+                }
+                
+                return result;
+            }
+            
+            ensureArray(item) {
+                if (!item) return [];
+                return Array.isArray(item) ? item : [item];
+            }
+            
+            displayResults(text) {
+                const resultsPanel = document.getElementById('resultsPanel');
+                const textOutput = document.getElementById('textOutput');
+                const charCount = document.getElementById('charCount');
+                
+                textOutput.value = text;
+                charCount.textContent = `${text.length} characters`;
+                resultsPanel.style.display = 'block';
+            }
+            
+            async copyToClipboard() {
+                const textOutput = document.getElementById('textOutput');
+                try {
+                    await navigator.clipboard.writeText(textOutput.value);
+                    this.showStatus('Text copied to clipboard!', 'success');
+                } catch (error) {
+                    // Fallback for older browsers
+                    textOutput.select();
+                    document.execCommand('copy');
+                    this.showStatus('Text copied to clipboard!', 'success');
+                }
+            }
+            
+            downloadText() {
+                const textOutput = document.getElementById('textOutput');
+                const blob = new Blob([textOutput.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'extracted_text.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.showStatus('Text file downloaded!', 'success');
+            }
+        }
+        
+        // Initialize the extractor
+        new FastXmlDocxExtractor();
+    </script>
+</body>
+</html>

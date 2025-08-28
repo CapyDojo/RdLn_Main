@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DOCX Numbering Resolver – Minimal Prototype</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#0b0f14; color: #e8eef6; }
+    header { padding: 16px 20px; border-bottom: 1px solid #1c2430; position: sticky; top: 0; background: #0b0f14; z-index: 10; }
+    h1 { font-size: 18px; margin: 0; letter-spacing: 0.2px; }
+    .bar { display: flex; gap: 12px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    input[type="file"] { padding: 8px; background: #101821; border: 1px solid #223041; border-radius: 10px; color: #cfe2ff; }
+    button { padding: 10px 14px; border-radius: 10px; border: 1px solid #263447; background: #13202d; color: #e8eef6; cursor: pointer; }
+    button:hover { background: #172736; }
+    main { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 80px); }
+    aside { border-right: 1px solid #1c2430; padding: 16px; }
+    .panel { background: #0f1620; border: 1px solid #1e2a3a; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+    .panel h3 { margin: 0 0 8px 0; font-size: 14px; color: #9fb7d7; }
+    .kv { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #b7c8de; }
+    .status { padding: 6px 10px; border-radius: 10px; background: #13202d; border: 1px solid #263447; font-size: 12px; color: #9fd7a5; display: inline-block; }
+    section#output { padding: 16px; }
+    .para { display: grid; grid-template-columns: 160px 1fr; gap: 12px; padding: 10px 12px; border-bottom: 1px dashed #1d2735; }
+    .para .label { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e6b86b; white-space: pre; }
+    .para .text { white-space: pre-wrap; }
+    .debug { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #9fb7d7; font-size: 12px; }
+    .muted { color: #6f8199; }
+    details { margin-top: 8px; }
+    summary { cursor: pointer; color: #a7c2e7; }
+    .small { font-size: 12px; }
+  </style>
+  <!-- External libs via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fast-xml-parser@4.4.1/dist/fxp.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>DOCX Numbering Resolver — Minimal, Deterministic Prototype</h1>
+    <div class="bar">
+      <input id="docx" type="file" accept=".docx" />
+      <button id="runBtn">Parse & Resolve</button>
+      <span id="status" class="status">idle</span>
+    </div>
+  </header>
+  <main>
+    <aside>
+      <div class="panel">
+        <h3>How to use</h3>
+        <ol class="small">
+          <li>Choose a <b>.docx</b> file with numbered lists or outline headings.</li>
+          <li>Click <b>Parse & Resolve</b>.</li>
+          <li>Left pane shows status; right pane prints paragraphs with computed labels.</li>
+        </ol>
+      </div>
+      <div class="panel">
+        <h3>Assumptions</h3>
+        <ul class="small">
+          <li>Final view (changes accepted).</li>
+          <li>Resolves list numbering only (no SEQ/LISTNUM fields yet).</li>
+          <li>Style-linked numbering supported via <code>basedOn</code> chain.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Debug</h3>
+        <div id="debug" class="kv">—</div>
+      </div>
+    </aside>
+    <section id="output">
+      <div class="muted">No output yet.</div>
+    </section>
+  </main>
+
+<script>
+(async function(){
+  const statusEl = document.getElementById('status');
+  const outEl = document.getElementById('output');
+  const debugEl = document.getElementById('debug');
+
+  const parser = new fxp.XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+    preserveOrder: false,
+    removeNSPrefix: false,
+    allowBooleanAttributes: true,
+    parseTagValue: false,
+    parseAttributeValue: false,
+  });
+
+  function setStatus(s){ statusEl.textContent = s; }
+
+  function ensureArray(x){ if (x == null) return []; return Array.isArray(x) ? x : [x]; }
+  function get(obj, path){
+    return path.split('.').reduce((o,k)=> (o && o[k]!==undefined) ? o[k] : undefined, obj);
+  }
+
+  function attr(o, name){ return o ? o['@_' + name] : undefined; } // e.g. attr(style, 'w:styleId')
+
+  function textFromParagraph(p){
+    // Collect w:t (text) nodes in visual order; include soft spaces between runs
+    const runs = ensureArray(get(p, 'w:r'));
+    let text = '';
+    if (runs.length === 0) {
+      // Some paragraphs wrap text directly in w:proofErr/w:t, or have fldSimple; fall back to deep scan
+      text = collectTextDeep(p);
+    } else {
+      for (const r of runs) {
+        const ts = ensureArray(get(r, 'w:t'));
+        for (const t of ts) {
+          const val = (typeof t === 'string') ? t : (t['#text'] || t['@_xml:space'] ? '' : '');
+        }
+      }
+      text = collectTextDeep(p);
+    }
+    return text;
+  }
+
+  function collectTextDeep(node){
+    // Walk node recursively; gather all w:t values
+    let result = '';
+    (function walk(n){
+      if (!n || typeof n !== 'object') return;
+      if (n['w:t']!==undefined) {
+        const ts = ensureArray(n['w:t']);
+        for (const t of ts) {
+          if (typeof t === 'string') { result += t; }
+          else if (t && t['#text']!==undefined) { result += t['#text']; }
+        }
+      }
+      for (const k of Object.keys(n)) {
+        if (k === 'w:t') continue;
+        const v = n[k];
+        if (Array.isArray(v)) { v.forEach(walk); }
+        else if (typeof v === 'object') { walk(v); }
+      }
+    })(node);
+    return result;
+  }
+
+  // ----- Parse numbering.xml into structures -----
+  function parseNumbering(xml){
+    const numbering = xml['w:numbering'];
+    const out = { abstractNums: {}, nums: {} };
+    if (!numbering) return out;
+
+    const abstractNums = ensureArray(numbering['w:abstractNum']);
+    for (const an of abstractNums) {
+      const absId = attr(an, 'w:abstractNumId') || attr(an, 'w:abstractNumId') || attr(an, 'w:abstractNumId');
+      const levels = {};
+      const lvls = ensureArray(an['w:lvl']);
+      for (const lvl of lvls) {
+        const ilvl = parseInt(attr(lvl, 'w:ilvl') || '0', 10);
+        const numFmt = attr(get(lvl, 'w:numFmt'), 'w:val') || 'decimal';
+        const lvlText = attr(get(lvl, 'w:lvlText'), 'w:val') || '%1.';
+        const start = parseInt(attr(get(lvl, 'w:start'), 'w:val') || '1', 10);
+        const suff = attr(get(lvl, 'w:suff'), 'w:val') || 'space';
+        const lvlRestart = (attr(get(lvl, 'w:lvlRestart'), 'w:val') === '1');
+        levels[ilvl] = { ilvl, numFmt, lvlText, start, suff, lvlRestart };
+      }
+      out.abstractNums[absId] = { id: absId, levels };
+    }
+
+    const nums = ensureArray(numbering['w:num']);
+    for (const n of nums) {
+      const numId = attr(n, 'w:numId') || attr(n, 'w:numId');
+      const abstractNumId = attr(get(n, 'w:abstractNumId'), 'w:val');
+      const overrides = {};
+      const ovNodes = ensureArray(n['w:lvlOverride']);
+      for (const ov of ovNodes) {
+        const level = parseInt(attr(ov, 'w:ilvl') || '0', 10);
+        const so = get(ov, 'w:startOverride');
+        const startOverride = so ? parseInt(attr(so, 'w:val') || '1', 10) : undefined;
+        overrides[level] = { level, startOverride };
+      }
+      out.nums[numId] = { id: numId, abstractNumId, overrides };
+    }
+    return out;
+  }
+
+  // ----- Parse styles.xml -----
+  function parseStyles(xml){
+    const styles = xml['w:styles'];
+    const map = {}; // styleId -> { basedOn, numPr }
+    if (!styles) return map;
+    const items = ensureArray(styles['w:style']);
+    for (const s of items) {
+      const styleId = attr(s, 'w:styleId');
+      const basedOn = attr(get(s, 'w:basedOn'), 'w:val');
+      let numPr = null;
+      const pPr = get(s, 'w:pPr');
+      if (pPr && pPr['w:numPr']) {
+        const np = pPr['w:numPr'];
+        const numIdVal = parseInt(attr(get(np, 'w:numId'), 'w:val') || '-1', 10);
+        const ilvlVal = parseInt(attr(get(np, 'w:ilvl'), 'w:val') || '0', 10);
+        if (!isNaN(numIdVal) && numIdVal >= 0) {
+          numPr = { numId: String(numIdVal), level: ilvlVal };
+        }
+      }
+      map[styleId] = { basedOn, numPr };
+    }
+    return map;
+  }
+
+  // ----- Parse document.xml paragraphs -----
+  function parseParagraphs(xml){
+    const body = get(xml, 'w:document.w:body');
+    const paras = ensureArray(body ? body['w:p'] : []);
+    const out = [];
+    let idx = 0;
+    for (const p of paras) {
+      const pPr = get(p, 'w:pPr');
+      const styleId = attr(get(pPr, 'w:pStyle'), 'w:val');
+      let numPr = null;
+      if (pPr && pPr['w:numPr']) {
+        const np = pPr['w:numPr'];
+        const numIdVal = attr(get(np, 'w:numId'), 'w:val');
+        const ilvlVal = attr(get(np, 'w:ilvl'), 'w:val');
+        if (numIdVal != null) {
+          numPr = { numId: String(parseInt(numIdVal,10)), level: parseInt(ilvlVal||'0',10) };
+        }
+      }
+      const text = textFromParagraph(p);
+      out.push({ idx: idx++, raw: p, text, styleId, directNumPr: numPr });
+    }
+    return out;
+  }
+
+  // ----- Resolve effectiveNumPr via style chain -----
+  function resolveEffectiveNumPrFor(par, styleMap){
+    if (par.directNumPr) return par.directNumPr;
+    let sid = par.styleId;
+    const seen = new Set();
+    let depth = 0;
+    while (sid && depth < 20) {
+      if (seen.has(sid)) break; seen.add(sid);
+      const s = styleMap[sid];
+      if (!s) break;
+      if (s.numPr) return s.numPr;
+      sid = s.basedOn; depth++;
+    }
+    return null;
+  }
+
+  // ----- Number formatting helpers -----
+  function toRoman(n, upper=true){
+    const vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+    const syms = ["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
+    let res = ""; let num = n;
+    for (let i=0;i<vals.length;i++){
+      while (num >= vals[i]) { res += syms[i]; num -= vals[i]; }
+    }
+    return upper ? res : res.toLowerCase();
+  }
+  function toLetter(n, upper=true){
+    let res = ""; let num = n;
+    while (num > 0) { num--; res = String.fromCharCode(65 + (num % 26)) + res; num = Math.floor(num / 26); }
+    return upper ? res : res.toLowerCase();
+  }
+  function formatBy(fmt, n){
+    switch(fmt){
+      case 'decimal': return String(n);
+      case 'upperRoman': return toRoman(n,true);
+      case 'lowerRoman': return toRoman(n,false);
+      case 'upperLetter': return toLetter(n,true);
+      case 'lowerLetter': return toLetter(n,false);
+      case 'bullet': return '•';
+      default: return String(n);
+    }
+  }
+
+  // ----- Deterministic resolver core -----
+  function resolveNumbering(model){
+    const results = new Array(model.paragraphs.length);
+    const states = new Map(); // numId -> { counters: (number|null)[], lastHigher: (number|null)[] }
+
+    function resolveStart(num, abs, level){
+      const def = abs.levels[level];
+      const base = def ? def.start : 1;
+      const ov = num.overrides[level];
+      return (ov && ov.startOverride!=null) ? ov.startOverride : base;
+    }
+
+    function buildLabel(abs, state, level){
+      const def = abs.levels[level];
+      if (!def) return '';
+      let s = def.lvlText || '%1.';
+      for (let k=1;k<=9;k++){
+        const idx = k-1;
+        const val = state.counters[idx];
+        const fmt = abs.levels[idx]?.numFmt || 'decimal';
+        s = s.replace(new RegExp('%'+k,'g'), val==null? '' : formatBy(fmt, val));
+      }
+      return s;
+    }
+
+    for (const p of model.paragraphs) {
+      if (!p.effectiveNumPr) { results[p.idx] = { label: '', suff: '', text: p.text }; continue; }
+      const { numId, level } = p.effectiveNumPr;
+      const num = model.nums[numId];
+      const abs = num ? model.abstractNums[num.abstractNumId] : null;
+      if (!num || !abs) { results[p.idx] = { label: '', suff: '', text: p.text }; continue; }
+
+      let st = states.get(numId);
+      if (!st) { st = { counters: Array(9).fill(null), lastHigher: Array(9).fill(null) }; states.set(numId, st); }
+
+      // Upward jump: clear deeper levels
+      for (let lv = level+1; lv < 9; lv++) st.counters[lv] = null;
+
+      const def = abs.levels[level] || { start:1, suff:'space' };
+      const start = resolveStart(num, abs, level);
+
+      // Detect whether higher levels changed since last time
+      let higherChanged = false;
+      for (let h=0; h<level; h++) {
+        if (st.counters[h] !== st.lastHigher[h]) { higherChanged = true; break; }
+      }
+
+      const needsInit = (st.counters[level] == null);
+      const needsRestart = !!def.lvlRestart && higherChanged;
+      if (needsInit || needsRestart) {
+        st.counters[level] = start - 1;
+        for (let h=0; h<level; h++) st.lastHigher[h] = st.counters[h];
+      }
+
+      // Increment current level
+      st.counters[level] = (st.counters[level] ?? (start-1)) + 1;
+      for (let h=0; h<level; h++) st.lastHigher[h] = st.counters[h];
+
+      const label = buildLabel(abs, st, level);
+      const suff = def.suff || 'space';
+      results[p.idx] = { label, suff, text: p.text };
+    }
+
+    return results;
+  }
+
+  // ----- Wire up UI -----
+  async function parseAndResolve(file){
+    setStatus('reading .docx ...');
+    const zip = await JSZip.loadAsync(file);
+
+    function readXML(path){
+      const f = zip.file(path);
+      return f ? f.async('string').then(xml => parser.parse(xml)) : Promise.resolve(null);
+    }
+
+    const [numberingXML, stylesXML, docXML] = await Promise.all([
+      readXML('word/numbering.xml'),
+      readXML('word/styles.xml'),
+      readXML('word/document.xml')
+    ]);
+
+    setStatus('parsing parts ...');
+    const numbering = numberingXML ? parseNumbering(numberingXML) : { abstractNums:{}, nums:{} };
+    const styles = stylesXML ? parseStyles(stylesXML) : {};
+    const paragraphsRaw = docXML ? parseParagraphs(docXML) : [];
+
+    setStatus('resolving effective numbering ...');
+    const paragraphs = paragraphsRaw.map(p => ({
+      idx: p.idx,
+      text: p.text,
+      effectiveNumPr: resolveEffectiveNumPrFor(p, styles)
+    }));
+
+    const model = { abstractNums: numbering.abstractNums, nums: numbering.nums, paragraphs };
+
+    setStatus('computing labels ...');
+    const resolved = resolveNumbering(model);
+
+    // Render
+    outEl.innerHTML = '';
+    resolved.forEach((r, i) => {
+      const row = document.createElement('div'); row.className = 'para';
+      const lab = document.createElement('div'); lab.className = 'label';
+      const txt = document.createElement('div'); txt.className = 'text';
+      const suff = (r.suff === 'tab') ? '\t' : (r.suff === 'space' ? ' ' : '');
+      lab.textContent = r.label ? r.label + suff : '';
+      txt.textContent = r.text || '';
+      row.appendChild(lab); row.appendChild(txt); outEl.appendChild(row);
+    });
+
+    debugEl.textContent = JSON.stringify({
+      abstractNumCount: Object.keys(numbering.abstractNums).length,
+      numCount: Object.keys(numbering.nums).length,
+      paragraphCount: paragraphs.length
+    }, null, 2);
+
+    setStatus('done');
+  }
+
+  document.getElementById('runBtn').addEventListener('click', async () => {
+    const file = document.getElementById('docx').files?.[0];
+    if (!file) { alert('Pick a .docx file first.'); return; }
+    try { await parseAndResolve(file); } catch (e) {
+      console.error(e);
+      setStatus('error');
+      outEl.innerHTML = '<div class="debug">'+(e?.message||String(e))+'</div>';
+    }
+  });
+})();
+</script>
+</body>
+</html>

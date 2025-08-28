@@ -1,0 +1,32 @@
+# Simple Test: Clipboard vs File Processing
+
+This document contains various list formats to test how well different extraction methods preserve formatting:
+
+## Standard Numbered List
+1. First item
+2. Second item
+3. Third item
+
+## Bulleted List
+• First bullet
+• Second bullet
+• Third bullet
+
+## Alphabetic List
+a. First alphabetic item
+b. Second alphabetic item
+c. Third alphabetic item
+
+## Custom Format List
+(1) First parenthesized item
+(2) Second parenthesized item
+(3) Third parenthesized item
+
+## Nested List
+1. Main item
+   a. Sub-item
+   b. Another sub-item
+2. Another main item
+   a. Sub-item
+      i. Sub-sub-item
+      ii. Another sub-sub-item

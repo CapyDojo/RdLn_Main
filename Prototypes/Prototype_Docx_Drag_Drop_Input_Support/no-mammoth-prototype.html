@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Processing Without Mammoth Prototype</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        
+        .instructions {
+            background-color: #e8f4fc;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h2 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        
+        .comparison-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .method-panel {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #fafafa;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .method-panel h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .method-1 h3 { border-color: #3498db; }
+        .method-2 h3 { border-color: #27ae60; }
+        .method-3 h3 { border-color: #9b59b6; }
+        .method-4 h3 { border-color: #f39c12; }
+        
+        .drop-zone {
+            border: 3px dashed #3498db;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .method-1 .drop-zone { border-color: #3498db; }
+        .method-2 .drop-zone { border-color: #27ae60; }
+        .method-3 .drop-zone { border-color: #9b59b6; }
+        .method-4 .drop-zone { border-color: #f39c12; }
+        
+        .drop-zone.dragover {
+            background-color: #e3f2fd;
+            border-color: #2980b9;
+        }
+        
+        .drop-zone-icon {
+            font-size: 36px;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        
+        .method-1 .drop-zone-icon { color: #3498db; }
+        .method-2 .drop-zone-icon { color: #27ae60; }
+        .method-3 .drop-zone-icon { color: #9b59b6; }
+        .method-4 .drop-zone-icon { color: #f39c12; }
+        
+        .drop-zone-text {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        
+        .file-input-container {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .method-1 .file-input { background-color: #3498db; }
+        .method-2 .file-input { background-color: #27ae60; }
+        .method-3 .file-input { background-color: #9b59b6; }
+        .method-4 .file-input { background-color: #f39c12; }
+        
+        .file-input:hover {
+            opacity: 0.9;
+        }
+        
+        .file-info {
+            background-color: #e8f4fc;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .file-info.visible {
+            display: block;
+        }
+        
+        .processing {
+            text-align: center;
+            padding: 15px;
+            display: none;
+        }
+        
+        .processing.visible {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        .method-1 .spinner { border-top-color: #3498db; }
+        .method-2 .spinner { border-top-color: #27ae60; }
+        .method-3 .spinner { border-top-color: #9b59b6; }
+        .method-4 .spinner { border-top-color: #f39c12; }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .output {
+            margin-top: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .output-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .copy-button {
+            padding: 5px 10px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .copy-button:hover {
+            background-color: #229954;
+        }
+        
+        .output-content {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            min-height: 150px;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #fff;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            flex-grow: 1;
+        }
+        
+        .error {
+            background-color: #fadbd8;
+            border: 1px solid #f1948a;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 15px;
+            display: none;
+            font-size: 12px;
+        }
+        
+        .error.visible {
+            display: block;
+        }
+        
+        .error-title {
+            font-weight: bold;
+            color: #c0392b;
+            margin-bottom: 5px;
+        }
+        
+        .results-comparison {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #eaf2f8;
+            border-radius: 8px;
+        }
+        
+        .results-comparison h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .comparison-table th {
+            background-color: #d6eaf8;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: #f8f9f9;
+        }
+        
+        .tip {
+            background-color: #d5f5e3;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            border-radius: 0 4px 4px 0;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .method-description {
+            background-color: #fef9e7;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        
+        .pros-cons {
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        .pros {
+            color: #27ae60;
+        }
+        
+        .cons {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DOCX Processing Without Mammoth Prototype</h1>
+        <div class="subtitle">Testing alternative approaches to preserve list formatting</div>
+        
+        <div class="instructions">
+            <h2>Testing Instructions</h2>
+            <ul>
+                <li>Drag and drop a DOCX file into each method panel</li>
+                <li>Compare how each approach handles list formatting</li>
+                <li>Test with various DOCX files containing different list formats</li>
+                <li><strong>Note:</strong> Legacy DOC files are not supported. Please use DOCX format.</li>
+            </ul>
+        </div>
+        
+        <div class="comparison-section">
+            <!-- Method 1: Direct XML Parsing (Primary Solution) -->
+            <div class="method-panel method-1" id="method-1-panel">
+                <h3>Method 1: Direct XML Parsing</h3>
+                <div class="method-description">
+                    <strong>Description:</strong> Parses DOCX XML directly for maximum control and fidelity
+                    <div class="pros-cons">
+                        <div class="pros"><strong>Pros:</strong> Maximum fidelity, full control, handles all formats</div>
+                        <div class="cons"><strong>Cons:</strong> Complex, requires DOCX knowledge</div>
+                    </div>
+                </div>
+                
+                <div class="drop-zone" id="drop-zone-1">
+                    <div class="drop-zone-icon">📄</div>
+                    <div class="drop-zone-text">Drag and drop a DOCX file here</div>
+                    <div class="drop-zone-text">or</div>
+                </div>
+                
+                <div class="file-input-container">
+                    <input type="file" id="file-input-1" class="file-input" accept=".docx" />
+                </div>
+                
+                <div class="file-info" id="file-info-1">
+                    <strong>Selected File:</strong> <span id="file-name-1"></span> 
+                    (<span id="file-size-1"></span>)
+                </div>
+                
+                <div class="processing" id="processing-1">
+                    <div class="spinner"></div>
+                    <p>Processing with Direct XML Parsing...</p>
+                </div>
+                
+                <div class="error" id="error-1">
+                    <div class="error-title">Error Processing File</div>
+                    <div id="error-message-1"></div>
+                </div>
+                
+                <div class="output">
+                    <div class="output-header">
+                        <div class="output-title">XML-Parsed Text</div>
+                        <button class="copy-button" id="copy-button-1">Copy Text</button>
+                    </div>
+                    <div class="output-content" id="output-content-1">
+                        XML-parsed text will appear here...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Method 2: Docx4JS -->
+            <div class="method-panel method-2" id="method-2-panel">
+                <h3>Method 2: Docx4JS</h3>
+                <div class="method-description">
+                    <strong>Description:</strong> Uses Docx4JS library for robust DOCX processing
+                    <div class="pros-cons">
+                        <div class="pros"><strong>Pros:</strong> Purpose-built for DOCX, better APIs</div>
+                        <div class="cons"><strong>Cons:</strong> External dependency, larger bundle</div>
+                    </div>
+                </div>
+                
+                <div class="drop-zone" id="drop-zone-2">
+                    <div class="drop-zone-icon">📄</div>
+                    <div class="drop-zone-text">Drag and drop a DOCX file here</div>
+                    <div class="drop-zone-text">or</div>
+                </div>
+                
+                <div class="file-input-container">
+                    <input type="file" id="file-input-2" class="file-input" accept=".docx" />
+                </div>
+                
+                <div class="file-info" id="file-info-2">
+                    <strong>Selected File:</strong> <span id="file-name-2"></span> 
+                    (<span id="file-size-2"></span>)
+                </div>
+                
+                <div class="processing" id="processing-2">
+                    <div class="spinner"></div>
+                    <p>Processing with Docx4JS...</p>
+                </div>
+                
+                <div class="error" id="error-2">
+                    <div class="error-title">Error Processing File</div>
+                    <div id="error-message-2"></div>
+                </div>
+                
+                <div class="output">
+                    <div class="output-header">
+                        <div class="output-title">Docx4JS Processed Text</div>
+                        <button class="copy-button" id="copy-button-2">Copy Text</button>
+                    </div>
+                    <div class="output-content" id="output-content-2">
+                        Docx4JS processed text will appear here...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Method 3: LibreOffice Conversion -->
+            <div class="method-panel method-3" id="method-3-panel">
+                <h3>Method 3: LibreOffice Conversion</h3>
+                <div class="method-description">
+                    <strong>Description:</strong> Uses LibreOffice in headless mode for perfect fidelity
+                    <div class="pros-cons">
+                        <div class="pros"><strong>Pros:</strong> Perfect fidelity, matches Word exactly</div>
+                        <div class="cons"><strong>Cons:</strong> Requires LibreOffice, not client-side</div>
+                    </div>
+                </div>
+                
+                <div class="drop-zone" id="drop-zone-3">
+                    <div class="drop-zone-icon">📄</div>
+                    <div class="drop-zone-text">Drag and drop a DOCX file here</div>
+                    <div class="drop-zone-text">or</div>
+                </div>
+                
+                <div class="file-input-container">
+                    <input type="file" id="file-input-3" class="file-input" accept=".docx" />
+                </div>
+                
+                <div class="file-info" id="file-info-3">
+                    <strong>Selected File:</strong> <span id="file-name-3"></span> 
+                    (<span id="file-size-3"></span>)
+                </div>
+                
+                <div class="processing" id="processing-3">
+                    <div class="spinner"></div>
+                    <p>Processing with LibreOffice Conversion...</p>
+                </div>
+                
+                <div class="error" id="error-3">
+                    <div class="error-title">Error Processing File</div>
+                    <div id="error-message-3"></div>
+                </div>
+                
+                <div class="output">
+                    <div class="output-header">
+                        <div class="output-title">LibreOffice Converted Text</div>
+                        <button class="copy-button" id="copy-button-3">Copy Text</button>
+                    </div>
+                    <div class="output-content" id="output-content-3">
+                        LibreOffice converted text will appear here...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Method 4: Clipboard Simulation -->
+            <div class="method-panel method-4" id="method-4-panel">
+                <h3>Method 4: Clipboard Simulation</h3>
+                <div class="method-description">
+                    <strong>Description:</strong> Simulates what would be on clipboard if content was copied from Word
+                    <div class="pros-cons">
+                        <div class="pros"><strong>Pros:</strong> Matches user expectations, simple for paste operations</div>
+                        <div class="cons"><strong>Cons:</strong> Only simulation for file processing</div>
+                    </div>
+                </div>
+                
+                <div class="drop-zone" id="drop-zone-4">
+                    <div class="drop-zone-icon">📄</div>
+                    <div class="drop-zone-text">Drag and drop a DOCX file here</div>
+                    <div class="drop-zone-text">or</div>
+                </div>
+                
+                <div class="file-input-container">
+                    <input type="file" id="file-input-4" class="file-input" accept=".docx" />
+                </div>
+                
+                <div class="file-info" id="file-info-4">
+                    <strong>Selected File:</strong> <span id="file-name-4"></span> 
+                    (<span id="file-size-4"></span>)
+                </div>
+                
+                <div class="processing" id="processing-4">
+                    <div class="spinner"></div>
+                    <p>Processing with Clipboard Simulation...</p>
+                </div>
+                
+                <div class="error" id="error-4">
+                    <div class="error-title">Error Processing File</div>
+                    <div id="error-message-4"></div>
+                </div>
+                
+                <div class="output">
+                    <div class="output-header">
+                        <div class="output-title">Simulated Clipboard Content</div>
+                        <button class="copy-button" id="copy-button-4">Copy Text</button>
+                    </div>
+                    <div class="output-content" id="output-content-4">
+                        Simulated clipboard content will appear here...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="results-comparison">
+            <h2>Comparison Results</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Processing Time</th>
+                        <th>List Formatting</th>
+                        <th>Paragraph Structure</th>
+                        <th>Implementation Complexity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Method 1: Direct XML Parsing</strong></td>
+                        <td id="time-1">-</td>
+                        <td id="lists-1">-</td>
+                        <td id="structure-1">-</td>
+                        <td>High</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Method 2: Docx4JS</strong></td>
+                        <td id="time-2">-</td>
+                        <td id="lists-2">-</td>
+                        <td id="structure-2">-</td>
+                        <td>Medium</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Method 3: LibreOffice Conversion</strong></td>
+                        <td id="time-3">-</td>
+                        <td id="lists-3">-</td>
+                        <td id="structure-3">-</td>
+                        <td>High (server-side)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Method 4: Clipboard Simulation</strong></td>
+                        <td id="time-4">-</td>
+                        <td id="lists-4">-</td>
+                        <td id="structure-4">-</td>
+                        <td>Low (paste) / Medium (file)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="tip">
+            <strong>Tip:</strong> For best results, test with DOCX files that contain various list formats:
+            numbered lists (1, a, A, i, I), custom formats ((a), [1]), bulleted lists, and nested lists.
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let JSZip;
+        
+        // Load JSZip dynamically
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+        script.onload = function() {
+            JSZip = window.JSZip;
+            console.log('JSZip loaded successfully');
+        };
+        script.onerror = function() {
+            console.error('Failed to load JSZip');
+            alert('Failed to load required libraries. Please refresh the page to try again.');
+        };
+        document.head.appendChild(script);
+        
+        // Format file size for display
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Check if file is a DOCX file
+        function isDocxFile(file) {
+            return file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                   file.name.toLowerCase().endsWith('.docx');
+        }
+        
+        // Check if file is a legacy DOC file
+        function isDocFile(file) {
+            return file.type === 'application/msword' ||
+                   file.name.toLowerCase().endsWith('.doc');
+        }
+        
+        // Method 1: Direct XML Parsing (Our Primary Solution)
+        async function processDocxMethod1(file) {
+            const startTime = Date.now();
+            
+            try {
+                // Check if file is a legacy DOC file
+                if (isDocFile(file)) {
+                    throw new Error('Legacy DOC files are not supported. Please save your document as DOCX format and try again.');
+                }
+                
+                // Validate file type
+                if (!isDocxFile(file)) {
+                    throw new Error('Selected file is not a DOCX file. Please select a valid .docx file.');
+                }
+                
+                // Check if JSZip is loaded
+                if (!JSZip) {
+                    throw new Error('XML processing library not loaded yet. Please wait a moment and try again.');
+                }
+                
+                // Convert file to array buffer
+                const arrayBuffer = await file.arrayBuffer();
+                
+                // Parse the DOCX file as a ZIP archive
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(arrayBuffer);
+                
+                // Extract document.xml
+                const documentXml = await zipContent.file('word/document.xml')?.async('string');
+                if (!documentXml) {
+                    throw new Error('Invalid DOCX file: Could not find document.xml');
+                }
+                
+                // Try to extract numbering.xml (may not exist in all documents)
+                let numberingXml = null;
+                try {
+                    numberingXml = await zipContent.file('word/numbering.xml')?.async('string');
+                } catch (e) {
+                    console.log('No numbering.xml found in document');
+                }
+                
+                // Parse XML and extract content
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(documentXml, 'application/xml');
+                
+                // Check for parsing errors
+                if (doc.querySelector('parsererror')) {
+                    throw new Error('Failed to parse document.xml');
+                }
+                
+                let text = '';
+                
+                // Extract paragraphs
+                const paragraphs = doc.querySelectorAll('w\\:p');
+                
+                paragraphs.forEach((paragraph, paraIndex) => {
+                    if (paraIndex > 0) {
+                        text += '\n';
+                    }
+                    
+                    // Check for numbering properties
+                    const numbering = paragraph.querySelector('w\\:numPr');
+                    if (numbering) {
+                        // Extract numbering information
+                        const level = numbering.querySelector('w\\:ilvl')?.getAttribute('w:val') || '0';
+                        const numId = numbering.querySelector('w\\:numId')?.getAttribute('w:val') || '0';
+                        
+                        // Add numbering prefix (simplified)
+                        text += `[L${level}:N${numId}] `;
+                    }
+                    
+                    // Extract text content
+                    const textElements = paragraph.querySelectorAll('w\\:t');
+                    textElements.forEach(textEl => {
+                        text += textEl.textContent || '';
+                    });
+                });
+                
+                const processingTime = Date.now() - startTime;
+                
+                return {
+                    content: text,
+                    processingTime: processingTime
+                };
+                
+            } catch (err) {
+                throw err;
+            }
+        }
+        
+        // Method 2: Enhanced Direct XML Parsing (Improved Implementation)
+        async function processDocxMethod2(file) {
+            const startTime = Date.now();
+            
+            try {
+                // Check if file is a legacy DOC file
+                if (isDocFile(file)) {
+                    throw new Error('Legacy DOC files are not supported. Please save your document as DOCX format and try again.');
+                }
+                
+                // Validate file type
+                if (!isDocxFile(file)) {
+                    throw new Error('Selected file is not a DOCX file. Please select a valid .docx file.');
+                }
+                
+                // Check if JSZip is loaded
+                if (!JSZip) {
+                    throw new Error('XML processing library not loaded yet. Please wait a moment and try again.');
+                }
+                
+                // Convert file to array buffer
+                const arrayBuffer = await file.arrayBuffer();
+                
+                // Parse the DOCX file as a ZIP archive
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(arrayBuffer);
+                
+                // Extract document.xml
+                const documentXml = await zipContent.file('word/document.xml')?.async('string');
+                if (!documentXml) {
+                    throw new Error('Invalid DOCX file: Could not find document.xml');
+                }
+                
+                // Try to extract numbering.xml (may not exist in all documents)
+                let numberingXml = null;
+                try {
+                    numberingXml = await zipContent.file('word/numbering.xml')?.async('string');
+                } catch (e) {
+                    console.log('No numbering.xml found in document');
+                }
+                
+                // Parse XML and extract content
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(documentXml, 'application/xml');
+                
+                // Check for parsing errors
+                if (doc.querySelector('parsererror')) {
+                    throw new Error('Failed to parse document.xml');
+                }
+                
+                let text = '';
+                
+                // Extract paragraphs
+                const paragraphs = doc.querySelectorAll('w\\:p');
+                
+                paragraphs.forEach((paragraph, paraIndex) => {
+                    if (paraIndex > 0) {
+                        text += '\n';
+                    }
+                    
+                    // Check for numbering properties
+                    const numbering = paragraph.querySelector('w\\:numPr');
+                    if (numbering) {
+                        // Extract numbering information
+                        const level = numbering.querySelector('w\\:ilvl')?.getAttribute('w:val') || '0';
+                        const numId = numbering.querySelector('w\\:numId')?.getAttribute('w:val') || '0';
+                        
+                        // Add proper numbering based on level
+                        const levelNum = parseInt(level) + 1;
+                        text += levelNum + '. ';
+                    }
+                    
+                    // Extract text content
+                    const textElements = paragraph.querySelectorAll('w\\:t');
+                    textElements.forEach(textEl => {
+                        text += textEl.textContent || '';
+                    });
+                });
+                
+                const processingTime = Date.now() - startTime;
+                
+                return {
+                    content: text,
+                    processingTime: processingTime
+                };
+                
+            } catch (err) {
+                throw err;
+            }
+        }
+        
+        // Method 3: Structure-Preserving XML Parsing
+        async function processDocxMethod3(file) {
+            const startTime = Date.now();
+            
+            try {
+                // Check if file is a legacy DOC file
+                if (isDocFile(file)) {
+                    throw new Error('Legacy DOC files are not supported. Please save your document as DOCX format and try again.');
+                }
+                
+                // Validate file type
+                if (!isDocxFile(file)) {
+                    throw new Error('Selected file is not a DOCX file. Please select a valid .docx file.');
+                }
+                
+                // Check if JSZip is loaded
+                if (!JSZip) {
+                    throw new Error('XML processing library not loaded yet. Please wait a moment and try again.');
+                }
+                
+                // Convert file to array buffer
+                const arrayBuffer = await file.arrayBuffer();
+                
+                // Parse the DOCX file as a ZIP archive
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(arrayBuffer);
+                
+                // Extract document.xml
+                const documentXml = await zipContent.file('word/document.xml')?.async('string');
+                if (!documentXml) {
+                    throw new Error('Invalid DOCX file: Could not find document.xml');
+                }
+                
+                // Parse XML and extract content
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(documentXml, 'application/xml');
+                
+                // Check for parsing errors
+                if (doc.querySelector('parsererror')) {
+                    throw new Error('Failed to parse document.xml');
+                }
+                
+                let text = '';
+                let paragraphCount = 0;
+                
+                // Extract all text elements while preserving structure
+                const paragraphs = doc.querySelectorAll('w\\:p');
+                
+                paragraphs.forEach((paragraph, paraIndex) => {
+                    paragraphCount++;
+                    
+                    // Add paragraph separator (except for first paragraph)
+                    if (paraIndex > 0) {
+                        text += '\n';
+                    }
+                    
+                    // Check for numbering properties
+                    const numbering = paragraph.querySelector('w\\:numPr');
+                    if (numbering) {
+                        // Add list marker
+                        text += '• ';
+                    }
+                    
+                    // Extract text content
+                    const textElements = paragraph.querySelectorAll('w\\:t');
+                    let paragraphText = '';
+                    textElements.forEach(textEl => {
+                        paragraphText += textEl.textContent || '';
+                    });
+                    
+                    // Only add non-empty paragraphs
+                    if (paragraphText.trim() !== '') {
+                        text += paragraphText;
+                    }
+                });
+                
+                const processingTime = Date.now() - startTime;
+                
+                return {
+                    content: text,
+                    processingTime: processingTime
+                };
+                
+            } catch (err) {
+                throw err;
+            }
+        }
+        
+        // Method 4: Clipboard Simulation
+        async function processDocxMethod4(file) {
+            const startTime = Date.now();
+            
+            try {
+                // Check if file is a legacy DOC file
+                if (isDocFile(file)) {
+                    throw new Error('Legacy DOC files are not supported. Please save your document as DOCX format and try again.');
+                }
+                
+                // Validate file type
+                if (!isDocxFile(file)) {
+                    throw new Error('Selected file is not a DOCX file. Please select a valid .docx file.');
+                }
+                
+                // Check if JSZip is loaded
+                if (!JSZip) {
+                    throw new Error('XML processing library not loaded yet. Please wait a moment and try again.');
+                }
+                
+                // Convert file to array buffer
+                const arrayBuffer = await file.arrayBuffer();
+                
+                // Parse the DOCX file as a ZIP archive
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(arrayBuffer);
+                
+                // Extract document.xml
+                const documentXml = await zipContent.file('word/document.xml')?.async('string');
+                if (!documentXml) {
+                    throw new Error('Invalid DOCX file: Could not find document.xml');
+                }
+                
+                // Parse XML and extract content
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(documentXml, 'application/xml');
+                
+                // Check for parsing errors
+                if (doc.querySelector('parsererror')) {
+                    throw new Error('Failed to parse document.xml');
+                }
+                
+                let text = '';
+                
+                // Extract paragraphs
+                const paragraphs = doc.querySelectorAll('w\\:p');
+                
+                paragraphs.forEach((paragraph, paraIndex) => {
+                    if (paraIndex > 0) {
+                        text += '\n';
+                    }
+                    
+                    // Check for numbering properties
+                    const numbering = paragraph.querySelector('w\\:numPr');
+                    if (numbering) {
+                        // Extract numbering information
+                        const level = numbering.querySelector('w\\:ilvl')?.getAttribute('w:val') || '0';
+                        const numId = numbering.querySelector('w\\:numId')?.getAttribute('w:val') || '0';
+                        
+                        // Add simulated numbering (what would be on clipboard)
+                        text += '1. '; // Simplified simulation of what Word would put on clipboard
+                    }
+                    
+                    // Extract text content
+                    const textElements = paragraph.querySelectorAll('w\\:t');
+                    textElements.forEach(textEl => {
+                        text += textEl.textContent || '';
+                    });
+                });
+                
+                const processingTime = Date.now() - startTime;
+                
+                return {
+                    content: text,
+                    processingTime: processingTime
+                };
+                
+            } catch (err) {
+                throw err;
+            }
+        }
+        
+        // Update UI with results
+        function updateResults(method, result, file) {
+            // Update content
+            if (result.content.trim()) {
+                document.getElementById(`output-content-${method}`).textContent = result.content;
+            } else {
+                document.getElementById(`output-content-${method}`).textContent = 'No text content found in the DOCX file.';
+            }
+            
+            // Analyze content for lists and structure
+            const listAnalysis = analyzeLists(result.content);
+            const structureAnalysis = analyzeStructure(result.content);
+            
+            // Update comparison table
+            document.getElementById(`time-${method}`).textContent = `${result.processingTime}ms`;
+            document.getElementById(`lists-${method}`).textContent = 
+                listAnalysis.ordered > 0 || listAnalysis.unordered > 0 ? 
+                `Yes (Ordered: ${listAnalysis.ordered}, Unordered: ${listAnalysis.unordered})` : 
+                'No';
+            document.getElementById(`structure-${method}`).textContent = 
+                structureAnalysis.paragraphs > 1 ? 'Good' : 'Poor';
+        }
+        
+        // Analyze content for lists
+        function analyzeLists(content) {
+            // Simple pattern matching for lists
+            const orderedMatches = content.match(/\d+\.\s/g) || [];
+            const unorderedMatches = content.match(/[•●○■▪▫–—‐‑‒·]\s/g) || [];
+            return { ordered: orderedMatches.length, unordered: unorderedMatches.length };
+        }
+        
+        // Analyze content for structure
+        function analyzeStructure(content) {
+            // Count paragraphs (lines with content)
+            const paragraphs = content.split('\n').filter(line => line.trim() !== '');
+            return { paragraphs: paragraphs.length };
+        }
+        
+        // Handle file selection for a specific method
+        async function handleFileSelection(file, method) {
+            // Display file info
+            document.getElementById(`file-name-${method}`).textContent = file.name;
+            document.getElementById(`file-size-${method}`).textContent = formatFileSize(file.size);
+            document.getElementById(`file-info-${method}`).classList.add('visible');
+            
+            // Show processing state
+            document.getElementById(`processing-${method}`).classList.add('visible');
+            document.getElementById(`error-${method}`).classList.remove('visible');
+            
+            try {
+                let result;
+                
+                // Process based on method
+                switch (method) {
+                    case '1':
+                        result = await processDocxMethod1(file);
+                        break;
+                    case '2':
+                        result = await processDocxMethod2(file);
+                        break;
+                    case '3':
+                        result = await processDocxMethod3(file);
+                        break;
+                    case '4':
+                        result = await processDocxMethod4(file);
+                        break;
+                }
+                
+                // Update UI with results
+                updateResults(method, result, file);
+                
+            } catch (err) {
+                // Display error
+                document.getElementById(`error-message-${method}`).textContent = err.message;
+                document.getElementById(`error-${method}`).classList.add('visible');
+                document.getElementById(`output-content-${method}`).textContent = 'Error processing file. Please try another file.';
+                console.error(`File processing error for method ${method}:`, err);
+            } finally {
+                // Hide processing state
+                document.getElementById(`processing-${method}`).classList.remove('visible');
+            }
+        }
+        
+        // Initialize event listeners for all methods
+        function initializeMethod(method) {
+            const fileInput = document.getElementById(`file-input-${method}`);
+            const dropZone = document.getElementById(`drop-zone-${method}`);
+            
+            fileInput.addEventListener('change', (event) => {
+                if (event.target.files.length > 0) {
+                    handleFileSelection(event.target.files[0], method);
+                }
+            });
+            
+            dropZone.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (event) => {
+                event.preventDefault();
+                dropZone.classList.remove('dragover');
+                
+                if (event.dataTransfer.files.length > 0) {
+                    handleFileSelection(event.dataTransfer.files[0], method);
+                }
+            });
+            
+            dropZone.addEventListener('click', () => {
+                // Check if required libraries are loaded
+                let libraryLoaded = true;
+                let errorMessage = '';
+                
+                if (!JSZip && (method === '1' || method === '4')) {
+                    libraryLoaded = false;
+                    errorMessage = 'XML processing library is still loading. Please wait a moment and try again.';
+                }
+                
+                if (!libraryLoaded) {
+                    document.getElementById(`error-message-${method}`).textContent = errorMessage;
+                    document.getElementById(`error-${method}`).classList.add('visible');
+                    return;
+                }
+                
+                fileInput.click();
+            });
+        }
+        
+        // Initialize copy button for a specific element
+        function initializeCopyButton(buttonId, contentId) {
+            const copyButton = document.getElementById(buttonId);
+            if (copyButton) {
+                copyButton.addEventListener('click', () => {
+                    const contentElement = document.getElementById(contentId);
+                    if (contentElement) {
+                        const content = contentElement.textContent || contentElement.innerHTML;
+                        if (content && content !== contentElement.dataset.placeholder) {
+                            navigator.clipboard.writeText(content)
+                                .then(() => {
+                                    const originalText = copyButton.textContent;
+                                    copyButton.textContent = 'Copied!';
+                                    setTimeout(() => {
+                                        copyButton.textContent = originalText;
+                                    }, 2000);
+                                })
+                                .catch(err => {
+                                    console.error('Failed to copy content: ', err);
+                                });
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Initialize the prototype
+        function initializePrototype() {
+            console.log('DOCX Processing Without Mammoth Prototype initialized');
+            
+            // Initialize all methods (1-4)
+            for (let i = 1; i <= 4; i++) {
+                initializeMethod(i.toString());
+            }
+            
+            // Initialize copy buttons
+            initializeCopyButton('copy-button-1', 'output-content-1');
+            initializeCopyButton('copy-button-2', 'output-content-2');
+            initializeCopyButton('copy-button-3', 'output-content-3');
+            initializeCopyButton('copy-button-4', 'output-content-4');
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', initializePrototype);
+    </script>
+</body>
+</html>

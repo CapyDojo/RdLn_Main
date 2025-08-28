@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX List Parser Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .upload-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"], select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Ensure padding doesn't add to width */
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .results-section {
+            margin-top: 20px;
+        }
+        .result-container {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #fcfcfc;
+        }
+        .result-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+        .result-content {
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            font-family: monospace; /* Monospace for consistent text display */
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow-x: auto; /* Horizontal scroll if needed */
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DOCX List Parser Comparison</h1>
+        <div class="upload-section">
+            <label for="docxFile">Choose DOCX file:</label>
+            <input type="file" id="docxFile" name="docxFile" accept=".docx" required>
+
+            <label for="parserSelect">Select Parser(s):</label>
+            <select id="parserSelect" name="parsers" multiple>
+                <option value="mammoth" selected>Mammoth</option>
+                <option value="python_docx" selected>python-docx</option>
+                <option value="docx2python" selected>docx2python</option>
+                <!-- Tika and Pandoc require more setup, so optional for now -->
+                <option value="tika">Apache Tika (Requires Java)</option>
+                <option value="pandoc">Pandoc (Requires Pandoc)</option>
+            </select>
+            <small>Hold Ctrl/Cmd to select multiple. Tika/Pandoc need backend setup.</small>
+
+            <button id="parseBtn">Parse Document</button>
+        </div>
+
+        <div id="results" class="results-section hidden">
+            <h2>Parsing Results:</h2>
+            <!-- Results will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('parseBtn').addEventListener('click', async function() {
+            const fileInput = document.getElementById('docxFile');
+            const parserSelect = document.getElementById('parserSelect');
+            const resultsDiv = document.getElementById('results');
+            const resultContainer = document.querySelector('#results'); // Target container
+
+            const file = fileInput.files[0];
+            const selectedParsers = Array.from(parserSelect.selectedOptions).map(option => option.value);
+
+            if (!file) {
+                alert('Please select a file.');
+                return;
+            }
+            if (selectedParsers.length === 0) {
+                alert('Please select at least one parser.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            // Append selected parsers
+            selectedParsers.forEach(parser => formData.append('parsers', parser));
+
+            resultContainer.innerHTML = '<p>Processing...</p>'; // Show processing message
+            resultsDiv.classList.remove('hidden'); // Show results section
+
+            try {
+                const response = await fetch('/parse', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const results = await response.json();
+
+                // Clear previous results
+                resultContainer.innerHTML = '<h2>Parsing Results:</h2>';
+
+                // Display results for each parser
+                for (const [parserName, resultData] of Object.entries(results)) {
+                    const parserDiv = document.createElement('div');
+                    parserDiv.className = 'result-container';
+
+                    const header = document.createElement('div');
+                    header.className = 'result-header';
+                    header.textContent = `Parser: ${parserName}`;
+
+                    const content = document.createElement('div');
+                    content.className = 'result-content';
+
+                    if (resultData.error) {
+                        content.textContent = `Error: ${resultData.error}`;
+                        content.className += ' error'; // Add error class
+                    } else {
+                        // Display HTML or plain text result
+                        if (resultData.html) {
+                             // For HTML content, set innerHTML
+                             content.innerHTML = resultData.html;
+                        } else if (resultData.text !== undefined) {
+                            // For plain text content, use textContent
+                            content.textContent = resultData.text;
+                        } else {
+                            content.textContent = "No result returned.";
+                        }
+                    }
+
+                    parserDiv.appendChild(header);
+                    parserDiv.appendChild(content);
+                    resultContainer.appendChild(parserDiv);
+                }
+
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultContainer.innerHTML = `<p class="error">Error occurred: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

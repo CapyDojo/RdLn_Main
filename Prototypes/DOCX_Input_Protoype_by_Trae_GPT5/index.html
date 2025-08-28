@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DOCX Input Prototype by Trae GPT-5</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --accent: #38bdf8;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --card: #1f2937;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 10% -10%, #0b1220, var(--bg));
+      color: var(--text);
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    header h1 { font-size: 20px; margin: 0; font-weight: 700; letter-spacing: .2px; }
+    .badge { font-size: 12px; padding: 6px 10px; border-radius: 999px; background: #0b1220; border: 1px solid #1f2a44; color: #93c5fd; }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+    select, button {
+      background: #0b1220; color: var(--text); border: 1px solid #1f2a44; border-radius: 10px; padding: 10px 12px; font-size: 14px;
+      transition: border-color .2s ease, background .2s ease;
+    }
+    select:focus, button:focus { outline: none; border-color: var(--accent); }
+    button.primary { background: linear-gradient(180deg, #0ea5e9, #0284c7); border: none; }
+    button.primary:disabled { opacity: .6; cursor: not-allowed; }
+
+    .grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: linear-gradient(180deg, rgba(31,41,55,.8), rgba(15,23,42,.8));
+      border: 1px solid #1f2a44; border-radius: 14px; overflow: hidden;
+    }
+    .card header { background: rgba(8, 17, 31, .5); border-bottom: 1px solid #1f2a44; padding: 12px 14px; }
+    .card header h3 { margin: 0; font-size: 14px; color: #c7d2fe; font-weight: 600; }
+    .card .body { padding: 14px; }
+
+    .dropzone {
+      border: 2px dashed #1f2a44; border-radius: 14px; padding: 28px; text-align: center; cursor: pointer;
+      transition: border-color .2s ease, background .2s ease;
+      background: linear-gradient(180deg, rgba(2,6,23,.6), rgba(2,6,23,.2));
+    }
+    .dropzone:hover { border-color: var(--accent); background: linear-gradient(180deg, rgba(2,6,23,.7), rgba(2,6,23,.3)); }
+    .dropzone.dragover { border-color: var(--success); box-shadow: inset 0 0 0 1px rgba(34,197,94,.3); }
+    .hint { color: var(--muted); font-size: 13px; margin-top: 8px; }
+
+    .row { display: flex; align-items: center; gap: 10px; }
+    .kvs { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; font-size: 13px; color: var(--muted); }
+
+    .output-area { width: 100%; min-height: 360px; resize: vertical; padding: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; line-height: 1.4;
+      background: #0b1220; color: #e5e7eb; border: 1px solid #1f2a44; border-radius: 10px; }
+
+    pre.log { margin: 0; white-space: pre-wrap; font-size: 12px; color: #cbd5e1; max-height: 400px; overflow: auto; }
+
+    .footer-note { margin-top: 12px; color: var(--muted); font-size: 12px; }
+    a { color: #93c5fd; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>DOCX Text Extraction Prototype</h1>
+      <span class="badge">Exploratory • A/B strategy</span>
+    </header>
+
+    <div class="controls">
+      <label class="row" for="strategy">
+        <span>Extraction Strategy</span>
+        <select id="strategy" title="Choose extraction approach">
+          <option value="xml">Strategy B — Direct DOCX XML (focus: list accuracy)</option>
+          <option value="mammoth_html">Strategy A — Mammoth HTML → reconstruct list prefixes</option>
+          <option value="mammoth_raw">Strategy C — Mammoth Raw Text (baseline)</option>
+        </select>
+      </label>
+      <button id="copyBtn" class="primary" disabled>Copy Extracted Text</button>
+      <div class="kvs">
+        <div>Goal:</div><div>High-accuracy plain text with list prefixes</div>
+        <div>Scope:</div><div>Exclude styling; include numbering/bullets; nested lists</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <header><h3>1) Upload DOCX</h3></header>
+        <div class="body">
+          <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Drop .docx file or click to select">
+            <div style="font-weight: 600; margin-bottom: 6px;">Drag & drop a .docx file here</div>
+            <div class="hint">or click to choose from your computer</div>
+            <input id="fileInput" type="file" accept=".docx" style="display:none" />
+          </div>
+          <div class="footer-note">The text will be extracted, copied to clipboard automatically, and shown on the right.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <header><h3>2) Processing Log</h3></header>
+        <div class="body">
+          <pre id="log" class="log">Ready.</pre>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1;">
+        <header><h3>3) Extracted Text Output</h3></header>
+        <div class="body">
+          <textarea id="output" class="output-area" readonly placeholder="The plain text will appear here..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dependencies: Mammoth for HTML/RawText and JSZip for direct XML parsing -->
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+  <script>
+    // --- Small helpers ---
+    const logEl = () => document.getElementById('log');
+    const outputEl = () => document.getElementById('output');
+    const copyBtn = () => document.getElementById('copyBtn');
+    const strategySel = () => document.getElementById('strategy');
+
+    function log(msg) {
+      const el = logEl();
+      const now = new Date().toISOString().split('T')[1].replace('Z','');
+      el.textContent += "\n[" + now + "] " + msg;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function setOutput(text) {
+      outputEl().value = text || '';
+      copyBtn().disabled = !text;
+    }
+
+    async function toArrayBuffer(file) {
+      return new Uint8Array(await file.arrayBuffer()).buffer;
+    }
+
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        log('Copied to clipboard.');
+      } catch (e) {
+        log('Clipboard write failed: ' + (e && e.message ? e.message : e));
+      }
+    }
+
+    // --- Dynamic loader helpers ---
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('Failed to load script: ' + src));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function ensureJSZip() {
+      if (window.JSZip) return;
+      log('JSZip not found. Loading fallback from CDN...');
+      await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+      if (!window.JSZip) throw new Error('JSZip failed to load');
+      log('JSZip loaded.');
+    }
+
+    // --- Strategy C: Mammoth Raw Text (baseline) ---
+    async function extractWithMammothRaw(file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await window.mammoth.extractRawText({ arrayBuffer });
+      // Mammoth separates paragraphs with two newlines; keep as-is for baseline
+      return result.value || '';
+    }
+
+    // Parse HTML into DOM safely
+    function parseHTML(html) {
+      const tpl = document.createElement('template');
+      tpl.innerHTML = html;
+      return tpl.content;
+    }
+
+    // Reconstruct list prefixes from HTML (<ol>/<ul><li>)
+    function htmlToPlainWithListPrefixes(html) {
+      const fragment = parseHTML(html);
+      const out = [];
+
+      // We'll traverse, maintaining counters for ordered lists and bullets for unordered lists.
+      function processNode(node, orderedStack = [], unorderedStack = []) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const tag = node.tagName.toLowerCase();
+          if (tag === 'ol') {
+            // Push a new counter (start may be provided on ol)
+            const start = parseInt(node.getAttribute('start') || '1', 10);
+            orderedStack.push({ index: start, type: node.getAttribute('type') || '1' });
+            Array.from(node.children).forEach(child => processNode(child, orderedStack, unorderedStack));
+            orderedStack.pop();
+            return;
+          }
+          if (tag === 'ul') {
+            unorderedStack.push(true);
+            Array.from(node.children).forEach(child => processNode(child, orderedStack, unorderedStack));
+            unorderedStack.pop();
+            return;
+          }
+          if (tag === 'li') {
+            // Build prefix based on current stacks
+            let prefix = '';
+            if (orderedStack.length > 0) {
+              const top = orderedStack[orderedStack.length - 1];
+              // Map numbering types (best-effort)
+              const n = top.index;
+              let label = '';
+              switch (top.type) {
+                case 'A': label = numberToAlpha(n, true); break; // A, B, C
+                case 'a': label = numberToAlpha(n, false); break; // a, b, c
+                case 'I': label = toRoman(n).toUpperCase(); break;
+                case 'i': label = toRoman(n).toLowerCase(); break;
+                case '1':
+                default: label = String(n); break;
+              }
+              prefix = label + '. ';
+              top.index += 1;
+            } else if (unorderedStack.length > 0) {
+              // Use bullet per depth
+              const depth = unorderedStack.length;
+              prefix = (depth === 1 ? '• ' : depth === 2 ? '◦ ' : '▪ ');
+            } else {
+              prefix = ''; // Not in a list
+            }
+
+            // Extract text content recursively for this li
+            const textContent = extractTextFromNode(node).trim();
+            if (textContent) out.push(prefix + textContent);
+
+            // Process nested lists inside li
+            Array.from(node.children).forEach(child => {
+              if (child.tagName && (/^ol|ul$/i).test(child.tagName)) {
+                processNode(child, orderedStack, unorderedStack);
+              }
+            });
+            return;
+          }
+
+          // Paragraphs and other blocks become separate lines
+          if (tag === 'p' || tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4' || tag === 'h5' || tag === 'h6') {
+            const text = extractTextFromNode(node).trim();
+            if (text) out.push(text);
+            return;
+          }
+        }
+
+        // Recurse into children by default
+        if (node.childNodes && node.childNodes.length) {
+          Array.from(node.childNodes).forEach(child => processNode(child, orderedStack, unorderedStack));
+        }
+      }
+
+      processNode(fragment);
+      return out.join('\n');
+    }
+
+    function extractTextFromNode(node) {
+      let text = '';
+      node.childNodes && node.childNodes.forEach(child => {
+        if (child.nodeType === Node.TEXT_NODE) text += child.nodeValue;
+        else if (child.nodeType === Node.ELEMENT_NODE) text += extractTextFromNode(child);
+      });
+      return text;
+    }
+
+    function numberToAlpha(num, upper = true) {
+      // 1 -> A, 27 -> AA
+      let s = '';
+      let n = Math.max(1, num);
+      while (n > 0) {
+        const rem = (n - 1) % 26;
+        s = String.fromCharCode(65 + rem) + s;
+        n = Math.floor((n - 1) / 26);
+      }
+      return upper ? s : s.toLowerCase();
+    }
+
+    function toRoman(num) {
+      if (num <= 0) return '';
+      const map = [
+        [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+        [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+        [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+      ];
+      let res = '';
+      let n = num;
+      for (const [val, sym] of map) {
+        while (n >= val) { res += sym; n -= val; }
+      }
+      return res;
+    }
+
+    // --- Strategy A: Mammoth to HTML then reconstruct ---
+    async function extractWithMammothHTMLReconstruct(file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await window.mammoth.convertToHtml({ arrayBuffer });
+      const html = result.value || '';
+      return htmlToPlainWithListPrefixes(html);
+    }
+
+    // --- Strategy B: Direct XML parse (JSZip). Focus on w:p and list numbering ---
+    async function extractWithDirectXML(file) {
+      await ensureJSZip();
+      const arrayBuffer = await file.arrayBuffer();
+      const zip = await window.JSZip.loadAsync(arrayBuffer);
+      const docXml = await zip.file('word/document.xml').async('string');
+      const numberingXml = await (zip.file('word/numbering.xml') ? zip.file('word/numbering.xml').async('string') : Promise.resolve(null));
+
+      // Parse with DOMParser
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(docXml, 'application/xml');
+      const numbering = numberingXml ? parser.parseFromString(numberingXml, 'application/xml') : null;
+
+      function getAttr(node, name) { return node.getAttribute(name); }
+
+      // Build numbering structures
+      // numId -> abstractNumId
+      const numToAbs = new Map();
+      // abstractNumId -> Map<ilvl, { numFmt, start, lvlText, lvlRestart }>
+      const absLvls = new Map();
+      // numId -> { startOverride: Map<ilvl, start>, lvlOverride: Map<ilvl, { numFmt?, start?, lvlText?, lvlRestart? }> }
+      const numOverrides = new Map();
+
+      if (numbering) {
+        // Map num instances
+        numbering.querySelectorAll('w\\:num, num').forEach(num => {
+          const numId = getAttr(num, 'w:numId') || getAttr(num, 'numId');
+          const abs = num.querySelector('w\\:abstractNumId, abstractNumId');
+          const absId = abs ? (getAttr(abs, 'w:val') || getAttr(abs, 'val')) : null;
+          if (numId && absId) numToAbs.set(numId, absId);
+
+          // Level overrides per num
+          const startOverride = new Map();
+          const lvlOverride = new Map();
+          num.querySelectorAll('w\\:lvlOverride, lvlOverride').forEach(lo => {
+            const ilvl = getAttr(lo, 'w:ilvl') || getAttr(lo, 'ilvl');
+            const so = lo.querySelector('w\\:startOverride, startOverride');
+            if (so) {
+              const val = parseInt(getAttr(so, 'w:val') || getAttr(so, 'val') || '1', 10);
+              if (ilvl != null) startOverride.set(String(ilvl), val);
+            }
+            const lvlNode = lo.querySelector('w\\:lvl, lvl');
+            if (lvlNode && ilvl != null) {
+              const parsed = parseLvl(lvlNode);
+              lvlOverride.set(String(ilvl), parsed);
+            }
+          });
+          if (numId) numOverrides.set(numId, { startOverride, lvlOverride });
+        });
+
+        // Abstract numbering definitions
+        numbering.querySelectorAll('w\\:abstractNum, abstractNum').forEach(abs => {
+          // Resolve abstractNumId
+          let absId = getAttr(abs, 'w:abstractNumId') || getAttr(abs, 'abstractNumId') || getAttr(abs, 'w:val') || getAttr(abs, 'val');
+          if (!absId) {
+            const absIdEl = abs.querySelector('w\\:abstractNumId, abstractNumId');
+            absId = absIdEl ? (getAttr(absIdEl, 'w:val') || getAttr(absIdEl, 'val')) : null;
+          }
+          const lvlMap = new Map();
+          abs.querySelectorAll('w\\:lvl, lvl').forEach(lvl => {
+            const ilvl = getAttr(lvl, 'w:ilvl') || getAttr(lvl, 'ilvl') || '0';
+            lvlMap.set(String(ilvl), parseLvl(lvl));
+          });
+          if (absId) absLvls.set(absId, lvlMap);
+        });
+      }
+
+      function parseLvl(lvlNode) {
+        const numFmtEl = lvlNode.querySelector('w\\:numFmt, numFmt');
+        const startEl = lvlNode.querySelector('w\\:start, start');
+        const lvlTextEl = lvlNode.querySelector('w\\:lvlText, lvlText');
+        const lvlRestartEl = lvlNode.querySelector('w\\:lvlRestart, lvlRestart');
+        const numFmt = numFmtEl ? (getAttr(numFmtEl, 'w:val') || getAttr(numFmtEl, 'val')) : 'decimal';
+        const start = startEl ? parseInt(getAttr(startEl, 'w:val') || getAttr(startEl, 'val') || '1', 10) : 1;
+        const lvlText = lvlTextEl ? (getAttr(lvlTextEl, 'w:val') || getAttr(lvlTextEl, 'val') || '') : '';
+        const lvlRestart = lvlRestartEl ? parseInt(getAttr(lvlRestartEl, 'w:val') || getAttr(lvlRestartEl, 'val') || '0', 10) : 0;
+        return { numFmt, start, lvlText, lvlRestart };
+      }
+
+      function getEffectiveLvl(numId, absId, ilvlStr) {
+        const lvlIndex = String(ilvlStr);
+        const base = (absLvls.get(absId) && absLvls.get(absId).get(lvlIndex)) || { numFmt: 'decimal', start: 1, lvlText: '', lvlRestart: 0 };
+        const o = numOverrides.get(numId);
+        const startOverride = o && o.startOverride.get(lvlIndex);
+        const lo = o && o.lvlOverride.get(lvlIndex);
+        const merged = { ...base };
+        if (lo) {
+          // override properties present in lvlOverride/lvl
+          if (lo.numFmt) merged.numFmt = lo.numFmt;
+          if (typeof lo.start === 'number') merged.start = lo.start;
+          if (typeof lo.lvlRestart === 'number') merged.lvlRestart = lo.lvlRestart;
+          if (typeof lo.lvlText === 'string') merged.lvlText = lo.lvlText;
+        }
+        if (typeof startOverride === 'number') merged.start = startOverride;
+        return merged;
+      }
+
+      function formatNumberByFmt(n, fmt) {
+        switch (fmt) {
+          case 'upperLetter': return numberToAlpha(n, true);
+          case 'lowerLetter': return numberToAlpha(n, false);
+          case 'upperRoman': return toRoman(n).toUpperCase();
+          case 'lowerRoman': return toRoman(n).toLowerCase();
+          case 'decimalZero':
+          case 'decimal':
+          default: return String(n);
+        }
+      }
+
+      function buildLabelFromTemplate({ template, ilvl, numId, absId, counters }) {
+        if (!template) return '';
+        // Replace %n placeholders with formatted numbers from referenced levels
+        return template.replace(/%(\d+)/g, (_, d) => {
+          const refLevel = Math.max(0, parseInt(d, 10) - 1);
+          const refKey = String(refLevel);
+          // Parent seeding: ensure referenced level counter exists
+          if (!counters.has(refKey)) {
+            const eff = getEffectiveLvl(numId, absId, refKey);
+            counters.set(refKey, eff.start);
+          }
+          const effRef = getEffectiveLvl(numId, absId, refKey);
+          const val = counters.get(refKey) || effRef.start || 1;
+          return formatNumberByFmt(val, effRef.numFmt);
+        });
+      }
+
+      // Iterate paragraphs
+      const paras = doc.querySelectorAll('w\\:p, p');
+      const countersByNum = new Map(); // numId -> Map<ilvl, currentVal>
+      const lines = [];
+
+      paras.forEach(p => {
+        const texts = [];
+        p.querySelectorAll('w\\:t, t').forEach(t => { texts.push(t.textContent); });
+        const content = texts.join('');
+        if (!content.trim()) return; // skip empty
+
+        let prefix = '';
+        const numPr = p.querySelector('w\\:numPr, numPr');
+        if (numPr) {
+          const ilvlEl = numPr.querySelector('w\\:ilvl, ilvl');
+          const numIdEl = numPr.querySelector('w\\:numId, numId');
+          const ilvlStr = ilvlEl ? (getAttr(ilvlEl, 'w:val') || getAttr(ilvlEl, 'val') || '0') : '0';
+          const numId = numIdEl ? (getAttr(numIdEl, 'w:val') || getAttr(numIdEl, 'val')) : null;
+          if (numId) {
+            const absId = numToAbs.get(numId);
+            const lvlIndex = parseInt(ilvlStr, 10);
+            if (absId != null) {
+              // Prepare counters state
+              if (!countersByNum.has(numId)) countersByNum.set(numId, new Map());
+              const counters = countersByNum.get(numId);
+
+              // Parent seeding: ensure all parents 0..ilvl exist
+              for (let i = 0; i <= lvlIndex; i++) {
+                const key = String(i);
+                if (!counters.has(key)) {
+                  const eff = getEffectiveLvl(numId, absId, key);
+                  counters.set(key, eff.start);
+                }
+              }
+
+              // Determine effective level template and formatting
+              const effLvl = getEffectiveLvl(numId, absId, ilvlStr);
+              if (effLvl.lvlText && /%\d+/.test(effLvl.lvlText)) {
+                prefix = buildLabelFromTemplate({ template: effLvl.lvlText, ilvl: lvlIndex, numId, absId, counters });
+              } else if (effLvl.lvlText) {
+                // No placeholders (e.g., bullet like "•"), use as-is
+                prefix = effLvl.lvlText;
+              } else {
+                // Fallback: join parents 0..ilvl using their formats
+                const parts = [];
+                for (let i = 0; i <= lvlIndex; i++) {
+                  const key = String(i);
+                  const eff = getEffectiveLvl(numId, absId, key);
+                  const val = counters.get(key) || eff.start || 1;
+                  parts.push(formatNumberByFmt(val, eff.numFmt));
+                }
+                prefix = parts.join('.') + '.';
+              }
+
+              // Normalize spacing
+              if (prefix && !/\s$/.test(prefix)) prefix = prefix + ' ';
+
+              // Increment current level and reset deeper ones
+              const curVal = counters.get(ilvlStr) || effLvl.start || 1;
+              counters.set(ilvlStr, curVal + 1);
+              for (let j = lvlIndex + 1; j < 9; j++) {
+                const k = String(j);
+                if (counters.has(k)) counters.delete(k);
+              }
+            }
+          }
+        }
+
+        lines.push((prefix || '') + content);
+      });
+
+      return lines.join('\n');
+    }
+
+    async function extract(file, strategy) {
+      if (strategy === 'mammoth_raw') return extractWithMammothRaw(file);
+      if (strategy === 'mammoth_html') return extractWithMammothHTMLReconstruct(file);
+      // default to xml
+      return extractWithDirectXML(file);
+    }
+
+    function bindDnD() {
+      const dz = document.getElementById('dropzone');
+      const fi = document.getElementById('fileInput');
+
+      function handleFiles(files) {
+        const file = files && files[0];
+        if (!file) return;
+        if (!/\.docx$/i.test(file.name)) { log('Please upload a .docx file.'); return; }
+        processFile(file).catch(err => log('Error: ' + (err && err.message ? err.message : err)));
+      }
+
+      dz.addEventListener('click', () => fi.click());
+      dz.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); }});
+      fi.addEventListener('change', (e) => handleFiles(e.target.files));
+
+      ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); }));
+      ['dragleave','drop'].forEach(evt => dz.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover'); }));
+      dz.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+    }
+
+    async function processFile(file) {
+      setOutput('');
+      log('Processing: ' + file.name + ' (' + Math.round(file.size/1024) + ' KB)');
+      const strategy = strategySel().value;
+      log('Strategy: ' + strategy);
+      try {
+        let text = await extract(file, strategy);
+        text = (text || '').replace(/\r\n/g, '\n');
+        setOutput(text);
+        await copyToClipboard(text);
+        log('Done. Lines: ' + (text ? text.split('\n').length : 0));
+      } catch (err) {
+        log('Extraction failed: ' + (err && err.message ? err.message : err));
+        throw err;
+      }
+    }
+
+    function init() {
+      bindDnD();
+      copyBtn().addEventListener('click', async () => {
+        const text = outputEl().value;
+        if (text) await copyToClipboard(text);
+      });
+      log('Ready for .docx. Choose a strategy and drop a file.');
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Text Extractor - Strategy Comparison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .strategies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .strategy-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .strategy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .strategy-a {
+            border-color: #4CAF50;
+        }
+        
+        .strategy-b {
+            border-color: #FF6B35;
+        }
+        
+        .strategy-c {
+            border-color: #6a11cb;
+        }
+        
+        .strategy-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 25px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .strategy-a .strategy-badge {
+            background: #4CAF50;
+        }
+        
+        .strategy-b .strategy-badge {
+            background: #FF6B35;
+        }
+        
+        .strategy-c .strategy-badge {
+            background: #6a11cb;
+        }
+        
+        .strategy-card h3 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .strategy-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .features-list {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+        
+        .features-list li {
+            color: #555;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .features-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #333;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: #555;
+        }
+        
+        .strategy-a .btn {
+            background: #4CAF50;
+        }
+        
+        .strategy-a .btn:hover {
+            background: #45a049;
+        }
+        
+        .strategy-b .btn {
+            background: #FF6B35;
+        }
+        
+        .strategy-b .btn:hover {
+            background: #e55a2b;
+        }
+        
+        .strategy-c .btn {
+            background: #6a11cb;
+        }
+        
+        .strategy-c .btn:hover {
+            background: #5a0fb5;
+        }
+        
+        .comparison-info {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+        
+        .comparison-info h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .comparison-info p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .test-recommendations {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .test-recommendations h4 {
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+        
+        .test-recommendations ul {
+            color: #555;
+            padding-left: 20px;
+        }
+        
+        .test-recommendations li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>DOCX Text Extractor</h1>
+            <p>Three different strategies for extracting text from DOCX files with proper list formatting and structure preservation. Choose a strategy to test based on your document complexity needs.</p>
+        </div>
+        
+        <div class="strategies-grid">
+            <div class="strategy-card strategy-a">
+                <div class="strategy-badge">Strategy A</div>
+                <h3>PizZip + Manual XML</h3>
+                <p>Most comprehensive approach with maximum control over parsing. Best for complex documents with intricate list structures.</p>
+                
+                <ul class="features-list">
+                    <li>Full XML parsing control</li>
+                    <li>Advanced list numbering support</li>
+                    <li>Handles nested lists properly</li>
+                    <li>Processes numbering.xml definitions</li>
+                    <li>Roman numeral support</li>
+                    <li>Custom indentation handling</li>
+                </ul>
+                
+                <a href="strategy_a_pizzip_manual.html" class="btn">Test Strategy A</a>
+            </div>
+            
+            <div class="strategy-card strategy-b">
+                <div class="strategy-badge">Strategy B</div>
+                <h3>Simple Text Extraction</h3>
+                <p>Fast and lightweight approach using regex-based parsing. Good for documents with straightforward formatting.</p>
+                
+                <ul class="features-list">
+                    <li>Fast processing speed</li>
+                    <li>Lightweight implementation</li>
+                    <li>Basic list detection</li>
+                    <li>Simple paragraph structure</li>
+                    <li>Good for basic documents</li>
+                    <li>Minimal dependencies</li>
+                </ul>
+                
+                <a href="strategy_b_simple_parser.html" class="btn">Test Strategy B</a>
+            </div>
+            
+            <div class="strategy-card strategy-c">
+                <div class="strategy-badge">Strategy C</div>
+                <h3>Hybrid Approach</h3>
+                <p>Reliable hybrid approach combining DOM parsing with smart list detection. No external dependencies, works consistently.</p>
+                
+                <ul class="features-list">
+                    <li>Reliable DOM-based parsing</li>
+                    <li>Smart list detection</li>
+                    <li>No external dependencies</li>
+                    <li>Advanced numbering support</li>
+                    <li>Robust error handling</li>
+                    <li>Works in all browsers</li>
+                </ul>
+                
+                <a href="strategy_c_hybrid.html" class="btn">Test Strategy C</a>
+            </div>
+        </div>
+        
+        <div class="comparison-info">
+            <h3>Testing Recommendations</h3>
+            <p>Each strategy has different strengths and is optimized for different use cases. Test with your specific DOCX files to determine which works best for your needs.</p>
+            
+            <div class="test-recommendations">
+                <h4>A/B Testing Guidelines:</h4>
+                <ul>
+                    <li><strong>Test with complex documents:</strong> Documents with multiple list levels, mixed numbering styles</li>
+                    <li><strong>Test with simple documents:</strong> Basic text with minimal formatting</li>
+                    <li><strong>Compare output quality:</strong> Check if lists are properly formatted and numbered</li>
+                    <li><strong>Check performance:</strong> Note processing speed differences with large files</li>
+                    <li><strong>Verify structure preservation:</strong> Ensure paragraph breaks and indentation are maintained</li>
+                    <li><strong>Test edge cases:</strong> Empty paragraphs, special characters, tables</li>
+                </ul>
+            </div>
+            
+            <p><strong>Expected Behavior:</strong> All strategies should produce output similar to opening the DOCX in Word, selecting all text (Ctrl+A), copying (Ctrl+C), and pasting into Notepad. The key difference will be in how well each handles complex list structures and formatting edge cases.</p>
+        </div>
+    </div>
+</body>
+</html>

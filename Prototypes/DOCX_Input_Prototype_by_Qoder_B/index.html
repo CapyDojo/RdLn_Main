@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Text Extraction Prototype</title>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+            min-height: 500px;
+        }
+
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .drop-zone {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            background: #fafafa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .drop-zone:hover {
+            border-color: #4CAF50;
+            background: #f0f8f0;
+        }
+
+        .drop-zone.drag-over {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+            transform: scale(1.02);
+        }
+
+        .drop-zone-icon {
+            font-size: 4em;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone.drag-over .drop-zone-icon {
+            color: #4CAF50;
+        }
+
+        .drop-zone h3 {
+            font-size: 1.5em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .drop-zone p {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-select-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .file-select-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .output-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .output-panel {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 400px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .output-panel:empty::before {
+            content: "Extracted text will appear here...";
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .status-panel {
+            background: #f0f0f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status-panel.show {
+            display: block;
+        }
+
+        .status-panel.processing {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .status-panel.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .status-panel.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(33, 150, 243, 0.3);
+        }
+
+        .copy-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .file-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-info h4 {
+            color: #1976D2;
+            margin-bottom: 5px;
+        }
+
+        .file-info p {
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .drop-zone {
+                padding: 40px 20px;
+                min-height: 200px;
+            }
+        }
+
+        .strategy-selector {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .strategy-selector h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .strategy-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 DOCX Text Extractor</h1>
+            <p>Advanced prototype for faithful text extraction with list formatting preservation</p>
+        </div>
+
+        <div class="main-content">
+            <div class="upload-section">
+                <div class="strategy-selector">
+                    <h4>Extraction Strategy</h4>
+                    <select id="strategySelect">
+                        <option value="xml-comprehensive">XML Comprehensive (Recommended)</option>
+                        <option value="xml-hybrid">XML Hybrid with Pattern Recognition</option>
+                        <option value="minimalist">Minimalist with Post-processing</option>
+                    </select>
+                </div>
+
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-zone-icon">📎</div>
+                    <h3>Drop DOCX file here</h3>
+                    <p>or click to select a file</p>
+                    <button class="file-select-btn" onclick="document.getElementById('fileInput').click()">
+                        Select File
+                    </button>
+                </div>
+
+                <input type="file" id="fileInput" class="file-input" accept=".docx">
+
+                <div class="status-panel" id="statusPanel">
+                    <div id="statusMessage"></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+
+                <div class="file-info" id="fileInfo">
+                    <h4>File Information</h4>
+                    <p id="fileDetails"></p>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="output-panel" id="outputPanel"></div>
+                <button class="copy-btn" id="copyBtn" disabled>
+                    📋 Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DocxTextExtractor {
+            constructor() {
+                this.setupEventListeners();
+                this.extractedText = '';
+                this.processingStrategy = 'xml-comprehensive';
+            }
+
+            setupEventListeners() {
+                const dropZone = document.getElementById('dropZone');
+                const fileInput = document.getElementById('fileInput');
+                const copyBtn = document.getElementById('copyBtn');
+                const strategySelect = document.getElementById('strategySelect');
+
+                dropZone.addEventListener('dragover', this.handleDragOver.bind(this));
+                dropZone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                dropZone.addEventListener('drop', this.handleDrop.bind(this));
+                dropZone.addEventListener('click', () => fileInput.click());
+
+                fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+                copyBtn.addEventListener('click', this.copyToClipboard.bind(this));
+                strategySelect.addEventListener('change', (e) => {
+                    this.processingStrategy = e.target.value;
+                });
+
+                document.addEventListener('dragover', e => e.preventDefault());
+                document.addEventListener('drop', e => e.preventDefault());
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.add('drag-over');
+            }
+
+            handleDragLeave(e) {
+                e.preventDefault();
+                if (!e.relatedTarget || !document.getElementById('dropZone').contains(e.relatedTarget)) {
+                    document.getElementById('dropZone').classList.remove('drag-over');
+                }
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                document.getElementById('dropZone').classList.remove('drag-over');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.processFile(files[0]);
+                }
+            }
+
+            handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    this.processFile(file);
+                }
+            }
+
+            async processFile(file) {
+                try {
+                    this.showStatus('Processing DOCX file...', 'processing');
+                    this.updateProgress(10);
+
+                    if (!this.validateFile(file)) {
+                        return;
+                    }
+
+                    this.showFileInfo(file);
+                    this.updateProgress(20);
+
+                    let extractedText;
+                    switch (this.processingStrategy) {
+                        case 'xml-comprehensive':
+                            extractedText = await this.extractWithXmlComprehensive(file);
+                            break;
+                        case 'xml-hybrid':
+                            extractedText = await this.extractWithXmlHybrid(file);
+                            break;
+                        case 'minimalist':
+                            extractedText = await this.extractWithMinimalist(file);
+                            break;
+                        default:
+                            extractedText = await this.extractWithXmlComprehensive(file);
+                    }
+
+                    this.updateProgress(100);
+                    this.displayResult(extractedText);
+                    this.showStatus('✅ Text extraction completed successfully!', 'success');
+
+                } catch (error) {
+                    console.error('Processing error:', error);
+                    this.showStatus(`❌ Error: ${error.message}`, 'error');
+                    this.updateProgress(0);
+                }
+            }
+
+            validateFile(file) {
+                if (!file.name.toLowerCase().endsWith('.docx')) {
+                    this.showStatus('❌ Please select a DOCX file', 'error');
+                    return false;
+                }
+
+                if (file.size > 50 * 1024 * 1024) {
+                    this.showStatus('❌ File too large. Maximum size is 50MB', 'error');
+                    return false;
+                }
+
+                return true;
+            }
+
+            async extractWithXmlComprehensive(file) {
+                this.updateProgress(30);
+                
+                const zip = await JSZip.loadAsync(file);
+                this.updateProgress(40);
+
+                const documentXml = await this.getXmlContent(zip, 'word/document.xml');
+                const numberingXml = await this.getXmlContent(zip, 'word/numbering.xml');
+                
+                this.updateProgress(60);
+
+                const numberingMap = this.parseNumberingDefinitions(numberingXml);
+                
+                this.updateProgress(70);
+
+                const result = this.processDocumentWithLists(documentXml, numberingMap);
+                
+                this.updateProgress(90);
+
+                return result;
+            }
+
+            async getXmlContent(zip, path) {
+                const file = zip.file(path);
+                if (!file) {
+                    return null;
+                }
+                return await file.async('string');
+            }
+
+            parseNumberingDefinitions(numberingXml) {
+                if (!numberingXml) return new Map();
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(numberingXml, 'text/xml');
+                const numberingMap = new Map();
+
+                // Parse abstract numbering definitions
+                const abstractNums = doc.querySelectorAll('w\\:abstractNum, abstractNum');
+                const abstractMap = new Map();
+
+                abstractNums.forEach(abstractNum => {
+                    const abstractNumId = abstractNum.getAttribute('w:abstractNumId') || abstractNum.getAttribute('abstractNumId');
+                    const levels = new Map();
+
+                    const lvls = abstractNum.querySelectorAll('w\\:lvl, lvl');
+                    lvls.forEach(lvl => {
+                        const ilvl = lvl.getAttribute('w:ilvl') || lvl.getAttribute('ilvl');
+                        const numFmt = lvl.querySelector('w\\:numFmt, numFmt');
+                        const lvlText = lvl.querySelector('w\\:lvlText, lvlText');
+                        const start = lvl.querySelector('w\\:start, start');
+
+                        levels.set(ilvl, {
+                            format: numFmt ? (numFmt.getAttribute('w:val') || numFmt.getAttribute('val')) : 'decimal',
+                            text: lvlText ? (lvlText.getAttribute('w:val') || lvlText.getAttribute('val')) : '%1.',
+                            start: start ? parseInt(start.getAttribute('w:val') || start.getAttribute('val')) : 1
+                        });
+                    });
+
+                    abstractMap.set(abstractNumId, levels);
+                });
+
+                // Parse concrete numbering instances
+                const nums = doc.querySelectorAll('w\\:num, num');
+                nums.forEach(num => {
+                    const numId = num.getAttribute('w:numId') || num.getAttribute('numId');
+                    const abstractNumId = num.querySelector('w\\:abstractNumId, abstractNumId');
+                    
+                    if (abstractNumId) {
+                        const abstractId = abstractNumId.getAttribute('w:val') || abstractNumId.getAttribute('val');
+                        numberingMap.set(numId, abstractMap.get(abstractId) || new Map());
+                    }
+                });
+
+                return numberingMap;
+            }
+
+            processDocumentWithLists(documentXml, numberingMap) {
+                if (!documentXml) return '';
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(documentXml, 'text/xml');
+                const paragraphs = doc.querySelectorAll('w\\:p, p');
+                
+                let result = '';
+                const listCounters = new Map();
+
+                paragraphs.forEach(paragraph => {
+                    const numPr = paragraph.querySelector('w\\:pPr w\\:numPr, pPr numPr');
+                    let textContent = '';
+
+                    // Extract text from all runs
+                    const runs = paragraph.querySelectorAll('w\\:r, r');
+                    runs.forEach(run => {
+                        const texts = run.querySelectorAll('w\\:t, t');
+                        texts.forEach(t => {
+                            textContent += t.textContent || '';
+                        });
+                    });
+
+                    if (numPr) {
+                        // This is a list item
+                        const numId = numPr.querySelector('w\\:numId, numId');
+                        const ilvl = numPr.querySelector('w\\:ilvl, ilvl');
+
+                        if (numId && ilvl) {
+                            const numIdVal = numId.getAttribute('w:val') || numId.getAttribute('val');
+                            const levelVal = parseInt(ilvl.getAttribute('w:val') || ilvl.getAttribute('val')) || 0;
+                            
+                            const listDef = numberingMap.get(numIdVal);
+                            if (listDef && listDef.has(levelVal.toString())) {
+                                const levelInfo = listDef.get(levelVal.toString());
+                                const prefix = this.generateListPrefix(levelInfo, numIdVal, levelVal, listCounters);
+                                const indent = '  '.repeat(levelVal);
+                                
+                                result += indent + prefix + ' ' + textContent.trim() + '\n';
+                            } else {
+                                const indent = '  '.repeat(levelVal);
+                                result += indent + '• ' + textContent.trim() + '\n';
+                            }
+                        } else {
+                            result += '• ' + textContent.trim() + '\n';
+                        }
+                    } else {
+                        if (textContent.trim()) {
+                            result += textContent.trim() + '\n';
+                        } else {
+                            result += '\n';
+                        }
+                    }
+                });
+
+                return result;
+            }
+
+            generateListPrefix(levelInfo, numId, level, listCounters) {
+                const counterKey = `${numId}-${level}`;
+                
+                if (!listCounters.has(counterKey)) {
+                    listCounters.set(counterKey, levelInfo.start || 1);
+                } else {
+                    listCounters.set(counterKey, listCounters.get(counterKey) + 1);
+                }
+
+                const counter = listCounters.get(counterKey);
+                const format = levelInfo.format || 'decimal';
+                let prefix = levelInfo.text || '%1.';
+
+                let formattedNumber;
+                switch (format) {
+                    case 'decimal':
+                        formattedNumber = counter.toString();
+                        break;
+                    case 'lowerLetter':
+                        formattedNumber = String.fromCharCode(96 + counter);
+                        break;
+                    case 'upperLetter':
+                        formattedNumber = String.fromCharCode(64 + counter);
+                        break;
+                    case 'lowerRoman':
+                        formattedNumber = this.toRoman(counter).toLowerCase();
+                        break;
+                    case 'upperRoman':
+                        formattedNumber = this.toRoman(counter);
+                        break;
+                    case 'bullet':
+                        return '•';
+                    default:
+                        formattedNumber = counter.toString();
+                }
+
+                return prefix.replace('%1', formattedNumber);
+            }
+
+            toRoman(num) {
+                const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+                const numerals = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'];
+                let result = '';
+                
+                for (let i = 0; i < values.length; i++) {
+                    while (num >= values[i]) {
+                        result += numerals[i];
+                        num -= values[i];
+                    }
+                }
+                
+                return result;
+            }
+
+            async extractWithXmlHybrid(file) {
+                this.updateProgress(30);
+                
+                const zip = await JSZip.loadAsync(file);
+                this.updateProgress(50);
+
+                const documentXml = await this.getXmlContent(zip, 'word/document.xml');
+                const numberingXml = await this.getXmlContent(zip, 'word/numbering.xml');
+                
+                this.updateProgress(70);
+
+                const basicNumbering = this.parseBasicNumbering(numberingXml);
+                const result = this.processWithPatternRecognition(documentXml, basicNumbering);
+                
+                this.updateProgress(90);
+
+                return result;
+            }
+
+            parseBasicNumbering(numberingXml) {
+                if (!numberingXml) return new Map();
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(numberingXml, 'text/xml');
+                const numberingMap = new Map();
+
+                const nums = doc.querySelectorAll('w\\:num, num');
+                nums.forEach(num => {
+                    const numId = num.getAttribute('w:numId') || num.getAttribute('numId');
+                    numberingMap.set(numId, { type: 'numbered' });
+                });
+
+                return numberingMap;
+            }
+
+            processWithPatternRecognition(documentXml, basicNumbering) {
+                if (!documentXml) return '';
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(documentXml, 'text/xml');
+                const paragraphs = doc.querySelectorAll('w\\:p, p');
+                
+                let result = '';
+                let listCounter = 1;
+
+                paragraphs.forEach(paragraph => {
+                    let textContent = '';
+
+                    const runs = paragraph.querySelectorAll('w\\:r, r');
+                    runs.forEach(run => {
+                        const texts = run.querySelectorAll('w\\:t, t');
+                        texts.forEach(t => {
+                            textContent += t.textContent || '';
+                        });
+                    });
+
+                    const numPr = paragraph.querySelector('w\\:pPr w\\:numPr, pPr numPr');
+                    
+                    if (numPr) {
+                        const ilvl = numPr.querySelector('w\\:ilvl, ilvl');
+                        const level = ilvl ? parseInt(ilvl.getAttribute('w:val') || ilvl.getAttribute('val')) || 0 : 0;
+                        const indent = '  '.repeat(level);
+                        
+                        if (textContent.match(/^\s*[•·▪▫◦‣⁃]/)) {
+                            result += indent + textContent.trim() + '\n';
+                        } else {
+                            result += indent + listCounter + '. ' + textContent.trim() + '\n';
+                            listCounter++;
+                        }
+                    } else {
+                        if (textContent.trim()) {
+                            result += textContent.trim() + '\n';
+                            listCounter = 1;
+                        } else {
+                            result += '\n';
+                        }
+                    }
+                });
+
+                return result;
+            }
+
+            async extractWithMinimalist(file) {
+                this.updateProgress(30);
+                
+                const zip = await JSZip.loadAsync(file);
+                this.updateProgress(50);
+
+                const documentXml = await this.getXmlContent(zip, 'word/document.xml');
+                
+                this.updateProgress(70);
+
+                const result = this.extractAndPostProcess(documentXml);
+                
+                this.updateProgress(90);
+
+                return result;
+            }
+
+            extractAndPostProcess(documentXml) {
+                if (!documentXml) return '';
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(documentXml, 'text/xml');
+                const paragraphs = doc.querySelectorAll('w\\:p, p');
+                
+                let result = '';
+
+                paragraphs.forEach(paragraph => {
+                    let textContent = '';
+
+                    const runs = paragraph.querySelectorAll('w\\:r, r');
+                    runs.forEach(run => {
+                        const texts = run.querySelectorAll('w\\:t, t');
+                        texts.forEach(t => {
+                            textContent += t.textContent || '';
+                        });
+                    });
+
+                    if (textContent.trim()) {
+                        result += textContent.trim() + '\n';
+                    } else {
+                        result += '\n';
+                    }
+                });
+
+                return this.postProcessLists(result);
+            }
+
+            postProcessLists(text) {
+                const lines = text.split('\n');
+                let result = '';
+                let inList = false;
+                let listCounter = 1;
+
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    
+                    if (trimmed.match(/^\d+[\.\)]/)) {
+                        result += line + '\n';
+                        inList = true;
+                    } else if (trimmed.match(/^[•·▪▫◦‣⁃]/)) {
+                        result += line + '\n';
+                        inList = true;
+                    } else if (trimmed.match(/^[a-zA-Z][\.\)]/)) {
+                        result += line + '\n';
+                        inList = true;
+                    } else if (trimmed && inList && !trimmed.match(/^[A-Z]/)) {
+                        result += line + '\n';
+                    } else {
+                        result += line + '\n';
+                        if (trimmed) {
+                            inList = false;
+                            listCounter = 1;
+                        }
+                    }
+                });
+
+                return result;
+            }
+
+            displayResult(text) {
+                this.extractedText = text;
+                document.getElementById('outputPanel').textContent = text;
+                document.getElementById('copyBtn').disabled = false;
+            }
+
+            async copyToClipboard() {
+                if (!this.extractedText) return;
+
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(this.extractedText);
+                        this.showStatus('✅ Text copied to clipboard!', 'success');
+                    } else {
+                        this.fallbackCopyToClipboard(this.extractedText);
+                        this.showStatus('✅ Text copied to clipboard!', 'success');
+                    }
+                } catch (error) {
+                    console.error('Copy failed:', error);
+                    this.showStatus('❌ Failed to copy to clipboard', 'error');
+                }
+            }
+
+            fallbackCopyToClipboard(text) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                textArea.remove();
+            }
+
+            showStatus(message, type) {
+                const statusPanel = document.getElementById('statusPanel');
+                const statusMessage = document.getElementById('statusMessage');
+                
+                statusPanel.className = `status-panel show ${type}`;
+                statusMessage.textContent = message;
+
+                if (type === 'success' || type === 'error') {
+                    setTimeout(() => {
+                        statusPanel.classList.remove('show');
+                    }, 5000);
+                }
+            }
+
+            updateProgress(percent) {
+                document.getElementById('progressFill').style.width = percent + '%';
+            }
+
+            showFileInfo(file) {
+                const fileInfo = document.getElementById('fileInfo');
+                const fileDetails = document.getElementById('fileDetails');
+                
+                fileDetails.innerHTML = `
+                    <strong>Name:</strong> ${file.name}<br>
+                    <strong>Size:</strong> ${this.formatFileSize(file.size)}<br>
+                    <strong>Type:</strong> ${file.type || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}
+                `;
+                
+                fileInfo.classList.add('show');
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new DocxTextExtractor();
+        });
+    </script>
+</body>
+</html>
