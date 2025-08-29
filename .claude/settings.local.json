@@ -84,14 +84,15 @@
       "mcp__serena__find_file",
       "mcp__serena__think_about_collected_information",
       "mcp__context7__resolve-library-id",
-            "mcp__context7__get-library-docs",
+      "mcp__context7__get-library-docs",
       "Bash(npm ls:*)",
       "WebFetch(domain:posthog.com)",
-      "WebFetch(domain:us.posthog.com)"
+      "WebFetch(domain:us.posthog.com)",
+      "mcp__serena__read_memory"
     ],
     "deny": [],
     "additionalDirectories": [
-            "C:\\temp"
+      "C:\\temp"
     ]
   }
 }
