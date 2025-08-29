@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract Structure Explorer v12 - CJK Space Fix</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .progress-bar {
+            height: 24px;
+            background-color: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .results-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .method-result {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .method-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            color: white;
+        }
+        .method-stats {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .text-output {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .text-item {
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-left: 3px solid #007bff;
+            border-radius: 0 4px 4px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .text-item.empty {
+            color: #999;
+            font-style: italic;
+            border-left-color: #ccc;
+        }
+        .clean-output-panel {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .clean-output-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #28a745;
+            color: white;
+        }
+        .clean-text-content {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .clean-paragraph {
+            margin-bottom: 1em;
+        }
+        .clean-paragraph:last-child {
+            margin-bottom: 0;
+        }
+        .summary-section {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .copy-area {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            user-select: text;
+            margin-top: 10px;
+        }
+        .hidden { display: none; }
+        .processing {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Tesseract Text Analyzer v12 - CJK Space Fix</h1>
+        <p>Streamlined OCR processing with CJK character space correction.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>📁 Click here or drag & drop a PNG image for automatic OCR processing</p>
+            <p style="font-size: 14px; color: #666;">Optimized for PNG format with CJK space correction</p>
+            <input type="file" id="fileInput" accept=".png,image/png" style="display: none;">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>📷 Processing Image</h3>
+            <img id="previewImage" class="image-preview">
+        </div>
+        
+        <div id="progressSection" class="hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultsContainer" class="results-container hidden">
+        <h2>📋 Text Recognition Results</h2>
+        <div id="methodResults"></div>
+        
+        <!-- CONTINUOUS CLEAN OUTPUT PANEL WITH CJK SPACE CORRECTION -->
+        <div id="cleanOutputPanel" class="clean-output-panel">
+            <div class="clean-output-header">
+                ✨ Clean OCR Output (CJK Space Corrected)
+            </div>
+            <div class="method-stats" id="cleanStats">
+                Ready to display clean text output...
+            </div>
+            <div class="clean-text-content" id="cleanTextContent">
+                <div class="clean-paragraph">No text processed yet</div>
+            </div>
+        </div>
+        
+        <div class="summary-section">
+            <h3 style="margin-top: 0;">📊 Copy/Share Summary</h3>
+            <button class="btn" onclick="copyToClipboard()" style="float: right;">📋 Copy</button>
+            <p>Formatted results for easy sharing:</p>
+            <div class="copy-area" id="summaryText"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentImage = null;
+        let analysisResults = {};
+
+        // Simplified method - only 10-Languages strategy with paragraph detection
+        const methods = [
+            { id: 'multiLang', name: '🌍 10-Languages Strategy', color: '#673ab7' }
+        ];
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const progressSection = document.getElementById('progressSection');
+        const progressFill = document.getElementById('progressFill');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const methodResults = document.getElementById('methodResults');
+        const cleanOutputPanel = document.getElementById('cleanOutputPanel');
+        const cleanStats = document.getElementById('cleanStats');
+        const cleanTextContent = document.getElementById('cleanTextContent');
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
+                    loadImage(file);
+                } else {
+                    alert('Please drop a PNG image file.');
+                }
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
+                    loadImage(file);
+                } else {
+                    alert('Please select a PNG image file.');
+                }
+            }
+        }
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImage = new Image();
+                currentImage.onload = function() {
+                    previewImage.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    // Automatically start analysis after image loads
+                    setTimeout(startAnalysis, 500);
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function getDetectionOptions() {
+            // Fixed to paragraph level processing
+            return { blocks: true, paragraphs: true };
+        }
+
+        function getDetectionItems(result) {
+            // Fixed to paragraph level
+            return result.data.paragraphs || [];
+        }
+
+        // Remove single spaces between CJK characters only - repeat until no more matches
+        function applyCJKSpaceCorrection(text) {
+            console.log('🈚 Applying CJK space correction...');
+            console.log(`🈚 Original text: "${text}"`);
+            
+            // CJK character ranges from OCRService.ts
+            const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
+            const cjkSpaceRegex = new RegExp(`(${cjk}) (${cjk})`, 'g');
+            
+            // DEBUG: Find all spaces between non-whitespace characters
+            console.log('🔍 DEBUG: Analyzing all character spaces before correction...');
+            const spacedMatches = text.match(/\S \S/g);
+            if (spacedMatches) {
+                spacedMatches.forEach((match, index) => {
+                    const before = match[0];
+                    const after = match[2];
+                    const beforeCode = before.charCodeAt(0);
+                    const afterCode = after.charCodeAt(0);
+                    const beforeHex = beforeCode.toString(16).toUpperCase().padStart(4, '0');
+                    const afterHex = afterCode.toString(16).toUpperCase().padStart(4, '0');
+                    
+                    // Test if characters match our CJK regex
+                    const beforeIsCJK = new RegExp(`^${cjk}$`).test(before);
+                    const afterIsCJK = new RegExp(`^${cjk}$`).test(after);
+                    const shouldMatch = beforeIsCJK && afterIsCJK;
+                    
+                    console.log(`🔍 Space #${index + 1}: "${before}" (U+${beforeHex}, CJK: ${beforeIsCJK}) <SPACE> "${after}" (U+${afterHex}, CJK: ${afterIsCJK}) → Should remove: ${shouldMatch}`);
+                });
+            } else {
+                console.log('🔍 No spaces between characters found');
+            }
+            
+            let processed = text;
+            let previousText;
+            let iterations = 0;
+            
+            do {
+                previousText = processed;
+                const beforeReplace = processed;
+                processed = processed.replace(cjkSpaceRegex, '$1$2');
+                iterations++;
+                
+                // DEBUG: Log each replacement iteration
+                if (processed !== beforeReplace) {
+                    console.log(`🈚 Iteration ${iterations}: Replaced ${beforeReplace.length - processed.length} spaces`);
+                    // Find what was changed
+                    const beforeMatches = beforeReplace.match(cjkSpaceRegex);
+                    if (beforeMatches) {
+                        beforeMatches.forEach((match, i) => {
+                            console.log(`   → Removed space from: "${match}" → "${match.replace(' ', '')}"`);
+                        });
+                    }
+                }
+                
+                if (iterations > 1000) {
+                    console.warn('🈚 CJK space correction stopped after 1000 iterations to prevent infinite loop');
+                    break;
+                }
+            } while (processed !== previousText);
+            
+            console.log(`🈚 CJK space correction completed after ${iterations} iterations`);
+            if (processed !== text) {
+                console.log(`🈚 Total spaces removed: ${text.length - processed.length} characters`);
+            }
+            
+            // DEBUG: Check for remaining spaces that should have been removed
+            console.log('🔍 DEBUG: Checking for missed CJK spaces after correction...');
+            const remainingSpaces = processed.match(/\S \S/g);
+            if (remainingSpaces) {
+                console.log('⚠️ WARNING: Found remaining spaces that might be CJK:');
+                remainingSpaces.forEach((match, index) => {
+                    const before = match[0];
+                    const after = match[2];
+                    const beforeCode = before.charCodeAt(0);
+                    const afterCode = after.charCodeAt(0);
+                    const beforeHex = beforeCode.toString(16).toUpperCase().padStart(4, '0');
+                    const afterHex = afterCode.toString(16).toUpperCase().padStart(4, '0');
+                    
+                    // Test if characters match our CJK regex
+                    const beforeIsCJK = new RegExp(`^${cjk}$`).test(before);
+                    const afterIsCJK = new RegExp(`^${cjk}$`).test(after);
+                    
+                    if (beforeIsCJK || afterIsCJK) {
+                        console.log(`⚠️ Missed CJK space #${index + 1}: "${before}" (U+${beforeHex}, CJK: ${beforeIsCJK}) <SPACE> "${after}" (U+${afterHex}, CJK: ${afterIsCJK})`);
+                    }
+                });
+            } else {
+                console.log('✅ No remaining spaces between characters found');
+            }
+            
+            console.log(`🈚 Final corrected text: "${processed}"`);
+            return processed;
+        }
+
+        async function startAnalysis() {
+            if (!currentImage) return;
+            
+            progressSection.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            methodResults.innerHTML = '';
+            analysisResults = {};
+
+            for (let i = 0; i < methods.length; i++) {
+                const method = methods[i];
+                const progress = Math.round((i / methods.length) * 100);
+                progressFill.style.width = `${progress}%`;
+                progressFill.textContent = `Processing ${method.name}...`;
+                
+                try {
+                    await runMethod(method);
+                } catch (error) {
+                    console.error(`${method.id} failed:`, error);
+                    analysisResults[method.id] = { error: error.message };
+                }
+            }
+
+            progressFill.style.width = '100%';
+            progressFill.textContent = 'Complete!';
+            
+            setTimeout(() => {
+                progressSection.classList.add('hidden');
+                displayResults();
+            }, 500);
+        }
+
+        async function runMethod(method) {
+            const startTime = performance.now();
+            
+            switch(method.id) {
+                case 'multiLang': return await runMultiLang(method, startTime);
+            }
+        }
+
+        async function runMultiLang(method, startTime) {
+            const languages = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+            
+            // Use correct v5 API - pass languages during worker creation
+            const worker = await Tesseract.createWorker(languages, 1, {
+                logger: m => console.log(`MultiLang: ${m.status} - ${m.progress}`)
+            });
+            await worker.setParameters({ classify_enable_learning: '0' });
+            
+            const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+            const totalTime = performance.now() - startTime;
+            
+            // Extract raw text items
+            const rawItems = getDetectionItems(result);
+            const rawTextItems = rawItems
+                .map(item => item.text ? item.text.trim() : '')
+                .filter(text => text.length > 0);
+            
+            // Apply CJK space correction to each text item
+            const correctedTextItems = rawTextItems.map(text => applyCJKSpaceCorrection(text));
+            
+            analysisResults[method.id] = {
+                method: method,
+                totalTime: totalTime,
+                items: rawItems,
+                rawTextItems: rawTextItems,
+                correctedTextItems: correctedTextItems,
+                confidence: result.data.confidence || 0,
+                languages: languages
+            };
+            
+            await worker.terminate();
+        }
+
+        function displayResults() {
+            resultsContainer.classList.remove('hidden');
+            methodResults.innerHTML = '';
+            
+            // Sort by processing time (fastest first)
+            const sortedResults = Object.values(analysisResults)
+                .filter(result => !result.error)
+                .sort((a, b) => a.totalTime - b.totalTime);
+            
+            sortedResults.forEach((result, index) => {
+                const rank = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                const methodDiv = document.createElement('div');
+                methodDiv.className = 'method-result';
+                
+                const textItems = result.rawTextItems || [];
+                
+                methodDiv.innerHTML = `
+                    <div class="method-header" style="background-color: ${result.method.color};">
+                        ${rank} ${result.method.name}
+                    </div>
+                    <div class="method-stats">
+                        Processing Time: ${Math.round(result.totalTime)}ms | 
+                        Paragraphs Found: ${result.items.length} | 
+                        Text Items: ${textItems.length} | 
+                        Confidence: ${Math.round(result.confidence)}%
+                        ${result.languages ? ` | Languages: ${result.languages.length}` : ''}
+                    </div>
+                    <div class="text-output">
+                        <strong>Recognized Text (Raw):</strong>
+                        ${textItems.length > 0 ? 
+                            textItems.map((text, i) => `
+                                <div class="text-item">
+                                    Paragraph ${i + 1}: "${text}"
+                                </div>
+                            `).join('') :
+                            '<div class="text-item empty">No text recognized</div>'
+                        }
+                    </div>
+                `;
+                
+                methodResults.appendChild(methodDiv);
+            });
+
+            // Add error results
+            Object.entries(analysisResults).forEach(([methodId, result]) => {
+                if (result.error) {
+                    const method = methods.find(m => m.id === methodId);
+                    const methodDiv = document.createElement('div');
+                    methodDiv.className = 'method-result';
+                    methodDiv.innerHTML = `
+                        <div class="method-header" style="background-color: #dc3545;">
+                            ❌ ${method.name}
+                        </div>
+                        <div class="text-output">
+                            <div class="text-item empty">Error: ${result.error}</div>
+                        </div>
+                    `;
+                    methodResults.appendChild(methodDiv);
+                }
+            });
+            
+            // Display continuous clean output with CJK space correction
+            displayCleanOutput();
+            
+            generateSummary();
+        }
+
+        function displayCleanOutput() {
+            const validResults = Object.values(analysisResults).filter(r => !r.error);
+            
+            if (validResults.length === 0) {
+                cleanStats.textContent = 'No successful OCR results to display';
+                cleanTextContent.innerHTML = '<div class="clean-paragraph">No text recognized</div>';
+                return;
+            }
+
+            // Use the first valid result (fastest processing time)
+            const result = validResults.sort((a, b) => a.totalTime - b.totalTime)[0];
+            const correctedTextItems = result.correctedTextItems || [];
+
+            // Update stats
+            const spacesRemoved = (result.rawTextItems || []).reduce((total, rawText, index) => {
+                const correctedText = correctedTextItems[index] || '';
+                return total + (rawText.length - correctedText.length);
+            }, 0);
+
+            cleanStats.textContent = `Processing Time: ${Math.round(result.totalTime)}ms | Text Segments: ${correctedTextItems.length} | Confidence: ${Math.round(result.confidence)}% | CJK Spaces Removed: ${spacesRemoved}`;
+
+            // Display continuous text with CJK space correction applied
+            if (correctedTextItems.length > 0) {
+                cleanTextContent.innerHTML = correctedTextItems.map(text => `
+                    <div class="clean-paragraph">${text}</div>
+                `).join('');
+            } else {
+                cleanTextContent.innerHTML = '<div class="clean-paragraph">No text recognized</div>';
+            }
+        }
+
+        function generateSummary() {
+            const validResults = Object.values(analysisResults).filter(r => !r.error);
+            
+            let summary = `TESSERACT TEXT RECOGNITION - PARAGRAPH LEVEL WITH CJK SPACE CORRECTION\n`;
+            summary += `=${'='.repeat(70)}\n\n`;
+            summary += `Image: ${currentImage ? `${currentImage.width}x${currentImage.height}px` : 'Unknown'}\n`;
+            summary += `Detection Level: paragraphs\n`;
+            summary += `Post-processing: CJK space correction applied\n`;
+            summary += `Test Date: ${new Date().toLocaleDateString()}\n`;
+            summary += `Methods Tested: ${validResults.length}\n\n`;
+            
+            summary += `RESULTS:\n`;
+            summary += `${'-'.repeat(10)}\n`;
+            
+            validResults
+                .sort((a, b) => a.totalTime - b.totalTime)
+                .forEach((result, index) => {
+                    const rank = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+                    const correctedTextItems = result.correctedTextItems || [];
+                    const spacesRemoved = (result.rawTextItems || []).reduce((total, rawText, index) => {
+                        const correctedText = correctedTextItems[index] || '';
+                        return total + (rawText.length - correctedText.length);
+                    }, 0);
+                    
+                    summary += `\n${rank} ${result.method.name} (${Math.round(result.totalTime)}ms)\n`;
+                    summary += `   Paragraphs Found: ${result.items.length} | Text Items: ${correctedTextItems.length} | Confidence: ${Math.round(result.confidence)}%\n`;
+                    summary += `   CJK Spaces Removed: ${spacesRemoved} characters\n`;
+                    
+                    if (correctedTextItems.length > 0) {
+                        summary += `   Corrected Text:\n`;
+                        correctedTextItems.forEach((text, i) => {
+                            summary += `   - "${text}"\n`;
+                        });
+                    } else {
+                        summary += `   - No text recognized\n`;
+                    }
+                });
+            
+            summary += `\nGenerated: ${new Date().toISOString()}\n`;
+            
+            document.getElementById('summaryText').textContent = summary;
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('summaryText').textContent;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopyFeedback();
+                });
+            } else {
+                // Fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showCopyFeedback();
+            }
+        }
+
+        function showCopyFeedback() {
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✅ Copied!';
+            button.style.backgroundColor = '#28a745';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.backgroundColor = '#007bff';
+            }, 2000);
+        }
+
+        console.log('Tesseract Text Analyzer v12 - CJK Space Fix initialized');
+    </script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ OCR Extractor v8 - Simplified Pipeline</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        :root {
+            --theme-primary-900: #1a3a5f;
+            --theme-primary-700: #2c5282;
+            --theme-primary-600: #3182ce;
+            --theme-neutral-800: #2d3748;
+            --theme-neutral-700: #4a5568;
+            --theme-neutral-600: #718096;
+            --theme-neutral-400: #a0aec0;
+            --theme-neutral-300: #e2e8f0;
+            --theme-neutral-200: #edf2f7;
+            --theme-neutral-100: #f7fafc;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            --glass-backdrop: blur(10px);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: var(--glass-backdrop);
+            -webkit-backdrop-filter: var(--glass-backdrop);
+        }
+
+        .glass-panel-header-footer {
+            position: relative;
+        }
+
+        .glass-panel-header-footer::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--theme-neutral-300), transparent);
+        }
+
+        .glass-input-field {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            line-height: 2;
+            color: var(--theme-neutral-800);
+            resize: none;
+        }
+
+        .glass-input-field:focus {
+            box-shadow: 0 0 0 2px var(--theme-primary-600);
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--theme-neutral-300);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--glass-bg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: var(--theme-primary-600);
+            background: rgba(49, 130, 206, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--theme-primary-600);
+            background: rgba(49, 130, 206, 0.1);
+            transform: scale(1.02);
+        }
+
+        .btn {
+            background-color: var(--theme-primary-700);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            background-color: var(--theme-primary-900);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .btn:disabled {
+            background-color: var(--theme-neutral-400);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+            padding: 0 10px;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background-color: var(--theme-neutral-200);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--theme-primary-600), var(--theme-primary-700));
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 6px;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+            border: 1px solid var(--theme-neutral-300);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .results-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .text-output {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            backdrop-filter: var(--glass-backdrop);
+            -webkit-backdrop-filter: var(--glass-backdrop);
+        }
+
+        .hidden { 
+            display: none; 
+        }
+
+        .processing {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-processing {
+            background-color: #3182ce;
+            color: white;
+        }
+
+        .status-complete {
+            background-color: #38a169;
+            color: white;
+        }
+
+        .status-error {
+            background-color: #e53e3e;
+            color: white;
+        }
+
+        .icon-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .placeholder-content {
+            text-align: center;
+            color: var(--theme-neutral-600);
+            padding: 40px 20px;
+        }
+
+        .placeholder-content p {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 {
+            color: var(--theme-primary-900);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-icon {
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container glass-panel">
+        <div class="header-content">
+            <span class="header-icon">📝</span>
+            <div>
+                <h1>RdLn™ OCR Extractor v8</h1>
+                <p>Drag & drop PNG for automatic paragraph-level text extraction</p>
+            </div>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <span class="icon-emoji">📷</span>
+            <p><strong>Click here or drag & drop a PNG image</strong></p>
+            <p style="font-size: 14px; color: var(--theme-neutral-600);">Auto-detects language and extracts text at paragraph level</p>
+            <input type="file" id="fileInput" accept="image/png" style="display: none;">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>📷 Original Image</h3>
+            <img id="previewImage" class="image-preview">
+        </div>
+        
+        <div id="progressSection" class="progress-container hidden">
+            <div class="status-indicator status-processing">
+                <span>Processing image...</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultsContainer" class="results-container glass-panel hidden">
+        <div class="glass-panel-header-footer">
+            <h2>📋 Extracted Text</h2>
+        </div>
+        <div class="text-output">
+            <textarea 
+                id="textOutput" 
+                class="glass-input-field" 
+                placeholder="Extracted text will appear here..." 
+                rows="15"
+                readonly
+            ></textarea>
+        </div>
+    </div>
+
+    <script>
+        let currentImage = null;
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const progressSection = document.getElementById('progressSection');
+        const progressFill = document.getElementById('progressFill');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const textOutput = document.getElementById('textOutput');
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                if (file.type === 'image/png') {
+                    loadImage(file);
+                } else {
+                    alert('Please drop a PNG image file.');
+                }
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                if (file.type === 'image/png') {
+                    loadImage(file);
+                } else {
+                    alert('Please select a PNG image file.');
+                }
+            }
+        }
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImage = new Image();
+                currentImage.onload = function() {
+                    previewImage.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    processImageWithOCR(file);
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function processImageWithOCR(imageFile) {
+            // Show progress UI
+            progressSection.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            progressFill.style.width = '0%';
+            
+            try {
+                // Create worker with multi-language support
+                const languages = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+                const worker = await Tesseract.createWorker(languages, 1, {
+                    logger: (m) => {
+                        if (m.status === 'recognizing text') {
+                            const progress = Math.round(m.progress * 100);
+                            progressFill.style.width = `${progress}%`;
+                        }
+                    }
+                });
+                
+                // Set parameters for paragraph-level extraction
+                await worker.setParameters({ 
+                    tessedit_pageseg_mode: 4, // PSM 4 - Assume a single column of text of variable sizes
+                    classify_enable_learning: '0' // Disable learning for consistent results
+                });
+                
+                // Process image
+                const result = await worker.recognize(currentImage, {}, { 
+                    blocks: true, 
+                    paragraphs: true 
+                });
+                
+                // Extract text from paragraphs
+                let extractedText = '';
+                if (result.data.paragraphs) {
+                    extractedText = result.data.paragraphs
+                        .map(paragraph => paragraph.text ? paragraph.text.trim() : '')
+                        .filter(text => text.length > 0)
+                        .join('\n\n');
+                }
+                
+                // Display results
+                textOutput.value = extractedText;
+                resultsContainer.classList.remove('hidden');
+                
+                // Clean up
+                await worker.terminate();
+                
+                // Update UI
+                progressFill.style.width = '100%';
+                setTimeout(() => {
+                    progressSection.classList.add('hidden');
+                }, 500);
+                
+            } catch (error) {
+                console.error('OCR failed:', error);
+                progressSection.classList.add('hidden');
+                alert('Failed to extract text from image: ' + error.message);
+            }
+        }
+
+        console.log('RdLn™ OCR Extractor v8 initialized');
+    </script>
+</body>
+</html>

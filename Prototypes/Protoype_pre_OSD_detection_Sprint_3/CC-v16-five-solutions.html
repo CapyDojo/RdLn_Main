@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract Structure Explorer v16 - Five CJK Solutions</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .progress-bar {
+            height: 24px;
+            background-color: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .results-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .method-result {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .method-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            color: white;
+        }
+        .method-stats {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .text-output {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .text-item {
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-left: 3px solid #007bff;
+            border-radius: 0 4px 4px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .text-item.empty {
+            color: #999;
+            font-style: italic;
+            border-left-color: #ccc;
+        }
+        
+        /* FIVE CJK SOLUTION APPROACHES */
+        .five-solutions-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .solution-panel {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 400px;
+        }
+        
+        /* Solution 1: Pre-emptive Line Break Removal */
+        .solution1 .solution-header {
+            background-color: #ff6b6b;
+            color: white;
+        }
+        .solution1 .solution-text-content {
+            /* Standard rendering */
+        }
+        
+        /* Solution 2: CSS White-space Control */
+        .solution2 .solution-header {
+            background-color: #4ecdc4;
+            color: white;
+        }
+        .solution2 .solution-text-content {
+            white-space: nowrap;
+        }
+        
+        /* Solution 3: Post-Render DOM Surgery */
+        .solution3 .solution-header {
+            background-color: #45b7d1;
+            color: white;
+        }
+        .solution3 .solution-text-content {
+            /* Will be processed post-render */
+        }
+        
+        /* Solution 4: Aggressive Whitespace Removal */
+        .solution4 .solution-header {
+            background-color: #f39c12;
+            color: white;
+        }
+        .solution4 .solution-text-content {
+            /* Text will be aggressively processed */
+        }
+        
+        /* Solution 5: innerHTML Replacement */
+        .solution5 .solution-header {
+            background-color: #9b59b6;
+            color: white;
+        }
+        .solution5 .solution-text-content {
+            /* innerHTML will be replaced post-render */
+        }
+        
+        .solution-header {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .solution-text-content {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 200px;
+        }
+        
+        .solution-paragraph {
+            margin-bottom: 1em;
+        }
+        .solution-paragraph:last-child {
+            margin-bottom: 0;
+        }
+        
+        .solution-stats {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .summary-section {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .copy-area {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            user-select: text;
+            margin-top: 10px;
+        }
+        .hidden { display: none; }
+        .processing {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 1200px) {
+            .five-solutions-showcase {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Tesseract Text Analyzer v16 - Five CJK Solutions</h1>
+        <p>Testing five different approaches to fix CJK character space issues caused by \\n → whitespace conversion.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>📁 Click here or drag & drop a PNG image for automatic OCR processing</p>
+            <p style="font-size: 14px; color: #666;">Test all 5 solutions for CJK space correction</p>
+            <input type="file" id="fileInput" accept=".png,image/png" style="display: none;">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>📷 Processing Image</h3>
+            <img id="previewImage" class="image-preview">
+        </div>
+        
+        <div id="progressSection" class="hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultsContainer" class="results-container hidden">
+        <h2>📋 Text Recognition Results</h2>
+        <div id="methodResults"></div>
+        
+        <!-- FIVE CJK SOLUTION APPROACHES SHOWCASE -->
+        <div class="five-solutions-showcase">
+            <!-- Solution 1: Pre-emptive Line Break Removal -->
+            <div class="solution-panel solution1">
+                <div class="solution-header">
+                    🔄 Solution 1: Pre-emptive Line Break Removal
+                </div>
+                <div class="solution-stats" id="solution1Stats">
+                    Removes \\n between CJK characters before HTML rendering
+                </div>
+                <div class="solution-text-content" id="solution1TextContent">
+                    <div class="solution-paragraph">No text processed yet</div>
+                </div>
+            </div>
+            
+            <!-- Solution 2: CSS White-space Control -->
+            <div class="solution-panel solution2">
+                <div class="solution-header">
+                    🎨 Solution 2: CSS White-space Control
+                </div>
+                <div class="solution-stats" id="solution2Stats">
+                    Uses white-space: nowrap + manual &lt;br&gt; insertion
+                </div>
+                <div class="solution-text-content" id="solution2TextContent">
+                    <div class="solution-paragraph">No text processed yet</div>
+                </div>
+            </div>
+            
+            <!-- Solution 3: Post-Render DOM Surgery -->
+            <div class="solution-panel solution3">
+                <div class="solution-header">
+                    ⚡ Solution 3: Post-Render DOM Surgery
+                </div>
+                <div class="solution-stats" id="solution3Stats">
+                    DOM text node correction after complete rendering
+                </div>
+                <div class="solution-text-content" id="solution3TextContent">
+                    <div class="solution-paragraph">No text processed yet</div>
+                </div>
+            </div>
+            
+            <!-- Solution 4: Aggressive Whitespace Removal -->
+            <div class="solution-panel solution4">
+                <div class="solution-header">
+                    💪 Solution 4: Aggressive Whitespace Removal
+                </div>
+                <div class="solution-stats" id="solution4Stats">
+                    Removes ALL whitespace between CJK characters
+                </div>
+                <div class="solution-text-content" id="solution4TextContent">
+                    <div class="solution-paragraph">No text processed yet</div>
+                </div>
+            </div>
+            
+            <!-- Solution 5: innerHTML Replacement -->
+            <div class="solution-panel solution5">
+                <div class="solution-header">
+                    🔁 Solution 5: innerHTML Replacement
+                </div>
+                <div class="solution-stats" id="solution5Stats">
+                    Replaces innerHTML content after HTML rendering
+                </div>
+                <div class="solution-text-content" id="solution5TextContent">
+                    <div class="solution-paragraph">No text processed yet</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="summary-section">
+            <h3 style="margin-top: 0;">📊 Five Solutions Comparison Summary</h3>
+            <button class="btn" onclick="copyToClipboard()" style="float: right;">📋 Copy</button>
+            <p>Detailed analysis of all five approaches to fix CJK character space issues:</p>
+            <div class="copy-area" id="summaryText"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentImage = null;
+        let analysisResults = {};
+
+        // Simplified method - only 10-Languages strategy with paragraph detection
+        const methods = [
+            { id: 'multiLang', name: '🌍 10-Languages Strategy', color: '#673ab7' }
+        ];
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const progressSection = document.getElementById('progressSection');
+        const progressFill = document.getElementById('progressFill');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const methodResults = document.getElementById('methodResults');
+        
+        // Five Solutions Elements
+        const solution1Stats = document.getElementById('solution1Stats');
+        const solution2Stats = document.getElementById('solution2Stats');
+        const solution3Stats = document.getElementById('solution3Stats');
+        const solution4Stats = document.getElementById('solution4Stats');
+        const solution5Stats = document.getElementById('solution5Stats');
+        const solution1TextContent = document.getElementById('solution1TextContent');
+        const solution2TextContent = document.getElementById('solution2TextContent');
+        const solution3TextContent = document.getElementById('solution3TextContent');
+        const solution4TextContent = document.getElementById('solution4TextContent');
+        const solution5TextContent = document.getElementById('solution5TextContent');
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
+                    loadImage(file);
+                } else {
+                    alert('Please drop a PNG image file.');
+                }
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
+                    loadImage(file);
+                } else {
+                    alert('Please select a PNG image file.');
+                }
+            }
+        }
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImage = new Image();
+                currentImage.onload = function() {
+                    previewImage.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    // Automatically start analysis after image loads
+                    setTimeout(startAnalysis, 500);
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function getDetectionOptions() {
+            // Fixed to paragraph level processing
+            return { blocks: true, paragraphs: true };
+        }
+
+        function getDetectionItems(result) {
+            // Fixed to paragraph level
+            return result.data.paragraphs || [];
+        }
+
+        // SOLUTION 1: Pre-emptive Line Break Removal
+        function preProcessCJKLineBreaks(text) {
+            console.log('🔄 Solution 1: Pre-emptive line break removal...');
+            
+            const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
+            // Match CJK character + newline(s) + CJK character
+            const cjkLineBreakRegex = new RegExp(`(${cjk})\\n+(${cjk})`, 'g');
+            
+            let processed = text;
+            let previousText;
+            let iterations = 0;
+            
+            do {
+                previousText = processed;
+                processed = processed.replace(cjkLineBreakRegex, '$1$2');
+                iterations++;
+            } while (processed !== previousText && iterations <= 100);
+            
+            const lineBreaksRemoved = text.length - processed.length;
+            console.log(`🔄 Pre-emptive line break removal: ${lineBreaksRemoved} characters removed, ${iterations} iterations`);
+            
+            return {
+                text: processed,
+                lineBreaksRemoved: lineBreaksRemoved,
+                iterations: iterations
+            };
+        }
+
+        // SOLUTION 2: CSS White-space Control with Manual Breaks
+        function createCSSControlledContent(textItems) {
+            console.log('🎨 Solution 2: CSS white-space control...');
+            
+            // Join text and manually insert <br> tags where needed
+            return textItems.map(text => {
+                // Convert line breaks to <br> tags
+                return text.replace(/\n/g, '<br>');
+            }).join('<br><br>'); // Double break between paragraphs
+        }
+
+        // SOLUTION 3: Post-Render DOM Surgery
+        function applyPostRenderDOMSurgery(element) {
+            console.log('⚡ Solution 3: Post-render DOM surgery...');
+            
+            return new Promise((resolve) => {
+                // Wait for complete rendering
+                setTimeout(() => {
+                    const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
+                    const cjkSpaceRegex = new RegExp(`(${cjk}) (${cjk})`, 'g');
+                    
+                    let totalSpacesRemoved = 0;
+                    
+                    function processTextNode(node) {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            const originalText = node.textContent;
+                            const correctedText = originalText.replace(cjkSpaceRegex, '$1$2');
+                            if (correctedText !== originalText) {
+                                node.textContent = correctedText;
+                                totalSpacesRemoved += originalText.length - correctedText.length;
+                            }
+                        } else {
+                            for (let child of node.childNodes) {
+                                processTextNode(child);
+                            }
+                        }
+                    }
+                    
+                    processTextNode(element);
+                    console.log(`⚡ Post-render surgery completed: ${totalSpacesRemoved} spaces removed`);
+                    resolve(totalSpacesRemoved);
+                }, 50); // Small delay after rendering
+            });
+        }
+
+        // SOLUTION 4: Aggressive Whitespace Removal
+        function aggressiveCJKWhitespaceRemoval(text) {
+            console.log('💪 Solution 4: Aggressive whitespace removal...');
+            
+            const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
+            // Remove ALL whitespace (spaces, tabs, newlines) between CJK characters
+            const aggressiveRegex = new RegExp(`(${cjk})\\s+(${cjk})`, 'g');
+            
+            let processed = text;
+            let previousText;
+            let iterations = 0;
+            
+            do {
+                previousText = processed;
+                processed = processed.replace(aggressiveRegex, '$1$2');
+                iterations++;
+            } while (processed !== previousText && iterations <= 100);
+            
+            const whitespaceRemoved = text.length - processed.length;
+            console.log(`💪 Aggressive removal: ${whitespaceRemoved} whitespace characters removed, ${iterations} iterations`);
+            
+            return {
+                text: processed,
+                whitespaceRemoved: whitespaceRemoved,
+                iterations: iterations
+            };
+        }
+
+        // SOLUTION 5: innerHTML Replacement Strategy
+        function applyInnerHTMLReplacement(element) {
+            console.log('🔁 Solution 5: innerHTML replacement...');
+            
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
+                    const cjkSpaceRegex = new RegExp(`(${cjk}) (${cjk})`, 'g');
+                    
+                    const originalHTML = element.innerHTML;
+                    const correctedHTML = originalHTML.replace(cjkSpaceRegex, '$1$2');
+                    
+                    if (correctedHTML !== originalHTML) {
+                        element.innerHTML = correctedHTML;
+                    }
+                    
+                    const spacesRemoved = originalHTML.length - correctedHTML.length;
+                    console.log(`🔁 innerHTML replacement: ${spacesRemoved} characters corrected`);
+                    resolve(spacesRemoved);
+                }, 50);
+            });
+        }
+
+        async function startAnalysis() {
+            if (!currentImage) return;
+            
+            progressSection.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            methodResults.innerHTML = '';
+            analysisResults = {};
+
+            for (let i = 0; i < methods.length; i++) {
+                const method = methods[i];
+                const progress = Math.round((i / methods.length) * 100);
+                progressFill.style.width = `${progress}%`;
+                progressFill.textContent = `Processing ${method.name}...`;
+                
+                try {
+                    await runMethod(method);
+                } catch (error) {
+                    console.error(`${method.id} failed:`, error);
+                    analysisResults[method.id] = { error: error.message };
+                }
+            }
+
+            progressFill.style.width = '100%';
+            progressFill.textContent = 'Complete!';
+            
+            setTimeout(() => {
+                progressSection.classList.add('hidden');
+                displayResults();
+            }, 500);
+        }
+
+        async function runMethod(method) {
+            const startTime = performance.now();
+            
+            switch(method.id) {
+                case 'multiLang': return await runMultiLang(method, startTime);
+            }
+        }
+
+        async function runMultiLang(method, startTime) {
+            const languages = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+            
+            // Use correct v5 API - pass languages during worker creation
+            const worker = await Tesseract.createWorker(languages, 1, {
+                logger: m => console.log(`MultiLang: ${m.status} - ${m.progress}`)
+            });
+            await worker.setParameters({ classify_enable_learning: '0' });
+            
+            const result = await worker.recognize(currentImage, {}, getDetectionOptions());
+            const totalTime = performance.now() - startTime;
+            
+            // Extract raw text items (preserve original structure for display)
+            const rawItems = getDetectionItems(result);
+            const rawTextItems = rawItems
+                .map(item => item.text ? item.text.trim() : '')
+                .filter(text => text.length > 0);
+            
+            // Store original joined text for all approaches
+            const joinedRawText = rawTextItems.join('\n\n');
+            
+            analysisResults[method.id] = {
+                method: method,
+                totalTime: totalTime,
+                items: rawItems,
+                rawTextItems: rawTextItems,
+                joinedRawText: joinedRawText,
+                confidence: result.data.confidence || 0,
+                languages: languages
+            };
+            
+            await worker.terminate();
+        }
+
+        function displayResults() {
+            resultsContainer.classList.remove('hidden');
+            methodResults.innerHTML = '';
+            
+            // Sort by processing time (fastest first)
+            const sortedResults = Object.values(analysisResults)
+                .filter(result => !result.error)
+                .sort((a, b) => a.totalTime - b.totalTime);
+            
+            sortedResults.forEach((result, index) => {
+                const rank = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                const methodDiv = document.createElement('div');
+                methodDiv.className = 'method-result';
+                
+                const textItems = result.rawTextItems || [];
+                
+                methodDiv.innerHTML = `
+                    <div class="method-header" style="background-color: ${result.method.color};">
+                        ${rank} ${result.method.name}
+                    </div>
+                    <div class="method-stats">
+                        Processing Time: ${Math.round(result.totalTime)}ms | 
+                        Paragraphs Found: ${result.items.length} | 
+                        Text Items: ${textItems.length} | 
+                        Confidence: ${Math.round(result.confidence)}%
+                        ${result.languages ? ` | Languages: ${result.languages.length}` : ''}
+                    </div>
+                    <div class="text-output">
+                        <strong>Recognized Text (Raw):</strong>
+                        ${textItems.length > 0 ? 
+                            textItems.map((text, i) => `
+                                <div class="text-item">
+                                    Paragraph ${i + 1}: "${text}"
+                                </div>
+                            `).join('') :
+                            '<div class="text-item empty">No text recognized</div>'
+                        }
+                    </div>
+                `;
+                
+                methodResults.appendChild(methodDiv);
+            });
+
+            // Add error results
+            Object.entries(analysisResults).forEach(([methodId, result]) => {
+                if (result.error) {
+                    const method = methods.find(m => m.id === methodId);
+                    const methodDiv = document.createElement('div');
+                    methodDiv.className = 'method-result';
+                    methodDiv.innerHTML = `
+                        <div class="method-header" style="background-color: #dc3545;">
+                            ❌ ${method.name}
+                        </div>
+                        <div class="text-output">
+                            <div class="text-item empty">Error: ${result.error}</div>
+                        </div>
+                    `;
+                    methodResults.appendChild(methodDiv);
+                }
+            });
+            
+            // Display all five solution approaches
+            displayFiveSolutionsShowcase();
+            
+            generateSummary();
+        }
+
+        async function displayFiveSolutionsShowcase() {
+            const validResults = Object.values(analysisResults).filter(r => !r.error);
+            
+            if (validResults.length === 0) {
+                // Set all stats to no results
+                [solution1Stats, solution2Stats, solution3Stats, solution4Stats, solution5Stats].forEach(stats => {
+                    stats.textContent = 'No OCR results available';
+                });
+                // Set all content to no text
+                [solution1TextContent, solution2TextContent, solution3TextContent, solution4TextContent, solution5TextContent].forEach(content => {
+                    content.innerHTML = '<div class="solution-paragraph">No text recognized</div>';
+                });
+                return;
+            }
+
+            const result = validResults.sort((a, b) => a.totalTime - b.totalTime)[0];
+            const rawTextItems = result.rawTextItems || [];
+            const joinedText = result.joinedRawText || '';
+
+            // SOLUTION 1: Pre-emptive Line Break Removal
+            console.log('🔄 Testing Solution 1: Pre-emptive line break removal...');
+            if (rawTextItems.length > 0) {
+                const solution1Result = preProcessCJKLineBreaks(joinedText);
+                solution1Stats.textContent = `Pre-processed: ${solution1Result.lineBreaksRemoved} line breaks removed in ${solution1Result.iterations} iterations`;
+                
+                // Split back into paragraphs for display
+                const processedItems = solution1Result.text.split('\n\n');
+                solution1TextContent.innerHTML = processedItems.map(text => `
+                    <div class="solution-paragraph">${text}</div>
+                `).join('');
+            } else {
+                solution1Stats.textContent = 'No text to process';
+                solution1TextContent.innerHTML = '<div class="solution-paragraph">No text recognized</div>';
+            }
+
+            // SOLUTION 2: CSS White-space Control
+            console.log('🎨 Testing Solution 2: CSS white-space control...');
+            if (rawTextItems.length > 0) {
+                const controlledContent = createCSSControlledContent(rawTextItems);
+                solution2Stats.textContent = 'CSS nowrap + manual <br> insertion';
+                solution2TextContent.innerHTML = controlledContent;
+            } else {
+                solution2Stats.textContent = 'No text to control';
+                solution2TextContent.innerHTML = '<div class="solution-paragraph">No text recognized</div>';
+            }
+
+            // SOLUTION 3: Post-Render DOM Surgery
+            console.log('⚡ Testing Solution 3: Post-render DOM surgery...');
+            if (rawTextItems.length > 0) {
+                // First render the raw content
+                solution3TextContent.innerHTML = rawTextItems.map(text => `
+                    <div class="solution-paragraph">${text}</div>
+                `).join('');
+                
+                // Then apply post-render surgery
+                const spacesRemoved = await applyPostRenderDOMSurgery(solution3TextContent);
+                solution3Stats.textContent = `Post-render surgery: ${spacesRemoved} spaces removed from DOM`;
+            } else {
+                solution3Stats.textContent = 'No text to process';
+                solution3TextContent.innerHTML = '<div class="solution-paragraph">No text recognized</div>';
+            }
+
+            // SOLUTION 4: Aggressive Whitespace Removal
+            console.log('💪 Testing Solution 4: Aggressive whitespace removal...');
+            if (rawTextItems.length > 0) {
+                const solution4Result = aggressiveCJKWhitespaceRemoval(joinedText);
+                solution4Stats.textContent = `Aggressive processing: ${solution4Result.whitespaceRemoved} whitespace chars removed in ${solution4Result.iterations} iterations`;
+                
+                // Split back into paragraphs for display
+                const processedItems = solution4Result.text.split('\n\n').filter(text => text.trim());
+                solution4TextContent.innerHTML = processedItems.map(text => `
+                    <div class="solution-paragraph">${text}</div>
+                `).join('');
+            } else {
+                solution4Stats.textContent = 'No text to process';
+                solution4TextContent.innerHTML = '<div class="solution-paragraph">No text recognized</div>';
+            }
+
+            // SOLUTION 5: innerHTML Replacement
+            console.log('🔁 Testing Solution 5: innerHTML replacement...');
+            if (rawTextItems.length > 0) {
+                // First render the raw content
+                solution5TextContent.innerHTML = rawTextItems.map(text => `
+                    <div class="solution-paragraph">${text}</div>
+                `).join('');
+                
+                // Then apply innerHTML replacement
+                const replacementResult = await applyInnerHTMLReplacement(solution5TextContent);
+                solution5Stats.textContent = `innerHTML replacement: ${replacementResult} characters corrected`;
+            } else {
+                solution5Stats.textContent = 'No text to process';
+                solution5TextContent.innerHTML = '<div class="solution-paragraph">No text recognized</div>';
+            }
+        }
+
+        function generateSummary() {
+            const validResults = Object.values(analysisResults).filter(r => !r.error);
+            
+            let summary = `TESSERACT CJK SPACE CORRECTION - FIVE SOLUTIONS TEST\n`;
+            summary += `=${'='.repeat(80)}\n\n`;
+            summary += `Image: ${currentImage ? `${currentImage.width}x${currentImage.height}px` : 'Unknown'}\n`;
+            summary += `Detection Level: paragraphs\n`;
+            summary += `Test Date: ${new Date().toLocaleDateString()}\n`;
+            summary += `Methods Tested: ${validResults.length}\n\n`;
+            
+            summary += `FIVE SOLUTION APPROACHES:\n`;
+            summary += `${'-'.repeat(30)}\n\n`;
+            
+            summary += `🔄 SOLUTION 1: PRE-EMPTIVE LINE BREAK REMOVAL\n`;
+            summary += `- Method: Remove \\n between CJK chars before HTML rendering\n`;
+            summary += `- Targets: Line break → space conversion at source\n`;
+            summary += `- Pros: Prevents problem before HTML processing\n`;
+            summary += `- Cons: May remove legitimate line breaks\n`;
+            summary += `- Best for: Documents with clear paragraph structure\n\n`;
+            
+            summary += `🎨 SOLUTION 2: CSS WHITE-SPACE CONTROL\n`;
+            summary += `- Method: white-space: nowrap + manual <br> insertion\n`;
+            summary += `- Targets: HTML white-space normalization behavior\n`;
+            summary += `- Pros: Full control over line breaking\n`;
+            summary += `- Cons: Requires manual break management\n`;
+            summary += `- Best for: Simple layouts with known break points\n\n`;
+            
+            summary += `⚡ SOLUTION 3: POST-RENDER DOM SURGERY\n`;
+            summary += `- Method: Text node correction after complete rendering\n`;
+            summary += `- Targets: Post-rendering artifacts in live DOM\n`;
+            summary += `- Pros: Catches all rendering-induced spaces\n`;
+            summary += `- Cons: Requires DOM traversal, potential flicker\n`;
+            summary += `- Best for: Complex documents with nested structures\n\n`;
+            
+            summary += `💪 SOLUTION 4: AGGRESSIVE WHITESPACE REMOVAL\n`;
+            summary += `- Method: Remove ALL whitespace between CJK characters\n`;
+            summary += `- Targets: All forms of whitespace (spaces, tabs, newlines)\n`;
+            summary += `- Pros: Comprehensive whitespace elimination\n`;
+            summary += `- Cons: May remove intentional spacing\n`;
+            summary += `- Best for: Dense CJK text without intentional spacing\n\n`;
+            
+            summary += `🔁 SOLUTION 5: INNERHTML REPLACEMENT\n`;
+            summary += `- Method: Replace entire innerHTML after rendering\n`;
+            summary += `- Targets: HTML content post-browser-processing\n`;
+            summary += `- Pros: Works on complete rendered HTML\n`;
+            summary += `- Cons: May lose event handlers, expensive operation\n`;
+            summary += `- Best for: Static content with complex HTML structure\n\n`;
+            
+            if (validResults.length > 0) {
+                const result = validResults[0];
+                summary += `SAMPLE TEXT ANALYSIS:\n`;
+                summary += `Original paragraphs: ${result.rawTextItems ? result.rawTextItems.length : 0}\n`;
+                summary += `Processing time: ${Math.round(result.totalTime)}ms\n`;
+                summary += `Confidence: ${Math.round(result.confidence)}%\n`;
+                summary += `Languages: ${result.languages ? result.languages.join(', ') : 'Unknown'}\n`;
+            }
+            
+            summary += `\nTesting Focus: \\n → whitespace conversion issues in CJK text\n`;
+            summary += `Problem: HTML rendering converts line breaks to spaces between CJK characters\n`;
+            summary += `Goal: Eliminate unwanted spaces while preserving document structure\n\n`;
+            
+            summary += `Generated: ${new Date().toISOString()}\n`;
+            
+            document.getElementById('summaryText').textContent = summary;
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('summaryText').textContent;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopyFeedback();
+                });
+            } else {
+                // Fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showCopyFeedback();
+            }
+        }
+
+        function showCopyFeedback() {
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✅ Copied!';
+            button.style.backgroundColor = '#28a745';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.backgroundColor = '#007bff';
+            }, 2000);
+        }
+
+        console.log('Tesseract Text Analyzer v16 - Five CJK Solutions initialized');
+    </script>
+</body>
+</html>
