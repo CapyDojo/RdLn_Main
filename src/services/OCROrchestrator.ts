@@ -23,8 +23,6 @@ import { OCRTextCleanupService, TextProcessingOptions } from './OCRTextCleanupSe
 import { LanguageDetectionService } from './LanguageDetectionService';
 import { OCRCacheManager } from './OCRCacheManager';
 import { BackgroundLanguageLoader } from './BackgroundLanguageLoader';
-import { ImagePreprocessingService, PreprocessingOptions } from './ocr/utils/ImagePreprocessingService';
-import { DEV_CONFIG } from '../config/appConfig';
 
 // Import error handling
 import { 
@@ -36,7 +34,6 @@ import {
 
 // Import centralized performance monitoring
 import { PerformanceMonitor } from './PerformanceMonitor';
-import { formatPastedText } from '../utils/paragraphFormatting';
 import type { MetricCategory } from '../types/performance-types';
 
 export interface OrchestrationResult {
@@ -47,16 +44,12 @@ export interface OrchestrationResult {
   totalTime: number;
   cacheHit: boolean;
   backgroundLoaderUsed: boolean;
-  preprocessingUsed: boolean;
   appliedProcessors: string[];
-  preprocessingFilters: string[];
   performanceMetrics: {
     languageDetectionMs: number;
     workerInitializationMs: number;
     ocrExtractionMs: number;
     textProcessingMs: number;
-    paragraphFormattingMs: number;
-    preprocessingMs: number;
   };
 }
 
@@ -64,9 +57,6 @@ export interface OrchestrationOptions extends OCROptions {
   textProcessing?: TextProcessingOptions;
   useBackgroundLoader?: boolean;
   performanceTracking?: boolean;
-  preprocessing?: PreprocessingOptions & {
-    enabled?: boolean;
-  };
 }
 
 export class OCROrchestrator {
@@ -113,131 +103,15 @@ export class OCROrchestrator {
       languageDetectionMs: 0,
       workerInitializationMs: 0,
       ocrExtractionMs: 0,
-      textProcessingMs: 0,
-      paragraphFormattingMs: 0
+      textProcessingMs: 0
     };
 
     try {
-      // OPTIMIZATION: Try single-phase OCR first if auto-detection is enabled
-      if (options.autoDetect !== false) {
-        try {
-          console.log('🔍 Attempting single-phase OCR (detection + extraction)...');
-          const singlePhaseStart = performance.now();
-          
-          const singlePhaseResult = await LanguageDetectionService.extractTextWithLanguageDetection(imageFile, {
-            autoDetect: options.autoDetect,
-            languages: options.languages,
-            primaryLanguage: options.primaryLanguage
-          });
-          
-          const singlePhaseTime = performance.now() - singlePhaseStart;
-          
-          // Single-phase succeeded - use its results
-          detectedLanguages = singlePhaseResult.detectedLanguages;
-          extractionTime = singlePhaseResult.extractionTime;
-          
-          // Skip traditional phases since we have both detection and extraction
-          performanceMetrics.languageDetectionMs = singlePhaseTime * 0.3; // Estimate detection portion
-          performanceMetrics.ocrExtractionMs = singlePhaseResult.extractionTime;
-          
-          console.log('✅ Single-phase OCR successful, skipping traditional phases');
-          console.log('📝 Single-phase detected languages:', detectedLanguages.map(lang => 
-            SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
-          ).join(', '));
-          
-          // Apply primary language priority if specified
-          if (options.primaryLanguage && detectedLanguages.includes(options.primaryLanguage)) {
-            detectedLanguages = [
-              options.primaryLanguage,
-              ...detectedLanguages.filter(lang => lang !== options.primaryLanguage)
-            ];
-            console.log('🎯 Primary language prioritized:', detectedLanguages.join(', '));
-          }
-
-          // Jump to Phase 4: Text Processing (skip phases 2-3)
-          const textProcessingStart = performance.now();
-          console.log('🧘 Processing extracted text...');
-
-          const textProcessingOptions = options.textProcessing || {};
-          const textResult = await safeAsync(
-            () => {
-              return OCRTextCleanupService.processText(
-                singlePhaseResult.text,
-                detectedLanguages,
-                textProcessingOptions
-              );
-            },
-            ErrorCategory.OCR,
-            'Text processing failed'
-          );
-          
-          let processingResult;
-          if (textResult.success) {
-            processingResult = textResult.data;
-          } else {
-            // Text processing failed, throw error to trigger fallback
-            throw new Error('Text processing failed: ' + textResult.error.message);
-          }
-
-          // Phase 5: Final Paragraph Formatting
-          const paragraphFormattingStart = performance.now();
-          const finalText = formatPastedText(processingResult.processedText);
-          performanceMetrics.paragraphFormattingMs = performance.now() - paragraphFormattingStart;
-
-          processingTime = processingResult.processingTime;
-          appliedProcessors = processingResult.appliedProcessors;
-          performanceMetrics.textProcessingMs = processingTime;
-
-          const totalTime = performance.now() - startTime;
-
-          console.log(`✅ Single-phase OCR orchestration completed in ${totalTime}ms (single-phase: ${singlePhaseTime}ms, processing: ${processingTime}ms)`);
-          
-          // Track completion metrics
-          this.performanceMonitor.recordMetric(
-            'ocr_operation_completed',
-            totalTime,
-            'ocr' as MetricCategory,
-            {
-              operationId,
-              totalTime,
-              extractionTime,
-              processingTime,
-              textLength: processingResult.processedText.length,
-              detectedLanguages,
-              cacheHit: false, // Single-phase manages its own caching
-              backgroundLoaderUsed: false, // Single-phase uses comprehensive worker
-              appliedProcessors,
-              imageSize: imageFile.size,
-              performanceMetrics,
-              singlePhase: true,
-              timestamp: Date.now()
-            }
-          );
-
-          return {
-            text: finalText,
-            detectedLanguages,
-            extractionTime,
-            processingTime,
-            totalTime,
-            cacheHit: false,
-            backgroundLoaderUsed: false,
-            appliedProcessors,
-            performanceMetrics
-          };
-
-        } catch (singlePhaseError) {
-          console.warn('⚠️ Single-phase OCR failed, falling back to traditional dual-phase approach:', singlePhaseError);
-          // Fall through to traditional approach
-        }
-      }
-
-      // FALLBACK: Traditional dual-phase approach
       // Phase 1: Language Detection
       const languageDetectionStart = performance.now();
       
       if (options.autoDetect !== false) {
-        console.log('🔍 Starting traditional language detection workflow...');
+        console.log('🔍 Starting language detection workflow...');
         const languageResult = await safeAsync(
           () => LanguageDetectionService.detectLanguage(imageFile),
           ErrorCategory.OCR,
@@ -286,68 +160,6 @@ export class OCROrchestrator {
         console.log('🎯 Primary language prioritized:', detectedLanguages.join(', '));
       }
 
-      // Phase 1.5: Image Preprocessing
-      let preprocessedImage = imageFile;
-      let preprocessingFilters: string[] = [];
-      
-      // Check if preprocessing should be applied
-      const shouldPreprocess = options.preprocessing === true || 
-                           (typeof options.preprocessing === 'object' && options.preprocessing?.enabled !== false);
-      
-      if (shouldPreprocess) {
-        const preprocessingStart = performance.now();
-        console.log('🖼️ Starting image preprocessing...');
-        
-        try {
-          // Import the preprocessing config
-          const { DEFAULT_PREPROCESSING_CONFIG } = await import('../config/ocrConfig');
-          
-          // Determine preprocessing options
-          let preprocessingOptions;
-          if (typeof options.preprocessing === 'object') {
-            // Merge with default config
-            preprocessingOptions = { ...DEFAULT_PREPROCESSING_CONFIG, ...options.preprocessing };
-          } else {
-            // Use default preprocessing config
-            preprocessingOptions = DEFAULT_PREPROCESSING_CONFIG;
-          }
-          
-          const preprocessingResult = await ImagePreprocessingService.preprocessImage(
-            imageFile,
-            preprocessingOptions
-          );
-          
-          preprocessedImage = preprocessingResult.processedImage;
-          preprocessingFilters = preprocessingResult.appliedFilters;
-          
-          performanceMetrics.preprocessingMs = performance.now() - preprocessingStart;
-          
-          this.performanceMonitor.recordMetric(
-            'ocr_preprocessing',
-            performanceMetrics.preprocessingMs,
-            'ocr' as MetricCategory,
-            {
-              operationId,
-              duration: performanceMetrics.preprocessingMs,
-              filters: preprocessingFilters,
-              originalSize: preprocessingResult.originalSize,
-              processedSize: preprocessingResult.processedSize,
-              processingTime: preprocessingResult.processingTime
-            }
-          );
-          
-          console.log(`⏱️ Image preprocessing completed in ${performanceMetrics.preprocessingMs}ms`);
-          console.log('🔧 Applied filters:', preprocessingFilters.join(', '));
-          
-        } catch (error) {
-          console.warn('⚠️ Image preprocessing failed, continuing with original image:', error);
-          performanceMetrics.preprocessingMs = 0;
-        }
-      } else {
-        performanceMetrics.preprocessingMs = 0;
-        console.log('⏭️ Image preprocessing disabled');
-      }
-
       // Phase 2: Worker Initialization with Background Loader Integration
       const workerInitStart = performance.now();
       const worker = await this.initializeOptimalWorker(detectedLanguages, options);
@@ -383,7 +195,7 @@ export class OCROrchestrator {
       console.log('📖 Extracting text from image...');
       
       const extractionResult = await safeAsync(
-        () => worker.tesseractWorker.recognize(preprocessedImage),
+        () => worker.tesseractWorker.recognize(imageFile),
         ErrorCategory.OCR,
         'OCR text extraction failed'
       );
@@ -442,19 +254,14 @@ export class OCROrchestrator {
         throw new Error('Text processing failed: ' + textResult.error.message);
       }
 
-      // Phase 5: Final Paragraph Formatting
-      const paragraphFormattingStart = performance.now();
-      const finalText = formatPastedText(processingResult.processedText);
-      // console.log(`DEBUG: finalText (after paragraph formatting): ${finalText}`);
-      performanceMetrics.paragraphFormattingMs = performance.now() - paragraphFormattingStart;
-
+      // Phase 5: Return processed text directly without additional formatting
       processingTime = processingResult.processingTime;
       appliedProcessors = processingResult.appliedProcessors;
       performanceMetrics.textProcessingMs = processingTime;
 
       const totalTime = performance.now() - startTime;
 
-      // OCR orchestration completed
+      console.log(`✅ OCR orchestration completed in ${totalTime}ms (extraction: ${extractionTime}ms, processing: ${processingTime}ms)`);
       
       // SSMR REVERSIBLE: Track comprehensive completion metrics
       this.performanceMonitor.recordMetric(
@@ -491,16 +298,14 @@ export class OCROrchestrator {
       }
 
       return {
-        text: finalText,
+        text: processingResult.processedText,
         detectedLanguages,
         extractionTime,
         processingTime,
         totalTime,
         cacheHit,
         backgroundLoaderUsed,
-        preprocessingUsed: options.preprocessing?.enabled !== false,
         appliedProcessors,
-        preprocessingFilters,
         performanceMetrics
       };
 
@@ -830,13 +635,13 @@ export class OCROrchestrator {
    * Start background services (if not already started)
    */
   public static async startBackgroundServices(): Promise<void> {
-    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🚀 Starting OCR background services...');
+    console.log('🚀 Starting OCR background services...');
     
     if (BackgroundLanguageLoader.isEnabled()) {
       await BackgroundLanguageLoader.startBackgroundLoading();
-      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('✅ Background language loader started');
+      console.log('✅ Background language loader started');
     } else {
-      if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('⏸️ Background language loader is disabled');
+      console.log('⏸️ Background language loader is disabled');
     }
   }
 
@@ -844,9 +649,9 @@ export class OCROrchestrator {
    * Stop background services safely
    */
   public static stopBackgroundServices(): void {
-    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🛑 Stopping OCR background services...');
+    console.log('🛑 Stopping OCR background services...');
     BackgroundLanguageLoader.stopBackgroundLoading();
-    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('✅ Background services stopped');
+    console.log('✅ Background services stopped');
   }
 
   /**
@@ -855,6 +660,6 @@ export class OCROrchestrator {
   public static cleanup(): void {
     this.stopBackgroundServices();
     this.performanceHistory = [];
-    if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🧹 OCR orchestrator cleaned up');
+    console.log('🧹 OCR orchestrator cleaned up');
   }
 }
