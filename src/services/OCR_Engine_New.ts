@@ -150,14 +150,46 @@ export class OCR_Engine_New {
 
   // Prototype-derived aggressive CJK whitespace removal (iterative until convergence)
   private static aggressiveCJKWhitespaceRemoval(text: string): { text: string; whitespaceRemoved: number; iterations: number } {
+    // Split text into paragraphs (preserve paragraph structure)
+    const paragraphs = text.split('\n\n').filter(p => p.trim());
+    
+    let totalSpacesRemoved = 0;
+    let totalIterations = 0;
+    
+    // Process each paragraph individually using DOM post-processing (v18 approach)
+    const cleanedParagraphs = paragraphs.map(paragraph => {
+      // Create temporary DOM element for text processing
+      const tempDiv = document.createElement('div');
+      tempDiv.textContent = paragraph;
+      const renderedText = tempDiv.textContent || '';
+      
+      // Apply CJK space removal to rendered text
+      const cleaned = this.removeCJKSpacesFromRenderedText(renderedText);
+      totalSpacesRemoved += cleaned.spacesRemoved;
+      totalIterations += cleaned.iterations;
+      
+      return cleaned.text;
+    });
+    
+    // Rejoin paragraphs
+    const finalText = cleanedParagraphs.join('\n\n');
+    
+    return { 
+      text: finalText, 
+      whitespaceRemoved: totalSpacesRemoved, 
+      iterations: totalIterations 
+    };
+  }
+
+  private static removeCJKSpacesFromRenderedText(text: string): { text: string; spacesRemoved: number; iterations: number } {
     const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
     const punct = '[\\u3000-\\u303f\\uff00-\\uffef\\u2000-\\u206f\\u2e00-\\u2e7f\\u00a0-\\u00bf.,;:!?()\\[\\]{}"\'-]';
     const english = '[a-zA-Z0-9]';
-
+    
     let processed = text;
     let previousText: string;
     let iterations = 0;
-
+    
     do {
       previousText = processed;
       
@@ -183,9 +215,9 @@ export class OCR_Engine_New {
       
       iterations++;
     } while (processed !== previousText && iterations <= 100);
-
-    const whitespaceRemoved = text.length - processed.length;
-    return { text: processed, whitespaceRemoved, iterations };
+    
+    const spacesRemoved = text.length - processed.length;
+    return { text: processed, spacesRemoved, iterations };
   }
 
   // Language inference removed per request.
