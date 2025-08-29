@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RdLn™ OCR Text Processor v17 - Final Solution</title>
+    <title>RdLn™ OCR Text Processor v18 - DOM Post-Processing</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body {
@@ -140,12 +140,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>📝 OCR Text Processor v17</h1>
-        <p>Professional OCR with CJK character space correction</p>
+        <h1>📝 OCR Text Processor v18</h1>
+        <p>Professional OCR with DOM post-processing CJK space correction</p>
         
         <div class="upload-area" id="uploadArea">
             <p>📁 Click here or drag & drop a PNG image</p>
-            <p style="font-size: 14px; color: #666;">Automatic OCR processing with CJK space correction</p>
+            <p style="font-size: 14px; color: #666;">Automatic OCR processing with DOM-based CJK space correction</p>
             <input type="file" id="fileInput" accept=".png,image/png" style="display: none;">
         </div>
         
@@ -252,10 +252,10 @@
             reader.readAsDataURL(file);
         }
 
-        // Aggressive CJK Whitespace Removal - Solution 4
-        function aggressiveCJKWhitespaceRemoval(text) {
+        // CJK Whitespace Removal for DOM Post-Processing
+        function removeCJKSpaces(text) {
             const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
-            const aggressiveRegex = new RegExp(`(${cjk}) +(${cjk})`, 'g');
+            const punct = '[\\u3000-\\u303f\\uff00-\\uffef\\u2000-\\u206f\\u2e00-\\u2e7f\\u00a0-\\u00bf.,;:!?()\\[\\]{}"\'-]';
             
             let processed = text;
             let previousText;
@@ -263,15 +263,28 @@
             
             do {
                 previousText = processed;
-                processed = processed.replace(aggressiveRegex, '$1$2');
+                
+                // Remove spaces between CJK characters
+                processed = processed.replace(new RegExp(`(${cjk}) +(${cjk})`, 'g'), '$1$2');
+                
+                // Remove single newlines between CJK characters (but preserve double newlines)
+                processed = processed.replace(new RegExp(`(${cjk})\\n(${cjk})`, 'g'), '$1$2');
+                
+                // Remove single newlines between punctuation and CJK
+                processed = processed.replace(new RegExp(`(${punct})\\n(${cjk})`, 'g'), '$1$2');
+                processed = processed.replace(new RegExp(`(${cjk})\\n(${punct})`, 'g'), '$1$2');
+                
+                // Remove single newlines between punctuation marks
+                processed = processed.replace(new RegExp(`(${punct})\\n(${punct})`, 'g'), '$1$2');
+                
                 iterations++;
             } while (processed !== previousText && iterations <= 100);
             
-            const whitespaceRemoved = text.length - processed.length;
+            console.log('Final result - spaces removed:', text.length - processed.length);
             
             return {
                 text: processed,
-                whitespaceRemoved: whitespaceRemoved,
+                spacesRemoved: text.length - processed.length,
                 iterations: iterations
             };
         }
@@ -305,24 +318,20 @@
                 progressFill.style.width = '80%';
                 progressFill.textContent = 'Processing text...';
                 
-                // Extract text from paragraphs
+                // Extract text from paragraphs - NO pre-processing
                 const paragraphs = result.data.paragraphs || [];
                 const rawTextItems = paragraphs
                     .map(item => item.text ? item.text.trim() : '')
                     .filter(text => text.length > 0);
                 
-                // Join all text
-                const joinedText = rawTextItems.join('\n\n');
-                
-                // Apply aggressive CJK whitespace removal
-                const correctionResult = aggressiveCJKWhitespaceRemoval(joinedText);
-                processedText = correctionResult.text;
+                // Join all text - store as raw processedText for copying
+                processedText = rawTextItems.join('\n\n');
                 
                 progressFill.style.width = '100%';
                 progressFill.textContent = 'Complete!';
                 
                 // Display results
-                displayResults(rawTextItems, correctionResult, result.data.confidence || 0);
+                displayResults(rawTextItems, result.data.confidence || 0);
                 
                 await worker.terminate();
                 
@@ -341,27 +350,50 @@
             }, 1000);
         }
 
-        function displayResults(rawTextItems, correctionResult, confidence) {
+        function displayResults(rawTextItems, confidence) {
             resultsContainer.classList.remove('hidden');
             
-            // Update stats
-            outputStats.innerHTML = `
-                <strong>Processing Summary:</strong><br>
-                Paragraphs found: ${rawTextItems.length} | 
-                Confidence: ${Math.round(confidence)}% | 
-                Whitespace removed: ${correctionResult.whitespaceRemoved} characters | 
-                Processing iterations: ${correctionResult.iterations}
-            `;
+            // Split text into paragraphs for display
+            const paragraphs = processedText.split('\n\n').filter(text => text.trim());
             
-            // Split corrected text back into paragraphs for display
-            const correctedParagraphs = processedText.split('\n\n').filter(text => text.trim());
-            
-            if (correctedParagraphs.length > 0) {
-                textContent.innerHTML = correctedParagraphs.map(text => `
+            if (paragraphs.length > 0) {
+                // First render normally
+                textContent.innerHTML = paragraphs.map(text => `
                     <div class="text-paragraph">${text}</div>
                 `).join('');
+                
+                // Then apply DOM post-processing to remove CJK spaces
+                let totalSpacesRemoved = 0;
+                let totalIterations = 0;
+                
+                document.querySelectorAll('.text-paragraph').forEach(paragraph => {
+                    const originalText = paragraph.textContent;
+                    const cleaned = removeCJKSpaces(originalText);
+                    paragraph.textContent = cleaned.text;
+                    totalSpacesRemoved += cleaned.spacesRemoved;
+                    totalIterations += cleaned.iterations;
+                });
+                
+                // Update processedText with cleaned version for copy/download
+                const cleanedParagraphs = Array.from(document.querySelectorAll('.text-paragraph'))
+                    .map(p => p.textContent);
+                processedText = cleanedParagraphs.join('\n\n');
+                
+                // Update stats
+                outputStats.innerHTML = `
+                    <strong>Processing Summary:</strong><br>
+                    Paragraphs found: ${rawTextItems.length} | 
+                    Confidence: ${Math.round(confidence)}% | 
+                    CJK spaces removed: ${totalSpacesRemoved} characters | 
+                    DOM processing iterations: ${totalIterations}
+                `;
+                
             } else {
                 textContent.innerHTML = '<div class="text-paragraph">No text recognized</div>';
+                outputStats.innerHTML = `
+                    <strong>Processing Summary:</strong><br>
+                    No text recognized | Confidence: ${Math.round(confidence)}%
+                `;
             }
             
             // Set raw output for debugging
