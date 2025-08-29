@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
-import { OCRService } from '../services/OCRService';
+// 20250829 - OCR_Engine refactor - code change - Codex/GPT5
+// Route all OCR through the single front door
+import { OCR_Engine } from '../services/OCR_Engine';
 import { OCROptions, OCRLanguage } from '../types/ocr-types';
 import { SUPPORTED_LANGUAGES } from '../config/ocrConfig';
 import { BaseHookReturn } from '../types/components';
@@ -170,26 +172,29 @@ export const useOCR = (): OCRReturn => {
           description: 'Scanning document structure...',
           cancellable: true
         });
-        
-        detectedLanguages = await OCRService.detectLanguage(imageFile, (detectionProgress) => {
-          if (operationRef.current.cancelled) return;
-          
-          // Map detection progress to 40-60% range with sub-phases
-          const mappedProgress = 0.4 + (detectionProgress * 0.2);
-          const subPhase = detectionProgress < 0.3 ? 'quick_scan' : 
-                          detectionProgress < 0.7 ? 'script_analysis' : 
-                          detectionProgress < 0.9 ? 'pattern_recognition' : 'confidence_calculation';
-          const description = detectionProgress < 0.3 ? 'Analyzing image content...' :
-                             detectionProgress < 0.7 ? 'Identifying character scripts...' :
-                             detectionProgress < 0.9 ? 'Recognizing language patterns...' : 'Calculating confidence scores...';
-          
-          updateProgress({
-            phase: 'language_detection',
-            subPhase,
-            progress: mappedProgress,
-            description,
-            cancellable: true
-          });
+        // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
+        // Use OCR_Engine for detection to enable simple future swap.
+        detectedLanguages = await OCR_Engine.detectLanguages(imageFile, {
+          onProgress: (detectionProgress: number) => {
+            if (operationRef.current.cancelled) return;
+
+            // Map detection progress to 40-60% range with sub-phases
+            const mappedProgress = 0.4 + (detectionProgress * 0.2);
+            const subPhase = detectionProgress < 0.3 ? 'quick_scan' :
+                            detectionProgress < 0.7 ? 'script_analysis' :
+                            detectionProgress < 0.9 ? 'pattern_recognition' : 'confidence_calculation';
+            const description = detectionProgress < 0.3 ? 'Analyzing image content...' :
+                               detectionProgress < 0.7 ? 'Identifying character scripts...' :
+                               detectionProgress < 0.9 ? 'Recognizing language patterns...' : 'Calculating confidence scores...';
+
+            updateProgress({
+              phase: 'language_detection',
+              subPhase,
+              progress: mappedProgress,
+              description,
+              cancellable: true
+            });
+          }
         });
         
         if (operationRef.current.cancelled) throw new Error('Operation cancelled');
@@ -239,12 +244,16 @@ export const useOCR = (): OCRReturn => {
         });
       };
       
-      const enhancedOptions = {
-        ...options,
+      // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
+      // Build extraction options; if we have detected or selected languages, disable autoDetect
+      const extractionOptions: OCROptions = {
+        autoDetect: false,
+        languages: state.autoDetect ? detectedLanguages : state.selectedLanguages,
+        primaryLanguage: state.selectedLanguages[0],
         onProgress: extractionProgress
       };
-      
-      const extractedText = await OCRService.extractTextFromImage(imageFile, enhancedOptions);
+
+      const { text: extractedText } = await OCR_Engine.extract(imageFile, extractionOptions);
       
       if (operationRef.current.cancelled) throw new Error('Operation cancelled');
       
