@@ -26,6 +26,8 @@ import { OCROptions, OCRLanguage } from '../types/ocr-types';
 // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
 // Legacy stack is exclusively accessed via OCR_Engine_Legacy
 import { OCR_Engine_Legacy } from './OCR_Engine_Legacy';
+import { OCR_Engine_New } from './OCR_Engine_New';
+import { appConfig } from '../config/appConfig';
 
 export interface DetectOptions {
   onProgress?: (progress: number) => void;
@@ -34,7 +36,6 @@ export interface DetectOptions {
 
 export interface ExtractResult {
   text: string;
-  detectedLanguages?: OCRLanguage[];
 }
 
 export class OCR_Engine {
@@ -47,8 +48,14 @@ export class OCR_Engine {
     options: DetectOptions = {}
   ): Promise<OCRLanguage[]> {
     // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
-    // Delegate to legacy engine for now
-    return OCR_Engine_Legacy.detectLanguages(imageFile, options);
+    // New engine is one-stop (detect+extract). Keep this for backward compatibility only.
+    if (appConfig.features.ENABLE_NEW_OCR_ENGINE) {
+      console.warn('[OCR_Engine] detectLanguages is deprecated. Use extract() with auto-detect.');
+      // Soft behavior: return empty array to indicate caller should rely on extract()
+      return [];
+    } else {
+      return OCR_Engine_Legacy.detectLanguages(imageFile, options);
+    }
   }
 
   /**
@@ -61,9 +68,13 @@ export class OCR_Engine {
     options: OCROptions = {}
   ): Promise<ExtractResult> {
     // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
-    // Delegate to legacy engine for now (it will normalize autoDetect appropriately)
-    const { text } = await OCR_Engine_Legacy.extract(imageFile, options);
-    return { text };
+    if (appConfig.features.ENABLE_NEW_OCR_ENGINE) {
+      const { text } = await OCR_Engine_New.extract(imageFile, options as any);
+      return { text };
+    } else {
+      const { text } = await OCR_Engine_Legacy.extract(imageFile, options);
+      return { text };
+    }
   }
 }
 

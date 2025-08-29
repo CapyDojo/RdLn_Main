@@ -39,7 +39,9 @@ async function detectEnvironment(): Promise<typeof cachedEnvironment> {
 
   try {
     // Electron detection
-    checks.isElectron = typeof window !== 'undefined' && (window as any).isElectron === true;
+    const windowElectron = typeof window !== 'undefined' && (window as any).isElectron === true;
+    const processElectron = typeof process !== 'undefined' && (process as any).versions && (process as any).versions.electron;
+    checks.isElectron = !!(windowElectron || processElectron);
 
     // Web deployment detection (production web)
     if (typeof window !== 'undefined') {
@@ -91,7 +93,10 @@ export async function getResourcePaths() {
   // Resource paths by environment
   let resourcePaths: typeof cachedResourcePaths;
 
-  if (env.isElectron) {
+  const forceLocal = (typeof window !== 'undefined' && (window as any).TESSERACT_CONFIG && (window as any).TESSERACT_CONFIG.preferLocal === true)
+                  || (typeof navigator !== 'undefined' && (navigator as any).onLine === false);
+
+  if (env.isElectron || forceLocal) {
     resourcePaths = {
       langPath: './tessdata',
       workerPath: './tesseract/worker.min.js',
@@ -107,12 +112,12 @@ export async function getResourcePaths() {
       baseUrl: baseUrls.cdn
     };
   } else {
-    // TEMPORARY: Local development - use CDN assets to fix path issues
+    // Local development - prefer local assets to avoid network dependency
     resourcePaths = {
-      langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-      workerPath: `${baseUrls.cdn}/worker.min.js`,
-      corePath: `${baseUrls.cdn}/tesseract-core.wasm.js`,
-      baseUrl: baseUrls.cdn
+      langPath: './tessdata',
+      workerPath: './tesseract/worker.min.js',
+      corePath: './tesseract/tesseract-core.wasm.js',
+      baseUrl: baseUrls.electron
     };
   }
 
