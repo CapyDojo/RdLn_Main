@@ -255,7 +255,7 @@
         // Aggressive CJK Whitespace Removal - Solution 4
         function aggressiveCJKWhitespaceRemoval(text) {
             const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
-            const aggressiveRegex = new RegExp(`(${cjk})\\s+(${cjk})`, 'g');
+            const aggressiveRegex = new RegExp(`(${cjk})[ \\t]+(${cjk})`, 'g');
             
             let processed = text;
             let previousText;
