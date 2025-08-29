@@ -60,6 +60,7 @@ export class OCR_Engine_New {
       this.report(onProgress, 0.4, { phase: 'language_loading', description: 'Loading language models...' });
 
       const resourcePaths = await getResourcePaths();
+      console.log('[OCR_Engine_New] Resource paths in use:', resourcePaths);
       let worker: any | null = null;
       try {
         const mkLogger = () => (m: any) => {
@@ -80,9 +81,16 @@ export class OCR_Engine_New {
           langPath: resourcePaths.langPath.endsWith('/') ? resourcePaths.langPath : resourcePaths.langPath + '/'
         } as any;
 
+        console.log('[OCR_Engine_New] Creating worker (primary/CDN?) with:', {
+          workerPath: optionsPrimary.workerPath,
+          corePath: optionsPrimary.corePath,
+          langPath: optionsPrimary.langPath
+        });
+
         try {
           worker = await createWorker(languages, 1, optionsPrimary);
         } catch (err) {
+          console.warn('[OCR_Engine_New] Primary worker creation failed, falling back to local assets.', err);
           // Fallback to local default relative paths if CDN or env paths fail
           const optionsFallback = {
             logger: mkLogger(),
@@ -90,6 +98,11 @@ export class OCR_Engine_New {
             corePath: './tesseract/tesseract-core.wasm.js',
             langPath: './tessdata/'
           } as any;
+          console.log('[OCR_Engine_New] Creating worker (fallback/local) with:', {
+            workerPath: optionsFallback.workerPath,
+            corePath: optionsFallback.corePath,
+            langPath: optionsFallback.langPath
+          });
           worker = await createWorker(languages, 1, optionsFallback);
         }
 
@@ -138,7 +151,8 @@ export class OCR_Engine_New {
   // Prototype-derived aggressive CJK whitespace removal (iterative until convergence)
   private static aggressiveCJKWhitespaceRemoval(text: string): { text: string; whitespaceRemoved: number; iterations: number } {
     const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
-    const aggressiveRegex = new RegExp(`(${cjk})[ \\t]+(${cjk})`, 'g');
+    const punct = '[\\u3000-\\u303f\\uff00-\\uffef\\u2000-\\u206f\\u2e00-\\u2e7f\\u00a0-\\u00bf.,;:!?()\\[\\]{}"\'-]';
+    const english = '[a-zA-Z0-9]';
 
     let processed = text;
     let previousText: string;
@@ -146,7 +160,27 @@ export class OCR_Engine_New {
 
     do {
       previousText = processed;
-      processed = processed.replace(aggressiveRegex, '$1$2');
+      
+      // Remove spaces between CJK characters
+      processed = processed.replace(new RegExp(`(${cjk}) +(${cjk})`, 'g'), '$1$2');
+      
+      // Remove single newlines between CJK characters (but preserve double newlines)
+      processed = processed.replace(new RegExp(`(${cjk})\\n(${cjk})`, 'g'), '$1$2');
+      
+      // Remove single newlines between punctuation and CJK
+      processed = processed.replace(new RegExp(`(${punct})\\n(${cjk})`, 'g'), '$1$2');
+      processed = processed.replace(new RegExp(`(${cjk})\\n(${punct})`, 'g'), '$1$2');
+      
+      // Remove single newlines between punctuation marks
+      processed = processed.replace(new RegExp(`(${punct})\\n(${punct})`, 'g'), '$1$2');
+      
+      // Remove single newlines between English characters (join broken words/lines)
+      processed = processed.replace(new RegExp(`(${english})\\n(${english})`, 'g'), '$1 $2');
+      
+      // Remove single newlines between English and CJK
+      processed = processed.replace(new RegExp(`(${english})\\n(${cjk})`, 'g'), '$1 $2');
+      processed = processed.replace(new RegExp(`(${cjk})\\n(${english})`, 'g'), '$1 $2');
+      
       iterations++;
     } while (processed !== previousText && iterations <= 100);
 
