@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RdLn™ Tesseract OCR with OSD Prototype v8 (Symmetric Han Decision)</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
+  <style>
+    :root { --brand:#0d6efd; --bg:#f5f5f5; --ink:#111; --muted:#6b7280; --card:#fff; }
+    body{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--ink); margin:0;}
+    .container{max-width:1200px;margin:0 auto;padding:24px}
+    .card{background:var(--card); border-radius:12px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,.06); margin-bottom:16px}
+    h1{font-size:24px;margin:0 0 6px}
+    .sub{color:var(--muted); margin:0 0 16px;}
+    .flowchart{background:#fffbe6;border:1px solid #ffe58f;border-radius:8px;padding:12px;margin-top:12px;font-size:14px;line-height:1.6}
+    .flowchart div{margin:6px 0}
+    .badge{display:inline-block;background:#eef2ff;color:#1e40af;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:600}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>RdLn™ Tesseract OCR with OSD Prototype v8</h1>
+      <p class="sub">v8 removes the prior bias toward the first Simplified pass. It decides <em>Simplified vs Traditional</em> using a <strong>symmetric multi‑signal</strong> analyzer and exposes richer diagnostics.</p>
+
+      <h3>🗺️ Dumbed‑Down Flowchart</h3>
+      <div class="flowchart">
+        <div>1️⃣ Run OCR twice → once with Simplified model, once with Traditional model.</div>
+        <div>2️⃣ Collect both outputs + their confidence scores.</div>
+        <div>3️⃣ Look for <span class="badge">S‑only</span> or <span class="badge">T‑only</span> characters (like 体 vs 體).</div>
+        <div>4️⃣ Convert text back and forth with OpenCC (T→S and S→T) and measure how much changes.</div>
+        <div>5️⃣ Check for common word pairs (经济 vs 經濟) and punctuation cues (like 「」).</div>
+        <div>6️⃣ Each clue gives a small vote toward Simplified or Traditional.</div>
+        <div>7️⃣ Add up the votes → get a final score.</div>
+        <div>8️⃣ Decision:
+          <ul>
+            <li>Score strongly Simplified → choose Simplified output.</li>
+            <li>Score strongly Traditional → choose Traditional output.</li>
+            <li>Too close → mark as “mixed” and use the higher‑confidence output.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>How it decides (Flowchart)</h3>
+    <p class="muted">A quick, visual walkthrough of the Simplified vs Traditional decision.</p>
+    <svg viewBox="0 0 900 520" width="100%" height="auto" aria-label="Han decision flowchart">
+      <defs>
+        <style>
+          .node{fill:#ffffff;stroke:#d1d5db;stroke-width:1.5;rx:10;ry:10;}
+          .title{font:600 14px Inter,system-ui,Segoe UI,Arial,sans-serif; fill:#111}
+          .text{font:12px Inter,system-ui,Segoe UI,Arial,sans-serif; fill:#374151}
+          .arrow{stroke:#6b7280;stroke-width:1.5;marker-end:url(#arrowhead)}
+        </style>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" />
+        </marker>
+      </defs>
+
+      <!-- Row 1: Start -->
+      <rect class="node" x="50" y="20" width="220" height="60"/>
+      <text class="title" x="160" y="45" text-anchor="middle">Start</text>
+      <text class="text" x="160" y="65" text-anchor="middle">Load image → OSD (script hint)</text>
+
+      <!-- Row 2: Dual OCR -->
+      <rect class="node" x="330" y="20" width="260" height="80"/>
+      <text class="title" x="460" y="45" text-anchor="middle">Run both OCR models</text>
+      <text class="text"  x="460" y="65" text-anchor="middle">chi_sim & chi_tra → texts + confidences</text>
+
+      <line class="arrow" x1="270" y1="50" x2="330" y2="60" />
+
+      <!-- Row 3: Features -->
+      <rect class="node" x="640" y="20" width="220" height="120"/>
+      <text class="title" x="750" y="45" text-anchor="middle">Extract signals</text>
+      <text class="text"  x="750" y="65" text-anchor="middle">• S-only / T-only chars</text>
+      <text class="text"  x="750" y="82" text-anchor="middle">• OpenCC: T→S vs S→T</text>
+      <text class="text"  x="750" y="99" text-anchor="middle">• Round-trip loss</text>
+      <text class="text"  x="750" y="116" text-anchor="middle">• Lexical pairs / 「」</text>
+
+      <line class="arrow" x1="590" y1="60" x2="640" y2="60" />
+
+      <!-- Row 4: Score -->
+      <rect class="node" x="210" y="160" width="260" height="80"/>
+      <text class="title" x="340" y="185" text-anchor="middle">Weighted score</text>
+      <text class="text"  x="340" y="205" text-anchor="middle">Combine clues (+T / −S) → score</text>
+
+      <line class="arrow" x1="680" y1="140" x2="470" y2="180" />
+
+      <!-- Row 5: Decision branch -->
+      <rect class="node" x="50" y="270" width="220" height="80"/>
+      <text class="title" x="160" y="295" text-anchor="middle">Decision</text>
+      <text class="text"  x="160" y="315" text-anchor="middle">Traditional / Simplified / Mixed</text>
+
+      <line class="arrow" x1="340" y1="240" x2="160" y2="270" />
+
+      <!-- Row 6: Output selection boxes -->
+      <rect class="node" x="330" y="270" width="220" height="80"/>
+      <text class="title" x="440" y="295" text-anchor="middle">If Traditional</text>
+      <text class="text"  x="440" y="315" text-anchor="middle">Use chi_tra text</text>
+
+      <rect class="node" x="610" y="270" width="220" height="80"/>
+      <text class="title" x="720" y="295" text-anchor="middle">If Simplified</text>
+      <text class="text"  x="720" y="315" text-anchor="middle">Use chi_sim text</text>
+
+      <rect class="node" x="330" y="380" width="500" height="80"/>
+      <text class="title" x="580" y="405" text-anchor="middle">If Mixed</text>
+      <text class="text"  x="580" y="425" text-anchor="middle">Pick the higher-confidence pass (or per‑line merge later)</text>
+
+      <line class="arrow" x1="160" y1="350" x2="330" y2="310" />
+      <line class="arrow" x1="160" y1="350" x2="610" y2="310" />
+      <line class="arrow" x1="160" y1="350" x2="330" y2="420" />
+
+      <!-- Final output -->
+      <rect class="node" x="50" y="430" width="220" height="60"/>
+      <text class="title" x="160" y="455" text-anchor="middle">Final OCR text</text>
+      <text class="text"  x="160" y="475" text-anchor="middle">Shown in “OCR Results”</text>
+
+      <line class="arrow" x1="330" y1="420" x2="270" y2="460" />
+      <line class="arrow" x1="720" y1="350" x2="270" y2="460" />
+      <line class="arrow" x1="580" y1="460" x2="270" y2="460" />
+    </svg>
+
+    <details style="margin-top:10px">
+      <summary><strong>Plain‑English steps</strong></summary>
+      <ol>
+        <li><strong>Run both models:</strong> get texts and confidence from <code>chi_sim</code> and <code>chi_tra</code>.</li>
+        <li><strong>Collect clues:</strong> unique characters, conversion changes (T→S vs S→T), round‑trip stability, word pairs, 「」 quotes, model confidence.</li>
+        <li><strong>Add the votes:</strong> each clue pushes the score toward Traditional (+) or Simplified (−).</li>
+        <li><strong>Decide:</strong> big positive → Traditional; big negative → Simplified; small → Mixed.</li>
+        <li><strong>Output:</strong> pick the matching OCR text (or higher confidence if Mixed).</li>
+      </ol>
+    </details>
+  </div>
+
+</body>
+</html>

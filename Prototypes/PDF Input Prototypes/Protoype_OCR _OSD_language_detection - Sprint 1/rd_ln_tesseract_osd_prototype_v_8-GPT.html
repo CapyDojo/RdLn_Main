@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RdLn™ Tesseract OCR with OSD Prototype v8 (Symmetric Han Decision)</title>
+  <!-- Runtime libs -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
+  <style>
+    :root { --brand:#0d6efd; --bg:#f5f5f5; --ink:#111; --muted:#6b7280; --card:#fff; }
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--ink); margin:0;}
+    .container{max-width:1200px;margin:0 auto;padding:24px}
+    .card{background:var(--card); border-radius:12px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,.06); margin-bottom:16px}
+    h1{font-size:24px;margin:0 0 6px}
+    .sub{color:var(--muted); margin:0 0 16px;}
+    .grid{display:grid; gap:12px}
+    @media(min-width:900px){ .grid{ grid-template-columns: 1.1fr 1fr } }
+
+    .upload{border:2px dashed #d1d5db; border-radius:12px; padding:36px; text-align:center; cursor:pointer; transition:.2s}
+    .upload:hover{border-color:var(--brand); background:#eff6ff}
+    .upload.dragover{border-color:var(--brand); background:#eef5ff}
+    .hidden{display:none}
+
+    .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    .btn{appearance:none;border:0;border-radius:10px;background:var(--brand);color:#fff;padding:10px 14px;font-weight:600;cursor:pointer}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .ghost{background:#e5e7eb;color:#111}
+
+    .progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    .fill{height:100%;background:var(--brand);width:0%;transition:width .25s ease}
+
+    .imgwrap img{max-width:100%;height:auto;border-radius:10px}
+
+    pre{white-space:pre-wrap; background:#0b1020; color:#d1e7ff; padding:12px; border-radius:10px; font-size:13px; line-height:1.5; overflow:auto}
+
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;background:#eef2ff;color:#1e40af;font-weight:600}
+    .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px}
+    .kpi .item{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px}
+    .muted{color:#6b7280}
+    .hl{background:#fff4cc;border:1px solid #ffe69c;padding:1px 4px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>RdLn™ Tesseract OCR with OSD Prototype v8</h1>
+      <p class="sub">v8 removes the prior bias toward the first Simplified pass. It decides <em>Simplified vs Traditional</em> using a <strong>symmetric multi‑signal</strong> analyzer and exposes richer diagnostics.</p>
+
+      <div id="drop" class="upload">
+        <input id="file" type="file" accept="image/*" class="hidden" />
+        <p><strong>Drag & drop</strong> an image, or click to select (JPG/PNG/GIF/BMP/TIFF)</p>
+      </div>
+
+      <div class="grid">
+        <div class="card imgwrap hidden" id="previewWrap">
+          <h3>Image Preview</h3>
+          <img id="preview" alt="Preview" />
+        </div>
+
+        <div class="card hidden" id="controls">
+          <div class="row" style="margin-bottom:10px">
+            <button class="btn" id="btnDetect">1) Detect Script & Orientation</button>
+            <button class="btn" id="btnOCR" disabled>2) Run OCR</button>
+            <button class="btn ghost" id="btnReset">Reset</button>
+            <span id="decisionBadge" class="badge hidden">Decision: <span id="decisionText">—</span></span>
+          </div>
+          <div class="progress" id="progBar"><div class="fill" id="progFill"></div></div>
+          <p class="muted" id="progText">Idle</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="panels" class="hidden">
+      <div class="card">
+        <h3>OSD Results</h3>
+        <pre id="osd"></pre>
+      </div>
+      <div class="card">
+        <h3>OCR Results</h3>
+        <pre id="ocr"></pre>
+      </div>
+      <div class="card">
+        <h3>Chinese Analysis</h3>
+        <div id="cn"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Script → languages map (kept simple; OSD is advisory only)
+    const SCRIPT_TO_LANGS = {
+      Latin: ['eng','deu','fra','spa'],
+      Han: ['chi_sim','chi_tra'],
+      HanS: ['chi_sim'],
+      HanT: ['chi_tra'],
+      Chinese: ['chi_sim','chi_tra'],
+      Japanese: ['jpn'],
+      Korean: ['kor'],
+      Arabic: ['ara'],
+      Cyrillic: ['rus'],
+      Unknown: ['eng'],
+      Common: ['eng']
+    };
+
+    // ---------- DOM
+    const elDrop = document.getElementById('drop');
+    const elFile = document.getElementById('file');
+    const elPrevWrap = document.getElementById('previewWrap');
+    const elPrev = document.getElementById('preview');
+    const elControls = document.getElementById('controls');
+    const elDetect = document.getElementById('btnDetect');
+    const elOCR = document.getElementById('btnOCR');
+    const elReset = document.getElementById('btnReset');
+    const elProg = document.getElementById('progBar');
+    const elFill = document.getElementById('progFill');
+    const elProgText = document.getElementById('progText');
+    const elPanels = document.getElementById('panels');
+    const elOSD = document.getElementById('osd');
+    const elOCRText = document.getElementById('ocr');
+    const elCN = document.getElementById('cn');
+    const elBadge = document.getElementById('decisionBadge');
+    const elDecisionText = document.getElementById('decisionText');
+
+    // ---------- State
+    let currentImage = null;
+    let detectedScript = null;
+    let detectedOrientation = null;
+
+    // ---------- UI wiring
+    elDrop.addEventListener('click', () => elFile.click());
+    elFile.addEventListener('change', (e)=>{ if (e.target.files?.length) handleFiles(e.target.files); });
+
+    elDrop.addEventListener('dragover', (e)=>{ e.preventDefault(); elDrop.classList.add('dragover'); });
+    elDrop.addEventListener('dragleave', ()=> elDrop.classList.remove('dragover'));
+    elDrop.addEventListener('drop', (e)=>{
+      e.preventDefault(); elDrop.classList.remove('dragover');
+      if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
+    });
+
+    elDetect.addEventListener('click', detectScriptAndOrientation);
+    elOCR.addEventListener('click', runOCR);
+    elReset.addEventListener('click', resetAll);
+
+    // ---------- Helpers (UI)
+    function setProgress(p, text){ elFill.style.width = `${p}%`; elProgText.textContent = text || ''; }
+    function show(el){ el.classList.remove('hidden'); }
+    function hide(el){ el.classList.add('hidden'); }
+
+    // ---------- Load file
+    function handleFiles(files){
+      const f = files[0];
+      if (!f || !/^image\//.test(f.type)) { alert('Please select an image file'); return; }
+      const reader = new FileReader();
+      reader.onload = (e)=>{
+        currentImage = new Image();
+        currentImage.onload = ()=>{
+          elPrev.src = e.target.result; show(elPrevWrap); show(elControls); hide(elPanels);
+          elOCR.disabled = true; detectedScript = null; detectedOrientation = null; setProgress(0,'Ready');
+        };
+        currentImage.src = e.target.result;
+      };
+      reader.readAsDataURL(f);
+    }
+
+    // ---------- OSD
+    async function detectScriptAndOrientation(){
+      if (!currentImage) return;
+      try{
+        show(elProg); setProgress(5,'Initializing OSD…');
+        const osd = await Tesseract.detect(currentImage);
+        detectedScript = osd?.data?.script || 'Unknown';
+        detectedOrientation = osd?.data?.orientation ?? 0;
+
+        elOSD.textContent = JSON.stringify({
+          script: detectedScript,
+          orientation: detectedOrientation,
+          script_confidence: osd?.data?.script_confidence ?? 'N/A',
+          orientation_confidence: osd?.data?.orientation_confidence ?? 'N/A',
+          angle: osd?.data?.angle,
+          confidence: osd?.data?.confidence,
+          unicharset: osd?.data?.unicharset
+        }, null, 2);
+        setProgress(100,'OSD complete');
+        elOCR.disabled = false; show(elPanels);
+      }catch(err){ console.error(err); alert('OSD error: '+err.message); hide(elProg); }
+    }
+
+    // ---------- Symmetric Han analyzer (no first-pass bias)
+    function analyzeHanVariant(textSim, textTra, confSim=0, confTra=0){
+      // UMD build exposes OpenCC.Converter({from,to})
+      const t2s = OpenCC.Converter({ from: 'tw', to: 'cn' });
+      const s2t = OpenCC.Converter({ from: 'cn', to: 'tw' });
+
+      const diffCount = (a,b)=>{
+        const n = Math.min(a.length,b.length); let d = Math.abs(a.length-b.length);
+        for (let i=0;i<n;i++) if (a[i]!==b[i]) d++; return d;
+      };
+      const countSet = (s,set)=>{ let c=0; for (const ch of s) if (set.has(ch)) c++; return c; };
+
+      // High-precision exemplars (extend as needed)
+      const S_ONLY = new Set('体术历压厂后发台标复面里币汉画国观买证这电办为录据众广云'.split(''));
+      const T_ONLY = new Set('體術歷壓廠後發臺標複麵裡幣漢畫觀買證這電辦為錄據眾廣雲'.split(''));
+
+      // Choose richer baseline (Tra often keeps more distinctive forms)
+      const base = textTra?.length ? textTra : textSim;
+      const t2sText = t2s(base);
+      const s2tText = s2t(base);
+
+      const t2sDelta = diffCount(base, t2sText);
+      const s2tDelta = diffCount(base, s2tText);
+      const t2s2t = diffCount(base, s2t(t2sText));
+      const s2t2s = diffCount(base, t2s(s2tText));
+
+      const sOnly = countSet(base, S_ONLY);
+      const tOnly = countSet(base, T_ONLY);
+
+      // Lexical pairs commonly seen in legal/commercial docs
+      const pairs = [
+        ['经济','經濟'],['研发','研發'],['标准','標準'],['里','裡'],['后','後'],['台','臺'],
+        ['于','於'],['并','並'],['为','為'],['证','證'],['这','這'],['录','錄'],['据','據'],['众','眾']
+      ];
+      let lexS=0, lexT=0; const reCount=(txt,pat)=> (txt.match(new RegExp(pat,'g'))||[]).length;
+      for (const [s,t] of pairs){ lexS += reCount(base,s); lexT += reCount(base,t); }
+
+      // Typography cues
+      const hasCornerQuotes = /[「」『』]/.test(base);
+
+      // Features (T positive, S negative)
+      const confFeat = Math.sign(confTra-confSim) * Math.min(1, Math.abs(confTra-confSim)/20);
+      const charsFeat = (tOnly - sOnly) / Math.max(1, (tOnly + sOnly));
+      const deltaFeat = Math.sign(t2sDelta - s2tDelta) * (Math.abs(t2sDelta - s2tDelta)/Math.max(1, t2sDelta + s2tDelta));
+      const rtripFeat = Math.sign(s2t2s - t2s2t) * (Math.abs(s2t2s - t2s2t)/Math.max(1, s2t2s + t2s2t));
+      const lexFeat = (lexT - lexS) / Math.max(1, (lexT + lexS));
+      const typFeat = hasCornerQuotes ? 1 : 0;
+
+      const score = 3*confFeat + 4*charsFeat + 3*deltaFeat + 2*rtripFeat + 3*lexFeat + 1*typFeat;
+      const EPS = 0.8;
+      let decision = 'mixed';
+      if (score > EPS) decision = 'traditional'; else if (score < -EPS) decision = 'simplified';
+
+      return { decision, score, features:{confFeat,charsFeat,deltaFeat,rtripFeat,lexFeat,typFeat},
+        counts:{tOnly,sOnly,t2sDelta,s2tDelta,t2s2t,s2t2s,lexT,lexS,hasCornerQuotes} };
+    }
+
+    // ---------- Run OCR
+    async function runOCR(){
+      if (!currentImage) return;
+      try{
+        show(elProg); setProgress(5,'Initializing OCR…');
+
+        // Decide language candidates from OSD (advisory only)
+        let langs = ['eng'];
+        if (detectedScript && SCRIPT_TO_LANGS[detectedScript]) langs = SCRIPT_TO_LANGS[detectedScript];
+
+        // Special Chinese handling: run both models, then decide symmetrically
+        if (langs.includes('chi_sim') && langs.includes('chi_tra')){
+          setProgress(10,'chi_sim pass…');
+          const wSim = await Tesseract.createWorker(['chi_sim']);
+          await wSim.setParameters({ classify_enable_learning: '0' });
+          const rSim = await wSim.recognize(currentImage); await wSim.terminate();
+
+          setProgress(55,'chi_tra pass…');
+          const wTra = await Tesseract.createWorker(['chi_tra']);
+          await wTra.setParameters({ classify_enable_learning: '0' });
+          const rTra = await wTra.recognize(currentImage); await wTra.terminate();
+
+          const confSim = rSim?.data?.confidence || 0;
+          const confTra = rTra?.data?.confidence || 0;
+
+          // Symmetric decision (no first-pass bias)
+          const a = analyzeHanVariant(rSim?.data?.text||'', rTra?.data?.text||'', confSim, confTra);
+
+          // Output selection
+          let outText = '';
+          if (a.decision === 'traditional') {
+            outText = rTra.data.text; elDecisionText.textContent = 'Traditional (Hant)';
+          } else if (a.decision === 'simplified') {
+            outText = rSim.data.text; elDecisionText.textContent = 'Simplified (Hans)';
+          } else {
+            // Mixed: pick higher-confidence pass (per-line merge can be a future enhancement)
+            const pickTra = confTra >= confSim; outText = pickTra ? rTra.data.text : rSim.data.text;
+            elDecisionText.textContent = `Mixed (base: ${pickTra?'Hant':'Hans'})`;
+          }
+          elOCRText.textContent = outText;
+          show(elBadge);
+
+          // Diagnostics panel
+          renderChineseDiagnostics(a, confSim, confTra);
+          setProgress(100,'OCR complete (Chinese)');
+        } else {
+          // Non-Chinese: single pass for detected family
+          const worker = await Tesseract.createWorker(langs);
+          await worker.setParameters({ classify_enable_learning: '0' });
+          const { data } = await worker.recognize(currentImage);
+          await worker.terminate();
+          elOCRText.textContent = data.text; hide(elBadge);
+          elCN.innerHTML = '<p class="muted">Not Chinese — no Han variant analysis.</p>';
+          setProgress(100,'OCR complete');
+        }
+
+      }catch(err){ console.error(err); alert('OCR error: '+err.message); hide(elProg); }
+    }
+
+    function renderChineseDiagnostics(a, confSim, confTra){
+      const rows = [
+        ['Decision', `<span class="hl">${a.decision}</span> (score ${a.score.toFixed(2)})`],
+        ['Confidence Δ (Tra−Sim)', (confTra-confSim).toFixed(1)],
+        ['T‑only chars', a.counts.tOnly],
+        ['S‑only chars', a.counts.sOnly],
+        ['Δ T→S vs S→T', `${a.counts.t2sDelta} vs ${a.counts.s2tDelta}`],
+        ['Round‑trip loss (T→S→T vs S→T→S)', `${a.counts.t2s2t} vs ${a.counts.s2t2s}`],
+        ['Lexical pairs (T vs S)', `${a.counts.lexT} vs ${a.counts.lexS}`],
+        ['Corner quotes 「」/『』', a.counts.hasCornerQuotes ? 'yes' : 'no']
+      ];
+      let html = '<div class="kpi">';
+      for (const [k,v] of rows){ html += `<div class="item"><div class="muted">${k}</div><div><strong>${v}</strong></div></div>`; }
+      html += '</div>';
+      elCN.innerHTML = html;
+    }
+
+    // ---------- Reset
+    function resetAll(){
+      currentImage=null; detectedScript=null; detectedOrientation=null;
+      elFile.value=''; hide(elPrevWrap); hide(elPanels); hide(elBadge); hide(elProg);
+      elOCR.disabled=true; elOSD.textContent=''; elOCRText.textContent=''; elCN.innerHTML='';
+      setProgress(0,'Idle');
+    }
+  </script>
+</body>
+</html>

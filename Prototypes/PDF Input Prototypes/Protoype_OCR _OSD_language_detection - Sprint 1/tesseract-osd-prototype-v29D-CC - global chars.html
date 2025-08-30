@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract OCR with OSD Prototype v29D-CC</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .language-option {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f8f9fa;
+        }
+        .language-option.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .hidden {
+            display: none;
+        }
+        .highlight {
+            background-color: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .confidence-high {
+            background-color: #d4edda;
+        }
+        .confidence-low {
+            background-color: #f8d7da;
+        }
+        .toggle-container {
+            margin: 10px 0;
+        }
+        .toggle-label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .stats-container {
+            background-color: #e9f7ef;
+            border: 1px solid #d4edda;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 10px 0;
+        }
+        .stat-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .paragraph-details {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .debug-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .decision-strategy {
+            background-color: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .decision-strategy select {
+            padding: 5px 10px;
+            margin-left: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .word-traditional {
+            background-color: #e1f5fe;
+            color: #0277bd;
+        }
+        .word-simplified {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .character-analysis {
+            background-color: #f0f4f8;
+            border: 1px solid #cfd8dc;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .character-pair {
+            display: inline-block;
+            margin: 2px 5px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+            font-size: 16px;
+        }
+        .traditional-char {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
+        .simplified-char {
+            background-color: #fce4ec;
+            color: #c2185b;
+            border: 1px solid #f8bbd9;
+        }
+        .global-analysis {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .diff-insertion {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .diff-deletion {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 2px 4px;
+            border-radius: 3px;
+            text-decoration: line-through;
+        }
+        .diff-substitution {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .global-score {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 0 5px;
+        }
+        .score-excellent {
+            background-color: #4caf50;
+            color: white;
+        }
+        .score-good {
+            background-color: #8bc34a;
+            color: white;
+        }
+        .score-fair {
+            background-color: #ff9800;
+            color: white;
+        }
+        .score-poor {
+            background-color: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RdLn™ Tesseract OCR with OSD Prototype v29D-CC</h1>
+        <p><strong>Option D: Global text comparison using character-level diff to avoid word alignment issues entirely</strong></p>
+        <p>This prototype demonstrates a radical approach - skipping word-level alignment completely and using global text comparison with character-level diff analysis to determine model appropriateness.</p>
+        <p><strong>Note:</strong> For OSD functionality, the <code>osd.traineddata</code> model must be available. Tesseract.js will automatically download it when needed.</p>
+        <p><strong>v29D-CC Changes:</strong> Implemented global text comparison with character-level diff algorithm, eliminating word alignment complexity that caused mis-alignment cascades.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="detectBtn" class="btn">1. Detect Script & Orientation</button>
+            <button id="ocrBtn" class="btn" disabled>2. Run OCR</button>
+            <button id="resetBtn" class="btn">Reset</button>
+            
+            <div class="toggle-container">
+                <span class="toggle-label">Bias toward Simplified:</span>
+                <input type="checkbox" id="biasToggle" checked>
+                <label for="biasToggle">Enable (5% boost to Simplified appropriateness)</label>
+            </div>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Detecting Script...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="result-box">
+                <h3>OSD Results</h3>
+                <pre id="osdResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>OCR Results</h3>
+                <pre id="ocrResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>Global Character Diff Analysis</h3>
+                <div id="chineseAnalysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supported languages configuration
+        const SUPPORTED_LANGUAGES = [
+            { code: "eng", name: "English", flag: "🇪🇳" },
+            { code: "chi_sim", name: "Chinese (Simplified)", flag: "🇨🇳" },
+            { code: "deu", name: "German", flag: "🇩🇪" },
+            { code: "chi_tra", name: "Chinese (Traditional)", flag: "🇹🇼" },
+            { code: "fra", name: "French", flag: "🇫🇷" },
+            { code: "jpn", name: "Japanese", flag: "🇯🇵" },
+            { code: "spa", name: "Spanish", flag: "🇪🇸" },
+            { code: "kor", name: "Korean", flag: "🇰🇷" },
+            { code: "ara", name: "Arabic", flag: "🇸🇦" },
+            { code: "rus", name: "Russian", flag: "🇷🇺" }
+        ];
+
+        // Traditional to Simplified Chinese character mappings for analysis
+        const TRADITIONAL_TO_SIMPLIFIED = {
+            // Common traditional→simplified pairs
+            '書': '书', '關': '关', '學': '学', '國': '国', '車': '车',
+            '門': '门', '開': '开', '時': '时', '長': '长', '會': '会',
+            '來': '来', '對': '对', '個': '个', '這': '这', '們': '们',
+            '說': '说', '現': '现', '實': '实', '間': '间', '點': '点',
+            '見': '见', '聽': '听', '講': '讲', '讀': '读', '寫': '写',
+            '頭': '头', '問': '问', '題': '题', '樣': '样', '機': '机',
+            '電': '电', '話': '话', '網': '网', '際': '际', '場': '场',
+            '業': '业', '產': '产', '經': '经', '濟': '济', '發': '发',
+            '展': '展', '動': '动', '務': '务', '員': '员', '價': '价',
+            '數': '数', '據': '据', '資': '资', '訊': '讯', '處': '处',
+            '離': '离', '難': '难', '雖': '虽', '幾': '几', '應': '应',
+            '許': '许', '記': '记', '認': '认', '識': '识', '議': '议',
+            '決': '决', '創': '创', '製': '制', '圖': '图', '編': '编',
+            '轉': '转', '變': '变', '導': '导', '報': '报', '職': '职',
+            '環': '环', '檔': '档', '標': '标', '層': '层', '線': '线',
+            '級': '级', '類': '类', '運': '运', '連': '连', '選': '选',
+            '聲': '声', '語': '语', '調': '调', '論': '论', '統': '统',
+            '區': '区', '歷': '历', '術': '术', '藝': '艺', '總': '总',
+            '務': '务', '況': '况', '態': '态', '織': '织', '構': '构',
+            '節': '节', '約': '约', '續': '续', '維': '维', '護': '护'
+            // Add more mappings as needed
+        };
+
+        // Reverse mapping for simplified to traditional
+        const SIMPLIFIED_TO_TRADITIONAL = {};
+        Object.keys(TRADITIONAL_TO_SIMPLIFIED).forEach(trad => {
+            const simp = TRADITIONAL_TO_SIMPLIFIED[trad];
+            SIMPLIFIED_TO_TRADITIONAL[simp] = trad;
+        });
+
+        // Map script names to language codes
+        const SCRIPT_TO_LANGUAGES = {
+            // Latin-based scripts
+            'Latin': ['eng', 'deu', 'fra', 'spa'],
+            
+            // Chinese scripts
+            'Han': ['chi_sim', 'chi_tra'], // Generic Chinese characters
+            'HanS': ['chi_sim'], // Simplified Chinese
+            'HanT': ['chi_tra'], // Traditional Chinese
+            'Chinese': ['chi_sim', 'chi_tra'], // Generic Chinese
+            
+            // Other major scripts
+            'Japanese': ['jpn'],
+            'Korean': ['kor'],
+            'Arabic': ['ara'],
+            'Cyrillic': ['rus'],
+            'Devanagari': ['hin'],
+            'Thai': ['tha'],
+            'Hebrew': ['heb'],
+            
+            // Fallback for unknown scripts
+            'Unknown': ['eng'],
+            'Common': ['eng'] // Common script often defaults to English
+        };
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const detectBtn = document.getElementById('detectBtn');
+        const ocrBtn = document.getElementById('ocrBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const biasToggle = document.getElementById('biasToggle');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const osdResults = document.getElementById('osdResults');
+        const ocrResults = document.getElementById('ocrResults');
+        const chineseAnalysis = document.getElementById('chineseAnalysis');
+
+        // State variables
+        let currentImage = null;
+        let detectedScript = null;
+        let detectedOrientation = null;
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        detectBtn.addEventListener('click', detectScriptAndOrientation);
+        ocrBtn.addEventListener('click', runOCR);
+        resetBtn.addEventListener('click', resetPrototype);
+
+        // Functions
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                    ocrBtn.disabled = true;
+                    detectedScript = null;
+                    detectedOrientation = null;
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function detectScriptAndOrientation() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Detecting Script & Orientation...', 0, 'Initializing OSD...');
+                
+                // Use Tesseract.detect for OSD
+                const result = await Tesseract.detect(currentImage);
+                
+                // Extract script and orientation
+                detectedScript = result.data.script || 'Unknown';
+                detectedOrientation = result.data.orientation || 0;
+                
+                // Debug output
+                console.log('Detected script:', detectedScript);
+                console.log('Script confidence:', result.data.script_confidence || 'N/A');
+                console.log('Available scripts in mapping:', Object.keys(SCRIPT_TO_LANGUAGES));
+                console.log('Mapping found:', SCRIPT_TO_LANGUAGES[detectedScript] || 'No mapping found');
+                
+                // Display OSD results
+                osdResults.textContent = JSON.stringify({
+                    script: detectedScript,
+                    orientation: detectedOrientation,
+                    script_confidence: result.data.script_confidence || 'N/A',
+                    orientation_confidence: result.data.orientation_confidence || 'N/A',
+                    deskewAngle: result.data.angle,
+                    confidence: result.data.confidence,
+                    unicharset: result.data.unicharset
+                }, null, 2);
+                
+                updateProgress(100, 'OSD detection complete!');
+                
+                // Enable OCR button
+                ocrBtn.disabled = false;
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('OSD Error:', error);
+                alert('Error during OSD detection: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        // CHARACTER-LEVEL DIFF ALGORITHM - Core implementation for Option D
+        function performCharacterLevelDiff(textSim, textTra) {
+            console.log('Performing character-level diff analysis...');
+            
+            const charsSim = Array.from(textSim); // Proper Unicode character splitting
+            const charsTra = Array.from(textTra);
+            
+            // Simple character-level diff using dynamic programming (LCS-based)
+            const dp = Array(charsTra.length + 1).fill(null).map(() => Array(charsSim.length + 1).fill(0));
+            
+            // Build LCS matrix
+            for (let i = 1; i <= charsTra.length; i++) {
+                for (let j = 1; j <= charsSim.length; j++) {
+                    if (charsTra[i-1] === charsSim[j-1]) {
+                        dp[i][j] = dp[i-1][j-1] + 1;
+                    } else {
+                        dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+                    }
+                }
+            }
+            
+            // Backtrack to find diff operations
+            const diffOps = [];
+            let i = charsTra.length, j = charsSim.length;
+            
+            while (i > 0 || j > 0) {
+                if (i > 0 && j > 0 && charsTra[i-1] === charsSim[j-1]) {
+                    // Match
+                    diffOps.unshift({
+                        type: 'match',
+                        traditional: charsTra[i-1],
+                        simplified: charsSim[j-1],
+                        position: Math.min(i-1, j-1)
+                    });
+                    i--; j--;
+                } else if (i > 0 && (j === 0 || dp[i-1][j] >= dp[i][j-1])) {
+                    // Deletion from traditional (Traditional has extra character)
+                    diffOps.unshift({
+                        type: 'deletion',
+                        traditional: charsTra[i-1],
+                        simplified: null,
+                        position: i-1
+                    });
+                    i--;
+                } else {
+                    // Insertion to simplified (Simplified has extra character)
+                    diffOps.unshift({
+                        type: 'insertion',
+                        traditional: null,
+                        simplified: charsSim[j-1],
+                        position: j-1
+                    });
+                    j--;
+                }
+            }
+            
+            return diffOps;
+        }
+
+        // GLOBAL APPROPRIATENESS CALCULATION - Core of Option D
+        function calculateGlobalAppropriatenessScores(diffOps) {
+            console.log('Calculating global appropriateness scores...');
+            
+            let traditionalScore = 0;
+            let simplifiedScore = 0;
+            let totalOperations = diffOps.length;
+            
+            let traditionalCharsPreserved = 0;
+            let simplifiedConversions = 0;
+            let matchingChars = 0;
+            let substitutions = 0;
+            
+            diffOps.forEach(op => {
+                switch (op.type) {
+                    case 'match':
+                        // Both models produced same character - good for both
+                        traditionalScore += 1.0;
+                        simplifiedScore += 1.0;
+                        matchingChars++;
+                        break;
+                        
+                    case 'deletion':
+                        // Traditional model has extra character
+                        if (TRADITIONAL_TO_SIMPLIFIED[op.traditional]) {
+                            // It's a traditional character that simplified model missed
+                            traditionalScore += 0.9; // Good for traditional
+                            simplifiedScore -= 0.3; // Penalty for simplified missing it
+                            traditionalCharsPreserved++;
+                        } else {
+                            // Unknown character difference
+                            traditionalScore += 0.1;
+                            simplifiedScore -= 0.1;
+                        }
+                        break;
+                        
+                    case 'insertion':
+                        // Simplified model has extra character
+                        if (SIMPLIFIED_TO_TRADITIONAL[op.simplified]) {
+                            // It's a simplified character that traditional model missed
+                            simplifiedScore += 0.9; // Good for simplified
+                            traditionalScore -= 0.3; // Penalty for traditional missing it
+                            simplifiedConversions++;
+                        } else {
+                            // Unknown character difference
+                            simplifiedScore += 0.1;
+                            traditionalScore -= 0.1;
+                        }
+                        break;
+                }
+            });
+            
+            // Handle cases where traditional chars were converted to simplified in diff
+            diffOps.forEach((op, index) => {
+                if (op.type === 'deletion' && index < diffOps.length - 1) {
+                    const nextOp = diffOps[index + 1];
+                    if (nextOp.type === 'insertion' && 
+                        TRADITIONAL_TO_SIMPLIFIED[op.traditional] === nextOp.simplified) {
+                        // This is actually a traditional→simplified conversion
+                        traditionalScore += 0.8; // Good for traditional preservation
+                        simplifiedScore += 0.7; // Good for simplified recognition
+                        substitutions++;
+                    }
+                }
+            });
+            
+            // Normalize scores (0-100 scale)
+            const maxPossibleScore = totalOperations * 1.0;
+            traditionalScore = Math.max(0, Math.min(100, (traditionalScore / maxPossibleScore) * 100));
+            simplifiedScore = Math.max(0, Math.min(100, (simplifiedScore / maxPossibleScore) * 100));
+            
+            // Apply bias if enabled
+            if (biasToggle.checked) {
+                simplifiedScore *= 1.05; // 5% boost
+                simplifiedScore = Math.min(100, simplifiedScore);
+            }
+            
+            // Calculate additional metrics
+            const textCompleteness = (matchingChars / totalOperations) * 100;
+            const characterPreservation = traditionalCharsPreserved > 0 ? 
+                (traditionalCharsPreserved / (traditionalCharsPreserved + simplifiedConversions)) * 100 : 0;
+            const conversionRatio = simplifiedConversions > 0 ? 
+                (simplifiedConversions / (traditionalCharsPreserved + simplifiedConversions)) * 100 : 0;
+            
+            return {
+                traditionalScore: Math.round(traditionalScore * 100) / 100,
+                simplifiedScore: Math.round(simplifiedScore * 100) / 100,
+                textCompleteness: Math.round(textCompleteness * 100) / 100,
+                characterPreservation: Math.round(characterPreservation * 100) / 100,
+                conversionRatio: Math.round(conversionRatio * 100) / 100,
+                totalOperations,
+                matchingChars,
+                traditionalCharsPreserved,
+                simplifiedConversions,
+                substitutions,
+                diffOps
+            };
+        }
+
+        // GLOBAL TEXT COMPARISON - Main Option D function
+        async function performGlobalTextComparison() {
+            console.log('Starting Option D: Global text comparison with character-level diff...');
+            
+            // Get full text output from both models
+            showProgress('Global Analysis...', 20, 'Processing with Simplified Chinese model...');
+            const workerSim = await Tesseract.createWorker(['chi_sim']);
+            await workerSim.setParameters({
+                classify_enable_learning: '0'
+            });
+            const resultSim = await workerSim.recognize(currentImage);
+            await workerSim.terminate();
+            
+            showProgress('Global Analysis...', 40, 'Processing with Traditional Chinese model...');
+            const workerTra = await Tesseract.createWorker(['chi_tra']);
+            await workerTra.setParameters({
+                classify_enable_learning: '0'
+            });
+            const resultTra = await workerTra.recognize(currentImage);
+            await workerTra.terminate();
+            
+            // Extract full text
+            const fullTextSim = resultSim.data.text || '';
+            const fullTextTra = resultTra.data.text || '';
+            
+            console.log('Full text lengths - Simplified:', fullTextSim.length, 'Traditional:', fullTextTra.length);
+            
+            // Perform character-level diff
+            showProgress('Global Analysis...', 60, 'Performing character-level diff analysis...');
+            const diffOps = performCharacterLevelDiff(fullTextSim, fullTextTra);
+            
+            // Calculate global appropriateness scores
+            showProgress('Global Analysis...', 80, 'Calculating global appropriateness metrics...');
+            const globalScores = calculateGlobalAppropriatenessScores(diffOps);
+            
+            console.log('Global scores calculated:', globalScores);
+            
+            // Apply paragraph-level decisions using global scores
+            const paragraphsSim = resultSim.data.paragraphs || [];
+            const paragraphsTra = resultTra.data.paragraphs || [];
+            const maxParagraphs = Math.max(paragraphsSim.length, paragraphsTra.length);
+            
+            let simplifiedParagraphs = 0;
+            let traditionalParagraphs = 0;
+            const paragraphDecisions = [];
+            
+            // Use global scores for paragraph-level decisions
+            const useSimplified = globalScores.simplifiedScore > globalScores.traditionalScore;
+            const winningModel = useSimplified ? 'Simplified (Global Analysis)' : 'Traditional (Global Analysis)';
+            const globalWinnerText = useSimplified ? fullTextSim : fullTextTra;
+            
+            console.log(`Global decision: ${winningModel} (Sim: ${globalScores.simplifiedScore}, Tra: ${globalScores.traditionalScore})`);
+            
+            // Apply global decision to all paragraphs
+            for (let i = 0; i < maxParagraphs; i++) {
+                const paraSim = paragraphsSim[i];
+                const paraTra = paragraphsTra[i];
+                
+                let chosenText, chosenConf, chosenModel;
+                if (useSimplified) {
+                    chosenText = paraSim ? (paraSim.text || '') : '';
+                    chosenConf = paraSim ? (paraSim.confidence || 0) : 0;
+                    chosenModel = 'Simplified (Global)';
+                    simplifiedParagraphs++;
+                } else {
+                    chosenText = paraTra ? (paraTra.text || '') : '';
+                    chosenConf = paraTra ? (paraTra.confidence || 0) : 0;
+                    chosenModel = 'Traditional (Global)';
+                    traditionalParagraphs++;
+                }
+                
+                paragraphDecisions.push({
+                    paragraphPosition: i,
+                    simplified: {
+                        text: paraSim ? (paraSim.text || '') : '',
+                        confidence: paraSim ? (paraSim.confidence || 0) : 0
+                    },
+                    traditional: {
+                        text: paraTra ? (paraTra.text || '') : '',
+                        confidence: paraTra ? (paraTra.confidence || 0) : 0
+                    },
+                    chosen: {
+                        text: chosenText,
+                        confidence: chosenConf,
+                        model: chosenModel
+                    },
+                    globalDecision: true
+                });
+            }
+            
+            const paragraphStats = {
+                totalParagraphs: maxParagraphs,
+                simplifiedParagraphs: simplifiedParagraphs,
+                traditionalParagraphs: traditionalParagraphs,
+                simplifiedParagraphPercentage: maxParagraphs > 0 ? (simplifiedParagraphs / maxParagraphs * 100).toFixed(2) : '0.00',
+                traditionalParagraphPercentage: maxParagraphs > 0 ? (traditionalParagraphs / maxParagraphs * 100).toFixed(2) : '0.00',
+                decisionMethod: 'Global Character-Level Diff',
+                globalWinner: winningModel
+            };
+            
+            return {
+                globalScores,
+                paragraphDecisions,
+                paragraphStats,
+                finalText: globalWinnerText,
+                fullTextSim,
+                fullTextTra,
+                resultSim,
+                resultTra
+            };
+        }
+
+        // Display global analysis results
+        function displayGlobalAnalysis(analysisResults) {
+            const { globalScores, paragraphDecisions, paragraphStats, finalText, fullTextSim, fullTextTra } = analysisResults;
+            
+            let html = `<div class="debug-info">
+                <h5>Option D: Global Character-Level Diff Analysis</h5>
+                <p><strong>Method:</strong> No word alignment - direct character-level comparison of full texts</p>
+                <p><strong>Benefits:</strong> Eliminates word boundary mis-alignment issues, provides global quality assessment</p>
+                <p><strong>Global Decision:</strong> ${paragraphStats.globalWinner} based on character preservation and appropriateness</p>
+            </div>`;
+            
+            // Global metrics display
+            html += `<div class="stats-container">
+                <h4>Global Character-Level Analysis Results</h4>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value ${getScoreClass(globalScores.traditionalScore)}">${globalScores.traditionalScore}</div>
+                        <div class="stat-label">Traditional Appropriateness</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value ${getScoreClass(globalScores.simplifiedScore)}">${globalScores.simplifiedScore}</div>
+                        <div class="stat-label">Simplified Appropriateness</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${globalScores.textCompleteness}%</div>
+                        <div class="stat-label">Text Completeness</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${globalScores.characterPreservation}%</div>
+                        <div class="stat-label">Character Preservation</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${globalScores.conversionRatio}%</div>
+                        <div class="stat-label">Conversion Ratio</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${globalScores.totalOperations}</div>
+                        <div class="stat-label">Total Diff Operations</div>
+                    </div>
+                </div>
+                
+                <h5>Global Quality Assessment</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                            <th>Interpretation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Traditional Appropriateness</td>
+                            <td class="global-score ${getScoreClass(globalScores.traditionalScore)}">${globalScores.traditionalScore}%</td>
+                            <td>${getScoreDescription(globalScores.traditionalScore)}</td>
+                        </tr>
+                        <tr>
+                            <td>Simplified Appropriateness</td>
+                            <td class="global-score ${getScoreClass(globalScores.simplifiedScore)}">${globalScores.simplifiedScore}%</td>
+                            <td>${getScoreDescription(globalScores.simplifiedScore)}</td>
+                        </tr>
+                        <tr>
+                            <td>Character Preservation</td>
+                            <td>${globalScores.characterPreservation}%</td>
+                            <td>Traditional characters preserved in analysis</td>
+                        </tr>
+                        <tr>
+                            <td>Conversion Ratio</td>
+                            <td>${globalScores.conversionRatio}%</td>
+                            <td>Simplified conversions detected</td>
+                        </tr>
+                        <tr>
+                            <td>Matching Characters</td>
+                            <td>${globalScores.matchingChars}</td>
+                            <td>Identical characters across models</td>
+                        </tr>
+                        <tr>
+                            <td>Traditional Preserved</td>
+                            <td>${globalScores.traditionalCharsPreserved}</td>
+                            <td>Traditional characters kept</td>
+                        </tr>
+                        <tr>
+                            <td>Simplified Conversions</td>
+                            <td>${globalScores.simplifiedConversions}</td>
+                            <td>Traditional→Simplified conversions</td>
+                        </tr>
+                        <tr>
+                            <td>Character Substitutions</td>
+                            <td>${globalScores.substitutions}</td>
+                            <td>Known Traditional↔Simplified pairs</td>
+                        </tr>
+                    </tbody>
+                </table>`;
+                
+            if (biasToggle.checked) {
+                html += `<p><em>Bias toward Simplified is enabled (5% boost applied to simplified appropriateness)</em></p>`;
+            }
+            
+            html += `</div>`;
+            
+            // Character-level diff visualization (sample)
+            html += `<div class="global-analysis">
+                <h4>Character-Level Diff Sample (First 20 operations)</h4>
+                <p><strong>Legend:</strong> 
+                    <span class="diff-insertion">Green = Insertion</span> 
+                    <span class="diff-deletion">Red = Deletion</span> 
+                    <span class="diff-substitution">Yellow = Difference</span>
+                </p>
+                <div class="character-analysis">`;
+            
+            // Show sample diff operations
+            const sampleOps = globalScores.diffOps.slice(0, 20);
+            sampleOps.forEach((op, index) => {
+                switch (op.type) {
+                    case 'match':
+                        html += `<span class="character-pair">${op.traditional}</span> `;
+                        break;
+                    case 'deletion':
+                        html += `<span class="diff-deletion traditional-char">${op.traditional}</span> `;
+                        break;
+                    case 'insertion':
+                        html += `<span class="diff-insertion simplified-char">${op.simplified}</span> `;
+                        break;
+                }
+            });
+            
+            if (globalScores.diffOps.length > 20) {
+                html += `<span>... (${globalScores.diffOps.length - 20} more operations)</span>`;
+            }
+            
+            html += `</div></div>`;
+            
+            // Paragraph-level application of global scores
+            html += `<h4>Paragraph-Level Application of Global Decision</h4>
+            <p><strong>Global Decision Applied:</strong> All paragraphs use ${paragraphStats.globalWinner} based on global character analysis.</p>
+            <p><strong>Rationale:</strong> Global text comparison provides more robust assessment than word-by-word alignment, avoiding mis-alignment cascades.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Paragraph</th>
+                        <th>Model Used</th>
+                        <th>Confidence</th>
+                        <th>Text Preview</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
+            paragraphDecisions.forEach(para => {
+                const textPreview = para.chosen.text.length > 50 ? 
+                    para.chosen.text.substring(0, 50) + '...' : 
+                    para.chosen.text;
+                const rowClass = para.chosen.model.includes('Traditional') ? 'word-traditional' : 'word-simplified';
+                
+                html += `<tr class="${rowClass}">
+                    <td>Paragraph ${para.paragraphPosition + 1}</td>
+                    <td>${para.chosen.model}</td>
+                    <td>${para.chosen.confidence.toFixed(2)}</td>
+                    <td>${textPreview || '(empty)'}</td>
+                </tr>`;
+            });
+            
+            html += `</tbody></table>`;
+            
+            html += `<h4>Final Reconstructed Text (Global Decision)</h4>`;
+            html += `<pre>${finalText}</pre>`;
+            
+            chineseAnalysis.innerHTML = html;
+        }
+
+        // Helper functions for scoring
+        function getScoreClass(score) {
+            if (score >= 80) return 'score-excellent';
+            if (score >= 65) return 'score-good';
+            if (score >= 50) return 'score-fair';
+            return 'score-poor';
+        }
+
+        function getScoreDescription(score) {
+            if (score >= 80) return 'Excellent appropriateness for text type';
+            if (score >= 65) return 'Good quality recognition';
+            if (score >= 50) return 'Acceptable quality';
+            return 'May require review - consider alternative model';
+        }
+
+        async function runOCR() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Running OCR...', 0, 'Initializing OCR...');
+                
+                // Determine which languages to use based on detected script
+                let languagesToUse = ['eng']; // Default to English
+                if (detectedScript && SCRIPT_TO_LANGUAGES[detectedScript]) {
+                    languagesToUse = SCRIPT_TO_LANGUAGES[detectedScript];
+                }
+                
+                console.log('Detected script:', detectedScript);
+                console.log('Languages to use:', languagesToUse);
+                
+                // Special handling for Chinese - run Option D global analysis
+                if (detectedScript === 'Han' && languagesToUse.includes('chi_sim') && languagesToUse.includes('chi_tra')) {
+                    console.log('Chinese detected - running Option D global character-level diff analysis...');
+                    
+                    // Perform global text comparison with character-level diff
+                    showProgress('Global Diff Analysis...', 10, 'Performing global text comparison with character-level diff...');
+                    const analysisResults = await performGlobalTextComparison();
+                    
+                    console.log('Option D global analysis complete. Results:', analysisResults);
+                    
+                    // Display the final OCR result (from global decision)
+                    ocrResults.textContent = analysisResults.finalText;
+                    
+                    // Display global analysis results
+                    displayGlobalAnalysis(analysisResults);
+                    
+                    updateProgress(100, 'OCR complete with Option D global character-level diff analysis');
+                } else {
+                    // Create a worker with the appropriate languages
+                    const worker = await Tesseract.createWorker(languagesToUse);
+                    
+                    // Set parameters
+                    await worker.setParameters({
+                        classify_enable_learning: '0' // Disable learning for consistent results
+                    });
+                    
+                    // Run OCR
+                    const { data } = await worker.recognize(currentImage);
+                    
+                    // Display OCR results
+                    ocrResults.textContent = data.text;
+                    
+                    updateProgress(100, 'OCR complete!');
+                    
+                    // Terminate worker
+                    await worker.terminate();
+                    
+                    // Clear Chinese analysis for non-Chinese text
+                    chineseAnalysis.innerHTML = '<p>Not Chinese text - no global character diff analysis performed.</p>';
+                }
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('OCR Error:', error);
+                alert('Error during OCR: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function resetPrototype() {
+            // Reset all state
+            currentImage = null;
+            detectedScript = null;
+            detectedOrientation = null;
+            
+            // Reset UI
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            controls.classList.add('hidden');
+            results.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            ocrBtn.disabled = true;
+            
+            // Clear results
+            osdResults.textContent = '';
+            ocrResults.textContent = '';
+            chineseAnalysis.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

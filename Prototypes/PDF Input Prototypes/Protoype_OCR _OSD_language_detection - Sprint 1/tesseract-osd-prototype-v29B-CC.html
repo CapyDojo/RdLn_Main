@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Tesseract OCR with OSD Prototype v29B-CC</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .language-option {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f8f9fa;
+        }
+        .language-option.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .hidden {
+            display: none;
+        }
+        .highlight {
+            background-color: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .confidence-high {
+            background-color: #d4edda;
+        }
+        .confidence-low {
+            background-color: #f8d7da;
+        }
+        .toggle-container {
+            margin: 10px 0;
+        }
+        .toggle-label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .stats-container {
+            background-color: #e9f7ef;
+            border: 1px solid #d4edda;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 10px 0;
+        }
+        .stat-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .paragraph-details {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .word-sample {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .debug-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .decision-strategy {
+            background-color: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .decision-strategy select {
+            padding: 5px 10px;
+            margin-left: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .word-traditional {
+            background-color: #e1f5fe;
+            color: #0277bd;
+        }
+        .word-simplified {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .word-preservation-high {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+        .word-preservation-low {
+            background-color: #ffcdd2;
+            color: #c62828;
+        }
+        .character-analysis {
+            background-color: #f0f4f8;
+            border: 1px solid #cfd8dc;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .character-pair {
+            display: inline-block;
+            margin: 2px 5px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+            font-size: 16px;
+        }
+        .traditional-char {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
+        .simplified-char {
+            background-color: #fce4ec;
+            color: #c2185b;
+            border: 1px solid #f8bbd9;
+        }
+        .appropriateness-score {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 0 5px;
+        }
+        .appropriateness-excellent {
+            background-color: #4caf50;
+            color: white;
+        }
+        .appropriateness-good {
+            background-color: #8bc34a;
+            color: white;
+        }
+        .appropriateness-fair {
+            background-color: #ff9800;
+            color: white;
+        }
+        .appropriateness-poor {
+            background-color: #f44336;
+            color: white;
+        }
+        .sliding-window-debug {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .window-match {
+            display: inline-block;
+            margin: 2px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .window-perfect {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .window-traditional-pair {
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+        .window-similar {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .window-no-match {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RdLn™ Tesseract OCR with OSD Prototype v29B-CC</h1>
+        <p>This prototype demonstrates Tesseract.js with <strong>Option B: Character-level sliding window alignment</strong> for Chinese Traditional vs Simplified OCR models.</p>
+        <p><strong>Key Innovation:</strong> Character-level sliding window analysis that works at character level to avoid word boundary issues where Traditional and Simplified models segment text differently (e.g., "文字" vs "文", "，" vs "輸入").</p>
+        <p><strong>Note:</strong> For OSD functionality, the <code>osd.traineddata</code> model must be available. Tesseract.js will automatically download it when needed.</p>
+        <p><strong>v29B-CC Changes:</strong> Implemented character-level sliding window alignment algorithm that operates below word boundaries to eliminate mis-alignment cascades.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Drag & drop an image here or click to select</p>
+            <p><small>Supports JPG, PNG, GIF, BMP, TIFF</small></p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview</h3>
+            <img id="preview" alt="Preview">
+        </div>
+        
+        <div id="controls" class="hidden">
+            <button id="detectBtn" class="btn">1. Detect Script & Orientation</button>
+            <button id="ocrBtn" class="btn" disabled>2. Run OCR</button>
+            <button id="resetBtn" class="btn">Reset</button>
+            
+            <div class="toggle-container">
+                <span class="toggle-label">Bias toward Simplified:</span>
+                <input type="checkbox" id="biasToggle" checked>
+                <label for="biasToggle">Enable (5% boost to Simplified confidence)</label>
+            </div>
+            
+            <div class="decision-strategy">
+                <strong>Character Sliding Window Configuration:</strong>
+                <select id="windowSizeSelect">
+                    <option value="3">Window Size: 3 characters</option>
+                    <option value="5" selected>Window Size: 5 characters</option>
+                    <option value="7">Window Size: 7 characters</option>
+                    <option value="10">Window Size: 10 characters</option>
+                </select>
+                <select id="decisionStrategy">
+                    <option value="character-sliding-window" selected>Character-Level Sliding Window (v29B-CC)</option>
+                    <option value="character-appropriateness">Character Appropriateness (v28B-CC)</option>
+                    <option value="word-vote">Word-Level Vote</option>
+                    <option value="confidence">Paragraph Confidence</option>
+                    <option value="hybrid">Hybrid</option>
+                </select>
+                <p><small>
+                    <strong>Character-Level Sliding Window (NEW):</strong> Uses flexible window size (3-10 characters) to find optimal character sequence alignments, robust to word boundary differences.<br>
+                    <strong>Character Appropriateness:</strong> Uses character preservation and appropriateness scores.<br>
+                    <strong>Word-Level Vote:</strong> Paragraph winner based on which model won more individual words.<br>
+                    <strong>Paragraph Confidence:</strong> Traditional approach using paragraph-level confidence scores.<br>
+                    <strong>Hybrid:</strong> Combines word-level votes with confidence weighting.
+                </small></p>
+            </div>
+            
+            <div id="progressContainer" class="hidden">
+                <h3 id="progressTitle">Detecting Script...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing...</p>
+            </div>
+        </div>
+        
+        <div id="results" class="result-container hidden">
+            <div class="result-box">
+                <h3>OSD Results</h3>
+                <pre id="osdResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>OCR Results</h3>
+                <pre id="ocrResults"></pre>
+            </div>
+            
+            <div class="result-box">
+                <h3>Chinese Character Analysis</h3>
+                <div id="chineseAnalysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supported languages configuration
+        const SUPPORTED_LANGUAGES = [
+            { code: "eng", name: "English", flag: "🇪🇳" },
+            { code: "chi_sim", name: "Chinese (Simplified)", flag: "🇨🇳" },
+            { code: "deu", name: "German", flag: "🇩🇪" },
+            { code: "chi_tra", name: "Chinese (Traditional)", flag: "🇹🇼" },
+            { code: "fra", name: "French", flag: "🇫🇷" },
+            { code: "jpn", name: "Japanese", flag: "🇯🇵" },
+            { code: "spa", name: "Spanish", flag: "🇪🇸" },
+            { code: "kor", name: "Korean", flag: "🇰🇷" },
+            { code: "ara", name: "Arabic", flag: "🇸🇦" },
+            { code: "rus", name: "Russian", flag: "🇷🇺" }
+        ];
+
+        // Traditional to Simplified Chinese character mappings for analysis
+        const TRADITIONAL_TO_SIMPLIFIED = {
+            // Common traditional→simplified pairs
+            '書': '书', '關': '关', '學': '学', '國': '国', '車': '车',
+            '門': '门', '開': '开', '時': '时', '長': '长', '會': '会',
+            '來': '来', '對': '对', '個': '个', '這': '这', '們': '们',
+            '說': '说', '現': '现', '實': '实', '間': '间', '點': '点',
+            '見': '见', '聽': '听', '講': '讲', '讀': '读', '寫': '写',
+            '頭': '头', '問': '问', '題': '题', '樣': '样', '機': '机',
+            '電': '电', '話': '话', '網': '网', '際': '际', '場': '场',
+            '業': '业', '產': '产', '經': '经', '濟': '济', '發': '发',
+            '展': '展', '動': '动', '務': '务', '員': '员', '價': '价'
+            // Add more mappings as needed
+        };
+
+        // Map script names to language codes
+        const SCRIPT_TO_LANGUAGES = {
+            // Latin-based scripts
+            'Latin': ['eng', 'deu', 'fra', 'spa'],
+            
+            // Chinese scripts
+            'Han': ['chi_sim', 'chi_tra'], // Generic Chinese characters
+            'HanS': ['chi_sim'], // Simplified Chinese
+            'HanT': ['chi_tra'], // Traditional Chinese
+            'Chinese': ['chi_sim', 'chi_tra'], // Generic Chinese
+            
+            // Other major scripts
+            'Japanese': ['jpn'],
+            'Korean': ['kor'],
+            'Arabic': ['ara'],
+            'Cyrillic': ['rus'],
+            'Devanagari': ['hin'],
+            'Thai': ['tha'],
+            'Hebrew': ['heb'],
+            
+            // Fallback for unknown scripts
+            'Unknown': ['eng'],
+            'Common': ['eng'] // Common script often defaults to English
+        };
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('preview');
+        const controls = document.getElementById('controls');
+        const detectBtn = document.getElementById('detectBtn');
+        const ocrBtn = document.getElementById('ocrBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const biasToggle = document.getElementById('biasToggle');
+        const decisionStrategy = document.getElementById('decisionStrategy');
+        const windowSizeSelect = document.getElementById('windowSizeSelect');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const osdResults = document.getElementById('osdResults');
+        const ocrResults = document.getElementById('ocrResults');
+        const chineseAnalysis = document.getElementById('chineseAnalysis');
+
+        // State variables
+        let currentImage = null;
+        let detectedScript = null;
+        let detectedOrientation = null;
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        detectBtn.addEventListener('click', detectScriptAndOrientation);
+        ocrBtn.addEventListener('click', runOCR);
+        resetBtn.addEventListener('click', resetPrototype);
+
+        // Functions
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    // Display preview
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    
+                    // Reset previous results
+                    results.classList.add('hidden');
+                    ocrBtn.disabled = true;
+                    detectedScript = null;
+                    detectedOrientation = null;
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function detectScriptAndOrientation() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Detecting Script & Orientation...', 0, 'Initializing OSD...');
+                
+                // Use Tesseract.detect for OSD
+                const result = await Tesseract.detect(currentImage);
+                
+                // Extract script and orientation
+                detectedScript = result.data.script || 'Unknown';
+                detectedOrientation = result.data.orientation || 0;
+                
+                // Debug output
+                console.log('Detected script:', detectedScript);
+                console.log('Script confidence:', result.data.script_confidence || 'N/A');
+                console.log('Available scripts in mapping:', Object.keys(SCRIPT_TO_LANGUAGES));
+                console.log('Mapping found:', SCRIPT_TO_LANGUAGES[detectedScript] || 'No mapping found');
+                
+                // Display OSD results
+                osdResults.textContent = JSON.stringify({
+                    script: detectedScript,
+                    orientation: detectedOrientation,
+                    script_confidence: result.data.script_confidence || 'N/A',
+                    orientation_confidence: result.data.orientation_confidence || 'N/A',
+                    deskewAngle: result.data.angle,
+                    confidence: result.data.confidence,
+                    unicharset: result.data.unicharset
+                }, null, 2);
+                
+                updateProgress(100, 'OSD detection complete!');
+                
+                // Enable OCR button
+                ocrBtn.disabled = false;
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('OSD Error:', error);
+                alert('Error during OSD detection: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        // NEW v29B-CC: Character-level sliding window alignment algorithm
+        function characterSlidingWindowAlignment(textSim, textTra, windowSize = 5) {
+            console.log('Starting character-level sliding window alignment with window size:', windowSize);
+            
+            const charsSim = textSim.split('');
+            const charsTra = textTra.split('');
+            const maxLength = Math.max(charsSim.length, charsTra.length);
+            
+            // Character streams with positions
+            const streamSim = charsSim.map((char, idx) => ({ char, pos: idx, model: 'simplified' }));
+            const streamTra = charsTra.map((char, idx) => ({ char, pos: idx, model: 'traditional' }));
+            
+            const alignment = [];
+            const windowMatches = [];
+            let simIndex = 0;
+            let traIndex = 0;
+            
+            // Sliding window algorithm
+            while (simIndex < streamSim.length || traIndex < streamTra.length) {
+                let bestMatch = null;
+                let bestScore = -999;
+                let bestSimAdvance = 1;
+                let bestTraAdvance = 1;
+                
+                // Try different window sizes around the current position
+                for (let winSize = Math.min(windowSize, windowSize * 2); winSize >= Math.max(1, Math.floor(windowSize / 2)); winSize--) {
+                    // Extract windows from both streams
+                    const simWindow = streamSim.slice(simIndex, simIndex + winSize);
+                    const traWindow = streamTra.slice(traIndex, traIndex + winSize);
+                    
+                    if (simWindow.length === 0 && traWindow.length === 0) break;
+                    
+                    // Score this window alignment
+                    const score = scoreCharacterWindow(simWindow, traWindow, simIndex, traIndex);
+                    
+                    if (score.total > bestScore) {
+                        bestScore = score.total;
+                        bestMatch = score;
+                        bestSimAdvance = Math.max(1, simWindow.length);
+                        bestTraAdvance = Math.max(1, traWindow.length);
+                    }
+                    
+                    // Try sliding the window by different amounts
+                    for (let simSlide = 0; simSlide <= Math.min(2, streamSim.length - simIndex - winSize); simSlide++) {
+                        for (let traSlide = 0; traSlide <= Math.min(2, streamTra.length - traIndex - winSize); traSlide++) {
+                            if (simSlide === 0 && traSlide === 0) continue;
+                            
+                            const simWindowSlide = streamSim.slice(simIndex + simSlide, simIndex + simSlide + winSize);
+                            const traWindowSlide = streamTra.slice(traIndex + traSlide, traIndex + traSlide + winSize);
+                            
+                            const slideScore = scoreCharacterWindow(simWindowSlide, traWindowSlide, simIndex + simSlide, traIndex + traSlide);
+                            
+                            if (slideScore.total > bestScore) {
+                                bestScore = slideScore.total;
+                                bestMatch = slideScore;
+                                bestSimAdvance = Math.max(1, simWindowSlide.length + simSlide);
+                                bestTraAdvance = Math.max(1, traWindowSlide.length + traSlide);
+                            }
+                        }
+                    }
+                }
+                
+                // Record the best match for this position
+                if (bestMatch) {
+                    alignment.push({
+                        simIndex: simIndex,
+                        traIndex: traIndex,
+                        windowScore: bestMatch,
+                        chosen: bestMatch.chosenModel,
+                        chosenChar: bestMatch.chosenChar,
+                        confidence: bestMatch.confidence
+                    });
+                    
+                    windowMatches.push({
+                        position: alignment.length - 1,
+                        simWindow: streamSim.slice(simIndex, simIndex + bestSimAdvance).map(s => s.char).join(''),
+                        traWindow: streamTra.slice(traIndex, traIndex + bestTraAdvance).map(s => s.char).join(''),
+                        score: bestMatch.total,
+                        details: bestMatch.details
+                    });
+                }
+                
+                // Advance indices
+                simIndex += bestSimAdvance;
+                traIndex += bestTraAdvance;
+                
+                // Safety break to prevent infinite loops
+                if (simIndex > streamSim.length + 10 || traIndex > streamTra.length + 10) {
+                    console.warn('Breaking sliding window loop for safety');
+                    break;
+                }
+            }
+            
+            console.log(`Character sliding window alignment complete. Found ${alignment.length} alignments.`);
+            
+            return { alignment, windowMatches, streamSim, streamTra };
+        }
+
+        // NEW v29B-CC: Scoring system for character windows
+        function scoreCharacterWindow(simWindow, traWindow, simStartIndex, traStartIndex) {
+            let totalScore = 0;
+            let details = [];
+            let chosenChars = [];
+            let chosenModel = '';
+            let confidence = 0;
+            
+            const maxLength = Math.max(simWindow.length, traWindow.length);
+            
+            if (maxLength === 0) {
+                return { total: -999, details: [], chosenChar: '', chosenModel: '', confidence: 0 };
+            }
+            
+            let simScore = 0;
+            let traScore = 0;
+            
+            for (let i = 0; i < maxLength; i++) {
+                const simChar = simWindow[i] ? simWindow[i].char : '';
+                const traChar = traWindow[i] ? traWindow[i].char : '';
+                let charScore = 0;
+                let charType = 'no-match';
+                
+                if (simChar && traChar) {
+                    if (simChar === traChar) {
+                        // Perfect character match
+                        charScore = 3;
+                        charType = 'perfect';
+                        details.push({ type: 'perfect', simChar, traChar, score: charScore });
+                    } else if (TRADITIONAL_TO_SIMPLIFIED[traChar] === simChar) {
+                        // Traditional→Simplified pair
+                        charScore = 2;
+                        charType = 'traditional-pair';
+                        details.push({ type: 'traditional-pair', simChar, traChar, score: charScore });
+                    } else if (TRADITIONAL_TO_SIMPLIFIED[simChar] === traChar) {
+                        // Simplified→Traditional pair (less common but possible)
+                        charScore = 1.5;
+                        charType = 'simplified-pair';
+                        details.push({ type: 'simplified-pair', simChar, traChar, score: charScore });
+                    } else if (isSimilarCharacter(simChar, traChar)) {
+                        // Similar characters (visual similarity, punctuation, etc.)
+                        charScore = 1;
+                        charType = 'similar';
+                        details.push({ type: 'similar', simChar, traChar, score: charScore });
+                    } else {
+                        // Different characters
+                        charScore = -0.5;
+                        charType = 'different';
+                        details.push({ type: 'different', simChar, traChar, score: charScore });
+                    }
+                    
+                    // Position proximity bonus (closer to expected position = better)
+                    const expectedSimPos = simStartIndex + i;
+                    const expectedTraPos = traStartIndex + i;
+                    const actualSimPos = simWindow[i] ? simWindow[i].pos : expectedSimPos;
+                    const actualTraPos = traWindow[i] ? traWindow[i].pos : expectedTraPos;
+                    
+                    const simPosBonus = Math.max(0, 0.5 - Math.abs(expectedSimPos - actualSimPos) * 0.1);
+                    const traPosBonus = Math.max(0, 0.5 - Math.abs(expectedTraPos - actualTraPos) * 0.1);
+                    
+                    charScore += (simPosBonus + traPosBonus) / 2;
+                    
+                    // Accumulate model scores
+                    if (charType === 'perfect' || charType === 'similar') {
+                        // Both models get credit for perfect/similar matches
+                        simScore += charScore / 2;
+                        traScore += charScore / 2;
+                    } else if (charType === 'traditional-pair') {
+                        // Traditional model gets more credit for preserving traditional characters
+                        traScore += charScore * 0.7;
+                        simScore += charScore * 0.3;
+                    } else if (charType === 'simplified-pair') {
+                        // Simplified model gets more credit
+                        simScore += charScore * 0.7;
+                        traScore += charScore * 0.3;
+                    } else {
+                        // For different characters, penalize both but look at individual character quality
+                        const simCharQuality = evaluateCharacterQuality(simChar);
+                        const traCharQuality = evaluateCharacterQuality(traChar);
+                        simScore += simCharQuality * 0.3;
+                        traScore += traCharQuality * 0.3;
+                    }
+                } else if (simChar) {
+                    // Only simplified has character
+                    const charQuality = evaluateCharacterQuality(simChar);
+                    charScore = charQuality;
+                    simScore += charScore;
+                    details.push({ type: 'sim-only', simChar, traChar: '', score: charScore });
+                } else if (traChar) {
+                    // Only traditional has character
+                    const charQuality = evaluateCharacterQuality(traChar);
+                    charScore = charQuality;
+                    traScore += charScore;
+                    details.push({ type: 'tra-only', simChar: '', traChar, score: charScore });
+                }
+                
+                totalScore += charScore;
+                chosenChars.push(simChar || traChar || '');
+            }
+            
+            // Apply bias if enabled
+            if (biasToggle.checked) {
+                simScore *= 1.05; // 5% boost to Simplified
+            }
+            
+            // Determine winning model for this window
+            if (simScore > traScore) {
+                chosenModel = 'simplified';
+                confidence = simScore;
+                chosenChars = simWindow.map(w => w ? w.char : '');
+            } else {
+                chosenModel = 'traditional';
+                confidence = traScore;
+                chosenChars = traWindow.map(w => w ? w.char : '');
+            }
+            
+            return {
+                total: totalScore,
+                simScore: simScore,
+                traScore: traScore,
+                chosenModel: chosenModel,
+                chosenChar: chosenChars.join(''),
+                confidence: confidence,
+                details: details
+            };
+        }
+
+        // NEW v29B-CC: Helper function to check character similarity
+        function isSimilarCharacter(char1, char2) {
+            // Check for visual similarity, punctuation equivalents, etc.
+            const punctuationMap = {
+                '，': ',', '。': '.', '！': '!', '？': '?', '；': ';', '：': ':',
+                '"': '"', '"': '"', ''': "'", ''': "'", '（': '(', '）': ')',
+                '【': '[', '】': ']', '《': '<', '》': '>'
+            };
+            
+            // Check punctuation mappings
+            if (punctuationMap[char1] === char2 || punctuationMap[char2] === char1) {
+                return true;
+            }
+            
+            // Check Unicode similarity (same category)
+            const cat1 = getUnicodeCategory(char1);
+            const cat2 = getUnicodeCategory(char2);
+            
+            return cat1 === cat2 && cat1 !== 'Other';
+        }
+
+        // NEW v29B-CC: Helper function to evaluate individual character quality
+        function evaluateCharacterQuality(char) {
+            if (!char) return 0;
+            
+            // Higher score for meaningful characters
+            if (/[\u4e00-\u9fff]/.test(char)) return 1.0; // Chinese characters
+            if (/[a-zA-Z0-9]/.test(char)) return 0.8; // Alphanumeric
+            if (/[，。！？；：""''（）【】《》]/.test(char)) return 0.6; // Chinese punctuation
+            if (/[.,!?;:"'()[\]<>]/.test(char)) return 0.5; // English punctuation
+            if (/\s/.test(char)) return 0.3; // Whitespace
+            return 0.1; // Other characters
+        }
+
+        // NEW v29B-CC: Helper function to get Unicode category
+        function getUnicodeCategory(char) {
+            if (!char) return 'Other';
+            
+            const code = char.charCodeAt(0);
+            if (code >= 0x4e00 && code <= 0x9fff) return 'CJK';
+            if (code >= 0x41 && code <= 0x5a || code >= 0x61 && code <= 0x7a) return 'Latin';
+            if (code >= 0x30 && code <= 0x39) return 'Number';
+            if (/\s/.test(char)) return 'Space';
+            if (/[.,!?;:"'()[\]<>]/.test(char)) return 'Punctuation';
+            
+            return 'Other';
+        }
+
+        // NEW v29B-CC: Convert character alignments back to word-level statistics for compatibility
+        function aggregateCharacterAlignmentToWordLevel(characterAlignment, textSim, textTra) {
+            console.log('Aggregating character-level alignment to word-level statistics...');
+            
+            // Reconstruct chosen text from character alignment
+            const chosenText = characterAlignment.alignment.map(a => a.chosenChar).join('');
+            
+            // Create mock word-level statistics for compatibility with existing display functions
+            let simplifiedWords = 0;
+            let traditionalWords = 0;
+            let ties = 0;
+            let identicalWords = 0;
+            
+            // Count character decisions
+            characterAlignment.alignment.forEach(charAlign => {
+                if (charAlign.chosen === 'simplified') {
+                    simplifiedWords++;
+                } else if (charAlign.chosen === 'traditional') {
+                    traditionalWords++;
+                } else {
+                    ties++;
+                }
+            });
+            
+            const totalWords = characterAlignment.alignment.length;
+            
+            // Calculate character-level preservation and appropriateness
+            let totalPreservation = 0;
+            let totalAppropriateness = 0;
+            let totalCompleteness = 0;
+            let totalConsistency = 0;
+            
+            characterAlignment.alignment.forEach(charAlign => {
+                const score = charAlign.windowScore;
+                if (score && score.details) {
+                    // Estimate preservation based on traditional pairs found
+                    const tradPairs = score.details.filter(d => d.type === 'traditional-pair').length;
+                    const totalChars = score.details.length;
+                    
+                    totalPreservation += totalChars > 0 ? (tradPairs / totalChars * 100) : 0;
+                    totalAppropriateness += score.total > 0 ? Math.min(100, score.total * 20) : 0;
+                    totalCompleteness += score.confidence > 0 ? Math.min(100, score.confidence * 30) : 0;
+                    totalConsistency += score.simScore > 0 && score.traScore > 0 ? 100 : 50;
+                }
+            });
+            
+            const stats = {
+                totalWords: totalWords,
+                simplifiedWords: simplifiedWords,
+                traditionalWords: traditionalWords,
+                ties: ties,
+                identicalWords: identicalWords,
+                simplifiedPercentage: totalWords > 0 ? (simplifiedWords / totalWords * 100).toFixed(2) : '0.00',
+                traditionalPercentage: totalWords > 0 ? (traditionalWords / totalWords * 100).toFixed(2) : '0.00',
+                tiePercentage: totalWords > 0 ? (ties / totalWords * 100).toFixed(2) : '0.00',
+                identicalPercentage: totalWords > 0 ? (identicalWords / totalWords * 100).toFixed(2) : '0.00',
+                averagePreservationScore: totalWords > 0 ? (totalPreservation / totalWords).toFixed(2) : '0.00',
+                averageAppropriatenessScore: totalWords > 0 ? (totalAppropriateness / totalWords).toFixed(2) : '0.00',
+                averageCompleteness: totalWords > 0 ? (totalCompleteness / totalWords).toFixed(2) : '0.00',
+                averageConsistency: totalWords > 0 ? (totalConsistency / totalWords).toFixed(2) : '0.00'
+            };
+            
+            console.log('Character-to-word aggregation complete:', stats);
+            return { stats, chosenText };
+        }
+
+        // NEW v29B-CC: Character-level sliding window comparison
+        async function characterSlidingWindowComparison() {
+            console.log('Starting character-level sliding window comparison (v29B-CC)...');
+            
+            // Get raw text results from both models
+            showProgress('Character Analysis...', 20, 'Processing with Simplified Chinese model...');
+            const workerSim = await Tesseract.createWorker(['chi_sim']);
+            await workerSim.setParameters({
+                classify_enable_learning: '0'
+            });
+            const resultSim = await workerSim.recognize(currentImage);
+            await workerSim.terminate();
+            
+            showProgress('Character Analysis...', 40, 'Processing with Traditional Chinese model...');
+            const workerTra = await Tesseract.createWorker(['chi_tra']);
+            await workerTra.setParameters({
+                classify_enable_learning: '0'
+            });
+            const resultTra = await workerTra.recognize(currentImage);
+            await workerTra.terminate();
+            
+            const textSim = resultSim.data.text || '';
+            const textTra = resultTra.data.text || '';
+            
+            console.log('Simplified text length:', textSim.length);
+            console.log('Traditional text length:', textTra.length);
+            
+            // Perform character-level sliding window alignment
+            showProgress('Character Analysis...', 60, 'Performing character-level sliding window alignment...');
+            const windowSize = parseInt(windowSizeSelect.value);
+            const characterAlignment = characterSlidingWindowAlignment(textSim, textTra, windowSize);
+            
+            console.log('Character alignment complete with window size:', windowSize);
+            
+            // Convert character-level results to word-level statistics for compatibility
+            showProgress('Character Analysis...', 80, 'Aggregating character-level decisions...');
+            const { stats, chosenText } = aggregateCharacterAlignmentToWordLevel(characterAlignment, textSim, textTra);
+            
+            return { 
+                stats, 
+                chosenText, 
+                characterAlignment, 
+                resultSim, 
+                resultTra,
+                windowSize
+            };
+        }
+
+        // Helper function to analyze character-level differences and appropriateness (legacy compatibility)
+        function analyzeCharacterDifferences(textSim, textTra) {
+            const charsSim = textSim.split('');
+            const charsTra = textTra.split('');
+            const maxLength = Math.max(charsSim.length, charsTra.length);
+            
+            let traditionalCharsPreserved = 0;
+            let simplifiedConversions = 0;
+            let appropriatenessScore = 0;
+            let characterPairs = [];
+            let consistency = 0;
+            
+            for (let i = 0; i < maxLength; i++) {
+                const charSim = charsSim[i] || '';
+                const charTra = charsTra[i] || '';
+                
+                if (charSim && charTra) {
+                    // Check for Traditional→Simplified pairs
+                    if (TRADITIONAL_TO_SIMPLIFIED[charTra] === charSim) {
+                        // Traditional model preserved Traditional, Simplified model converted
+                        characterPairs.push({
+                            position: i,
+                            traditional: charTra,
+                            simplified: charSim,
+                            type: 'traditional_to_simplified',
+                            appropriate_for_traditional: true,
+                            appropriate_for_simplified: true
+                        });
+                        appropriatenessScore += 1;
+                        simplifiedConversions++;
+                    } else if (charSim === charTra) {
+                        // Both models produced same character
+                        characterPairs.push({
+                            position: i,
+                            traditional: charTra,
+                            simplified: charSim,
+                            type: 'identical',
+                            appropriate_for_traditional: true,
+                            appropriate_for_simplified: true
+                        });
+                        consistency++;
+                    } else if (TRADITIONAL_TO_SIMPLIFIED[charSim]) {
+                        // Simplified model has Traditional character (unexpected)
+                        characterPairs.push({
+                            position: i,
+                            traditional: charTra,
+                            simplified: charSim,
+                            type: 'simplified_has_traditional',
+                            appropriate_for_traditional: true,
+                            appropriate_for_simplified: false
+                        });
+                    } else if (TRADITIONAL_TO_SIMPLIFIED[charTra]) {
+                        // Traditional model has Traditional character (expected)
+                        characterPairs.push({
+                            position: i,
+                            traditional: charTra,
+                            simplified: charSim,
+                            type: 'traditional_preserved',
+                            appropriate_for_traditional: true,
+                            appropriate_for_simplified: false
+                        });
+                        traditionalCharsPreserved++;
+                        appropriatenessScore += 0.8;
+                    } else {
+                        // Different characters with no known relationship
+                        characterPairs.push({
+                            position: i,
+                            traditional: charTra,
+                            simplified: charSim,
+                            type: 'different_unknown',
+                            appropriate_for_traditional: false,
+                            appropriate_for_simplified: false
+                        });
+                        appropriatenessScore -= 0.5;
+                    }
+                }
+            }
+            
+            // Calculate metrics
+            const totalChars = maxLength || 1;
+            const preservationScore = (traditionalCharsPreserved / totalChars) * 100;
+            const completeness = Math.min(charsSim.length, charsTra.length) / totalChars * 100;
+            const consistencyScore = (consistency / totalChars) * 100;
+            const finalAppropriatenessScore = Math.max(0, (appropriatenessScore / totalChars) * 100);
+            
+            return {
+                traditionalCharsPreserved,
+                simplifiedConversions,
+                preservationScore,
+                completeness,
+                consistencyScore,
+                appropriatenessScore: finalAppropriatenessScore,
+                characterPairs,
+                totalChars
+            };
+        }
+
+        // Enhanced paragraph decision making with character sliding window support
+        function makeParagraphDecision(paraConfSim, paraConfTra, wordStats, strategy) {
+            let winningModel, chosenByStrategy;
+            
+            switch (strategy) {
+                case 'character-sliding-window':
+                    // NEW v29B-CC: Decision based on character-level sliding window analysis
+                    if (parseFloat(wordStats.averageAppropriatenessScore) > 60) {
+                        // High character-level score - choose based on preservation
+                        if (parseFloat(wordStats.averagePreservationScore) > 40) {
+                            winningModel = 'Traditional (Character Window Analysis)';
+                            chosenByStrategy = 'traditional';
+                        } else {
+                            winningModel = 'Simplified (Character Window Analysis)';
+                            chosenByStrategy = 'simplified';
+                        }
+                    } else {
+                        // Fall back to character count
+                        if (wordStats.simplifiedWords > wordStats.traditionalWords) {
+                            winningModel = 'Simplified (Character Count Fallback)';
+                            chosenByStrategy = 'simplified';
+                        } else if (wordStats.traditionalWords > wordStats.simplifiedWords) {
+                            winningModel = 'Traditional (Character Count Fallback)';
+                            chosenByStrategy = 'traditional';
+                        } else {
+                            // Final tie - use bias or confidence
+                            if (biasToggle.checked) {
+                                winningModel = 'Simplified (Character Window Tie + Bias)';
+                                chosenByStrategy = 'simplified';
+                            } else if (paraConfSim >= paraConfTra) {
+                                winningModel = 'Simplified (Character Window Tie + Confidence)';
+                                chosenByStrategy = 'simplified';
+                            } else {
+                                winningModel = 'Traditional (Character Window Tie + Confidence)';
+                                chosenByStrategy = 'traditional';
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'character-appropriateness':
+                    // v28B-CC: Decision based on character analysis
+                    const appropriatenessThreshold = 60;
+                    const preservationThreshold = 40;
+                    
+                    if (parseFloat(wordStats.averageAppropriatenessScore) > appropriatenessThreshold) {
+                        // High appropriateness - choose based on preservation
+                        if (parseFloat(wordStats.averagePreservationScore) > preservationThreshold) {
+                            winningModel = 'Traditional (Character Preservation)';
+                            chosenByStrategy = 'traditional';
+                        } else {
+                            winningModel = 'Simplified (Character Appropriateness)';
+                            chosenByStrategy = 'simplified';
+                        }
+                    } else {
+                        // Fall back to word vote when character analysis is inconclusive
+                        if (wordStats.simplifiedWords > wordStats.traditionalWords) {
+                            winningModel = 'Simplified (Word-Vote Fallback)';
+                            chosenByStrategy = 'simplified';
+                        } else if (wordStats.traditionalWords > wordStats.simplifiedWords) {
+                            winningModel = 'Traditional (Word-Vote Fallback)';
+                            chosenByStrategy = 'traditional';
+                        } else {
+                            // Final tie - use bias or confidence
+                            if (biasToggle.checked) {
+                                winningModel = 'Simplified (Character Analysis Tie + Bias)';
+                                chosenByStrategy = 'simplified';
+                            } else if (paraConfSim >= paraConfTra) {
+                                winningModel = 'Simplified (Character Analysis Tie + Confidence)';
+                                chosenByStrategy = 'simplified';
+                            } else {
+                                winningModel = 'Traditional (Character Analysis Tie + Confidence)';
+                                chosenByStrategy = 'traditional';
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'word-vote':
+                    // Decision based on word-level statistics
+                    if (wordStats.simplifiedWords > wordStats.traditionalWords) {
+                        winningModel = 'Simplified (Word-Vote)';
+                        chosenByStrategy = 'simplified';
+                    } else if (wordStats.traditionalWords > wordStats.simplifiedWords) {
+                        winningModel = 'Traditional (Word-Vote)';
+                        chosenByStrategy = 'traditional';
+                    } else {
+                        // Tie in word votes - fall back to bias setting or confidence
+                        if (biasToggle.checked) {
+                            winningModel = 'Simplified (Word-Vote Tie + Bias)';
+                            chosenByStrategy = 'simplified';
+                        } else if (paraConfSim >= paraConfTra) {
+                            winningModel = 'Simplified (Word-Vote Tie + Confidence)';
+                            chosenByStrategy = 'simplified';
+                        } else {
+                            winningModel = 'Traditional (Word-Vote Tie + Confidence)';
+                            chosenByStrategy = 'traditional';
+                        }
+                    }
+                    break;
+                    
+                case 'confidence':
+                    // Original behavior - pure confidence comparison
+                    let finalParaConfSim = paraConfSim;
+                    if (biasToggle.checked) {
+                        finalParaConfSim = paraConfSim * 1.05; // 5% boost to Simplified
+                    }
+                    
+                    if (finalParaConfSim >= paraConfTra) {
+                        winningModel = 'Simplified (Confidence)';
+                        chosenByStrategy = 'simplified';
+                    } else {
+                        winningModel = 'Traditional (Confidence)';
+                        chosenByStrategy = 'traditional';
+                    }
+                    break;
+                    
+                case 'hybrid':
+                    // Hybrid approach: weight confidence by word-level success rate
+                    const simWordWeight = wordStats.totalWords > 0 ? wordStats.simplifiedWords / wordStats.totalWords : 0.5;
+                    const traWordWeight = wordStats.totalWords > 0 ? wordStats.traditionalWords / wordStats.totalWords : 0.5;
+                    
+                    let weightedConfSim = paraConfSim * (0.5 + simWordWeight * 0.5); // Base 50% + word success rate
+                    let weightedConfTra = paraConfTra * (0.5 + traWordWeight * 0.5);
+                    
+                    if (biasToggle.checked) {
+                        weightedConfSim *= 1.05; // 5% boost to Simplified
+                    }
+                    
+                    if (weightedConfSim >= weightedConfTra) {
+                        winningModel = 'Simplified (Hybrid)';
+                        chosenByStrategy = 'simplified';
+                    } else {
+                        winningModel = 'Traditional (Hybrid)';
+                        chosenByStrategy = 'traditional';
+                    }
+                    console.log(`Hybrid decision: Sim conf ${paraConfSim} * weight ${(0.5 + simWordWeight * 0.5).toFixed(2)} = ${weightedConfSim.toFixed(2)}, Tra conf ${paraConfTra} * weight ${(0.5 + traWordWeight * 0.5).toFixed(2)} = ${weightedConfTra.toFixed(2)}`);
+                    break;
+                    
+                default:
+                    // Default to character-sliding-window for v29B-CC
+                    return makeParagraphDecision(paraConfSim, paraConfTra, wordStats, 'character-sliding-window');
+            }
+            
+            return { winningModel, chosenByStrategy };
+        }
+
+        // Simplified paragraph processing for character-level approach
+        async function characterSlidingWindowParagraphProcessing(resultSim, resultTra, characterResults) {
+            console.log('Starting character sliding window paragraph processing (v29B-CC)...');
+            
+            // For character-level approach, we treat the entire text as one logical unit
+            // but maintain compatibility with paragraph-based display
+            const textSim = resultSim.data.text || '';
+            const textTra = resultTra.data.text || '';
+            
+            // Create a single "paragraph" alignment based on character-level decisions
+            const strategy = decisionStrategy.value;
+            console.log('Using decision strategy:', strategy);
+            
+            // Make overall decision based on character-level analysis
+            const { winningModel, chosenByStrategy } = makeParagraphDecision(
+                resultSim.data.confidence || 0, 
+                resultTra.data.confidence || 0, 
+                characterResults.stats, 
+                strategy
+            );
+            
+            // Choose text based on character-level analysis
+            let chosenText = characterResults.chosenText;
+            let chosenConf = chosenByStrategy === 'simplified' ? 
+                (resultSim.data.confidence || 0) : (resultTra.data.confidence || 0);
+            
+            const alignment = [{
+                paragraphPosition: 0,
+                simplified: {
+                    text: textSim,
+                    confidence: resultSim.data.confidence || 0,
+                    wordCount: characterResults.stats.totalWords
+                },
+                traditional: {
+                    text: textTra,
+                    confidence: resultTra.data.confidence || 0,
+                    wordCount: characterResults.stats.totalWords
+                },
+                wordAnalysis: characterResults.stats,
+                chosen: {
+                    text: chosenText,
+                    confidence: chosenConf,
+                    model: winningModel,
+                    strategy: strategy
+                },
+                characterAlignment: characterResults.characterAlignment
+            }];
+            
+            // Calculate paragraph-level statistics
+            const paragraphStats = {
+                totalParagraphs: 1,
+                simplifiedParagraphs: chosenByStrategy === 'simplified' ? 1 : 0,
+                traditionalParagraphs: chosenByStrategy === 'traditional' ? 1 : 0,
+                tieBreakParagraphs: 0,
+                averageConfidenceSim: resultSim.data.confidence || 0,
+                averageConfidenceTra: resultTra.data.confidence || 0,
+                simplifiedParagraphPercentage: chosenByStrategy === 'simplified' ? '100.00' : '0.00',
+                traditionalParagraphPercentage: chosenByStrategy === 'traditional' ? '100.00' : '0.00',
+                decisionStrategy: strategy
+            };
+            
+            console.log('Character sliding window paragraph processing complete (v29B-CC). Stats:', paragraphStats);
+            
+            return { alignment, paragraphStats };
+        }
+
+        // Function to reconstruct final text from alignment while preserving paragraph breaks
+        function reconstructText(alignment) {
+            return alignment.map(item => item.chosen.text).join('\n\n'); // Paragraph breaks
+        }
+
+        // NEW v29B-CC: Enhanced debug information display with sliding window details
+        function displaySlidingWindowDebugInfo(characterResults, wordStats, paragraphStats) {
+            let html = `<div class="debug-info">
+                <h5>Character-Level Sliding Window Debug Information (v29B-CC)</h5>
+                <p><strong>Decision Strategy:</strong> ${paragraphStats.decisionStrategy}</p>
+                <p><strong>Window Size:</strong> ${characterResults.windowSize} characters</p>
+                <p><strong>Character Decisions:</strong> Total: ${wordStats.totalWords}, Sim: ${wordStats.simplifiedWords}, Tra: ${wordStats.traditionalWords}</p>
+                <p><strong>Window Matches Found:</strong> ${characterResults.characterAlignment.windowMatches.length}</p>
+                <p><strong>Character Analysis:</strong> Preservation: ${wordStats.averagePreservationScore}%, Appropriateness: ${wordStats.averageAppropriatenessScore}%</p>
+            </div>`;
+            
+            // Display sliding window matches
+            if (characterResults.characterAlignment.windowMatches.length > 0) {
+                html += `<div class="sliding-window-debug">
+                    <h6>Sliding Window Matches (First 20)</h6>
+                    <p><small>Shows how character-level sliding window found alignments independent of word boundaries:</small></p>
+                    <div>`;
+                
+                characterResults.characterAlignment.windowMatches.slice(0, 20).forEach((match, idx) => {
+                    let matchClass = 'window-no-match';
+                    if (match.score > 2) matchClass = 'window-perfect';
+                    else if (match.score > 1) matchClass = 'window-traditional-pair';
+                    else if (match.score > 0) matchClass = 'window-similar';
+                    
+                    html += `<span class="window-match ${matchClass}" title="Score: ${match.score.toFixed(2)}">
+                        ${match.simWindow}|${match.traWindow}
+                    </span>`;
+                });
+                
+                if (characterResults.characterAlignment.windowMatches.length > 20) {
+                    html += `<span class="window-match">... ${characterResults.characterAlignment.windowMatches.length - 20} more matches</span>`;
+                }
+                
+                html += `</div>
+                    <p><small>
+                        <span class="window-match window-perfect">Green</span> = High score alignment,
+                        <span class="window-match window-traditional-pair">Blue</span> = Traditional-Simplified pairs,
+                        <span class="window-match window-similar">Yellow</span> = Similar characters,
+                        <span class="window-match window-no-match">Red</span> = Poor alignment
+                    </small></p>
+                </div>`;
+            }
+            
+            return html;
+        }
+
+        // Enhanced statistics display with character analysis
+        function displayStatistics(wordStats, paragraphStats) {
+            let html = `<div class="stats-container">
+                <h4>Character-Level Sliding Window Analysis (v29B-CC)</h4>
+                <p><strong>Decision Strategy Used:</strong> <em>${paragraphStats.decisionStrategy}</em></p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${wordStats.totalWords}</div>
+                        <div class="stat-label">Character Decisions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${paragraphStats.totalParagraphs}</div>
+                        <div class="stat-label">Text Sections</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${wordStats.averagePreservationScore}%</div>
+                        <div class="stat-label">Character Preservation</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${wordStats.averageAppropriatenessScore}%</div>
+                        <div class="stat-label">Appropriateness Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${wordStats.averageCompleteness}%</div>
+                        <div class="stat-label">Completeness Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${wordStats.averageConsistency}%</div>
+                        <div class="stat-label">Consistency Score</div>
+                    </div>
+                </div>
+                
+                <h5>Character-Level Model Selection</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Characters Selected</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="word-simplified">
+                            <td>Simplified Chinese</td>
+                            <td>${wordStats.simplifiedWords}</td>
+                            <td>${wordStats.simplifiedPercentage}%</td>
+                        </tr>
+                        <tr class="word-traditional">
+                            <td>Traditional Chinese</td>
+                            <td>${wordStats.traditionalWords}</td>
+                            <td>${wordStats.traditionalPercentage}%</td>
+                        </tr>
+                        <tr>
+                            <td>Tied Decisions</td>
+                            <td>${wordStats.ties}</td>
+                            <td>${wordStats.tiePercentage}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h5>Text-Level Model Selection</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Sections Selected</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="word-simplified">
+                            <td>Simplified Chinese</td>
+                            <td>${paragraphStats.simplifiedParagraphs}</td>
+                            <td>${paragraphStats.simplifiedParagraphPercentage}%</td>
+                        </tr>
+                        <tr class="word-traditional">
+                            <td>Traditional Chinese</td>
+                            <td>${paragraphStats.traditionalParagraphs}</td>
+                            <td>${paragraphStats.traditionalParagraphPercentage}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h5>Character Analysis Quality Metrics</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Average Score</th>
+                            <th>Interpretation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Character Preservation</td>
+                            <td class="${getPreservationClass(wordStats.averagePreservationScore)}">${wordStats.averagePreservationScore}%</td>
+                            <td>${getPreservationDescription(wordStats.averagePreservationScore)}</td>
+                        </tr>
+                        <tr>
+                            <td>Appropriateness Rating</td>
+                            <td class="${getAppropriatenessClass(wordStats.averageAppropriatenessScore)}">${wordStats.averageAppropriatenessScore}%</td>
+                            <td>${getAppropriatenessDescription(wordStats.averageAppropriatenessScore)}</td>
+                        </tr>
+                        <tr>
+                            <td>Completeness</td>
+                            <td>${wordStats.averageCompleteness}%</td>
+                            <td>Recognition completeness across models</td>
+                        </tr>
+                        <tr>
+                            <td>Consistency</td>
+                            <td>${wordStats.averageConsistency}%</td>
+                            <td>Character form consistency</td>
+                        </tr>
+                    </tbody>
+                </table>`;
+            
+            if (biasToggle.checked) {
+                html += `<p><em>Bias toward Simplified is enabled (5% boost applied during analysis)</em></p>`;
+            } else {
+                html += `<p><em>Bias toward Simplified is disabled</em></p>`;
+            }
+            
+            html += `</div>`;
+            
+            return html;
+        }
+
+        // Helper functions for quality assessment
+        function getPreservationClass(score) {
+            const s = parseFloat(score);
+            if (s >= 70) return 'word-preservation-high';
+            if (s >= 40) return 'confidence-high';
+            return 'word-preservation-low';
+        }
+
+        function getAppropriatenessClass(score) {
+            const s = parseFloat(score);
+            if (s >= 80) return 'appropriateness-excellent';
+            if (s >= 60) return 'appropriateness-good';
+            if (s >= 40) return 'appropriateness-fair';
+            return 'appropriateness-poor';
+        }
+
+        function getPreservationDescription(score) {
+            const s = parseFloat(score);
+            if (s >= 70) return 'Excellent Traditional character preservation';
+            if (s >= 40) return 'Good character form maintenance';
+            return 'Low preservation of Traditional forms';
+        }
+
+        function getAppropriatenessDescription(score) {
+            const s = parseFloat(score);
+            if (s >= 80) return 'Highly appropriate for source text type';
+            if (s >= 60) return 'Well-suited for detected text';
+            if (s >= 40) return 'Moderately appropriate';
+            return 'May not match source text requirements';
+        }
+
+        // Enhanced Chinese analysis display for sliding window approach
+        function displayCharacterSlidingWindowAnalysis(alignment, finalText, wordStats, paragraphStats, characterResults) {
+            let html = displaySlidingWindowDebugInfo(characterResults, wordStats, paragraphStats);
+            html += displayStatistics(wordStats, paragraphStats);
+            
+            // Character analysis summary
+            html += `<div class="character-analysis">
+                <h4>Character-Level Sliding Window Analysis Summary</h4>
+                <p><strong>Key Insights:</strong></p>
+                <ul>
+                    <li><strong>Window Size Used:</strong> ${characterResults.windowSize} characters - optimal for avoiding word boundary issues</li>
+                    <li><strong>Character Preservation:</strong> ${wordStats.averagePreservationScore}% - ${getPreservationDescription(wordStats.averagePreservationScore)}</li>
+                    <li><strong>Model Appropriateness:</strong> ${wordStats.averageAppropriatenessScore}% - ${getAppropriatenessDescription(wordStats.averageAppropriatenessScore)}</li>
+                    <li><strong>Alignment Quality:</strong> Found ${characterResults.characterAlignment.windowMatches.length} character window matches</li>
+                    <li><strong>Decision Strategy:</strong> ${paragraphStats.decisionStrategy === 'character-sliding-window' ? 'Character-level sliding window eliminated word boundary misalignments' : 'Alternative strategy used'}</li>
+                    <li><strong>Final Recommendation:</strong> ${parseFloat(wordStats.averagePreservationScore) > 50 ? 'Traditional model better preserves original character forms' : 'Simplified model provides better overall recognition'}</li>
+                </ul>
+            </div>`;
+            
+            html += `<h4>Final Reconstructed Output</h4>`;
+            html += `<pre>${finalText}</pre>`;
+            
+            chineseAnalysis.innerHTML = html;
+        }
+
+        async function runOCR() {
+            if (!currentImage) return;
+
+            try {
+                showProgress('Running OCR...', 0, 'Initializing OCR...');
+                
+                // Determine which languages to use based on detected script
+                let languagesToUse = ['eng']; // Default to English
+                if (detectedScript && SCRIPT_TO_LANGUAGES[detectedScript]) {
+                    languagesToUse = SCRIPT_TO_LANGUAGES[detectedScript];
+                }
+                
+                console.log('Detected script:', detectedScript);
+                console.log('Languages to use:', languagesToUse);
+                
+                // Special handling for Chinese - run character-level sliding window analysis
+                if (detectedScript === 'Han' && languagesToUse.includes('chi_sim') && languagesToUse.includes('chi_tra')) {
+                    console.log('Chinese detected - running character-level sliding window analysis (v29B-CC)...');
+                    
+                    const strategy = decisionStrategy.value;
+                    
+                    if (strategy === 'character-sliding-window') {
+                        // NEW v29B-CC: Character-level sliding window approach
+                        showProgress('Character Analysis...', 10, 'Performing character-level sliding window alignment...');
+                        const characterResults = await characterSlidingWindowComparison();
+                        
+                        console.log('Character-level sliding window analysis complete (v29B-CC).');
+                        
+                        // Process with character-aware paragraph analysis
+                        showProgress('Text Analysis...', 50, 'Processing text with character-level decisions...');
+                        const { alignment, paragraphStats } = await characterSlidingWindowParagraphProcessing(
+                            characterResults.resultSim, 
+                            characterResults.resultTra, 
+                            characterResults
+                        );
+                        
+                        console.log('Character sliding window processing complete (v29B-CC). Stats:', paragraphStats);
+                        
+                        // Reconstruct final text
+                        const finalText = characterResults.chosenText;
+                        
+                        // Display the final OCR result
+                        ocrResults.textContent = finalText;
+                        
+                        // Display enhanced analysis with character-level sliding window insights
+                        displayCharacterSlidingWindowAnalysis(alignment, finalText, characterResults.stats, paragraphStats, characterResults);
+                        
+                        updateProgress(100, `OCR complete with character-level sliding window (v29B-CC - Window Size: ${characterResults.windowSize})`);
+                    } else {
+                        // Fallback to legacy approaches for other strategies
+                        console.log('Using legacy word-level approach for strategy:', strategy);
+                        
+                        // Use simplified approach for non-sliding-window strategies
+                        const workerSim = await Tesseract.createWorker(['chi_sim']);
+                        await workerSim.setParameters({ classify_enable_learning: '0' });
+                        const resultSim = await workerSim.recognize(currentImage);
+                        await workerSim.terminate();
+                        
+                        const workerTra = await Tesseract.createWorker(['chi_tra']);
+                        await workerTra.setParameters({ classify_enable_learning: '0' });
+                        const resultTra = await workerTra.recognize(currentImage);
+                        await workerTra.terminate();
+                        
+                        // Simple character analysis for compatibility
+                        const charAnalysis = analyzeCharacterDifferences(resultSim.data.text, resultTra.data.text);
+                        const stats = {
+                            totalWords: Math.max(resultSim.data.text.length, resultTra.data.text.length),
+                            simplifiedWords: strategy.includes('simplified') ? 1 : 0,
+                            traditionalWords: strategy.includes('traditional') ? 1 : 0,
+                            ties: 0,
+                            identicalWords: 0,
+                            simplifiedPercentage: strategy.includes('simplified') ? '100.00' : '0.00',
+                            traditionalPercentage: strategy.includes('traditional') ? '100.00' : '0.00',
+                            tiePercentage: '0.00',
+                            identicalPercentage: '0.00',
+                            averagePreservationScore: charAnalysis.preservationScore.toFixed(2),
+                            averageAppropriatenessScore: charAnalysis.appropriatenessScore.toFixed(2),
+                            averageCompleteness: charAnalysis.completeness.toFixed(2),
+                            averageConsistency: charAnalysis.consistencyScore.toFixed(2)
+                        };
+                        
+                        const { winningModel, chosenByStrategy } = makeParagraphDecision(
+                            resultSim.data.confidence, resultTra.data.confidence, stats, strategy
+                        );
+                        
+                        const finalText = chosenByStrategy === 'simplified' ? resultSim.data.text : resultTra.data.text;
+                        ocrResults.textContent = finalText;
+                        
+                        const paragraphStats = {
+                            totalParagraphs: 1,
+                            simplifiedParagraphs: chosenByStrategy === 'simplified' ? 1 : 0,
+                            traditionalParagraphs: chosenByStrategy === 'traditional' ? 1 : 0,
+                            decisionStrategy: strategy,
+                            simplifiedParagraphPercentage: chosenByStrategy === 'simplified' ? '100.00' : '0.00',
+                            traditionalParagraphPercentage: chosenByStrategy === 'traditional' ? '100.00' : '0.00'
+                        };
+                        
+                        const alignment = [{
+                            chosen: { text: finalText, model: winningModel, strategy: strategy },
+                            wordAnalysis: stats
+                        }];
+                        
+                        chineseAnalysis.innerHTML = displayStatistics(stats, paragraphStats);
+                        
+                        updateProgress(100, `OCR complete with ${strategy} strategy`);
+                    }
+                } else {
+                    // Create a worker with the appropriate languages
+                    const worker = await Tesseract.createWorker(languagesToUse);
+                    
+                    // Set parameters
+                    await worker.setParameters({
+                        classify_enable_learning: '0' // Disable learning for consistent results
+                    });
+                    
+                    // Run OCR
+                    const { data } = await worker.recognize(currentImage);
+                    
+                    // Display OCR results
+                    ocrResults.textContent = data.text;
+                    
+                    updateProgress(100, 'OCR complete!');
+                    
+                    // Terminate worker
+                    await worker.terminate();
+                    
+                    // Clear Chinese analysis for non-Chinese text
+                    chineseAnalysis.innerHTML = '<p>Not Chinese text - no character analysis performed.</p>';
+                }
+                
+                // Show results
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    results.classList.remove('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('OCR Error:', error);
+                alert('Error during OCR: ' + error.message);
+                progressContainer.classList.add('hidden');
+            }
+        }
+
+        function showProgress(title, percent, text) {
+            progressTitle.textContent = title;
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            progressContainer.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function resetPrototype() {
+            // Reset all state
+            currentImage = null;
+            detectedScript = null;
+            detectedOrientation = null;
+            
+            // Reset UI
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            controls.classList.add('hidden');
+            results.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            ocrBtn.disabled = true;
+            
+            // Clear results
+            osdResults.textContent = '';
+            ocrResults.textContent = '';
+            chineseAnalysis.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
