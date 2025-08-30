@@ -80,18 +80,15 @@ body {
 
 /* Font size scaling system */
 /* Font size control for user text areas only */
-.user-text-area[data-user-font-size="small"],
-.user-text-area[data-user-font-size="small"] * {
+.user-text-area[data-user-font-size="small"] {
   font-size: 15px !important;
 }
 
-.user-text-area[data-user-font-size="medium"],
-.user-text-area[data-user-font-size="medium"] * {
+.user-text-area[data-user-font-size="medium"] {
   font-size: 18px !important;
 }
 
-.user-text-area[data-user-font-size="large"],
-.user-text-area[data-user-font-size="large"] * {
+.user-text-area[data-user-font-size="large"] {
   font-size: 23px !important;
 }
 
@@ -251,12 +248,11 @@ button.enhanced-button.text-white,
 
 /* Enhanced readability for glass panels */
 .glass-panel .text-body,
-.glass-panel textarea,
 .glass-panel input,
 .glass-panel p,
 .glass-panel span:not(.text-header):not(.text-secondary):not(.text-placeholder):not(.text-pilcrow-on):not(.text-pilcrow-off):not([style*="color"]) {
   color: var(--text-on-glass) !important;
-  font-weight: 500 !important;
+  /* Removed font-weight override for textarea - let .user-input-typography handle it */
 }
 
 /* Legal document specific improvements */

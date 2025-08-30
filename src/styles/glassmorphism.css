@@ -216,9 +216,30 @@
   transform: none;
 }
 
-/* Libertinus Math font styles */
+/* Premium Typography - Libre Baskerville + Source Han Serif */
+.user-input-typography {
+  /* Adobe/Google flagship serif pairing: Libre Baskerville (Latin) + Source Han Serif SC (CJK) */
+  font-family: 'Libre Baskerville', 'Source Han Serif SC', 'Noto Serif SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Libertinus Math', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'serif' !important;
+  font-weight: 400 !important; /* Consistent weight for both Latin and CJK */
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "onum" 1;
+  font-variant-numeric: oldstyle-nums;
+  font-variant-ligatures: common-ligatures contextual;
+  text-rendering: optimizeLegibility;
+  line-height: 1.8; /* Generous line height for CJK readability */
+}
+
+/* CJK Character Enhancement - Font weight approach */
+.user-input-typography {
+  /* Enhanced CJK rendering */
+  font-variant-east-asian: proportional-width;
+  font-weight: 500 !important; /* Heavier weight makes CJK more prominent */
+  /* Remove font-size scaling - doesn't work selectively for CJK characters */
+}
+
+/* Legacy class - maintained for backward compatibility */
 .libertinus-math-text {
-  font-family: 'Libre Baskerville', 'Libertinus Math', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif' !important;
+  font-family: 'Libre Baskerville', 'Source Han Serif SC', 'Noto Serif SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Libertinus Math', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'serif' !important;
+  font-weight: 400 !important;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "onum" 1;
   font-variant-numeric: oldstyle-nums;
   font-variant-ligatures: common-ligatures contextual;

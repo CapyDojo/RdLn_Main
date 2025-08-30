@@ -6,7 +6,7 @@ import { getRecommendedSample } from '../utils/sampleData';
 
 // Beta countdown component
 const BetaBadge: React.FC = () => {
-  const BETA_EXPIRY_DATE = new Date('2025-08-31T23:59:59.999Z');
+  const BETA_EXPIRY_DATE = new Date('2025-09-18T23:59:59.999Z');
   const currentDate = new Date();
   const daysRemaining = Math.ceil((BETA_EXPIRY_DATE.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
   
@@ -21,7 +21,7 @@ const BetaBadge: React.FC = () => {
            backdropFilter: 'blur(10px)',
            lineHeight: '1.2'
          }}>
-      <span>Limited Beta v.0.5.0 ({daysRemaining} days remaining)</span>
+      <span>Limited Beta v.0.6.0 ({daysRemaining} days remaining)</span>
     </div>
   );
 };

@@ -120,10 +120,14 @@ export class OCR_Engine_New {
         // 5) Phase: processing
         this.report(onProgress, 0.8, { phase: 'post_processing', description: 'Processing text...' });
 
-        const paragraphs = (result?.data?.paragraphs || [])
-          .map((p: any) => (p?.text || '').trim())
-          .filter((t: string) => t.length > 0);
-        const joined = paragraphs.join('\n\n');
+        // Extract text from paragraphs - NO pre-processing (matching prototype exactly)
+        const paragraphs = result.data.paragraphs || [];
+        const rawTextItems = paragraphs
+            .map((item: any) => item.text ? item.text.trim() : '')
+            .filter((text: string) => text.length > 0);
+        
+        // Join all text - store as raw processedText for copying (matching prototype exactly)
+        const joined = rawTextItems.join('\n\n');
 
         const correction = this.aggressiveCJKWhitespaceRemoval(joined);
 
@@ -148,30 +152,44 @@ export class OCR_Engine_New {
     }
   }
 
-  // Prototype-derived aggressive CJK whitespace removal (iterative until convergence)
+  // EXACT v18 DOM post-processing approach - creates LIVE DOM elements
   private static aggressiveCJKWhitespaceRemoval(text: string): { text: string; whitespaceRemoved: number; iterations: number } {
-    // Split text into paragraphs (preserve paragraph structure)
+    // Split text into paragraphs (preserve paragraph structure) - EXACT v18 logic
     const paragraphs = text.split('\n\n').filter(p => p.trim());
     
+    // Use a persistent hidden container to match prototype behavior more closely
+    let tempContainer = document.getElementById('ocr-temp-container');
+    if (!tempContainer) {
+      tempContainer = document.createElement('div');
+      tempContainer.id = 'ocr-temp-container';
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '-9999px';
+      tempContainer.style.visibility = 'hidden';
+      document.body.appendChild(tempContainer);
+    }
+    tempContainer.innerHTML = '';
+    
+    // First render paragraphs in LIVE DOM - EXACT v18 approach
+    tempContainer.innerHTML = paragraphs.map(text => 
+      `<div class="text-paragraph">${text}</div>`
+    ).join('');
+    
+    // Then apply DOM post-processing to remove CJK spaces - EXACT v18 approach
     let totalSpacesRemoved = 0;
     let totalIterations = 0;
     
-    // Process each paragraph individually using DOM post-processing (v18 approach)
-    const cleanedParagraphs = paragraphs.map(paragraph => {
-      // Create temporary DOM element for text processing
-      const tempDiv = document.createElement('div');
-      tempDiv.textContent = paragraph;
-      const renderedText = tempDiv.textContent || '';
-      
-      // Apply CJK space removal to rendered text
-      const cleaned = this.removeCJKSpacesFromRenderedText(renderedText);
+    tempContainer.querySelectorAll('.text-paragraph').forEach(paragraph => {
+      const originalText = paragraph.textContent || '';
+      const cleaned = this.removeCJKSpacesFromRenderedText(originalText);
+      paragraph.textContent = cleaned.text;
       totalSpacesRemoved += cleaned.spacesRemoved;
       totalIterations += cleaned.iterations;
-      
-      return cleaned.text;
     });
     
-    // Rejoin paragraphs
+    // Extract final text from DOM - EXACT v18 approach
+    const cleanedParagraphs = Array.from(tempContainer.querySelectorAll('.text-paragraph'))
+      .map(p => p.textContent || '');
     const finalText = cleanedParagraphs.join('\n\n');
     
     return { 
@@ -182,6 +200,7 @@ export class OCR_Engine_New {
   }
 
   private static removeCJKSpacesFromRenderedText(text: string): { text: string; spacesRemoved: number; iterations: number } {
+    // EXACT v18 character class definitions
     const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
     const punct = '[\\u3000-\\u303f\\uff00-\\uffef\\u2000-\\u206f\\u2e00-\\u2e7f\\u00a0-\\u00bf.,;:!?()\\[\\]{}"\'-]';
     const english = '[a-zA-Z0-9]';
@@ -206,12 +225,13 @@ export class OCR_Engine_New {
       // Remove single newlines between punctuation marks
       processed = processed.replace(new RegExp(`(${punct})\\n(${punct})`, 'g'), '$1$2');
       
-      // Remove single newlines between English characters (join broken words/lines)
+      // Handle English text line breaks (replicating v18 prototype behavior)
+      // Remove single newlines between English characters/numbers to reconstruct paragraphs
       processed = processed.replace(new RegExp(`(${english})\\n(${english})`, 'g'), '$1 $2');
       
-      // Remove single newlines between English and CJK
-      processed = processed.replace(new RegExp(`(${english})\\n(${cjk})`, 'g'), '$1 $2');
-      processed = processed.replace(new RegExp(`(${cjk})\\n(${english})`, 'g'), '$1 $2');
+      // Enhanced pattern: Remove single newlines that follow punctuation marks
+      // This helps with punctuation at the end of lines
+      processed = processed.replace(new RegExp(`(${punct})\\n`, 'g'), '$1 ');
       
       iterations++;
     } while (processed !== previousText && iterations <= 100);
