@@ -220,6 +220,8 @@
 .user-input-typography {
   /* Adobe/Google flagship serif pairing: Libre Baskerville (Latin) + Source Han Serif SC (CJK) */
   font-family: 'Libre Baskerville', 'Source Han Serif SC', 'Noto Serif SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Libertinus Math', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'serif' !important;
+  /* Ensure theme body color applies over utility classes */
+  color: var(--theme-text-body) !important;
   font-weight: 400 !important; /* Consistent weight for both Latin and CJK */
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "onum" 1;
   font-variant-numeric: oldstyle-nums;

@@ -109,7 +109,47 @@ Traditional vs Optimized OCR Pipeline:
 
 ---
 
-## Version 0.5.28 - "Enhanced OCR Text Post-Processing - Multi-Script Line Joining"
+## Version 0.5.28 - "OCR Engine Phase 1, CDN Fallbacks & Analytics"
+*Entries dated per commit; spans 2025-08-25–2025-08-31*
+
+### Features
+- OCR_Engine abstraction introduced; Phase 1 completed to improve modularity and reliability [2025-08-29, 2025-08-30].
+- OCR engine enhanced with robust CDN fallback and advanced CJK whitespace processing [2025-08-30].
+- OCR structure explorer: Japanese support and granular layout analysis improvements [2025-08-25].
+
+### Input & Prototypes
+- TXT drag-and-drop support finalized; docs updated [2025-08-27].
+- Input placeholders updated to reflect DOCX drag & drop support [2025-08-26].
+- DOCX parsing strategies (D/E) prototype and relocation; DOM-based CJK whitespace post-processing prototype [2025-08-28, 2025-08-30].
+- PDF input and OCR prototypes added; outdated prototypes removed [2025-08-31, 2025-08-26].
+
+### Refactors
+- Simplified OCRService and OCROrchestrator; adopted DOM-based CJK whitespace removal [2025-08-29, 2025-08-30].
+- Smart revert to proven OCR post-processing architecture for output stability [2025-08-29].
+- Single-phase OCR fidelity restoration with paragraph reconstruction fixes [2025-08-28].
+
+### Fixes
+- TypeScript compatibility issues resolved [2025-08-28].
+- OCR text cleanup: improved line joining [2025-08-29].
+- Missing imports fixed in ScrollLockContext and TextInputPanel [2025-08-26].
+- Netlify build reliability: Vite availability, Rollup native deps, Sass addition, env injection/substitution and config corrections [2025-08-25–2025-08-26].
+
+### Analytics & Privacy
+- PostHog analytics integration with comprehensive tracking [2025-08-25].
+- Enhanced debugging and event logging for analytics [2025-08-26].
+- Privacy settings and disclosures updated for accuracy and transparency [2025-08-26].
+
+### Docs
+- Major documentation restructure: index, quarterly learnings archives, and organization improvements [2025-08-28].
+- TXT drag-and-drop documentation updated [2025-08-27].
+- Analytics disclosure updates in beta agreements and documentation [2025-08-26].
+
+### Chore/Deps
+- Rollup platform dependencies updated [2025-08-28].
+- .gitignore and local agent settings adjustments; untracked local caches [2025-08-26–2025-08-28].
+- Removed outdated OCR/PDF prototypes [2025-08-31].
+
+## Version 0.6.0 - "Enhanced OCR Text Post-Processing - Multi-Script Line Joining"
 *Released: 2025-08-30*
 
 ### 🎯 **FEATURE: Multi-Script Line Joining Enhancement**
