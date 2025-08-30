@@ -200,10 +200,12 @@ export class OCR_Engine_New {
   }
 
   private static removeCJKSpacesFromRenderedText(text: string): { text: string; spacesRemoved: number; iterations: number } {
-    // EXACT v18 character class definitions
+    // EXACT v18 character class definitions with additions for Cyrillic and Arabic
     const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
     const punct = '[\\u3000-\\u303f\\uff00-\\uffef\\u2000-\\u206f\\u2e00-\\u2e7f\\u00a0-\\u00bf.,;:!?()\\[\\]{}"\'-]';
-    const english = '[a-zA-Z0-9]';
+    const latin = '[a-zA-Z0-9\\u00c0-\\u00ff]'; // Extended Latin with accented characters
+    const cyrillic = '[\\u0400-\\u04ff\\u0500-\\u052f\\u2de0-\\u2dff\\ua640-\\ua69f]'; // Complete Cyrillic ranges
+    const arabic = '[\\u0600-\\u06ff\\u0750-\\u077f\\u08a0-\\u08ff\\ufb50-\\ufdff\\ufe70-\\ufeff]'; // Complete Arabic ranges
     
     let processed = text;
     let previousText: string;
@@ -225,9 +227,17 @@ export class OCR_Engine_New {
       // Remove single newlines between punctuation marks
       processed = processed.replace(new RegExp(`(${punct})\\n(${punct})`, 'g'), '$1$2');
       
-      // Handle English text line breaks (replicating v18 prototype behavior)
-      // Remove single newlines between English characters/numbers to reconstruct paragraphs
-      processed = processed.replace(new RegExp(`(${english})\\n(${english})`, 'g'), '$1 $2');
+      // Handle Latin script line breaks (replicating v18 prototype behavior)
+      // Remove single newlines between Latin characters/numbers to reconstruct paragraphs
+      processed = processed.replace(new RegExp(`(${latin})\\n(${latin})`, 'g'), '$1 $2');
+      
+      // Handle Cyrillic script line breaks
+      // Remove single newlines between Cyrillic characters to reconstruct paragraphs
+      processed = processed.replace(new RegExp(`(${cyrillic})\\n(${cyrillic})`, 'g'), '$1 $2');
+      
+      // Handle Arabic script line breaks
+      // Remove single newlines between Arabic characters to reconstruct paragraphs
+      processed = processed.replace(new RegExp(`(${arabic})\\n(${arabic})`, 'g'), '$1 $2');
       
       // Enhanced pattern: Remove single newlines that follow punctuation marks
       // This helps with punctuation at the end of lines

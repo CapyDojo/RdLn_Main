@@ -109,6 +109,39 @@ Traditional vs Optimized OCR Pipeline:
 
 ---
 
+## Version 0.5.28 - "Enhanced OCR Text Post-Processing - Multi-Script Line Joining"
+*Released: 2025-08-30*
+
+### 🎯 **FEATURE: Multi-Script Line Joining Enhancement**
+- **EXTENDED SUPPORT**: Enhanced OCR post-processing to support line joining for Cyrillic and Arabic scripts in addition to existing Latin and CJK support
+- **COMPREHENSIVE UNICODE COVERAGE**: Added complete Unicode ranges for Cyrillic (`\u0400-\u04ff`, `\u0500-\u052f`, `\u2de0-\u2dff`, `\ua640-\ua69f`) and Arabic (`\u0600-\u06ff`, `\u0750-\u077f`, `\u08a0-\u08ff`, `\ufb50-\ufdff`, `\ufe70-\ufeff`) scripts
+- **PARAGRAPH RECONSTRUCTION**: Improved text reconstruction for documents in Russian, Bulgarian, Serbian, Ukrainian, Arabic, Persian/Farsi, Urdu, and other languages using these scripts
+- **PERFORMANCE OPTIMIZED**: Efficient regex patterns with minimal performance impact even with extended character class coverage
+
+### 🚀 **ENHANCEMENT: OCR Engine Post-Processing Refinement**
+- **BUG FIX**: Resolved critical regex syntax error in CJK character class definitions that caused "Range out of order" exceptions
+- **ENHANCED PATTERN MATCHING**: Added new patterns for punctuation followed by line breaks to improve text reconstruction quality
+- **CONSISTENT BEHAVIOR**: Unified line joining logic across all supported scripts for predictable text processing
+- **BACKWARD COMPATIBILITY**: All existing functionality preserved with no breaking changes to OCR processing pipeline
+
+### ✨ **TECHNICAL: Implementation Excellence**
+- **MODULAR DESIGN**: Extended `removeCJKSpacesFromRenderedText` function to handle all supported scripts while maintaining clean, readable code
+- **PERFORMANCE MONITORING**: Maintained existing performance tracking and iteration limits to ensure consistent processing times
+- **ERROR HANDLING**: Preserved robust error handling with proper fallback mechanisms
+- **TYPE SAFETY**: Full TypeScript support with appropriate type definitions for extended character classes
+
+### 🧪 **QUALITY ASSURANCE**
+- **BUILD VERIFICATION**: Confirmed successful build with all changes applied and no syntax errors
+- **REGRESSION TESTING**: Validated that existing Latin and CJK text processing continues to work correctly
+- **SCRIPT COVERAGE**: Comprehensive Unicode range coverage for all supported writing systems
+- **EDGE CASE HANDLING**: Proper handling of mixed-script documents and complex text layouts
+
+### 🎯 **USER IMPACT**
+- **IMPROVED ACCURACY**: Better text reconstruction for documents in multiple languages
+- **ENHANCED UX**: More readable OCR output for Cyrillic and Arabic script documents
+- **PROFESSIONAL QUALITY**: Production-ready enhancement suitable for legal and business document processing
+- **GLOBAL ACCESSIBILITY**: Extended support for international users working with non-Latin scripts
+
 ## Version 0.5.25 - "Professional Cancellation UX - Spotlight Effects & Fixed Button Positioning"
 *Released: 2025-08-19*
 
