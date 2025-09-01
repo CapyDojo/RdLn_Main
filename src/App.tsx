@@ -38,6 +38,7 @@ import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
 import OnboardingTour, { TourRestartButton } from './components/experimental/onboarding/OnboardingTour';
 import { StorageQuotaManager } from './components/StorageQuotaManager';
 import DocxTestPage from './pages/DocxTestPage';
+import OCRCacheTestPage from './pages/OCRCacheTestPage';
 import './styles/resize-overrides.css';
 
 interface AppContentProps {
@@ -488,6 +489,8 @@ function App() {
               <UnifiedTestDashboard />
             ) : window.location.pathname === '/docx-test' ? (
               <DocxTestPage />
+            ) : window.location.pathname === '/ocr-cache-test' ? (
+              <OCRCacheTestPage />
             ) : (
               <AppContent
                 showAdvancedOcrCard={showAdvancedOcrCardState}
