@@ -113,41 +113,45 @@ Traditional vs Optimized OCR Pipeline:
 *Entries dated per commit; spans 2025-08-25–2025-08-31*
 
 ### Features
-- OCR_Engine abstraction introduced; Phase 1 completed to improve modularity and reliability [2025-08-29, 2025-08-30].
-- OCR engine enhanced with robust CDN fallback and advanced CJK whitespace processing [2025-08-30].
-- OCR structure explorer: Japanese support and granular layout analysis improvements [2025-08-25].
+- OCR_Engine abstraction introduced; Phase 1 completed to improve modularity and reliability (1e60efd [2025-08-29], c2e6340 [2025-08-30]).
+- OCR engine: robust CDN fallback + advanced CJK whitespace processing (b00495c [2025-08-30]).
+- OCR structure explorer: Japanese support + granular layout analysis (c3c8a3b [2025-08-25]).
+- Single-phase OCR with 3be3ff2 fidelity restoration (fc64d99 [2025-08-28]).
 
 ### Input & Prototypes
-- TXT drag-and-drop support finalized; docs updated [2025-08-27].
-- Input placeholders updated to reflect DOCX drag & drop support [2025-08-26].
-- DOCX parsing strategies (D/E) prototype and relocation; DOM-based CJK whitespace post-processing prototype [2025-08-28, 2025-08-30].
-- PDF input and OCR prototypes added; outdated prototypes removed [2025-08-31, 2025-08-26].
+- TXT drag-and-drop support finalized; docs updated (1f411cf [2025-08-27], 59dd959 [2025-08-27]).
+- Input placeholders reflect DOCX drag & drop support (7ada39a [2025-08-26]).
+- DOCX parsing strategies prototypes and relocation; DOCX DnD prototype (d8283c7 [2025-08-28], 8ff2575 [2025-08-28], 7e002d9 [2025-08-28]).
+- DOM-based CJK whitespace post-processing prototypes and reports (0348f91 [2025-08-29], 28e1d5d [2025-08-30], 95222e1 [2025-08-29], 1fe0d97 [2025-08-30]).
+- PDF input and OCR prototypes added; outdated prototypes removed (0baaaa8 [2025-08-26], 1453fbf [2025-08-31], 1dd5a3f [2025-08-31]).
 
 ### Refactors
-- Simplified OCRService and OCROrchestrator; adopted DOM-based CJK whitespace removal [2025-08-29, 2025-08-30].
-- Smart revert to proven OCR post-processing architecture for output stability [2025-08-29].
-- Single-phase OCR fidelity restoration with paragraph reconstruction fixes [2025-08-28].
+- Simplified OCRService and OCROrchestrator (cd77787 [2025-08-29]).
+- Adopted DOM-based CJK whitespace removal (ff99a8c [2025-08-30]).
+- Smart revert to proven OCR post-processing architecture (9b8dba7 [2025-08-29]).
+- Removed duplicate/legacy steps in single-phase OCR flow (internal cleanups).
 
 ### Fixes
-- TypeScript compatibility issues resolved [2025-08-28].
-- OCR text cleanup: improved line joining [2025-08-29].
-- Missing imports fixed in ScrollLockContext and TextInputPanel [2025-08-26].
-- Netlify build reliability: Vite availability, Rollup native deps, Sass addition, env injection/substitution and config corrections [2025-08-25–2025-08-26].
+- TypeScript compatibility issues (0415d5e [2025-08-28]).
+- OCR text cleanup: improved line joining (f649872 [2025-08-29]).
+- Missing imports in ScrollLockContext and TextInputPanel (1b15811 [2025-08-26], a912371 [2025-08-26]).
+- Single-phase OCR paragraph reconstruction fix (e58165d [2025-08-28]).
+- Netlify builds: Vite availability, Rollup native deps, Sass, env injection/substitution, configs (03364a5, 59b602d, d2d0670, d80058d, 437b704, dcaecb2 [2025-08-25]; 7dc2616, 4f61ab8, f02eafb, 976020b, 87cd46c [2025-08-26]).
 
 ### Analytics & Privacy
-- PostHog analytics integration with comprehensive tracking [2025-08-25].
-- Enhanced debugging and event logging for analytics [2025-08-26].
-- Privacy settings and disclosures updated for accuracy and transparency [2025-08-26].
+- PostHog analytics integration with comprehensive tracking (1d82860 [2025-08-25]).
+- Enhanced analytics debugging and event logging (6a7fc75 [2025-08-26], d525bd0 [2025-08-26], 8c7ba9d [2025-08-26]).
+- Privacy settings and disclosures (4d35f8b [2025-08-26], 6da9216 [2025-08-26], 9c2b784 [2025-08-26]).
 
 ### Docs
-- Major documentation restructure: index, quarterly learnings archives, and organization improvements [2025-08-28].
-- TXT drag-and-drop documentation updated [2025-08-27].
-- Analytics disclosure updates in beta agreements and documentation [2025-08-26].
+- Documentation restructure: index, quarterly learnings archives, restored/archived content (01f2af8, fbf76d6, e24d494, 982ad66, fa4012a [2025-08-28]).
+- TXT drag-and-drop docs (59dd959 [2025-08-27]).
+- Analytics disclosures in docs and beta agreements (6da9216, 9c2b784 [2025-08-26]).
 
 ### Chore/Deps
-- Rollup platform dependencies updated [2025-08-28].
-- .gitignore and local agent settings adjustments; untracked local caches [2025-08-26–2025-08-28].
-- Removed outdated OCR/PDF prototypes [2025-08-31].
+- Rollup platform dependencies updated (0c58dfb [2025-08-28]).
+- .gitignore and local settings; untracked local caches (f22f974 [2025-08-26], 891fa56 [2025-08-26], 4dece2f [2025-08-28], 5ba5bd7 [2025-08-28]).
+- Remove outdated OCR/PDF prototypes (1dd5a3f [2025-08-31]).
 
 ## Version 0.6.0 - "Enhanced OCR Text Post-Processing - Multi-Script Line Joining"
 *Released: 2025-08-30*
@@ -2922,3 +2926,19 @@ We welcome contributions to improve the document comparison algorithm and user e
 ## License
 
 This project is proprietary software owned by RdLn Team. See LICENSE file for full terms and conditions.
+## Version 0.6.1 - "User Text Color Consistency & Glassmorphism CSS Cleanup"
+*Released: 2025-09-01*
+
+### Fixes
+- Text input color: Restored theme-consistent user text color in `TextInputPanel` by enforcing theme body color on `.user-input-typography` (`src/styles/glassmorphism.css`). Uses `color: var(--theme-text-body) !important;` to override legacy utility classes and ensure correct inheritance across themes.
+
+### Styles/CSS Cleanup (INP, safe and non-breaking)
+- Removed unused legacy button utilities: `.enhanced-button`, `.subtle-button`, and `bg-theme-*` helpers, plus their unused `--button-*` variables from `:root`.
+- Removed unused content-panel utilities: `.glass-effect`, `.glass-content-panel` (and hover), chunk-container overrides within content panels, and base hover variant `.glass-panel.hover-from-handle` (theme-specific variants remain in theme files).
+- Removed unused utilities: `.line-clamp-2`, `.custom-scrollbar` rules.
+- Consolidated duplicate `.user-input-typography` rules into a single definition, keeping CJK-friendly settings (`font-variant-east-asian: proportional-width;`, `font-weight: 500 !important`).
+- Kept active selectors: `.glass-panel` (+ hover), `.glass-input-field` (+ hover/focus), and `.libertinus-math-text` (for output).
+
+### Validation
+- Repo-wide search confirmed no references to removed selectors/variables.
+- Smoke test passed: text color, placeholder, focus ring, font size; theme switching; selection styling; OCR flows; redline output integrity.

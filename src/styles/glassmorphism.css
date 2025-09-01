@@ -15,26 +15,6 @@
   --glass-blur: 10px;
   --glass-saturate: 1.3;
 
-  /* Button color variables */
-  --button-primary-bg: #1e40af;
-  --button-primary-border: #1d4ed8;
-  --button-primary-text: #ffffff;
-  --button-primary-hover: #1e3a8a;
-
-  --button-accent-bg: #dc2626;
-  --button-accent-border: #b91c1c;
-  --button-accent-text: #ffffff;
-  --button-accent-hover: #b91c1c;
-
-  --button-neutral-bg: #374151;
-  --button-neutral-border: #4b5563;
-  --button-neutral-text: #ffffff;
-  --button-neutral-hover: #1f2937;
-
-  --button-light-bg: #e2e8f0;
-  --button-light-border: #cbd5e1;
-  --button-light-text: #1e293b;
-  --button-light-hover: #cbd5e1;
 }
 
 /* Base glassmorphism panel */
@@ -55,108 +35,9 @@
   transition: all 600ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Enhanced hover for special panels */
-.glass-panel.hover-from-handle {
-  background: rgba(var(--glass-bg), var(--glass-focus));
-  border-color: rgba(var(--glass-border), 0.6);
-  box-shadow: 0 30px 80px 0 rgba(var(--glass-shadow), 0.7), 0 12px 40px 0 rgba(var(--glass-shadow), 0.5);
-  transform: translateY(-1px);
-  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* (Theme-specific hover variants like .hover-from-handle/.force-hover are defined in theme files) */
 
-/* Enhanced button system */
-.enhanced-button {
-  font-weight: 700;
-  letter-spacing: 0.025em;
-  text-rendering: optimizeLegibility;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
-}
-
-.enhanced-button:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.15);
-}
-
-.enhanced-button:active {
-  transform: translateY(-1px) scale(1.02);
-}
-
-/* Primary buttons */
-.bg-theme-primary-600 {
-  background-color: var(--button-primary-bg);
-  border-color: var(--button-primary-border);
-  color: var(--button-primary-text);
-}
-
-.bg-theme-primary-600:hover {
-  background-color: var(--button-primary-hover);
-}
-
-/* Accent buttons */
-.bg-theme-accent-600,
-.bg-theme-accent-500 {
-  background-color: var(--button-accent-bg);
-  border-color: var(--button-accent-border);
-  color: var(--button-accent-text);
-}
-
-.bg-theme-accent-600:hover,
-.bg-theme-accent-500:hover {
-  background-color: var(--button-accent-hover);
-}
-
-/* Neutral buttons */
-.bg-theme-neutral-600 {
-  background-color: var(--button-neutral-bg);
-  border-color: var(--button-neutral-border);
-  color: var(--button-neutral-text);
-}
-
-.bg-theme-neutral-600:hover {
-  background-color: var(--button-neutral-hover);
-}
-
-/* Light buttons */
-.bg-theme-neutral-100 {
-  background-color: var(--button-light-bg);
-  border-color: var(--button-light-border);
-  color: var(--button-light-text);
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-.bg-theme-neutral-100:hover {
-  background-color: var(--button-light-hover);
-}
-
-.bg-theme-neutral-200 {
-  background-color: var(--button-light-bg);
-  border-color: var(--button-light-border);
-  color: var(--button-light-text);
-}
-
-/* Disabled states */
-.enhanced-button:disabled,
-.enhanced-button.disabled {
-  background-color: #9ca3af;
-  border-color: #d1d5db;
-  color: #374151;
-  text-shadow: none;
-  cursor: not-allowed;
-  opacity: 0.8;
-}
-
-/* Subtle button hover effects for smaller elements */
-.subtle-button {
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.05);
-}
-
-.subtle-button:hover {
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
-}
+/* (Legacy button utilities removed: not referenced in app code) */
 
 /* Input field glassmorphism */
 .glass-input-field {
@@ -177,44 +58,7 @@
   border-color: rgba(var(--glass-border), var(--glass-strong));
 }
 
-/* Enhanced glassmorphism utility */
-.glass-effect {
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-}
-
-/* Content panel specific styles */
-.glass-content-panel {
-  transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-content-panel:hover {
-  backdrop-filter: blur(calc(var(--glass-blur) * 1.15)) saturate(calc(var(--glass-saturate) * 1.05));
-  -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.15)) saturate(calc(var(--glass-saturate) * 1.05));
-}
-
-
-/* Prevent chunk containers from inheriting glass effects */
-.glass-content-panel .chunk-container {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.glass-content-panel .chunk-container::before,
-.glass-content-panel .chunk-container::after {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: none;
-  box-shadow: none;
-}
-
-/* Disable transforms for input/output panels */
-[data-input-panel] .glass-panel:hover,
-[data-output-panel] .glass-panel:hover {
-  transform: none;
-}
+/* (Legacy content-panel utilities removed: not referenced in app code) */
 
 /* Premium Typography - Libre Baskerville + Source Han Serif */
 .user-input-typography {
@@ -222,7 +66,9 @@
   font-family: 'Libre Baskerville', 'Source Han Serif SC', 'Noto Serif SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Libertinus Math', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'serif' !important;
   /* Ensure theme body color applies over utility classes */
   color: var(--theme-text-body) !important;
-  font-weight: 400 !important; /* Consistent weight for both Latin and CJK */
+  /* Enhanced CJK rendering and consistent weight */
+  font-variant-east-asian: proportional-width;
+  font-weight: 500 !important;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "onum" 1;
   font-variant-numeric: oldstyle-nums;
   font-variant-ligatures: common-ligatures contextual;
@@ -230,13 +76,7 @@
   line-height: 1.8; /* Generous line height for CJK readability */
 }
 
-/* CJK Character Enhancement - Font weight approach */
-.user-input-typography {
-  /* Enhanced CJK rendering */
-  font-variant-east-asian: proportional-width;
-  font-weight: 500 !important; /* Heavier weight makes CJK more prominent */
-  /* Remove font-size scaling - doesn't work selectively for CJK characters */
-}
+/* CJK Character Enhancement - merged into base */
 
 /* Legacy class - maintained for backward compatibility */
 .libertinus-math-text {
@@ -247,30 +87,4 @@
   font-variant-ligatures: common-ligatures contextual;
   text-rendering: optimizeLegibility;
 }
-
-/* Utility classes for RdLn Memory */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Custom scrollbar for RdLn Memory panels */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.5);
-}
+/* (Removed unused line-clamp and custom-scrollbar utilities) */
