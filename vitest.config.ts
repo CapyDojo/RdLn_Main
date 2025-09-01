@@ -11,17 +11,22 @@ export default defineConfig({
     include: [
       'tests/unit/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'tests/integration/**/*.{test,spec}.{js,ts,jsx,tsx}',
+      'tests/performance/**/*.{test,spec}.{js,ts}',
+      'tests/accuracy/**/*.{test,spec}.{js,ts}',
       'src/**/*.{test,spec}.{js,ts,jsx,tsx}'
     ],
     exclude: [
-      'tests/performance/**/*',
-      'tests/accuracy/**/*',
       'tests/e2e/**/*',
       'node_modules/**/*',
       'tests/archive/**/*',
     ],
-    testTimeout: 30000, // 30 seconds for OCR operations
+    testTimeout: 30000, // 30 seconds max for any test (reduced from 120s OCR timeout)
     hookTimeout: 30000,
+    // Re-enabled parallel execution (removed forced sequential from OCR config)
+    reporter: ['verbose', 'json'],
+    outputFile: {
+      json: './test-results/test-results.json'
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],

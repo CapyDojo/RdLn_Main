@@ -86,7 +86,7 @@ export const createMockDocument = (size: 'small' | 'medium' | 'large' | 'xlarge'
   return paragraphs.join('\n\n');
 };
 
-export const createMockDiff = (changeCount: 'few' | 'moderate' | 'many' | 'extreme'): Array<{type: 'added' | 'removed' | 'unchanged', text: string}> => {
+export const createMockDiff = (changeCount: 'few' | 'moderate' | 'many' | 'extreme'): Array<{type: 'added' | 'removed' | 'unchanged', content: string, index: number}> => {
   const baseText = "Sample text content for testing purposes.";
   
   const changeCounts = {
@@ -103,7 +103,8 @@ export const createMockDiff = (changeCount: 'few' | 'moderate' | 'many' | 'extre
     const changeType = i % 3 === 0 ? 'added' : i % 3 === 1 ? 'removed' : 'unchanged';
     changes.push({
       type: changeType as 'added' | 'removed' | 'unchanged',
-      text: `${baseText} Change ${i + 1}.`
+      content: `${baseText} Change ${i + 1}.`,
+      index: i
     });
   }
   

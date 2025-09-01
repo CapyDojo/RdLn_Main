@@ -1,8 +1,8 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { ThemeProvider } from '../src/contexts/ThemeContext';
-import { FontSizeProvider } from '../src/contexts/FontSizeContext';
-import { ExperimentalLayoutProvider } from '../src/contexts/ExperimentalLayoutContext';
+import { ThemeProvider } from '../../src/contexts/ThemeContext';
+import { FontSizeProvider } from '../../src/contexts/FontSizeContext';
+import { ExperimentalLayoutProvider } from '../../src/contexts/ExperimentalLayoutContext';
 
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (

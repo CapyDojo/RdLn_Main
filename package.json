@@ -24,11 +24,11 @@
     "test:coverage:report": "node scripts/coverage-report.js",
     "test:coverage:open": "npm run test:coverage && open coverage/index.html",
     "test:unit": "vitest run tests/unit",
-    "test:integration": "vitest run --config vitest.ocr.config.ts tests/integration",
-    "test:performance": "vitest run --config vitest.ocr.config.ts tests/performance",
-    "test:accuracy": "vitest run --config vitest.ocr.config.ts tests/accuracy",
-    "test:ocr": "vitest run --config vitest.ocr.config.ts",
-    "test:real": "vitest run tests/real-ocr.test.ts --no-coverage",
+    "test:integration": "vitest run tests/integration",
+    "test:performance": "vitest run tests/performance",
+    "test:accuracy": "vitest run tests/accuracy",
+
+
     "test:watch": "vitest --watch",
     "test:filing-cabinet": "ts-node tests/unified-filing-cabinet/test-runner.ts",
     "test:filing-cabinet:visual": "ts-node tests/unified-filing-cabinet/test-runner.ts visual",

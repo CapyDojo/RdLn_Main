@@ -88,203 +88,93 @@ vi.mock('../src/config/appConfig', () => ({
   },
 }));
 
-// Mock Canvas API for JSDOM environment
-const createMockCanvas = () => {
-  const canvas = {
-    getContext: () => ({
-      drawImage: () => {},
-      getImageData: () => ({ data: new Uint8ClampedArray(4) }),
-      putImageData: () => {},
-      fillRect: () => {},
-      clearRect: () => {},
-      beginPath: () => {},
-      closePath: () => {},
-      stroke: () => {},
-      fill: () => {},
-      arc: () => {},
-      moveTo: () => {},
-      lineTo: () => {},
-      save: () => {},
-      restore: () => {},
-      scale: () => {},
-      rotate: () => {},
-      translate: () => {},
-      transform: () => {},
-      setTransform: () => {},
-      createImageData: () => ({ data: new Uint8ClampedArray(4), width: 1, height: 1 }),
-      measureText: () => ({ width: 10 }),
-      canvas: { width: 100, height: 100 }
-    }),
-    toDataURL: () => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-    toBlob: (callback: (blob: Blob | null) => void) => {
-      const blob = new Blob(['test'], { type: 'image/png' });
-      callback(blob);
-    },
-    width: 100,
-    height: 100
-  };
-  return canvas;
-};
-
-// Mock HTML Canvas Element
-Object.defineProperty(global, 'HTMLCanvasElement', {
-  value: function() {
-    return createMockCanvas();
-  },
-  writable: true
+// Mock Canvas API (simplified)
+const createMockCanvas = () => ({
+  getContext: () => ({
+    drawImage: () => {},
+    getImageData: () => ({ data: new Uint8ClampedArray(4) }),
+    putImageData: () => {},
+    fillRect: () => {},
+    canvas: { width: 100, height: 100 }
+  }),
+  toDataURL: () => 'data:image/png;base64,mock',
+  width: 100,
+  height: 100
 });
 
-// Mock Canvas constructor for node-canvas
+// Mock HTML Canvas Element
+global.HTMLCanvasElement = createMockCanvas as any;
 global.createCanvas = createMockCanvas;
 
-// Mock Image constructor
+// Mock Image constructor (simplified)
 global.Image = class {
-  constructor() {
-    this.onload = null;
-    this.onerror = null;
-    this.src = '';
-    this.width = 100;
-    this.height = 100;
-  }
-  
-  set src(value: string) {
-    this._src = value;
-    setTimeout(() => {
-      if (this.onload) this.onload({} as Event);
-    }, 0);
-  }
-  
-  get src() {
-    return this._src;
-  }
-  
-  private _src = '';
+  onload: ((event: Event) => void) | null = null;
+  src = '';
+  width = 100;
+  height = 100;
 } as any;
 
-// Mock FileReader
+// Mock FileReader (simplified)
 global.FileReader = class {
-  constructor() {
-    this.onload = null;
-    this.onerror = null;
-    this.result = null;
-  }
+  onload: ((event: ProgressEvent) => void) | null = null;
+  result: string | ArrayBuffer | null = null;
   
-  readAsDataURL(file: Blob) {
+  readAsDataURL() {
     setTimeout(() => {
-      this.result = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+      this.result = 'data:image/png;base64,mock';
       if (this.onload) this.onload({} as ProgressEvent);
     }, 0);
   }
 
-  readAsArrayBuffer(file: Blob) {
+  readAsArrayBuffer() {
     setTimeout(() => {
-      // Mock a simple ArrayBuffer for testing purposes
-      this.result = new ArrayBuffer(8); // A small buffer
+      this.result = new ArrayBuffer(8);
       if (this.onload) this.onload({} as ProgressEvent);
     }, 0);
   }
-  
-  onload: ((event: ProgressEvent) => void) | null = null;
-  onerror: ((event: ProgressEvent) => void) | null = null;
-  result: string | ArrayBuffer | null = null;
 } as any;
 
-// Mock Blob
+// Mock Blob (simplified)
 if (!global.Blob) {
   global.Blob = class {
-    constructor(chunks: any[], options: any = {}) {
-      this.size = 0;
+    size = 0;
+    type = '';
+    constructor(chunks: any[] = [], options: any = {}) {
       this.type = options.type || '';
     }
-    size: number;
-    type: string;
   } as any;
 }
 
-// Mock Blob.prototype.arrayBuffer
-if (typeof Blob !== 'undefined' && !Blob.prototype.arrayBuffer) {
-  Blob.prototype.arrayBuffer = function() {
-    return new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (reader.result instanceof ArrayBuffer) {
-          resolve(reader.result);
-        } else if (typeof reader.result === 'string') {
-          // Basic conversion for data URL strings if needed, though ArrayBuffer is preferred
-          const base64 = reader.result.split(',')[1];
-          const binaryString = atob(base64);
-          const len = binaryString.length;
-          const bytes = new Uint8Array(len);
-          for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-          }
-          resolve(bytes.buffer);
-        } else {
-          resolve(new ArrayBuffer(0)); // Resolve with empty buffer if result is not ArrayBuffer or string
-        }
-      };
-      reader.readAsArrayBuffer(this);
-    });
-  };
-}
-
-// Mock File.prototype.arrayBuffer (File inherits from Blob)
-if (typeof File !== 'undefined' && !File.prototype.arrayBuffer) {
-  File.prototype.arrayBuffer = function() {
-    return Blob.prototype.arrayBuffer.call(this);
-  };
-}
-
-// Mock URL.createObjectURL
+// Mock URL
 global.URL = {
-    createObjectURL: vi.fn(() => 'blob:mock-url'),
-    revokeObjectURL: vi.fn(() => {}),
-  } as any;
+  createObjectURL: vi.fn(() => 'blob:mock-url'),
+  revokeObjectURL: vi.fn()
+} as any;
 
-// Mock tesseract.js
+// Mock tesseract.js (simplified)
 vi.mock('tesseract.js', () => ({
   createWorker: vi.fn(() => ({
     load: vi.fn(),
     loadLanguage: vi.fn(),
     initialize: vi.fn(),
     recognize: vi.fn(() => Promise.resolve({ data: { text: 'mock text' }})),
-    terminate: vi.fn(() => Promise.resolve()),
-    get  progress() { return 0.5; }, // Mock progress
-    set progress(value) { /* do nothing */ },
-  })),
+    terminate: vi.fn(() => Promise.resolve())
+  }))
 }));
 
-// Mock usePerformanceMonitor hook
+// Mock usePerformanceMonitor hook (simplified)
 vi.mock('../src/hooks/usePerformanceMonitor', () => ({
   usePerformanceMonitor: vi.fn(() => ({
-    trackMetric: vi.fn(),
     trackOperation: vi.fn((name, operation) => operation()),
-    getRecentMetrics: vi.fn(() => []),
-    getLastMetricValue: vi.fn(() => undefined),
-    recordMetric: vi.fn(),
-    timeFunction: vi.fn((name, operation) => operation()),
-    startTiming: vi.fn(() => () => {}),
-    trackRender: vi.fn(),
-    trackMount: vi.fn(),
-    trackUpdate: vi.fn(),
-    getCurrentMetric: vi.fn(),
-    getComponentStats: vi.fn(() => []),
-    isEnabled: true,
-    config: {},
+    isEnabled: true
   })),
   useInteractionTracking: vi.fn(() => ({
-    trackInteraction: vi.fn(() => () => {}),
-    trackClick: vi.fn(() => () => {}),
-    trackScroll: vi.fn(() => () => {}),
-    trackInput: vi.fn(() => () => {}),
-    trackDrag: vi.fn(() => () => {}),
-    trackResize: vi.fn(() => () => {}),
+    trackInteraction: vi.fn(() => () => {})
   })),
   usePerformanceDebugger: vi.fn(() => ({
     isEnabled: false,
-    logMetric: vi.fn(),
-    logPerformanceWarning: vi.fn(),
-  })),
+    logMetric: vi.fn()
+  }))
 }));
 
 // Test environment setup
@@ -309,9 +199,29 @@ afterAll(async () => {
 beforeEach(() => {
   // Clear any existing timers or intervals
   vi.clearAllTimers();
+  
+  // Clear any global abort signals to prevent unhandled promises
+  try {
+    (globalThis as any).currentAbortSignal = null;
+  } catch (error) {
+    // Ignore cleanup errors
+  }
 });
 
 afterEach(() => {
   // Cleanup after each test
   vi.restoreAllMocks();
+  
+  // Clear any hanging timeouts that might cause unhandled promise rejections
+  vi.clearAllTimers();
+  
+  // Reset any global abort signals
+  try {
+    (globalThis as any).currentAbortSignal = null;
+  } catch (error) {
+    // Ignore cleanup errors
+  }
+  
+  // Clear any pending async operations
+  return new Promise(resolve => setTimeout(resolve, 0));
 });
