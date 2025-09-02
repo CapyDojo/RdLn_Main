@@ -39,7 +39,7 @@ import OnboardingTour, { TourRestartButton } from './components/experimental/onb
 import { StorageQuotaManager } from './components/StorageQuotaManager';
 import DocxTestPage from './pages/DocxTestPage';
 import OCRCacheTestPage from './pages/OCRCacheTestPage';
-// Import prewarming functions
+// Import prewarming functions and cache
 import { prewarmLanguageWorker, SimpleOCRCache } from './services/SimpleOCRCache';
 import { DETECTION_LANGUAGES } from './config/ocrConfig';
 import './styles/resize-overrides.css';
@@ -112,15 +112,15 @@ function AppContent({
       try {
         console.log('🔥 Starting OCR prewarming...');
         
-        // Prewarm a single multilingual worker (10 languages, no OSD)
-        await prewarmLanguageWorker(DETECTION_LANGUAGES, (progress) => {
+        // Prewarm the primary multilingual worker (unified approach)
+        await prewarmLanguageWorker([...DETECTION_LANGUAGES], (progress) => {
           console.log( `?? Multilingual worker prewarming progress: ${Math.round(progress * 100)}%`); 
         });
         
         // Optionally prewarm common language workers
         // await prewarmLanguageWorker(['eng'], (progress) => {
         //   console.log( `?? English worker prewarming progress: ${Math.round(progress * 100)}%`); 
-        // // });
+        // });
         
         // Log prewarming stats
         const stats = SimpleOCRCache.getStats();
@@ -160,8 +160,8 @@ function AppContent({
   useEffect(() => {
     return () => {
       OCRService.terminate();
-      // Also terminate SimpleOCRCache workers
-      SimpleOCRCache.terminateAll();
+      // SimpleOCRCache termination is now handled by OCRService.terminate()
+      // SimpleOCRCache.terminateAll();
     };
   }, []);
 
