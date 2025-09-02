@@ -81,15 +81,21 @@ body {
 /* Font size scaling system */
 /* Font size control for user text areas only */
 .user-text-area[data-user-font-size="small"] {
-  font-size: 15px !important;
+  --user-font-size: 16px;
 }
 
 .user-text-area[data-user-font-size="medium"] {
-  font-size: 18px !important;
+  --user-font-size: 23px;
 }
 
 .user-text-area[data-user-font-size="large"] {
-  font-size: 23px !important;
+  --user-font-size: 30px;
+}
+
+/* Apply the custom property to all text content */
+.user-text-area,
+.user-text-area * {
+  font-size: var(--user-font-size, 18px) !important;
 }
 
 /* Apply font scaling to body and common elements with smooth transitions */
