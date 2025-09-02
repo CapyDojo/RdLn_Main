@@ -92,7 +92,12 @@ export class OCR_Engine_New {
 
       this.report(onProgress, 0.55, { phase: 'recognition', description: 'Recognizing text...' });
       // Use paragraph mode for better text structure
-      const result = await worker!.recognize(imageFile, {}, { blocks: true, paragraphs: true });
+      // In Tesseract.js v6+, non-text formats are disabled by default, so we need to explicitly enable them
+      const result = await worker!.recognize(imageFile, {}, { 
+        blocks: true, 
+        paragraphs: true,
+        text: true  // Explicitly enable text output (though it's enabled by default)
+      });
 
       // Extract text from paragraphs for better structure preservation
       const paragraphs = result.data.paragraphs || [];
