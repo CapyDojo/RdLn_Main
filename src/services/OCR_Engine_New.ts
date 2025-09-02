@@ -1,17 +1,18 @@
 /**
  * 20250829 - OCR_Engine refactor - code change - Codex/GPT5
- * OCR_Engine_New: One-stop detect+extract engine based on v17 prototype.
+ * OCR_Engine_New: One-stop detect+extract engine based on prototype.
  *
  * - Loads a multilingual worker (no pre-detection), recognizes with paragraph mode,
  *   then applies aggressive CJK whitespace correction. Returns final text.
- * - Integrates with OCR worker cache and supports progress + cancellation.
- * - Uses local assets for Electron via centralized path/worker factory.
+ * - Integrates with SimpleOCRCache and supports progress + cancellation.
+ * - Uses centralized path configuration for tesseract.js resources.
  */
 
 import { DETECTION_LANGUAGES } from '../config/ocrConfig';
 import { OCROptions, OCRLanguage, OCRProgressCallback } from '../types/ocr-types';
-import { createWorker } from 'tesseract.js';
+import { createWorker, type Worker as TesseractWorker } from 'tesseract.js';
 import { getResourcePaths } from '../config/pathConfig';
+import { SimpleOCRCache } from './SimpleOCRCache';
 
 export interface NewEngineExtractOptions extends OCROptions {
   signal?: AbortSignal;
@@ -25,11 +26,6 @@ export interface NewEngineExtractResult {
 }
 
 export class OCR_Engine_New {
-  /**
-   * 20250829 - OCR_Engine refactor - code change - Codex/GPT5
-   * One-stop detect+extract. If languages provided, uses them; otherwise loads
-   * a multilingual worker (DETECTION_LANGUAGES) and skips a separate detection phase.
-   */
   static async extract(
     imageFile: File | Blob,
     options: NewEngineExtractOptions = {}
@@ -37,124 +33,98 @@ export class OCR_Engine_New {
     const onProgress = options.onProgress;
     const signal = options.signal;
 
-    if (signal?.aborted) {
-      throw new Error('OCR operation aborted');
-    }
-
-    const abortHandler = () => {
-      // We do not terminate cached workers to avoid impacting others.
-      // We simply short-circuit and throw when checked next.
-    };
+    if (signal?.aborted) throw new Error('OCR operation aborted');
+    const abortHandler = () => { /* no-op: caller handles cancellation */ };
     signal?.addEventListener('abort', abortHandler, { once: true });
 
     try {
-      // 1) Phase: init
-      this.report(onProgress, 0.2, { phase: 'init', description: 'Initializing OCR...' });
+      this.report(onProgress, 0.15, { phase: 'init', description: 'Initializing OCR...' });
 
-      // 2) Determine language set
-      const languages: OCRLanguage[] = options.languages && options.languages.length > 0
+      // Determine languages (multilingual, no OSD pre-detection)
+      const languages: OCRLanguage[] = (options.languages && options.languages.length > 0)
         ? options.languages
         : DETECTION_LANGUAGES;
 
-      // 3) Phase: load models (prototype-strict worker, no factory/cache)
-      this.report(onProgress, 0.4, { phase: 'language_loading', description: 'Loading language models...' });
+      this.report(onProgress, 0.3, { phase: 'language_loading', description: 'Loading language models...' });
 
-      const resourcePaths = await getResourcePaths();
-      console.log('[OCR_Engine_New] Resource paths in use:', resourcePaths);
-      let worker: any | null = null;
-      try {
-        const mkLogger = () => (m: any) => {
+      // Try a prewarmed worker first
+      let worker = SimpleOCRCache.getLanguageWorker(languages) as unknown as TesseractWorker | null;
+      if (!worker) {
+        const resourcePaths = await getResourcePaths();
+        const mkLogger = (cb?: OCRProgressCallback) => (m: any) => {
           if (m?.status === 'recognizing text' && typeof m.progress === 'number') {
             const scaled = 0.6 + (m.progress * 0.4);
-            this.report(onProgress, Math.min(1.0, Math.max(0.6, scaled)), {
-              phase: m.progress < 0.25 ? 'image_preprocessing' : m.progress < 0.75 ? 'character_recognition' : m.progress < 0.95 ? 'text_assembly' : 'post_processing',
-              description: m.progress < 0.25 ? 'Preprocessing image for OCR...' : m.progress < 0.75 ? 'Recognizing characters and words...' : m.progress < 0.95 ? 'Assembling extracted text...' : 'Finalizing text formatting...'
+            this.report(cb, Math.min(1.0, Math.max(0.6, scaled)), {
+              phase: m.progress < 0.25 ? 'image_preprocessing'
+                   : m.progress < 0.75 ? 'character_recognition'
+                   : m.progress < 0.95 ? 'text_assembly'
+                   : 'post_processing',
+              description: 'Recognition in progress...'
             });
           }
         };
 
-        // Attempt with environment-provided paths first
-        const optionsPrimary = {
-          logger: mkLogger(),
+        const primary = {
+          logger: mkLogger(onProgress),
           workerPath: resourcePaths.workerPath,
           corePath: resourcePaths.corePath,
           langPath: resourcePaths.langPath.endsWith('/') ? resourcePaths.langPath : resourcePaths.langPath + '/'
         } as any;
 
-        console.log('[OCR_Engine_New] Creating worker (primary/CDN?) with:', {
-          workerPath: optionsPrimary.workerPath,
-          corePath: optionsPrimary.corePath,
-          langPath: optionsPrimary.langPath
-        });
-
         try {
-          worker = await createWorker(languages, 1, optionsPrimary);
-        } catch (err) {
-          console.warn('[OCR_Engine_New] Primary worker creation failed, falling back to local assets.', err);
-          // Fallback to local default relative paths if CDN or env paths fail
-          const optionsFallback = {
-            logger: mkLogger(),
+          worker = await createWorker(languages, 1, primary);
+        } catch (e) {
+          const fallback = {
+            logger: mkLogger(onProgress),
             workerPath: './tesseract/worker.min.js',
             corePath: './tesseract/tesseract-core.wasm.js',
             langPath: './tessdata/'
           } as any;
-          console.log('[OCR_Engine_New] Creating worker (fallback/local) with:', {
-            workerPath: optionsFallback.workerPath,
-            corePath: optionsFallback.corePath,
-            langPath: optionsFallback.langPath
-          });
-          worker = await createWorker(languages, 1, optionsFallback);
+          worker = await createWorker(languages, 1, fallback);
         }
 
+        // Conservative defaults
         await worker.setParameters({ classify_enable_learning: '0' });
 
-        if (signal?.aborted) throw new Error('OCR operation aborted');
-
-        // 4) Phase: recognize
-        this.report(onProgress, 0.6, { phase: 'recognize', description: 'Recognizing text...' });
-
-        const result: any = await worker.recognize(imageFile, {}, { blocks: true, paragraphs: true });
-
-        if (signal?.aborted) throw new Error('OCR operation aborted');
-
-        // 5) Phase: processing
-        this.report(onProgress, 0.8, { phase: 'post_processing', description: 'Processing text...' });
-
-        // Extract text from paragraphs - NO pre-processing (matching prototype exactly)
-        const paragraphs = result.data.paragraphs || [];
-        const rawTextItems = paragraphs
-            .map((item: any) => item.text ? item.text.trim() : '')
-            .filter((text: string) => text.length > 0);
-        
-        // Join all text - store as raw processedText for copying (matching prototype exactly)
-        const joined = rawTextItems.join('\n\n');
-
-        const correction = this.aggressiveCJKWhitespaceRemoval(joined);
-
-        // Per request: no universal cleanup and no language inference.
-        const processed = correction.text;
-
-        // 6) Phase: complete
-        this.report(onProgress, 1.0, { phase: 'complete', description: 'Complete!' });
-
-        return {
-          text: processed,
-          confidence: result?.data?.confidence ?? undefined,
-          paragraphs,
-          meta: { whitespaceRemoved: correction.whitespaceRemoved, iterations: correction.iterations }
-        };
-      } finally {
-        // Terminate each run to match prototype behavior
-        try { await (worker as any)?.terminate?.(); } catch {}
+        // Cache for reuse
+        SimpleOCRCache.setLanguageWorker(languages, worker);
       }
+
+      this.report(onProgress, 0.55, { phase: 'recognition', description: 'Recognizing text...' });
+      // Use paragraph mode for better text structure
+      const result: any = await worker!.recognize(imageFile, {}, { blocks: true, paragraphs: true });
+
+      // Extract text from paragraphs for better structure preservation
+      const paragraphs = result.data.paragraphs || [];
+      const rawTextItems = paragraphs
+          .map((item: any) => item.text ? item.text.trim() : '')
+          .filter((text: string) => text.length > 0);
+      
+      // Join all text with paragraph breaks
+      const joined = rawTextItems.join('\n\n');
+
+      // Apply aggressive CJK whitespace removal (DOM-based approach)
+      const correction = this.aggressiveCJKWhitespaceRemoval(joined);
+
+      this.report(onProgress, 1.0, { phase: 'complete', description: 'OCR complete' });
+      return {
+        text: correction.text,
+        confidence: result.data.confidence,
+        paragraphs: correction.cleanedParagraphs,
+        meta: { whitespaceRemoved: correction.whitespaceRemoved, iterations: correction.iterations }
+      };
     } finally {
-      signal?.removeEventListener('abort', abortHandler);
+      signal?.removeEventListener('abort', abortHandler as any);
     }
   }
 
+  private static report(cb: OCRProgressCallback | undefined, progress: number, info?: { phase: string; description: string }) {
+    try { cb && cb(progress, info); } catch { /* ignore */ }
+  }
+
   // EXACT v18 DOM post-processing approach - creates LIVE DOM elements
-  private static aggressiveCJKWhitespaceRemoval(text: string): { text: string; whitespaceRemoved: number; iterations: number } {
-    // Split text into paragraphs (preserve paragraph structure) - EXACT v18 logic
+  private static aggressiveCJKWhitespaceRemoval(text: string): { text: string; whitespaceRemoved: number; iterations: number; cleanedParagraphs: string[] } {
+    // Split text into paragraphs (preserve paragraph structure)
     const paragraphs = text.split('\n\n').filter(p => p.trim());
     
     // Use a persistent hidden container to match prototype behavior more closely
@@ -170,12 +140,12 @@ export class OCR_Engine_New {
     }
     tempContainer.innerHTML = '';
     
-    // First render paragraphs in LIVE DOM - EXACT v18 approach
+    // First render paragraphs in LIVE DOM
     tempContainer.innerHTML = paragraphs.map(text => 
       `<div class="text-paragraph">${text}</div>`
     ).join('');
     
-    // Then apply DOM post-processing to remove CJK spaces - EXACT v18 approach
+    // Then apply DOM post-processing to remove CJK spaces
     let totalSpacesRemoved = 0;
     let totalIterations = 0;
     
@@ -187,7 +157,7 @@ export class OCR_Engine_New {
       totalIterations += cleaned.iterations;
     });
     
-    // Extract final text from DOM - EXACT v18 approach
+    // Extract final text from DOM
     const cleanedParagraphs = Array.from(tempContainer.querySelectorAll('.text-paragraph'))
       .map(p => p.textContent || '');
     const finalText = cleanedParagraphs.join('\n\n');
@@ -195,7 +165,8 @@ export class OCR_Engine_New {
     return { 
       text: finalText, 
       whitespaceRemoved: totalSpacesRemoved, 
-      iterations: totalIterations 
+      iterations: totalIterations,
+      cleanedParagraphs
     };
   }
 
@@ -249,12 +220,4 @@ export class OCR_Engine_New {
     const spacesRemoved = text.length - processed.length;
     return { text: processed, spacesRemoved, iterations };
   }
-
-  // Language inference removed per request.
-
-  private static report(cb?: OCRProgressCallback, progress?: number, phaseInfo?: { phase: string; description: string }) {
-    try { cb && typeof progress === 'number' && cb(progress, phaseInfo); } catch {}
-  }
 }
-
-export default OCR_Engine_New;

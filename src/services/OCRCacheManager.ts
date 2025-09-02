@@ -163,8 +163,13 @@ export class OCRWorkerFactory {
           OCRErrorUtils.createTimeoutPromise(timeout, 'Web Worker Creation')
         ]);
 
+        // SAFELY set parameters only if the method exists
         if (Object.keys(parametersForLater).length > 0) {
-          await worker.setParameters(parametersForLater);
+          if (typeof worker.setParameters === 'function') {
+            await worker.setParameters(parametersForLater);
+          } else {
+            console.warn('⚠️ Worker.setParameters method not available, skipping parameter configuration');
+          }
         }
         
         console.log('✅ Web worker created successfully');
@@ -228,8 +233,13 @@ export class OCRWorkerFactory {
           OCRErrorUtils.createTimeoutPromise(timeout, 'Electron Worker Creation')
         ]);
 
+        // SAFELY set parameters only if the method exists
         if (Object.keys(parametersForLater).length > 0) {
-          await worker.setParameters(parametersForLater);
+          if (typeof worker.setParameters === 'function') {
+            await worker.setParameters(parametersForLater);
+          } else {
+            console.warn('⚠️ Worker.setParameters method not available, skipping parameter configuration');
+          }
         }
         
         console.log('✅ Electron worker created successfully');

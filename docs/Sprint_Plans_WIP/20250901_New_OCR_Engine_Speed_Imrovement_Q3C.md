@@ -56,6 +56,9 @@ This sprint focuses on significantly improving the OCR processing speed of the `
 - Immediate response for initial OCR operations
 - Better perceived performance
 
+*Details have been extracted to a separate document: [20250901_OCR_Prewarming_Enhancement.md](20250901_OCR_Prewarming_Enhancement.md)*
+*Alternative implementation approach: [20250902_OCR_Prewarming_Without_Cache_Manager.md](20250902_OCR_Prewarming_Without_Cache_Manager.md)*
+
 ### Phase 3: Progressive Loading Enhancement (Medium Priority)
 **Estimated Effort**: 2-3 days  
 **Risk Level**: Medium  
@@ -104,15 +107,7 @@ const worker = await OCRCacheManager.initializeWorker(languages, onProgress);
 ```
 
 ### Prewarming Implementation
-```typescript
-// In App initialization
-useEffect(() => {
-  // Prewarm detection worker
-  OCRCacheManager.initializeDetectionWorker();
-  // Optionally prewarm common language workers
-  OCRCacheManager.initializeWorker(['eng']);
-}, []);
-```
+*Technical implementation details have been moved to the dedicated document: [20250901_OCR_Prewarming_Enhancement.md](20250901_OCR_Prewarming_Enhancement.md)*
 
 ### Progressive Loading Enhancement
 Leverage existing logic from `OCRCacheManager.createProgressiveWorker`:

@@ -10,6 +10,8 @@ import { OCRCacheManager } from './OCRCacheManager';
 import { OCRErrorDetection, OCRErrorHandler, OCRErrorUtils } from '../utils/ocrErrorHandling';
 import { createWorker } from 'tesseract.js';
 import type { Worker as TesseractWorker } from 'tesseract.js';
+// Import SimpleOCRCache for prewarming support
+import { SimpleOCRCache } from './SimpleOCRCache';
 
 export class LanguageDetectionService {
   // SINGLE-PHASE OCR: Comprehensive worker for both detection and extraction
@@ -463,16 +465,29 @@ export class LanguageDetectionService {
     }
 
     try {
-      // Use OSD detection worker with detailed progress feedback
-      console.log('🔧 Initializing OSD detection worker...');
+      // Try to use prewarmed detection worker first
+      let worker = SimpleOCRCache.getDetectionWorker();
+      let workerWasPrewarmed = !!worker;
       
-      // Report worker initialization progress (0-60% of total)
-      const worker = await OCRCacheManager.initializeDetectionWorker((progress) => {
-        if (onProgress) {
-          const scaledProgress = progress * 0.6; // First 60% is worker initialization
-          onProgress(scaledProgress);
+      if (worker) {
+        console.log('🎯 Using prewarmed detection worker for OSD detection');
+      } else {
+        // Use OSD detection worker with detailed progress feedback
+        console.log('🔧 Initializing OSD detection worker...');
+        
+        // Report worker initialization progress (0-60% of total)
+        worker = await OCRCacheManager.initializeDetectionWorker((progress) => {
+          if (onProgress) {
+            const scaledProgress = progress * 0.6; // First 60% is worker initialization
+            onProgress(scaledProgress);
+          }
+        });
+        
+        // Cache the newly created worker if it wasn't prewarmed
+        if (!workerWasPrewarmed) {
+          SimpleOCRCache.setDetectionWorker(worker);
         }
-      });
+      }
       
       if (onProgress) {
         onProgress(0.6);
