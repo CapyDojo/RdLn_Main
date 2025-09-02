@@ -125,7 +125,7 @@ export const BetaTermsDialog: React.FC<BetaTermsDialogProps> = ({ isOpen, onClos
           <div>
             <h3 className="font-medium mb-2">1. BETA SOFTWARE ACKNOWLEDGMENT</h3>
             <p className="text-xs leading-relaxed opacity-90">
-              You acknowledge that RdLn™ (version 0.5.0) is beta software that may contain bugs, 
+              You acknowledge that RdLn™ (version 0.6.0) is beta software that may contain bugs, 
               errors, or incomplete features. This software is provided for testing purposes only 
               and is not recommended for production use with critical documents.
             </p>
@@ -212,7 +212,7 @@ export const BetaTermsDialog: React.FC<BetaTermsDialogProps> = ({ isOpen, onClos
               <strong>Contact:</strong> <a href="mailto:kai@rdln.io" className="text-blue-400 hover:text-blue-300 underline transition-colors">kai@rdln.io</a> for questions or concerns about these beta terms.
             </p>
             <p className="text-xs opacity-60 mt-1">
-              Last updated: August 2025
+              Last updated: Sep 2025
             </p>
           </div>
         </div>
