@@ -48,7 +48,7 @@ export class OCR_Engine_New {
       this.report(onProgress, 0.3, { phase: 'language_loading', description: 'Loading language models...' });
 
       // Try a prewarmed worker first
-      let worker = SimpleOCRCache.getLanguageWorker(languages) as unknown as TesseractWorker | null;
+      let worker = SimpleOCRCache.getLanguageWorker(languages) as TesseractWorker | null;
       if (!worker) {
         const resourcePaths = await getResourcePaths();
         const mkLogger = (cb?: OCRProgressCallback) => (m: any) => {
@@ -69,7 +69,7 @@ export class OCR_Engine_New {
           workerPath: resourcePaths.workerPath,
           corePath: resourcePaths.corePath,
           langPath: resourcePaths.langPath.endsWith('/') ? resourcePaths.langPath : resourcePaths.langPath + '/'
-        } as any;
+        };
 
         try {
           worker = await createWorker(languages, 1, primary);
@@ -79,7 +79,7 @@ export class OCR_Engine_New {
             workerPath: './tesseract/worker.min.js',
             corePath: './tesseract/tesseract-core.wasm.js',
             langPath: './tessdata/'
-          } as any;
+          };
           worker = await createWorker(languages, 1, fallback);
         }
 
@@ -92,7 +92,7 @@ export class OCR_Engine_New {
 
       this.report(onProgress, 0.55, { phase: 'recognition', description: 'Recognizing text...' });
       // Use paragraph mode for better text structure
-      const result: any = await worker!.recognize(imageFile, {}, { blocks: true, paragraphs: true });
+      const result = await worker!.recognize(imageFile, {}, { blocks: true, paragraphs: true });
 
       // Extract text from paragraphs for better structure preservation
       const paragraphs = result.data.paragraphs || [];
@@ -114,7 +114,7 @@ export class OCR_Engine_New {
         meta: { whitespaceRemoved: correction.whitespaceRemoved, iterations: correction.iterations }
       };
     } finally {
-      signal?.removeEventListener('abort', abortHandler as any);
+      signal?.removeEventListener('abort', abortHandler);
     }
   }
 
@@ -127,54 +127,54 @@ export class OCR_Engine_New {
     // Split text into paragraphs (preserve paragraph structure)
     const paragraphs = text.split('\n\n').filter(p => p.trim());
     
-    // Use a persistent hidden container to match prototype behavior more closely
-    let tempContainer = document.getElementById('ocr-temp-container');
-    if (!tempContainer) {
-      tempContainer = document.createElement('div');
-      tempContainer.id = 'ocr-temp-container';
-      tempContainer.style.position = 'absolute';
-      tempContainer.style.left = '-9999px';
-      tempContainer.style.top = '-9999px';
-      tempContainer.style.visibility = 'hidden';
-      document.body.appendChild(tempContainer);
+    // Create a temporary container for DOM manipulation
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '-9999px';
+    tempContainer.style.visibility = 'hidden';
+    document.body.appendChild(tempContainer);
+    
+    try {
+      // First render paragraphs in LIVE DOM
+      tempContainer.innerHTML = paragraphs.map(text => 
+        `<div class="text-paragraph">${text}</div>`
+      ).join('');
+      
+      // Then apply DOM post-processing to remove CJK spaces
+      let totalSpacesRemoved = 0;
+      let totalIterations = 0;
+      
+      tempContainer.querySelectorAll('.text-paragraph').forEach(paragraph => {
+        const originalText = paragraph.textContent || '';
+        const cleaned = this.removeCJKSpacesFromRenderedText(originalText);
+        paragraph.textContent = cleaned.text;
+        totalSpacesRemoved += cleaned.spacesRemoved;
+        totalIterations += cleaned.iterations;
+      });
+      
+      // Extract final text from DOM
+      const cleanedParagraphs = Array.from(tempContainer.querySelectorAll('.text-paragraph'))
+        .map(p => p.textContent || '');
+      const finalText = cleanedParagraphs.join('\n\n');
+      
+      return { 
+        text: finalText, 
+        whitespaceRemoved: totalSpacesRemoved, 
+        iterations: totalIterations,
+        cleanedParagraphs
+      };
+    } finally {
+      // Clean up the temporary container
+      document.body.removeChild(tempContainer);
     }
-    tempContainer.innerHTML = '';
-    
-    // First render paragraphs in LIVE DOM
-    tempContainer.innerHTML = paragraphs.map(text => 
-      `<div class="text-paragraph">${text}</div>`
-    ).join('');
-    
-    // Then apply DOM post-processing to remove CJK spaces
-    let totalSpacesRemoved = 0;
-    let totalIterations = 0;
-    
-    tempContainer.querySelectorAll('.text-paragraph').forEach(paragraph => {
-      const originalText = paragraph.textContent || '';
-      const cleaned = this.removeCJKSpacesFromRenderedText(originalText);
-      paragraph.textContent = cleaned.text;
-      totalSpacesRemoved += cleaned.spacesRemoved;
-      totalIterations += cleaned.iterations;
-    });
-    
-    // Extract final text from DOM
-    const cleanedParagraphs = Array.from(tempContainer.querySelectorAll('.text-paragraph'))
-      .map(p => p.textContent || '');
-    const finalText = cleanedParagraphs.join('\n\n');
-    
-    return { 
-      text: finalText, 
-      whitespaceRemoved: totalSpacesRemoved, 
-      iterations: totalIterations,
-      cleanedParagraphs
-    };
   }
 
   private static removeCJKSpacesFromRenderedText(text: string): { text: string; spacesRemoved: number; iterations: number } {
     // EXACT v18 character class definitions with additions for Cyrillic and Arabic
     const cjk = '[\\u4e00-\\u9fff\\u3400-\\u4dbf\\uf900-\\ufaff\\u3040-\\u309f\\u30a0-\\u30ff\\uac00-\\ud7af\\u3000-\\u303f\\uff00-\\uffef]';
     const punct = '[\\u3000-\\u303f\\uff00-\\uffef\\u2000-\\u206f\\u2e00-\\u2e7f\\u00a0-\\u00bf.,;:!?()\\[\\]{}"\'-]';
-    const latin = '[a-zA-Z0-9\\u00c0-\\u00ff]'; // Extended Latin with accented characters
+    const latin = '[a-zA-Z0-9\u00c0-\u00ff]'; // Extended Latin with accented characters
     const cyrillic = '[\\u0400-\\u04ff\\u0500-\\u052f\\u2de0-\\u2dff\\ua640-\\ua69f]'; // Complete Cyrillic ranges
     const arabic = '[\\u0600-\\u06ff\\u0750-\\u077f\\u08a0-\\u08ff\\ufb50-\\ufdff\\ufe70-\\ufeff]'; // Complete Arabic ranges
     
