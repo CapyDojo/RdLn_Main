@@ -83,14 +83,14 @@ export async function getResourcePaths() {
 
   const env = await detectEnvironment();
 
-  // Base URLs for different environments
+  // Base URLs for different environments - Updated for v6.0.1 with SIMD support
   const baseUrls = {
     electron: '', // Electron uses file protocol
     web: '', // Web uses relative/absolute paths
-    // Note: tesseract.js-core is a separate package in v5; corePath must point to it
-    cdn_worker: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
-    cdn_core: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js',
-    cdn_base: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist'
+    // Updated for v6: Use directory paths to enable automatic SIMD detection
+    cdn_worker: 'https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/worker.min.js',
+    cdn_core: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0', // Directory path for SIMD auto-detection
+    cdn_base: 'https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist'
   };
 
   // Resource paths by environment
@@ -103,23 +103,23 @@ export async function getResourcePaths() {
     resourcePaths = {
       langPath: './tessdata',
       workerPath: './tesseract/worker.min.js',
-      corePath: './tesseract/tesseract-core.wasm.js',
+      corePath: './tesseract', // Directory path for SIMD auto-detection in Electron
       baseUrl: baseUrls.electron
     };
   } else if (env.isWebDeployment) {
-    // Production web deployment - use CDN (tesseract.js 5.1.1) and tesseract.js-core@5
+    // Production web deployment - use CDN v6.0.1 with SIMD auto-detection
     resourcePaths = {
       langPath: 'https://tessdata.projectnaptha.com/4.0.0',
       workerPath: baseUrls.cdn_worker,
-      corePath: baseUrls.cdn_core,
+      corePath: baseUrls.cdn_core, // Directory path enables SIMD auto-detection
       baseUrl: baseUrls.cdn_base
     };
   } else {
-    // Local development - use CDN (tesseract.js 5.1.1) for parity and speed
+    // Local development - use CDN v6.0.1 with SIMD for parity and speed
     resourcePaths = {
       langPath: 'https://tessdata.projectnaptha.com/4.0.0',
       workerPath: baseUrls.cdn_worker,
-      corePath: baseUrls.cdn_core,
+      corePath: baseUrls.cdn_core, // Directory path enables SIMD auto-detection
       baseUrl: baseUrls.cdn_base
     };
   }

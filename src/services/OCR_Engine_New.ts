@@ -77,7 +77,7 @@ export class OCR_Engine_New {
           const fallback = {
             logger: mkLogger(onProgress),
             workerPath: './tesseract/worker.min.js',
-            corePath: './tesseract/tesseract-core.wasm.js',
+            corePath: './tesseract', // Directory path for SIMD auto-detection
             langPath: './tessdata/'
           };
           worker = await createWorker(languages, 1, fallback);
