@@ -95,18 +95,16 @@ export class OCR_Engine_New {
       // In Tesseract.js v6+, non-text formats are disabled by default, so we need to explicitly enable them
       const result = await worker!.recognize(imageFile, {}, { 
         blocks: true, 
-        paragraphs: true,
         text: true  // Explicitly enable text output (though it's enabled by default)
       });
 
       // Extract text from paragraphs for better structure preservation
-      const paragraphs = result.data.paragraphs || [];
-      const rawTextItems = paragraphs
-          .map((item: any) => item.text ? item.text.trim() : '')
-          .filter((text: string) => text.length > 0);
+      // In newer versions of Tesseract.js, we might have paragraphs array
+      // But for compatibility, we'll use the text directly and apply our own paragraph processing
+      const rawText = result.data.text || '';
       
-      // Join all text with paragraph breaks
-      const joined = rawTextItems.join('\n\n');
+      // Join all text with paragraph breaks (apply our own processing)
+      const joined = rawText;
 
       // Apply aggressive CJK whitespace removal (DOM-based approach)
       const correction = this.aggressiveCJKWhitespaceRemoval(joined);

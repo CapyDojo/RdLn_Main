@@ -21,32 +21,11 @@ interface SimpleCachedWorker {
 }
 
 export class SimpleOCRCache {
-  private static detectionWorker: SimpleCachedWorker | null = null;
   private static languageWorkers: Map<string, SimpleCachedWorker> = new Map();
   
   // Generate cache key for worker identification
   private static getWorkerKey(languages: OCRLanguage[]): string {
     return languages.sort().join('-');
-  }
-  
-  // Set detection worker
-  static setDetectionWorker(worker: TesseractWorker) {
-    this.detectionWorker = {
-      worker,
-      lastUsed: Date.now(),
-      useCount: 1,
-      languages: ['eng', 'osd']
-    };
-  }
-  
-  // Get detection worker
-  static getDetectionWorker(): TesseractWorker | null {
-    if (this.detectionWorker) {
-      this.detectionWorker.lastUsed = Date.now();
-      this.detectionWorker.useCount++;
-      return this.detectionWorker.worker;
-    }
-    return null;
   }
   
   // Set language worker
@@ -77,11 +56,7 @@ export class SimpleOCRCache {
   // Terminate all workers and clear caches
   static async terminateAll() {
     try {
-      if (this.detectionWorker) {
-        await this.detectionWorker.worker.terminate();
-      }
-      
-      for (const cached of this.languageWorkers.values()) {
+      for (const cached of Array.from(this.languageWorkers.values())) {
         try {
           await cached.worker.terminate();
         } catch (error) {
@@ -91,7 +66,6 @@ export class SimpleOCRCache {
     } catch (error) {
       console.warn('⚠️ Error terminating workers:', error);
     } finally {
-      this.detectionWorker = null;
       this.languageWorkers.clear();
     }
   }
@@ -99,22 +73,9 @@ export class SimpleOCRCache {
   // Get cache statistics
   static getStats() {
     return {
-      detectionWorkerCached: !!this.detectionWorker,
       languageWorkersCached: this.languageWorkers.size,
-      totalWorkers: (this.detectionWorker ? 1 : 0) + this.languageWorkers.size
+      totalWorkers: this.languageWorkers.size
     };
-  }
-}
-
-// Prewarming functions that don't depend on OCRCacheManager
-export async function prewarmDetectionWorker(onProgress?: (progress: number) => void): Promise<boolean> {
-  // Detection prewarm deprecated — align with new engine: prewarm multilingual worker (no OSD)
-  try {
-    console.log('🔥 Detection prewarm disabled. Prewarming multilingual worker instead...');
-    return await prewarmLanguageWorker([...DETECTION_LANGUAGES], onProgress);
-  } catch (error) {
-    console.error('❌ Failed to prewarm multilingual worker via detection prewarm shim:', error);
-    return false;
   }
 }
 
@@ -161,39 +122,62 @@ export async function prewarmLanguageWorker(languages: OCRLanguage[] = ['eng'], 
   }
 }
 
-// Modified OCR functions that use prewarmed workers with fallback to OCRCacheManager
+// Modified OCR functions that use prewarmed workers
 export async function detectLanguageWithPrewarmedWorker(imageFile: File | Blob): Promise<any> {
   try {
-    // Try to use prewarmed detection worker
-    let worker = SimpleOCRCache.getDetectionWorker();
+    // Use the multilingual worker for detection (aligns with OCR_Engine_New approach)
+    const languages = [...DETECTION_LANGUAGES];
+    let worker = SimpleOCRCache.getLanguageWorker(languages);
     
     if (!worker) {
       // Fallback to creating new worker if not prewarmed
-      console.log('🔥 Creating new detection worker (not prewarmed)');
-      worker = await createWorker(['eng', 'osd'], 1, {
+      console.log('🔥 Creating new multilingual worker for detection (not prewarmed)');
+      const paths = await getResourcePaths();
+      worker = await createWorker(languages, 1, {
         logger: (m) => {
           if (m.status === 'recognizing text') {
-            console.log(`🔥 Detection worker progress: ${Math.round(m.progress * 100)}%`);
+            console.log(`🔥 Multilingual worker progress: ${Math.round(m.progress * 100)}%`);
           }
-        }
+        },
+        workerPath: paths.workerPath,
+        corePath: paths.corePath,
+        langPath: paths.langPath.endsWith('/') ? paths.langPath : paths.langPath + '/',
       } as any);
-      SimpleOCRCache.setDetectionWorker(worker);
+      
+      // Apply conservative default parameters to align with OCR_Engine_New
+      if (typeof (worker as any).setParameters === 'function') {
+        await (worker as any).setParameters({ classify_enable_learning: '0' });
+      }
+      
+      SimpleOCRCache.setLanguageWorker(languages, worker);
     }
     
     const result = await (worker as any).detect(imageFile);
     return result;
   } catch (error) {
     // If prewarmed worker fails, try creating a new one
-    console.warn('⚠️ Prewarmed detection worker failed, creating new one:', error);
-    const newWorker = await createWorker(['eng', 'osd'], 1, {
+    console.warn('⚠️ Prewarmed multilingual worker failed, creating new one:', error);
+    const languages = [...DETECTION_LANGUAGES];
+    const paths = await getResourcePaths();
+    const newWorker = await createWorker(languages, 1, {
       logger: (m) => {
         if (m.status === 'recognizing text') {
-          console.log(`🔥 New detection worker progress: ${Math.round(m.progress * 100)}%`);
+          console.log(`🔥 New multilingual worker progress: ${Math.round(m.progress * 100)}%`);
         }
-      }
+      },
+      workerPath: paths.workerPath,
+      corePath: paths.corePath,
+      langPath: paths.langPath.endsWith('/') ? paths.langPath : paths.langPath + '/',
     } as any);
-    SimpleOCRCache.setDetectionWorker(newWorker);
-    return await (newWorker as any).detect(imageFile);
+    
+    // Apply conservative default parameters to align with OCR_Engine_New
+    if (typeof (newWorker as any).setParameters === 'function') {
+      await (newWorker as any).setParameters({ classify_enable_learning: '0' });
+    }
+    
+    SimpleOCRCache.setLanguageWorker(languages, newWorker);
+    const result = await (newWorker as any).detect(imageFile);
+    return result;
   }
 }
 

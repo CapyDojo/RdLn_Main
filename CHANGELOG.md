@@ -109,83 +109,6 @@ Traditional vs Optimized OCR Pipeline:
 
 ---
 
-## Version 0.5.28 - "OCR Engine Phase 1, CDN Fallbacks & Analytics"
-*Entries dated per commit; spans 2025-08-25–2025-08-31*
-
-### Features
-- OCR_Engine abstraction introduced; Phase 1 completed to improve modularity and reliability (1e60efd [2025-08-29], c2e6340 [2025-08-30]).
-- OCR engine: robust CDN fallback + advanced CJK whitespace processing (b00495c [2025-08-30]).
-- OCR structure explorer: Japanese support + granular layout analysis (c3c8a3b [2025-08-25]).
-- Single-phase OCR with 3be3ff2 fidelity restoration (fc64d99 [2025-08-28]).
-
-### Input & Prototypes
-- TXT drag-and-drop support finalized; docs updated (1f411cf [2025-08-27], 59dd959 [2025-08-27]).
-- Input placeholders reflect DOCX drag & drop support (7ada39a [2025-08-26]).
-- DOCX parsing strategies prototypes and relocation; DOCX DnD prototype (d8283c7 [2025-08-28], 8ff2575 [2025-08-28], 7e002d9 [2025-08-28]).
-- DOM-based CJK whitespace post-processing prototypes and reports (0348f91 [2025-08-29], 28e1d5d [2025-08-30], 95222e1 [2025-08-29], 1fe0d97 [2025-08-30]).
-- PDF input and OCR prototypes added; outdated prototypes removed (0baaaa8 [2025-08-26], 1453fbf [2025-08-31], 1dd5a3f [2025-08-31]).
-
-### Refactors
-- Simplified OCRService and OCROrchestrator (cd77787 [2025-08-29]).
-- Adopted DOM-based CJK whitespace removal (ff99a8c [2025-08-30]).
-- Smart revert to proven OCR post-processing architecture (9b8dba7 [2025-08-29]).
-- Removed duplicate/legacy steps in single-phase OCR flow (internal cleanups).
-
-### Fixes
-- TypeScript compatibility issues (0415d5e [2025-08-28]).
-- OCR text cleanup: improved line joining (f649872 [2025-08-29]).
-- Missing imports in ScrollLockContext and TextInputPanel (1b15811 [2025-08-26], a912371 [2025-08-26]).
-- Single-phase OCR paragraph reconstruction fix (e58165d [2025-08-28]).
-- Netlify builds: Vite availability, Rollup native deps, Sass, env injection/substitution, configs (03364a5, 59b602d, d2d0670, d80058d, 437b704, dcaecb2 [2025-08-25]; 7dc2616, 4f61ab8, f02eafb, 976020b, 87cd46c [2025-08-26]).
-
-### Analytics & Privacy
-- PostHog analytics integration with comprehensive tracking (1d82860 [2025-08-25]).
-- Enhanced analytics debugging and event logging (6a7fc75 [2025-08-26], d525bd0 [2025-08-26], 8c7ba9d [2025-08-26]).
-- Privacy settings and disclosures (4d35f8b [2025-08-26], 6da9216 [2025-08-26], 9c2b784 [2025-08-26]).
-
-### Docs
-- Documentation restructure: index, quarterly learnings archives, restored/archived content (01f2af8, fbf76d6, e24d494, 982ad66, fa4012a [2025-08-28]).
-- TXT drag-and-drop docs (59dd959 [2025-08-27]).
-- Analytics disclosures in docs and beta agreements (6da9216, 9c2b784 [2025-08-26]).
-
-### Chore/Deps
-- Rollup platform dependencies updated (0c58dfb [2025-08-28]).
-- .gitignore and local settings; untracked local caches (f22f974 [2025-08-26], 891fa56 [2025-08-26], 4dece2f [2025-08-28], 5ba5bd7 [2025-08-28]).
-- Remove outdated OCR/PDF prototypes (1dd5a3f [2025-08-31]).
-
-## Version 0.6.0 - "Enhanced OCR Text Post-Processing - Multi-Script Line Joining"
-*Released: 2025-08-30*
-
-### 🎯 **FEATURE: Multi-Script Line Joining Enhancement**
-- **EXTENDED SUPPORT**: Enhanced OCR post-processing to support line joining for Cyrillic and Arabic scripts in addition to existing Latin and CJK support
-- **COMPREHENSIVE UNICODE COVERAGE**: Added complete Unicode ranges for Cyrillic (`\u0400-\u04ff`, `\u0500-\u052f`, `\u2de0-\u2dff`, `\ua640-\ua69f`) and Arabic (`\u0600-\u06ff`, `\u0750-\u077f`, `\u08a0-\u08ff`, `\ufb50-\ufdff`, `\ufe70-\ufeff`) scripts
-- **PARAGRAPH RECONSTRUCTION**: Improved text reconstruction for documents in Russian, Bulgarian, Serbian, Ukrainian, Arabic, Persian/Farsi, Urdu, and other languages using these scripts
-- **PERFORMANCE OPTIMIZED**: Efficient regex patterns with minimal performance impact even with extended character class coverage
-
-### 🚀 **ENHANCEMENT: OCR Engine Post-Processing Refinement**
-- **BUG FIX**: Resolved critical regex syntax error in CJK character class definitions that caused "Range out of order" exceptions
-- **ENHANCED PATTERN MATCHING**: Added new patterns for punctuation followed by line breaks to improve text reconstruction quality
-- **CONSISTENT BEHAVIOR**: Unified line joining logic across all supported scripts for predictable text processing
-- **BACKWARD COMPATIBILITY**: All existing functionality preserved with no breaking changes to OCR processing pipeline
-
-### ✨ **TECHNICAL: Implementation Excellence**
-- **MODULAR DESIGN**: Extended `removeCJKSpacesFromRenderedText` function to handle all supported scripts while maintaining clean, readable code
-- **PERFORMANCE MONITORING**: Maintained existing performance tracking and iteration limits to ensure consistent processing times
-- **ERROR HANDLING**: Preserved robust error handling with proper fallback mechanisms
-- **TYPE SAFETY**: Full TypeScript support with appropriate type definitions for extended character classes
-
-### 🧪 **QUALITY ASSURANCE**
-- **BUILD VERIFICATION**: Confirmed successful build with all changes applied and no syntax errors
-- **REGRESSION TESTING**: Validated that existing Latin and CJK text processing continues to work correctly
-- **SCRIPT COVERAGE**: Comprehensive Unicode range coverage for all supported writing systems
-- **EDGE CASE HANDLING**: Proper handling of mixed-script documents and complex text layouts
-
-### 🎯 **USER IMPACT**
-- **IMPROVED ACCURACY**: Better text reconstruction for documents in multiple languages
-- **ENHANCED UX**: More readable OCR output for Cyrillic and Arabic script documents
-- **PROFESSIONAL QUALITY**: Production-ready enhancement suitable for legal and business document processing
-- **GLOBAL ACCESSIBILITY**: Extended support for international users working with non-Latin scripts
-
 ## Version 0.5.25 - "Professional Cancellation UX - Spotlight Effects & Fixed Button Positioning"
 *Released: 2025-08-19*
 
@@ -2926,19 +2849,4 @@ We welcome contributions to improve the document comparison algorithm and user e
 ## License
 
 This project is proprietary software owned by RdLn Team. See LICENSE file for full terms and conditions.
-## Version 0.6.1 - "User Text Color Consistency & Glassmorphism CSS Cleanup"
-*Released: 2025-09-01*
 
-### Fixes
-- Text input color: Restored theme-consistent user text color in `TextInputPanel` by enforcing theme body color on `.user-input-typography` (`src/styles/glassmorphism.css`). Uses `color: var(--theme-text-body) !important;` to override legacy utility classes and ensure correct inheritance across themes.
-
-### Styles/CSS Cleanup (INP, safe and non-breaking)
-- Removed unused legacy button utilities: `.enhanced-button`, `.subtle-button`, and `bg-theme-*` helpers, plus their unused `--button-*` variables from `:root`.
-- Removed unused content-panel utilities: `.glass-effect`, `.glass-content-panel` (and hover), chunk-container overrides within content panels, and base hover variant `.glass-panel.hover-from-handle` (theme-specific variants remain in theme files).
-- Removed unused utilities: `.line-clamp-2`, `.custom-scrollbar` rules.
-- Consolidated duplicate `.user-input-typography` rules into a single definition, keeping CJK-friendly settings (`font-variant-east-asian: proportional-width;`, `font-weight: 500 !important`).
-- Kept active selectors: `.glass-panel` (+ hover), `.glass-input-field` (+ hover/focus), and `.libertinus-math-text` (for output).
-
-### Validation
-- Repo-wide search confirmed no references to removed selectors/variables.
-- Smoke test passed: text color, placeholder, focus ring, font size; theme switching; selection styling; OCR flows; redline output integrity.
