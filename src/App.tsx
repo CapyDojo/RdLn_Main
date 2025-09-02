@@ -39,6 +39,8 @@ import OnboardingTour, { TourRestartButton } from './components/experimental/onb
 import { StorageQuotaManager } from './components/StorageQuotaManager';
 import DocxTestPage from './pages/DocxTestPage';
 import OCRCacheTestPage from './pages/OCRCacheTestPage';
+// Import prewarming functions
+import { prewarmDetectionWorker, prewarmLanguageWorker, SimpleOCRCache } from './services/SimpleOCRCache';
 import './styles/resize-overrides.css';
 
 interface AppContentProps {
@@ -90,7 +92,7 @@ function AppContent({
         } else {
           const acceptanceData = JSON.parse(betaAcceptance);
           // Check if acceptance is for current version
-          if (!acceptanceData.accepted || acceptanceData.version !== '0.5.0') {
+          if (!acceptanceData.accepted || acceptanceData.version !== '0.6.0') {
             setShowBetaAgreement(true);
           }
         }
@@ -101,6 +103,33 @@ function AppContent({
     };
 
     checkBetaAgreement();
+  }, []);
+
+  // Prewarm OCR workers during app initialization
+  useEffect(() => {
+    const prewarmWorkers = async () => {
+      try {
+        console.log('🔥 Starting OCR prewarming...');
+        
+        // Prewarm detection worker for language detection
+        await prewarmDetectionWorker((progress) => {
+          console.log(`🔍 Detection worker prewarming progress: ${Math.round(progress * 100)}%`);
+        });
+        
+        // Optionally prewarm common language workers
+        await prewarmLanguageWorker(['eng'], (progress) => {
+          console.log(`📖 English worker prewarming progress: ${Math.round(progress * 100)}%`);
+        });
+        
+        // Log prewarming stats
+        const stats = SimpleOCRCache.getStats();
+        console.log('✅ OCR prewarming completed:', stats);
+      } catch (error) {
+        console.error('❌ OCR prewarming failed:', error);
+      }
+    };
+
+    prewarmWorkers();
   }, []);
 
   const handleBetaAgreementAccept = () => {
@@ -130,6 +159,8 @@ function AppContent({
   useEffect(() => {
     return () => {
       OCRService.terminate();
+      // Also terminate SimpleOCRCache workers
+      SimpleOCRCache.terminateAll();
     };
   }, []);
 
@@ -390,7 +421,7 @@ function App() {
         setTimeout(() => {
           console.log('📊 Analytics: Sending app_loaded event');
           analyticsService.track('app_loaded', {
-            version: '0.5.15',
+            version: '0.6.0',
             environment: NODE_ENV
           });
           // Send a test event to verify events are being captured

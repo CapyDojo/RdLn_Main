@@ -26,7 +26,7 @@ interface BetaDemoControlsPanelProps extends BaseComponentProps {
 }
 
 /**
- * BetaDemoControlsPanel Component
+ * BetaDemoControlsPanel Component (v0.6.0)
  * 
  * Provides a simple Quick Demo button to instantly seed the application
  * with professional sample content and run an automatic comparison.
