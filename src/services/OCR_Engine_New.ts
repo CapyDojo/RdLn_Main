@@ -25,6 +25,12 @@ export interface NewEngineExtractResult {
   meta?: { whitespaceRemoved: number; iterations: number };
 }
 
+// Global registry for job-specific progress callbacks
+const jobProgressCallbacks = new Map<string, any>();
+// Track which operation is expecting which job
+const operationToJobMapping = new Map<string, string>();
+let globalHandlerInstalled = false;
+
 export class OCR_Engine_New {
   static async extract(
     imageFile: File | Blob,
@@ -32,38 +38,37 @@ export class OCR_Engine_New {
   ): Promise<NewEngineExtractResult> {
     const onProgress = options.onProgress;
     const signal = options.signal;
+    
+    // Generate unique operation ID to track this specific OCR operation
+    const operationId = `op-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     if (signal?.aborted) throw new Error('OCR operation aborted');
     const abortHandler = () => { /* no-op: caller handles cancellation */ };
     signal?.addEventListener('abort', abortHandler, { once: true });
 
     try {
-      this.report(onProgress, 0.15, { phase: 'init', description: 'Initializing OCR...' });
-
       // Determine languages (multilingual, no OSD pre-detection)
       const languages: OCRLanguage[] = (options.languages && options.languages.length > 0)
         ? options.languages
         : DETECTION_LANGUAGES;
-
-      this.report(onProgress, 0.3, { phase: 'language_loading', description: 'Loading language models...' });
 
       // Try a prewarmed worker first
       console.log(`[OCR_DEBUG] 🔍 Checking for prewarmed worker for languages: ${languages.join(',')}`);
       let worker = SimpleOCRCache.getLanguageWorker(languages) as TesseractWorker | null;
       if (worker) {
         console.log(`[OCR_DEBUG] ✅ Using prewarmed worker for languages: ${languages.join(',')}`);
+        // Note: Cannot update logger on existing worker due to DataCloneError
+        // Progress callback will be handled during recognition if needed
       } else {
         console.log(`[OCR_DEBUG] ❌ No prewarmed worker found for languages: ${languages.join(',')}, creating new worker`);
         const resourcePaths = await getResourcePaths();
         const mkLogger = (cb?: OCRProgressCallback) => (m: any) => {
+          // Only report real Tesseract progress during text recognition
           if (m?.status === 'recognizing text' && typeof m.progress === 'number') {
-            const scaled = 0.6 + (m.progress * 0.4);
-            this.report(cb, Math.min(1.0, Math.max(0.6, scaled)), {
-              phase: m.progress < 0.25 ? 'image_preprocessing'
-                   : m.progress < 0.75 ? 'character_recognition'
-                   : m.progress < 0.95 ? 'text_assembly'
-                   : 'post_processing',
-              description: 'Recognition in progress...'
+            // Pass real progress directly (0.0 to 1.0)
+            this.report(cb, m.progress, {
+              phase: 'text_extraction',
+              description: 'Extracting text...'
             });
           }
         };
@@ -98,13 +103,56 @@ export class OCR_Engine_New {
         console.log(`[OCR_DEBUG] 💾 Cached new worker for languages: ${languages.join(',')}`);
       }
 
-      this.report(onProgress, 0.55, { phase: 'recognition', description: 'Recognizing text...' });
       // Use paragraph mode for better text structure
       // In Tesseract.js v6+, non-text formats are disabled by default, so we need to explicitly enable them
-      const result = await worker!.recognize(imageFile, {}, { 
+      
+      // Report start of text extraction
+      if (onProgress) {
+        this.report(onProgress, 0.0, { phase: 'text_extraction', description: 'Extracting text...' });
+      }
+      
+      // For prewarmed workers, set up job-specific progress tracking
+      const isPrewarmedWorker = SimpleOCRCache.getLanguageWorker(languages) !== null;
+      
+      let actualJobId: string | null = null;
+      
+      if (onProgress && isPrewarmedWorker) {
+        // Install global progress dispatcher if not already installed
+        this.ensureGlobalProgressHandler(worker as any);
+        
+        // Create progress callback for this operation
+        const progressCallback = (progress: number) => {
+          this.report(onProgress, progress, {
+            phase: 'text_extraction',
+            description: 'Extracting text...'
+          });
+        };
+        
+        // Register callback with operation ID - we'll map to job ID when we get it
+        actualJobId = operationId;
+        jobProgressCallbacks.set(operationId, progressCallback);
+      }
+      
+      // Start the recognition and immediately capture job mapping
+      const recognizePromise = worker!.recognize(imageFile, {}, { 
         blocks: true, 
         text: true  // Explicitly enable text output (though it's enabled by default)
       });
+      
+      const result = await recognizePromise;
+      
+      // Clean up our job-specific callback and mappings
+      if (actualJobId && isPrewarmedWorker) {
+        // Clean up operation callback
+        jobProgressCallbacks.delete(actualJobId);
+        
+        // Find and clean up job mapping
+        const mappedJobId = operationToJobMapping.get(actualJobId);
+        if (mappedJobId) {
+          jobProgressCallbacks.delete(mappedJobId);
+          operationToJobMapping.delete(actualJobId);
+        }
+      }
 
       // Extract text from paragraphs for better structure preservation
       // In newer versions of Tesseract.js, we might have paragraphs array
@@ -117,7 +165,8 @@ export class OCR_Engine_New {
       // Apply aggressive CJK whitespace removal (DOM-based approach)
       const correction = this.aggressiveCJKWhitespaceRemoval(joined);
 
-      this.report(onProgress, 1.0, { phase: 'complete', description: 'OCR complete' });
+      // Report completion
+      this.report(onProgress, 1.0, { phase: 'text_extraction', description: 'OCR complete' });
       return {
         text: correction.text,
         confidence: result.data.confidence,
@@ -129,8 +178,60 @@ export class OCR_Engine_New {
     }
   }
 
+  private static ensureGlobalProgressHandler(workerInstance: any) {
+    if (!globalHandlerInstalled && workerInstance.worker && workerInstance.worker.onmessage) {
+      const originalOnMessage = workerInstance.worker.onmessage;
+      
+      // Install global handler that dispatches to job-specific callbacks
+      workerInstance.worker.onmessage = function(event: MessageEvent) {
+        // Call original handler first (preserves console logging)
+        if (originalOnMessage) {
+          originalOnMessage.call(this, event);
+        }
+        
+        const data = event.data;
+        if (data && data.jobId && data.status === 'progress' && 
+            data.data && typeof data.data.progress === 'number') {
+          
+          // Check if we have a callback registered for this specific jobId
+          let callback = jobProgressCallbacks.get(data.jobId);
+          
+          if (!callback) {
+            // This is a new job - find the most recently registered operation callback
+            // that doesn't have a job mapping yet
+            for (const [operationId, operationCallback] of jobProgressCallbacks.entries()) {
+              if (!operationToJobMapping.has(operationId)) {
+                // Map this operation to this job
+                operationToJobMapping.set(operationId, data.jobId);
+                jobProgressCallbacks.set(data.jobId, operationCallback);
+                callback = operationCallback;
+                break;
+              }
+            }
+          }
+          
+          // Dispatch to the callback
+          if (callback) {
+            callback(data.data.progress);
+          }
+        }
+      };
+      
+      globalHandlerInstalled = true;
+    }
+  }
+
   private static report(cb: OCRProgressCallback | undefined, progress: number, info?: { phase: string; description: string }) {
-    try { cb && cb(progress, info); } catch { /* ignore */ }
+    // Only report progress if we have a callback
+    if (cb) {
+      try { 
+        // Ensure progress is between 0 and 1
+        const clampedProgress = Math.min(1.0, Math.max(0.0, progress));
+        cb(clampedProgress, info); 
+      } catch { 
+        /* ignore callback errors */ 
+      }
+    }
   }
 
   // EXACT v18 DOM post-processing approach - creates LIVE DOM elements

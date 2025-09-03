@@ -7,7 +7,7 @@ import { SUPPORTED_LANGUAGES } from '../config/ocrConfig';
 import { BaseHookReturn } from '../types/components';
 
 export interface OCRProgressPhase {
-  phase: 'initialization' | 'language_detection' | 'text_extraction';
+  phase: 'text_extraction';
   subPhase: string;
   progress: number;
   description: string;
@@ -110,37 +110,30 @@ export const useOCR = (): OCRReturn => {
       detectedLanguages: [],
       startTime,
       currentPhase: {
-        phase: 'initialization',
+        phase: 'text_extraction',
         subPhase: 'starting',
         progress: 0,
-        description: 'Preparing OCR system...',
+        description: 'Starting text extraction...',
         cancellable: true
       }
     }));
 
     try {
-      // Simplified progress callback
+      // Simplified progress callback - only handle real OCR progress
       const onProgress = (progress: number, phaseInfo?: { phase: string; description: string }) => {
         if (operationRef.current.cancelled) return;
         
         const elapsed = Date.now() - startTime;
         const phase: OCRProgressPhase = {
           phase: 'text_extraction', 
-          subPhase: phaseInfo?.phase || 'processing',
+          subPhase: 'extracting',
           progress,
-          description: phaseInfo?.description || 'Processing...',
-          estimatedTimeRemaining: estimateTimeRemaining(progress, elapsed),
-          cancellable: progress < 0.9
+          description: phaseInfo?.description || 'Extracting text...',
+          estimatedTimeRemaining: progress > 0 ? Math.max(1000, (elapsed / progress) - elapsed) : 15000,
+          cancellable: progress < 0.95
         };
         
         updateProgress(phase);
-      };
-
-      // Helper function to estimate remaining time
-      const estimateTimeRemaining = (progress: number, elapsed: number): number => {
-        if (progress <= 0) return 15000; // Initial estimate
-        const estimatedTotal = elapsed / progress;
-        return Math.max(1000, estimatedTotal - elapsed);
       };
 
       // Build options for the unified extract call

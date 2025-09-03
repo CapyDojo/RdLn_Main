@@ -1133,40 +1133,24 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
             pointerEvents: 'all'
           }}
         >
-          {/* Smart Phase Header */}
+          {/* Simplified Progress Header */}
           <div className="flex items-start gap-4 mb-4">
-            {/* Adaptive Phase Icon */}
+            {/* Simple Extraction Icon */}
             <div className="relative flex-shrink-0 mt-1">
-              {currentPhase.phase === 'initialization' && (
-                <div className="relative">
-                  <div className="w-7 h-7 border-2 border-theme-primary-500 border-t-transparent rounded-full animate-spin" />
-                  <div className="absolute inset-0 border-2 border-theme-primary-300/30 rounded-full" />
+              <div className="relative">
+                <div className="w-7 h-7 bg-gradient-to-r from-theme-primary-500 to-theme-primary-600 rounded-full flex items-center justify-center animate-bounce shadow-lg">
+                  <Image className="w-4 h-4 text-white" />
                 </div>
-              )}
-              {currentPhase.phase === 'language_detection' && (
-                <div className="relative">
-                  <div className="w-7 h-7 bg-gradient-to-r from-theme-secondary-500 to-theme-secondary-600 rounded-full animate-pulse flex items-center justify-center shadow-lg">
-                    <span className="text-white text-sm">🔍</span>
-                  </div>
-                  <div className="absolute -inset-1 bg-theme-secondary-400/30 rounded-full animate-ping" />
-                </div>
-              )}
-              {currentPhase.phase === 'text_extraction' && (
-                <div className="relative">
-                  <div className="w-7 h-7 bg-gradient-to-r from-theme-primary-500 to-theme-primary-600 rounded-full flex items-center justify-center animate-bounce shadow-lg">
-                    <Image className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="absolute -inset-1 bg-theme-primary-400/30 rounded-full animate-pulse" />
-                </div>
-              )}
+                <div className="absolute -inset-1 bg-theme-primary-400/30 rounded-full animate-pulse" />
+              </div>
             </div>
             
             <div className="flex-1 min-w-0">
-              {/* Phase Information */}
+              {/* Progress Information */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="text-sm font-semibold text-theme-neutral-800 capitalize">
-                    {currentPhase.phase.replace('_', ' ')}
+                  <h4 className="text-sm font-semibold text-theme-neutral-800">
+                    Text Extraction
                   </h4>
                   <span className="text-xs bg-gradient-to-r from-theme-primary-100 to-theme-primary-50 text-theme-primary-700 px-2.5 py-1 rounded-full font-medium border border-theme-primary-200">
                     {currentPhase.subPhase.replace('_', ' ')}
@@ -1188,7 +1172,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                 </div>
               </div>
               
-              {/* Live Description with Time */}
+              {/* Description with Time */}
               <div className="flex items-start justify-between gap-3 mb-4">
                 <p className="text-xs text-theme-neutral-600 leading-relaxed flex-1">
                   {currentPhase.description}
@@ -1206,20 +1190,13 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                 )}
               </div>
               
-              {/* Next-Gen Progress Bar */}
+              {/* Simplified Progress Bar */}
               <div className="relative">
-                {/* Phase Segments Background */}
+                {/* Progress Background */}
                 <div className="relative w-full h-4 bg-theme-neutral-100 rounded-full overflow-hidden shadow-inner border border-theme-neutral-200">
-                  {/* Segment Dividers */}
-                  <div className="absolute inset-0 flex">
-                    <div className="w-2/5 border-r border-theme-neutral-300/50" />
-                    <div className="w-1/5 border-r border-theme-neutral-300/50" />
-                    <div className="w-2/5" />
-                  </div>
-                  
                   {/* Dynamic Progress Fill with Gradient */}
                   <div
-                    className="absolute left-0 top-0 h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-theme-primary-500 via-theme-primary-600 to-theme-secondary-500 shadow-sm"
+                    className="absolute left-0 top-0 h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-theme-primary-500 via-theme-primary-600 to-theme-secondary-500 shadow-sm"
                     style={{ width: `${progress}%` }}
                   >
                     {/* Animated Shimmer Effect */}
@@ -1228,61 +1205,12 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                     {/* Progress Highlight */}
                     <div className="absolute right-0 top-0 w-3 h-full bg-white/40 rounded-r-full" />
                   </div>
-                  
-                  {/* Phase Milestone Indicators */}
-                  <div className="absolute inset-0 flex items-center pointer-events-none">
-                    <div className="w-2/5 flex justify-center">
-                      <div className={`w-2 h-2 rounded-full transition-all duration-300 ${progress >= 40 ? 'bg-white shadow-md scale-110' : 'bg-theme-neutral-400'}`} />
-                    </div>
-                    <div className="w-1/5 flex justify-center">
-                      <div className={`w-2 h-2 rounded-full transition-all duration-300 ${progress >= 60 ? 'bg-white shadow-md scale-110' : 'bg-theme-neutral-400'}`} />
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Phase Labels */}
-                <div className="flex justify-between mt-2 text-xs text-theme-neutral-500">
-                  <span className={progress >= 40 ? 'text-theme-primary-600 font-medium' : ''}>
-                    Init
-                  </span>
-                  <span className={progress >= 60 ? 'text-theme-primary-600 font-medium' : ''}>
-                    Detect
-                  </span>
-                  <span className={progress >= 100 ? 'text-theme-primary-600 font-medium' : ''}>
-                    Extract
-                  </span>
                 </div>
               </div>
             </div>
           </div>
           
-          {/* Enhanced Language Detection Results */}
-          {detectedLanguages.length > 0 && (
-            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-theme-secondary-50 to-theme-secondary-25 border border-theme-secondary-200 rounded-lg mt-3">
-              <div className="flex items-center gap-2">
-                <Languages className="w-4 h-4 text-theme-secondary-600" />
-                <span className="text-sm font-medium text-theme-secondary-800">
-                  Detected Languages:
-                </span>
-                <div className="flex items-center gap-1">
-                  {detectedLanguages.slice(0, 3).map((lang, i) => (
-                    <span key={lang} className="text-sm bg-white px-2 py-0.5 rounded-md border border-theme-secondary-200 font-medium">
-                      {getLanguageShortName(lang)}
-                    </span>
-                  ))}
-                  {detectedLanguages.length > 3 && (
-                    <span className="text-xs text-theme-secondary-600">
-                      +{detectedLanguages.length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-xs text-theme-secondary-600 font-medium">High Confidence</span>
-              </div>
-            </div>
-          )}
+          {/* Language Detection Results - Removed to simplify UI */}
           
           {/* Smart Performance Dashboard */}
           {startTime && (
