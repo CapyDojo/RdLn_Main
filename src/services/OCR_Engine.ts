@@ -1,11 +1,12 @@
 /**
  * 20250829 - OCR_Engine refactor - code change - Codex/GPT5
- * OCR_Engine: Single front door for the OCR pipeline.
+ * OCR_Engine: A thin gating facade for the OCR pipeline.
  *
  * Purpose:
- * - Centralize all OCR calls (detection + extraction) behind one import.
- * - Delegate to OCR_Engine_New as the primary implementation.
- * - Keep this file's public API stable for useOCR.
+ * - To act as a single, stable entry point (a "gate") for all OCR operations.
+ * - Allows plugging in/out different underlying OCR engine implementations (e.g., OCR_Engine_New).
+ * - Centralizes all OCR calls (detection + extraction) behind this facade.
+ * - Keeps this file's public API stable for consumers like useOCR.
  */
 
 import { OCROptions, OCRLanguage } from '../types/ocr-types';

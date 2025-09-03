@@ -23,9 +23,9 @@ export class OCRService {
   ): Promise<string> {
     // OCRRouter will select the appropriate engine based on the environment.
     const result = await OCRRouter.routeOCRRequest(imageFile, options, async (file, opts) => {
-      // This default callback is for the web environment, using OCR_Engine_New.
-      const { OCR_Engine_New } = await import('./OCR_Engine_New');
-      const engineResult = await OCR_Engine_New.extract(file, opts);
+      // This default callback is for the web environment, using the OCR_Engine facade.
+      const { OCR_Engine } = await import('./OCR_Engine');
+      const engineResult = await OCR_Engine.extract(file, opts);
       return engineResult.text;
     });
     

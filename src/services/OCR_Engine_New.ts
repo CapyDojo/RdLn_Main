@@ -48,8 +48,12 @@ export class OCR_Engine_New {
       this.report(onProgress, 0.3, { phase: 'language_loading', description: 'Loading language models...' });
 
       // Try a prewarmed worker first
+      console.log(`[OCR_DEBUG] 🔍 Checking for prewarmed worker for languages: ${languages.join(',')}`);
       let worker = SimpleOCRCache.getLanguageWorker(languages) as TesseractWorker | null;
-      if (!worker) {
+      if (worker) {
+        console.log(`[OCR_DEBUG] ✅ Using prewarmed worker for languages: ${languages.join(',')}`);
+      } else {
+        console.log(`[OCR_DEBUG] ❌ No prewarmed worker found for languages: ${languages.join(',')}, creating new worker`);
         const resourcePaths = await getResourcePaths();
         const mkLogger = (cb?: OCRProgressCallback) => (m: any) => {
           if (m?.status === 'recognizing text' && typeof m.progress === 'number') {
@@ -73,7 +77,9 @@ export class OCR_Engine_New {
 
         try {
           worker = await createWorker(languages, 1, primary);
+          console.log(`[OCR_DEBUG] 🔧 Created new primary worker for languages: ${languages.join(',')}`);
         } catch (e) {
+          console.log(`[OCR_DEBUG] 🔧 Falling back to default paths for worker for languages: ${languages.join(',')}`);
           const fallback = {
             logger: mkLogger(onProgress),
             workerPath: './tesseract/worker.min.js',
@@ -81,6 +87,7 @@ export class OCR_Engine_New {
             langPath: './tessdata/'
           };
           worker = await createWorker(languages, 1, fallback);
+          console.log(`[OCR_DEBUG] 🔧 Created fallback worker for languages: ${languages.join(',')}`);
         }
 
         // Conservative defaults
@@ -88,6 +95,7 @@ export class OCR_Engine_New {
 
         // Cache for reuse
         SimpleOCRCache.setLanguageWorker(languages, worker);
+        console.log(`[OCR_DEBUG] 💾 Cached new worker for languages: ${languages.join(',')}`);
       }
 
       this.report(onProgress, 0.55, { phase: 'recognition', description: 'Recognizing text...' });

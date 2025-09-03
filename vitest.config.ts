@@ -19,6 +19,7 @@ export default defineConfig({
       'tests/e2e/**/*',
       'node_modules/**/*',
       'tests/archive/**/*',
+      'src/RetiredCode/**/*',
     ],
     testTimeout: 30000, // 30 seconds max for any test (reduced from 120s OCR timeout)
     hookTimeout: 30000,
@@ -33,6 +34,7 @@ export default defineConfig({
       exclude: [
         'node_modules/',
         'tests/',
+        'src/RetiredCode/',
         '**/*.d.ts',
         '**/*.config.*',
         '**/coverage/**',

@@ -22,7 +22,6 @@ import { useTheme } from './contexts/ThemeContext';
 import { LayoutProvider } from './contexts/LayoutContext';
 import { ExperimentalLayoutProvider, useExperimentalFeatures } from './contexts/ExperimentalLayoutContext';
 import { ScrollLockProvider } from './contexts/ScrollLockContext';
-import { OCRService } from './services/OCRService';
 import { analyticsService, trackEvent } from './services/AnalyticsService';
 import { LogoTestPage } from './pages/LogoTestPage';
 import { CuppingTestPage } from './pages/CuppingTestPage';
@@ -33,8 +32,7 @@ import BoundaryFragmentTest from './pages/BoundaryFragmentTest';
 import BoundaryFixTester from './components/BoundaryFixTester';
 import { SmartPasteTest } from './components/SmartPasteTest';
 import { OCRFeatureCard } from './components/OCRFeatureCard';
-import { BackgroundLoadingStatus } from './components/BackgroundLoadingStatus';
-import { BackgroundLanguageLoader } from './services/BackgroundLanguageLoader';
+
 import OnboardingTour, { TourRestartButton } from './components/experimental/onboarding/OnboardingTour';
 import { StorageQuotaManager } from './components/StorageQuotaManager';
 import DocxTestPage from './pages/DocxTestPage';
@@ -114,7 +112,7 @@ function AppContent({
         
         // Prewarm the primary multilingual worker (unified approach)
         await prewarmLanguageWorker([...DETECTION_LANGUAGES], (progress) => {
-          console.log( `?? Multilingual worker prewarming progress: ${Math.round(progress * 100)}%`); 
+          console.log( `?? OCR worker progress: ${Math.round(progress * 100)}%`); 
         });
         
         // Optionally prewarm common language workers
@@ -281,10 +279,7 @@ function AppContent({
       {/* OCR Loading Card - Moved here from ComparisonInterface */}
       {showAdvancedOcrCard && <OCRFeatureCard visible={true} />}
 
-      {/* Background Loading Status - render only when feature is enabled */}
-      {BackgroundLanguageLoader.isEnabled() && (
-        <BackgroundLoadingStatus enabled={true} compact={true} className="mb-4" />
-      )}
+      
 
       <div className="glass-panel border-t border-theme-neutral-200 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-4 text-center text-theme-neutral-600">
@@ -538,4 +533,3 @@ function App() {
 }
 
 export default App;
-

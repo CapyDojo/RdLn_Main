@@ -53,7 +53,7 @@ export interface OCROptions {
   autoDetect?: boolean;
   /** Primary language to prioritize in processing */
   primaryLanguage?: OCRLanguage;
-  /** PHASE 3.3: Use enhanced orchestrator workflow for better coordination (optional) */
+  /** DEPRECATED: Orchestrator retired; this flag is ignored. */
   useOrchestrator?: boolean;
   /** Callback function for real-time progress updates (0.0 to 1.0) */
   onProgress?: OCRProgressCallback;
