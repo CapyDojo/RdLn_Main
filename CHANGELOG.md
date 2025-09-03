@@ -7,9 +7,55 @@ All notable changes to this project are documented here. This file follows the K
 - Placeholder for upcoming changes.
 
 ### Contents
+- 0.6.3 — 2025-09-03
 - 0.6.2 — 2025-09-02
 - 0.6.1 — 2025-09-01
 - 0.6.0 — 2025-08-30
+
+
+## [0.6.3] - 2025-09-03
+
+### 🐛 Critical Fix: OCR Progress Modal Issues
+- **PROBLEM SOLVED**: OCR progress modal stuck at 0% and cross-contamination between concurrent OCR operations
+- **ROOT CAUSE**: DataCloneError when updating prewarmed worker loggers + shared worker causing progress mixing between panels
+- **BREAKTHROUGH**: Implemented job-specific progress tracking with global message dispatcher
+- **RESULT**: Real progress display (0%, 1%, 4%, 7%, etc.) and isolated progress per input panel
+
+### 🔧 Technical Implementation
+
+#### **OCR Progress System Overhaul**
+- **`src/services/OCR_Engine_New.ts`**: 
+  - Fixed DataCloneError by removing problematic `setParameters` call with logger function serialization
+  - Added global progress handler that installs once per worker to avoid handler conflicts
+  - Implemented job-specific progress callbacks using Map registry for operation-to-job mapping
+  - Real progress extraction from worker messages matches console log values
+  - Proper cleanup of callbacks and mappings prevents memory leaks
+- **`src/hooks/useOCR.ts`**:
+  - Simplified progress phases to single 'text_extraction' phase for consistency
+  - Updated progress callback to handle real Tesseract.js progress values (0.0-1.0 range)
+  - Improved time estimation and progress clamping
+- **`src/components/TextInputPanel.tsx`**:
+  - Streamlined progress modal UI to show single extraction phase
+  - Removed complex multi-phase progress indicators in favor of real progress display
+
+#### **Concurrent Operations Support**
+- **Job Isolation**: Each OCR operation gets unique operation ID mapped to worker job ID
+- **Progress Dispatching**: Global handler routes progress messages to correct panel callbacks
+- **Resource Management**: Automatic cleanup when operations complete or are cancelled
+- **Worker Reuse**: Maintains prewarmed worker benefits while fixing progress tracking
+
+### ✅ User Experience Improvements
+
+#### **Reliable Progress Feedback**
+- **Real Progress Values**: Shows actual Tesseract.js progress (0%, 1%, 4%, 7%, 10%, etc.) instead of stuck at 0%
+- **Panel Isolation**: Panel A progress only affects Panel A modal, Panel B progress only affects Panel B modal
+- **Concurrent Support**: Multiple OCR operations can run simultaneously without progress interference
+- **Visual Consistency**: Smooth progress updates throughout the entire OCR process
+
+#### **Developer Experience**
+- **Debug Friendly**: Console logs preserved for troubleshooting while modal shows clean progress
+- **Error Resilient**: Graceful handling of worker message interception failures
+- **Memory Efficient**: Proper cleanup prevents callback accumulation and memory leaks
 
 ## [0.6.2] - 2025-09-02
 
