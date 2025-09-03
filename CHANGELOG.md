@@ -57,6 +57,16 @@ All notable changes to this project are documented here. This file follows the K
 - **Error Resilient**: Graceful handling of worker message interception failures
 - **Memory Efficient**: Proper cleanup prevents callback accumulation and memory leaks
 
+### 🐛 Minor Fix: Progress Rate Calculation
+- **PROBLEM SOLVED**: OCR progress rate always showing "0.0% per sec" instead of meaningful values
+- **ROOT CAUSE**: Formula was dividing progress by 100 first (converting to decimal 0.0-1.0) then dividing by elapsed time
+- **FIX**: Removed unnecessary division by 100 to keep progress in percentage units throughout calculation
+- **RESULT**: Now shows meaningful progress rates like "5.2% per sec" or "12.8% per sec" for better user feedback
+
+#### **Technical Details**
+- **`src/components/TextInputPanel.tsx`**: Fixed progress rate calculation formula from `((progress / 100) / elapsed_seconds)` to `(progress / elapsed_seconds)`
+- **Impact**: Users now get accurate feedback on OCR processing speed instead of misleading "0.0% per sec" display
+
 ## [0.6.2] - 2025-09-02
 
 ### 🐛 Critical Fix: OCR Text Visibility Regression
