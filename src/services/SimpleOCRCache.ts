@@ -95,7 +95,6 @@ export async function prewarmLanguageWorker(languages: OCRLanguage[] = ['eng'], 
       logger: (m: any) => {
         if (m.status === 'recognizing text' && typeof m.progress === 'number') {
           const progress = Math.round(m.progress * 100);
-          console.log(`🔥 Language worker progress: ${progress}%`);
           if (onProgress) onProgress(progress / 100);
         }
       },

@@ -9,7 +9,7 @@
  */
 
 import { OCROptions, OCRLanguage } from '../types/ocr-types';
-import { OCR_Engine_New } from './OCR_Engine_New';
+
 import { appConfig } from '../config/appConfig';
 
 export interface DetectOptions {
@@ -24,21 +24,6 @@ export interface ExtractResult {
 export class OCR_Engine {
   /**
    * 20250829 - OCR_Engine refactor - code change - Codex/GPT5
-   * Detect languages with progress support using the current stack.
-   */
-  static async detectLanguages(
-    imageFile: File | Blob,
-    options: DetectOptions = {}
-  ): Promise<OCRLanguage[]> {
-    // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
-    // New engine is one-stop (detect+extract). Keep this for backward compatibility only.
-    console.warn('[OCR_Engine] detectLanguages is deprecated. Use extract() with auto-detect.');
-    // Soft behavior: return empty array to indicate caller should rely on extract()
-    return [];
-  }
-
-  /**
-   * 20250829 - OCR_Engine refactor - code change - Codex/GPT5
    * Extract text using the current OCR services. If languages are provided,
    * force autoDetect=false to prevent duplicate detection.
    */
@@ -46,7 +31,7 @@ export class OCR_Engine {
     imageFile: File | Blob,
     options: OCROptions = {}
   ): Promise<ExtractResult> {
-    // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
+    const { OCR_Engine_New } = await import('./OCR_Engine_New');
     const { text } = await OCR_Engine_New.extract(imageFile, options as any);
     return { text };
   }

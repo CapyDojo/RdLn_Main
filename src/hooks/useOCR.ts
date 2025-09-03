@@ -119,13 +119,13 @@ export const useOCR = (): OCRReturn => {
     }));
 
     try {
-      // Enhanced progress callback with phase tracking
+      // Simplified progress callback
       const onProgress = (progress: number, phaseInfo?: { phase: string; description: string }) => {
         if (operationRef.current.cancelled) return;
         
         const elapsed = Date.now() - startTime;
         const phase: OCRProgressPhase = {
-          phase: progress < 0.4 ? 'initialization' : progress < 0.6 ? 'language_detection' : 'text_extraction',
+          phase: 'text_extraction', 
           subPhase: phaseInfo?.phase || 'processing',
           progress,
           description: phaseInfo?.description || 'Processing...',
@@ -143,116 +143,15 @@ export const useOCR = (): OCRReturn => {
         return Math.max(1000, estimatedTotal - elapsed);
       };
 
-      const options: OCROptions = {
-        autoDetect: state.autoDetect,
-        languages: state.autoDetect ? undefined : state.selectedLanguages,
-        primaryLanguage: state.selectedLanguages[0],
-        onProgress // Pass real progress callback
-      };
-
-      // Phase 1: OCR System Initialization (0-40%)
-      updateProgress({
-        phase: 'initialization',
-        subPhase: 'core_loading',
-        progress: 0.05,
-        description: 'Loading OCR engine core...',
-        cancellable: true
-      });
-      
-      // Check for cancellation
-      if (operationRef.current.cancelled) throw new Error('Operation cancelled');
-      
-      // Phase 2: Language Detection (40-60%)
-      let detectedLanguages: OCRLanguage[] = [];
-      if (state.autoDetect) {
-        updateProgress({
-          phase: 'language_detection',
-          subPhase: 'quick_scan',
-          progress: 0.4,
-          description: 'Scanning document structure...',
-          cancellable: true
-        });
-        // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
-        // Use OCR_Engine for detection to enable simple future swap.
-        detectedLanguages = await OCR_Engine.detectLanguages(imageFile, {
-          onProgress: (detectionProgress: number) => {
-            if (operationRef.current.cancelled) return;
-
-            // Map detection progress to 40-60% range with sub-phases
-            const mappedProgress = 0.4 + (detectionProgress * 0.2);
-            const subPhase = detectionProgress < 0.3 ? 'quick_scan' :
-                            detectionProgress < 0.7 ? 'script_analysis' :
-                            detectionProgress < 0.9 ? 'pattern_recognition' : 'confidence_calculation';
-            const description = detectionProgress < 0.3 ? 'Analyzing image content...' :
-                               detectionProgress < 0.7 ? 'Identifying character scripts...' :
-                               detectionProgress < 0.9 ? 'Recognizing language patterns...' : 'Calculating confidence scores...';
-
-            updateProgress({
-              phase: 'language_detection',
-              subPhase,
-              progress: mappedProgress,
-              description,
-              cancellable: true
-            });
-          }
-        });
-        
-        if (operationRef.current.cancelled) throw new Error('Operation cancelled');
-        
-        setState(prev => ({ 
-          ...prev, 
-          detectedLanguages,
-          currentPhase: {
-            phase: 'language_detection',
-            subPhase: 'complete',
-            progress: 0.6,
-            description: `Detected ${detectedLanguages.length} language${detectedLanguages.length !== 1 ? 's' : ''}`,
-            cancellable: true
-          }
-        }));
-      }
-
-      // Phase 3: Text Extraction (60-100%)
-      updateProgress({
-        phase: 'text_extraction',
-        subPhase: 'image_preprocessing',
-        progress: 0.6,
-        description: 'Preparing image for text extraction...',
-        cancellable: false
-      });
-      
-      if (operationRef.current.cancelled) throw new Error('Operation cancelled');
-      
-      // Enhanced progress tracking for extraction phase
-      const extractionProgress = (progress: number) => {
-        if (operationRef.current.cancelled) return;
-        
-        const extractionProgress = 0.6 + (progress * 0.4); // Map to 60-100%
-        const subPhase = progress < 0.25 ? 'image_preprocessing' :
-                        progress < 0.75 ? 'character_recognition' :
-                        progress < 0.95 ? 'text_assembly' : 'post_processing';
-        const description = progress < 0.25 ? 'Preprocessing image for OCR...' :
-                           progress < 0.75 ? 'Recognizing characters and words...' :
-                           progress < 0.95 ? 'Assembling extracted text...' : 'Finalizing text formatting...';
-        
-        updateProgress({
-          phase: 'text_extraction',
-          subPhase,
-          progress: extractionProgress,
-          description,
-          cancellable: false
-        });
-      };
-      
-      // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
-      // Build extraction options; if we have detected or selected languages, disable autoDetect
+      // Build options for the unified extract call
       const extractionOptions: OCROptions = {
-        autoDetect: false,
-        languages: state.autoDetect ? detectedLanguages : state.selectedLanguages,
-        primaryLanguage: state.selectedLanguages[0],
-        onProgress: extractionProgress
+        languages: state.autoDetect ? undefined : state.selectedLanguages,
+        onProgress: onProgress
       };
+      
+      if (operationRef.current.cancelled) throw new Error('Operation cancelled');
 
+      // Single call to the engine
       const { text: extractedText } = await OCR_Engine.extract(imageFile, extractionOptions);
       
       if (operationRef.current.cancelled) throw new Error('Operation cancelled');
@@ -263,7 +162,7 @@ export const useOCR = (): OCRReturn => {
         isProcessing: false,
         progress: 100,
         error: null,
-        detectedLanguages: state.autoDetect ? detectedLanguages : [],
+        detectedLanguages: [], 
         currentPhase: {
           phase: 'text_extraction',
           subPhase: 'complete',
@@ -286,7 +185,6 @@ export const useOCR = (): OCRReturn => {
       return extractedText;
     } catch (error) {
       if (operationRef.current.cancelled && error instanceof Error && error.message === 'Operation cancelled') {
-        // Don't show error for user-cancelled operations
         return '';
       }
       

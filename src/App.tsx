@@ -159,9 +159,8 @@ function AppContent({
   // Cleanup OCR worker on app unmount
   useEffect(() => {
     return () => {
-      OCRService.terminate();
-      // SimpleOCRCache termination is now handled by OCRService.terminate()
-      // SimpleOCRCache.terminateAll();
+      SimpleOCRCache.terminateAll();
+      
     };
   }, []);
 
