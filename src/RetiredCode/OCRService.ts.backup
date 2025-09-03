@@ -1,0 +1,1106 @@
+/**
+ * OCR Service - Main Interface
+ * 
+ * Provides a simplified interface for OCR text extraction with multi-language support.
+ * This service coordinates between language detection, caching, and post-processing services.
+ */
+
+import { createWorker } from 'tesseract.js';
+import type { Worker as TesseractWorker } from 'tesseract.js';
+import { OCRLanguage, CachedWorker, LanguageDetectionCacheEntry, OCROptions, LanguageOption } from '../types/ocr-types';
+import { SUPPORTED_LANGUAGES } from '../config/ocrConfig';
+// TAURI INTEGRATION: Import OCR router for Tauri-specific OCR handling
+import { OCRRouter } from './OCRRouter';
+
+// Import SimpleOCRCache and prewarming functions for direct integration
+import { SimpleOCRCache, prewarmLanguageWorker } from './SimpleOCRCache';
+
+// Note: Re-exports removed to avoid module resolution conflicts
+
+export class OCRService {
+  private static workers: Map<string, CachedWorker> = new Map();
+  private static loadingPromises: Map<string, Promise<TesseractWorker>> = new Map();
+  
+  // Language detection cache
+  private static languageCache: Map<string, LanguageDetectionCacheEntry> = new Map();
+  private static readonly LANGUAGE_CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
+  private static readonly MAX_LANGUAGE_CACHE_ENTRIES = 50; // Memory limit
+  
+  // Cache configuration
+  private static readonly CACHE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+  private static readonly MAX_CACHED_WORKERS = 5; // Prevent memory bloat
+  private static readonly CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  // Start cleanup timer on first use
+  private static cleanupTimer: NodeJS.Timeout | null = null;
+
+  private static startCleanupTimer() {
+    if (this.cleanupTimer) return;
+    
+    this.cleanupTimer = setInterval(() => {
+      this.cleanupExpiredWorkers();
+      this.cleanupLanguageCache();
+    }, this.CLEANUP_INTERVAL_MS);
+  }
+
+  private static async cleanupExpiredWorkers() {
+    const now = Date.now();
+    const expiredKeys: string[] = [];
+
+    // Find expired workers
+    for (const [key, cached] of Array.from(this.workers.entries())) {
+      if (now - cached.lastUsed > this.CACHE_EXPIRY_MS) {
+        expiredKeys.push(key);
+      }
+    }
+
+    // Cleanup expired workers
+    for (const key of expiredKeys) {
+      const cached = this.workers.get(key);
+      if (cached) {
+        console.log(`🧹 Cleaning up expired OCR worker: ${key}`);
+        await cached.worker.terminate();
+        this.workers.delete(key);
+      }
+    }
+
+    // If cache is too large, remove least recently used
+    if (this.workers.size > this.MAX_CACHED_WORKERS) {
+      const sortedEntries = Array.from(this.workers.entries())
+        .sort(([,a], [,b]) => a.lastUsed - b.lastUsed);
+      
+      const toRemove = sortedEntries.slice(0, this.workers.size - this.MAX_CACHED_WORKERS);
+      for (const [key, cached] of toRemove) {
+        console.log(`🧹 Removing LRU OCR worker: ${key}`);
+        await cached.worker.terminate();
+        this.workers.delete(key);
+      }
+    }
+  }
+
+  // Language cache cleanup
+  private static cleanupLanguageCache() {
+    const now = Date.now();
+    const expiredKeys: string[] = [];
+
+    // Find expired language cache entries
+    for (const [key, entry] of Array.from(this.languageCache.entries())) {
+      if (now - entry.timestamp > this.LANGUAGE_CACHE_EXPIRY_MS) {
+        expiredKeys.push(key);
+      }
+    }
+
+    // Remove expired entries
+    for (const key of expiredKeys) {
+      this.languageCache.delete(key);
+      console.log(`🧹 Cleaned up expired language detection cache entry`);
+    }
+
+    // If cache is too large, remove least recently used (by hitCount and timestamp)
+    if (this.languageCache.size > this.MAX_LANGUAGE_CACHE_ENTRIES) {
+      const sortedEntries = Array.from(this.languageCache.entries())
+        .sort(([,a], [,b]) => {
+          // Sort by hit count first, then by timestamp
+          if (a.hitCount !== b.hitCount) {
+            return a.hitCount - b.hitCount;
+          }
+          return a.timestamp - b.timestamp;
+        });
+      
+      const toRemove = sortedEntries.slice(0, this.languageCache.size - this.MAX_LANGUAGE_CACHE_ENTRIES);
+      for (const [key] of toRemove) {
+        this.languageCache.delete(key);
+        console.log(`🧹 Removed LRU language detection cache entry`);
+      }
+    }
+  }
+
+  // Generate cache key for language detection
+  private static async generateLanguageCacheKey(imageFile: File | Blob): Promise<string> {
+    const size = imageFile.size;
+    
+    if (imageFile instanceof File) {
+      // For File objects: use size + modified date + name
+      const modifiedDate = imageFile.lastModified || 0;
+      const name = imageFile.name || 'unknown';
+      return `file_${size}_${modifiedDate}_${name}`;
+    } else {
+      // For Blob objects: use size + content hash
+      const arrayBuffer = await imageFile.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16); // First 16 chars
+      return `blob_${size}_${hashHex}`;
+    }
+  }
+
+  // Check language detection cache
+  private static async checkLanguageCache(imageFile: File | Blob): Promise<OCRLanguage[] | null> {
+    try {
+      const cacheKey = await this.generateLanguageCacheKey(imageFile);
+      const cached = this.languageCache.get(cacheKey);
+      
+      if (cached) {
+        const now = Date.now();
+        if (now - cached.timestamp < this.LANGUAGE_CACHE_EXPIRY_MS) {
+          // Update hit count and return cached result
+          cached.hitCount++;
+          console.log(`🎯 LANGUAGE CACHE HIT: Found cached detection result (hit #${cached.hitCount}):`, cached.languages);
+          return cached.languages;
+        } else {
+          // Expired entry
+          this.languageCache.delete(cacheKey);
+          console.log(`⏰ Language cache entry expired, removing`);
+        }
+      }
+      
+      console.log(`🔍 LANGUAGE CACHE MISS: No cached detection result found`);
+      return null;
+    } catch (error) {
+      console.warn('Failed to check language cache:', error);
+      return null;
+    }
+  }
+
+  // Store language detection result in cache
+  private static async storeLanguageCache(imageFile: File | Blob, languages: OCRLanguage[]): Promise<void> {
+    try {
+      const cacheKey = await this.generateLanguageCacheKey(imageFile);
+      
+      this.languageCache.set(cacheKey, {
+        languages: [...languages], // Clone array
+        timestamp: Date.now(),
+        hitCount: 0
+      });
+      
+      console.log(`💾 LANGUAGE CACHE STORE: Cached detection result for future use:`, languages);
+      
+      // Trigger cleanup if cache is getting large
+      if (this.languageCache.size > this.MAX_LANGUAGE_CACHE_ENTRIES) {
+        this.cleanupLanguageCache();
+      }
+    } catch (error) {
+      console.warn('Failed to store language cache:', error);
+    }
+  }
+
+  private static createLogger() {
+    return (m: any) => {
+      // Suppress most logging to reduce console noise
+      if (m.status === 'recognizing text') {
+        console.log(`OCR progress: ${Math.round(m.progress * 100)}%`);
+      }
+    };
+  }
+
+  private static getWorkerKey(languages: OCRLanguage[]): string {
+    return languages.sort().join('-');
+  }
+
+  private static async initializeDetectionWorker(): Promise<TesseractWorker> {
+    // Use the multilingual worker for detection (aligns with OCR_Engine_New approach)
+    const detectionLanguages: OCRLanguage[] = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+    
+    // Check SimpleOCRCache first for prewarmed or previously loaded worker
+    const cachedWorker = SimpleOCRCache.getLanguageWorker(detectionLanguages);
+    if (cachedWorker) {
+      console.log(`🎯 SIMPLE CACHE HIT: Reusing prewarmed/loaded multilingual worker for detection`);
+      // Note: SimpleOCRCache handles its own lastUsed/useCount updates
+      return cachedWorker;
+    }
+
+    // Worker not found, need to initialize a new one
+    console.log('🔄 SIMPLE CACHE MISS: Initializing new multilingual worker for detection:', detectionLanguages);
+    
+    // Delegate to SimpleOCRCache's prewarm function which handles creation and caching
+    const success = await prewarmLanguageWorker(detectionLanguages, (progress) => {
+      console.log(`🔍 Multilingual worker progress: ${Math.round(progress * 100)}%`);
+    });
+    
+    if (!success) {
+      throw new Error('Failed to initialize multilingual worker for detection');
+    }
+    
+    // Retrieve the newly created and cached worker
+    const newWorker = SimpleOCRCache.getLanguageWorker(detectionLanguages);
+    if (!newWorker) {
+      throw new Error('Multilingual worker was supposedly created but not found in cache');
+    }
+    
+    console.log('✅ New multilingual worker initialized and cached successfully for detection');
+    return newWorker;
+  }
+
+  private static async initializeWorker(languages: OCRLanguage[]): Promise<TesseractWorker> {
+    const workerKey = this.getWorkerKey(languages);
+    
+    // Check if we're already loading this worker
+    if (this.loadingPromises.has(workerKey)) {
+      console.log(`⏳ Worker for ${workerKey} already loading, waiting...`);
+      return this.loadingPromises.get(workerKey)!;
+    }
+    
+    // Check SimpleOCRCache first for prewarmed or previously loaded worker
+    const cachedWorker = SimpleOCRCache.getLanguageWorker(languages);
+    if (cachedWorker) {
+      console.log(`🎯 SIMPLE CACHE HIT: Reusing prewarmed/loaded worker for ${workerKey}`);
+      // Note: SimpleOCRCache handles its own lastUsed/useCount updates
+      return cachedWorker;
+    }
+
+    // Worker not found, need to initialize a new one
+    console.log(`🔄 SIMPLE CACHE MISS: Initializing new worker for languages: ${languages.join(', ')}`);
+    
+    // Define the loading promise
+    const loadingPromise = (async () => {
+      try {
+        // Delegate to SimpleOCRCache's prewarm function which handles creation and caching
+        const success = await prewarmLanguageWorker(languages, (progress) => {
+          console.log(`🔥 Language worker progress: ${Math.round(progress * 100)}%`);
+        });
+        
+        if (!success) {
+          throw new Error(`Failed to initialize worker for languages: ${languages.join(', ')}`);
+        }
+        
+        // Retrieve the newly created and cached worker
+        const newWorker = SimpleOCRCache.getLanguageWorker(languages);
+        if (!newWorker) {
+          throw new Error(`Worker for ${languages.join(', ')} was supposedly created but not found in cache`);
+        }
+        
+        console.log(`✅ New extraction worker initialized and cached for ${workerKey}`);
+        return newWorker;
+      } catch (error) {
+        console.error(`❌ Failed to initialize worker for ${workerKey}:`, error);
+        throw error;
+      } finally {
+        this.loadingPromises.delete(workerKey); // Clean up the promise map
+      }
+    })();
+
+    // Store the promise to prevent concurrent initializations
+    this.loadingPromises.set(workerKey, loadingPromise);
+    return loadingPromise;
+  }
+
+  /**
+   * Language detection - delegated to LanguageDetectionService for modularity
+   * NOTE: LanguageDetectionService has been retired. Using direct implementation.
+   */
+  public static async detectLanguage(imageFile: File | Blob): Promise<OCRLanguage[]> {
+    // TAURI INTEGRATION: Route to appropriate language detection provider
+    // UPDATED: Use OCR_Engine_New approach with multilingual worker
+    try {
+      console.log('🔍 Detecting document language (using OCR_Engine_New approach)...');
+      
+      // Import OCR_Engine_New dynamically to avoid circular dependencies
+      const { OCR_Engine_New } = await import('./OCR_Engine_New');
+      
+      // Use the same multilingual approach as OCR_Engine_New
+      const languages: OCRLanguage[] = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+      
+      // Try to get a prewarmed worker first
+      let worker = SimpleOCRCache.getLanguageWorker(languages) as any;
+      if (!worker) {
+        // Fallback to creating new worker if not prewarmed
+        console.log('🔄 Creating new multilingual worker for detection (not prewarmed)');
+        const resourcePaths = await (await import('../config/pathConfig')).getResourcePaths();
+        const { createWorker } = await import('tesseract.js');
+        
+        worker = await createWorker(languages, 1, {
+          logger: (m: any) => {
+            if (m.status === 'recognizing text') {
+              console.log(`🔍 Multilingual worker progress: ${Math.round(m.progress * 100)}%`);
+            }
+          },
+          workerPath: resourcePaths.workerPath,
+          corePath: resourcePaths.corePath,
+          langPath: resourcePaths.langPath.endsWith('/') ? resourcePaths.langPath : resourcePaths.langPath + '/',
+        } as any);
+        
+        // Apply conservative default parameters
+        if (typeof worker.setParameters === 'function') {
+          await worker.setParameters({ classify_enable_learning: '0' });
+        }
+        
+        SimpleOCRCache.setLanguageWorker(languages, worker);
+      }
+      
+      // Perform detection
+      const result = await (worker as any).detect(imageFile);
+      
+      // Extract languages from detection result
+      let detectedLanguages: OCRLanguage[] = [];
+      if (result && result.data && result.data.scripts) {
+        // Map detected scripts to supported languages
+        detectedLanguages = result.data.scripts
+          .map((script: any) => script.lang as OCRLanguage)
+          .filter((lang: OCRLanguage) => 
+            SUPPORTED_LANGUAGES.some(supported => supported.code === lang)
+          );
+      }
+      
+      // Fallback to English if no languages detected
+      if (detectedLanguages.length === 0) {
+        console.log('📝 No languages detected, defaulting to English');
+        detectedLanguages = ['eng'];
+      } else {
+        console.log('📝 Detected languages:', detectedLanguages.map(lang => 
+          SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang
+        ).join(', '));
+      }
+      
+      return detectedLanguages;
+    } catch (error) {
+      console.error('Language detection failed:', error);
+      // Fallback to English on error
+      return ['eng'];
+    }
+  }
+
+  public static async extractTextFromImage(
+    imageFile: File | Blob, 
+    options: OCROptions = {}
+  ): Promise<string> {
+    // TAURI INTEGRATION: Route to appropriate OCR provider
+    // UPDATED: Use OCR_Engine_New instead of legacy implementation
+    const result = await OCRRouter.routeOCRRequest(imageFile, options, async (imageFile, options) => {
+      // Import OCR_Engine_New dynamically to avoid circular dependencies
+      const { OCR_Engine_New } = await import('./OCR_Engine_New');
+      const engineResult = await OCR_Engine_New.extract(imageFile, options);
+      return engineResult.text;
+    });
+    
+    return result;
+  }
+
+  // TAURI INTEGRATION: Renamed original method to avoid conflicts
+  private static async extractTextFromImageLegacy(
+    imageFile: File | Blob, 
+    options: OCROptions = {}
+  ): Promise<string> {
+    // PHASE 3.3: Enhanced workflow using OCR Orchestrator (opt-in)
+    // Orchestrator has been retired. All OCR operations now use the direct integration path.
+    if (options.useOrchestrator) {
+      console.log('🎼 OCR Orchestrator has been retired. Using direct integration path.');
+      // Fall through to legacy implementation (which is now the standard implementation)
+    }
+    
+    // UPDATED: Use OCR_Engine_New instead of legacy implementation
+    try {
+      console.log('🔍 Extracting text using OCR_Engine_New...');
+      
+      // Import OCR_Engine_New dynamically to avoid circular dependencies
+      const { OCR_Engine_New } = await import('./OCR_Engine_New');
+      
+      // Map OCROptions to NewEngineExtractOptions
+      const newOptions = {
+        ...options,
+        // Add any additional options needed by OCR_Engine_New
+      };
+      
+      const result = await OCR_Engine_New.extract(imageFile, newOptions);
+      console.log(`⏱️ Text extraction completed with confidence: ${result.confidence}`);
+      
+      return result.text;
+    } catch (error) {
+      console.error('OCR extraction failed:', error);
+      throw new Error(`Failed to extract text from image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  private static chinesePostProcessing(text: string): string {
+    return text
+      // Fix common Chinese OCR errors
+      .replace(/。\s*(?=[^\s])/g, '。 ')  // Add space after period
+      .replace(/，\s*(?=[^\s])/g, '， ')  // Add space after comma
+      .replace(/；\s*(?=[^\s])/g, '； ')  // Add space after semicolon
+      .replace(/：\s*(?=[^\s])/g, '： ')  // Add space after colon
+      .replace(/\s{2,}/g, ' ')           // Multiple spaces to single
+      .replace(/\n{3,}/g, '\n\n')       // Multiple newlines to double
+      .trim();
+  }
+
+  private static japanesePostProcessing(text: string): string {
+    return text
+      // Fix Japanese punctuation spacing
+      .replace(/。\s*(?=[^\s])/g, '。')   // No space after period in Japanese
+      .replace(/、\s*(?=[^\s])/g, '、')   // No space after comma in Japanese
+      .replace(/\s{2,}/g, ' ')           // Multiple spaces to single
+      .replace(/\n{3,}/g, '\n\n')       // Multiple newlines to double
+      .trim();
+  }
+
+  private static koreanPostProcessing(text: string): string {
+    return text
+      // Fix Korean punctuation and spacing
+      .replace(/\.\s*(?=[^\s])/g, '. ')  // Add space after period
+      .replace(/,\s*(?=[^\s])/g, ', ')   // Add space after comma
+      .replace(/\s{2,}/g, ' ')           // Multiple spaces to single
+      .replace(/\n{3,}/g, '\n\n')       // Multiple newlines to double
+      .trim();
+  }
+
+  private static arabicPostProcessing(text: string): string {
+    return text
+      // Fix Arabic text direction and punctuation
+      .replace(/\s{2,}/g, ' ')           // Multiple spaces to single
+      .replace(/\n{3,}/g, '\n\n')       // Multiple newlines to double
+      // Arabic-specific fixes would go here
+      .trim();
+  }
+
+  private static russianPostProcessing(text: string): string {
+    return text
+      // Fix Cyrillic character recognition errors
+      .replace(/\s{2,}/g, ' ')           // Multiple spaces to single
+      .replace(/\n{3,}/g, '\n\n')       // Multiple newlines to double
+      // Russian-specific fixes would go here
+      .trim();
+  }
+
+  private static europeanLanguagePostProcessing(text: string, language: OCRLanguage): string {
+    // ENHANCED: Apply universal paragraph preservation for European languages
+    let processed = this.universalParagraphPreservation(text);
+
+    // Language-specific character and punctuation fixes
+    switch (language) {
+      case 'fra':
+        // French-specific punctuation rules
+        processed = processed
+          .replace(/\s+([!?:;])/g, ' $1')  // Space before exclamation, question, colon, semicolon
+          .replace(/«\s*/g, '« ')          // French quotes
+          .replace(/\s*»/g, ' »');
+        break;
+      case 'deu':
+        // German-specific fixes
+        processed = processed
+          .replace(/ß/g, 'ß')              // Ensure proper ß character
+          .replace(/ae/g, 'ä')             // Common OCR error
+          .replace(/oe/g, 'ö')             // Common OCR error
+          .replace(/ue/g, 'ü');            // Common OCR error
+        break;
+      case 'spa':
+        // Spanish-specific fixes
+        processed = processed
+          .replace(/n~/g, 'ñ')             // Fix ñ character
+          .replace(/¿\s*/g, '¿')           // Spanish question marks
+          .replace(/\s*\?/g, '?')
+          .replace(/¡\s*/g, '¡')           // Spanish exclamation marks
+          .replace(/\s*!/g, '!');
+        break;
+    }
+
+    // Final cleanup while preserving paragraph structure
+    return this.finalCleanupUniversal(processed);
+  }
+
+  // Keep the original English post-processing method
+  private static enhancedPostProcessing(text: string): string {
+    // Step 1: Basic cleanup
+    let processed = this.basicCleanup(text);
+    
+    // Step 2: Fix common OCR character errors
+    processed = this.fixCharacterErrors(processed);
+    
+    // Step 3: Fix number formatting issues
+    processed = this.fixNumberFormatting(processed);
+    
+    // Step 4: Fix legal/business terminology
+    processed = this.fixLegalTerminology(processed);
+    
+    // Step 5: Fix spacing and punctuation
+    processed = this.fixSpacingAndPunctuation(processed);
+    
+    // Step 6: Reconstruct paragraphs intelligently
+    processed = this.intelligentParagraphReconstruction(processed);
+    
+    // Step 7: Final cleanup
+    processed = this.finalCleanup(processed);
+    
+    return processed;
+  }
+
+  private static basicCleanup(text: string): string {
+    return text
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .trim();
+  }
+
+  private static fixCharacterErrors(text: string): string {
+    // Common OCR character substitution errors
+    const characterFixes: [RegExp, string | ((match: string, ...groups: string[]) => string)][] = [
+      // Numbers and letters confusion
+      [/\b0(?=[a-zA-Z])/g, 'O'],           // 0 before letters -> O
+      [/(?<=[a-zA-Z])0\b/g, 'O'],         // 0 after letters -> O
+      [/\b1(?=[a-zA-Z])/g, 'I'],          // 1 before letters -> I
+      [/(?<=[a-zA-Z])1\b/g, 'l'],         // 1 after letters -> l
+      [/\|/g, 'I'],                       // Pipe to I
+      [/(?<!\d)5(?=\d)/g, 'S'],           // 5 at start of word -> S
+      [/8(?=[a-zA-Z])/g, 'B'],            // 8 before letters -> B
+      
+      // Common punctuation errors
+      [/\s*,\s*(?=\d)/g, ','],            // Fix comma spacing before numbers
+      [/(\d)\s*,\s*(\d)/g, '$1,$2'],      // Fix number comma formatting
+      [/\s*\.\s*(?=\d)/g, '.'],           // Fix period spacing before numbers
+      [/(\d)\s*\.\s*(\d)/g, '$1.$2'],     // Fix decimal formatting
+      
+      // Quote and apostrophe fixes
+      [/[""]/g, '"'],                     // Smart quotes to regular
+      [/['']/g, "'"],                     // Smart apostrophes to regular
+      
+      // Common word boundary issues
+      [/\bthe\s+(?=\d)/g, 'the '],        // "the" before numbers
+      [/\bof\s+(?=\d)/g, 'of '],          // "of" before numbers
+      [/\band\s+(?=\d)/g, 'and '],        // "and" before numbers
+    ];
+
+    let result = text;
+    characterFixes.forEach(([pattern, replacement]) => {
+      result = result.replace(pattern, replacement as any);
+    });
+
+    return result;
+  }
+
+  private static fixNumberFormatting(text: string): string {
+    let result = text;
+
+    // Fix common number formatting issues
+    const numberFixes: [RegExp, string | ((match: string, ...groups: string[]) => string)][] = [
+      // Fix concatenated numbers like "2,000500" -> "2,000" or "2,500"
+      [/(\d{1,3}),(\d{3})(\d{3})/g, (match: string, p1: string, p2: string, p3: string) => {
+        // If the third group looks like a separate number, split them
+        if (p3.length === 3 && parseInt(p3) < 600) {
+          return `${p1},${p2} ${p3}`;
+        }
+        return `${p1},${p2},${p3}`;
+      }],
+      
+      // Fix malformed currency
+      [/\$\s*(\d)/g, '$$$1'],              // Fix "$ 100" -> "$100"
+      [/(\d)\s*\$(?!\d)/g, '$1$'],         // Fix "100 $" -> "100$"
+      
+      // Fix percentage formatting
+      [/(\d)\s*%/g, '$1%'],                // Fix "50 %" -> "50%"
+      [/%\s*(\d)/g, '% $1'],               // Fix "%50" -> "% 50"
+      
+      // Fix decimal issues
+      [/(\d)\s*\.\s*(\d)/g, '$1.$2'],      // Fix "3 . 14" -> "3.14"
+      
+      // Fix date formatting
+      [/(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{2,4})/g, '$1/$2/$3'],
+      
+      // Fix phone number formatting
+      [/(\d{3})\s*-\s*(\d{3})\s*-\s*(\d{4})/g, '$1-$2-$3'],
+    ];
+
+    numberFixes.forEach(([pattern, replacement]) => {
+      result = result.replace(pattern, replacement as any);
+    });
+
+    return result;
+  }
+
+  private static fixLegalTerminology(text: string): string {
+    // Common legal/business terms that get OCR'd incorrectly
+    const legalTermFixes: [RegExp, string | ((match: string, ...groups: string[]) => string)][] = [
+      // Contract terms
+      [/\bwhereas\b/gi, 'WHEREAS'],
+      [/\bnow therefore\b/gi, 'NOW THEREFORE'],
+      [/\bin witness whereof\b/gi, 'IN WITNESS WHEREOF'],
+      [/\bto wit\b/gi, 'to wit'],
+      [/\binter alia\b/gi, 'inter alia'],
+      [/\be\.g\.\b/gi, 'e.g.'],
+      [/\bi\.e\.\b/gi, 'i.e.'],
+      [/\betc\.\b/gi, 'etc.'],
+      
+      // Legal entities
+      [/\bllc\b/gi, 'LLC'],
+      [/\binc\b(?=\.|\s|$)/gi, 'Inc'],
+      [/\bcorp\b(?=\.|\s|$)/gi, 'Corp'],
+      [/\bltd\b(?=\.|\s|$)/gi, 'Ltd'],
+      
+      // Common legal phrases
+      [/\bforce majeure\b/gi, 'force majeure'],
+      [/\bfob\b/gi, 'FOB'],
+      [/\bcif\b/gi, 'CIF'],
+      [/\bfca\b/gi, 'FCA'],
+      
+      // Fix common word splits
+      [/\bthere fore\b/gi, 'therefore'],
+      [/\bthere of\b/gi, 'thereof'],
+      [/\bthere in\b/gi, 'therein'],
+      [/\bthere under\b/gi, 'thereunder'],
+      [/\bwhere as\b/gi, 'whereas'],
+      [/\bwhere in\b/gi, 'wherein'],
+      [/\bwhere by\b/gi, 'whereby'],
+      [/\bwhere upon\b/gi, 'whereupon'],
+      
+      // Fix common legal abbreviations
+      [/\bp\s*\.\s*a\s*\./gi, 'p.a.'],
+      [/\bv\s*\.\s*(?=[A-Z])/g, 'v. '],     // Case citations
+      [/\bvs\s*\.\s*(?=[A-Z])/g, 'vs. '],   // Case citations
+      
+      // Fix section references
+      [/\bsection\s+(\d+)/gi, 'Section $1'],
+      [/\bsec\s*\.\s*(\d+)/gi, 'Sec. $1'],
+      [/\bparagraph\s+(\d+)/gi, 'Paragraph $1'],
+      [/\bpara\s*\.\s*(\d+)/gi, 'Para. $1'],
+    ];
+
+    let result = text;
+    legalTermFixes.forEach(([pattern, replacement]) => {
+      result = result.replace(pattern, replacement as any);
+    });
+
+    return result;
+  }
+
+  private static fixSpacingAndPunctuation(text: string): string {
+    let result = text;
+
+    // Fix spacing issues
+    const spacingFixes: [RegExp, string | ((match: string, ...groups: string[]) => string)][] = [
+      // Multiple spaces to single space
+      [/\s{2,}/g, ' '],
+      
+      // Fix spacing around punctuation
+      [/\s+([,.;:!?])/g, '$1'],           // Remove space before punctuation
+      [/([,.;:!?])(?=[a-zA-Z])/g, '$1 '], // Add space after punctuation
+      [/([.!?])([A-Z])/g, '$1 $2'],       // Space after sentence-ending punctuation
+      
+      // Fix parentheses spacing
+      [/\(\s+/g, '('],                    // Remove space after opening paren
+      [/\s+\)/g, ')'],                    // Remove space before closing paren
+      [/\)(?=[a-zA-Z])/g, ') '],          // Add space after closing paren
+      
+      // Fix quote spacing
+      [/"\s+/g, '"'],                     // Remove space after opening quote
+      [/\s+"/g, '"'],                     // Remove space before closing quote
+      
+      // Fix hyphen and dash spacing
+      [/\s+-\s+/g, ' - '],                // Standardize dash spacing
+      [/(\w)-(\w)/g, '$1-$2'],            // Remove spaces in hyphenated words
+      
+      // Fix colon spacing (important for legal documents)
+      [/:\s*(?=[A-Z])/g, ': '],           // Standardize colon spacing
+      
+      // Fix semicolon spacing
+      [/;\s*(?=[a-zA-Z])/g, '; '],        // Standardize semicolon spacing
+    ];
+
+    spacingFixes.forEach(([pattern, replacement]) => {
+      result = result.replace(pattern, replacement as any);
+    });
+
+    return result;
+  }
+
+  private static intelligentParagraphReconstruction(text: string): string {
+    // CONSERVATIVE APPROACH: Preserve existing paragraph structure while fixing obvious line breaks
+    const lines = text.split('\n');
+    const result: string[] = [];
+    let currentParagraph = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      const prevLine = i > 0 ? lines[i - 1]?.trim() : '';
+      const nextLine = i < lines.length - 1 ? lines[i + 1]?.trim() : '';
+
+      // Skip empty lines - they indicate paragraph breaks
+      if (line.length === 0) {
+        // Finish current paragraph if we have one
+        if (currentParagraph.trim()) {
+          result.push(currentParagraph.trim());
+          currentParagraph = '';
+        }
+        continue;
+      }
+
+      // Definitely start new paragraph for legal/formal indicators
+      if (this.isDefiniteNewParagraph(line)) {
+        if (currentParagraph.trim()) {
+          result.push(currentParagraph.trim());
+        }
+        currentParagraph = line;
+        continue;
+      }
+
+      // Only join lines if there's clear evidence they should be joined
+      if (currentParagraph && this.shouldDefinitelyJoin(currentParagraph, line)) {
+        // Join with previous line (handle hyphenation)
+        currentParagraph += (currentParagraph.endsWith('-') ? '' : ' ') + line;
+      } else {
+        // DEFAULT: Start new paragraph (preserve paragraph breaks)
+        if (currentParagraph.trim()) {
+          result.push(currentParagraph.trim());
+        }
+        currentParagraph = line;
+      }
+    }
+
+    // Add final paragraph
+    if (currentParagraph.trim()) {
+      result.push(currentParagraph.trim());
+    }
+
+    return result.join('\n\n');
+  }
+
+  private static isNewParagraphStart(line: string, currentParagraph: string): boolean {
+    // Legal document paragraph indicators
+    const paragraphStarters = [
+      /^\d+\./,                           // Numbered paragraphs
+      /^[A-Z]\./,                         // Lettered paragraphs
+      /^\([a-z]\)/,                       // Lettered sub-paragraphs
+      /^\([0-9]+\)/,                      // Numbered sub-paragraphs
+      /^WHEREAS\b/i,                      // Contract clauses
+      /^NOW THEREFORE\b/i,                // Contract clauses
+      /^IN WITNESS WHEREOF\b/i,           // Contract clauses
+      /^Section\s+\d+/i,                  // Section headers
+      /^Article\s+\d+/i,                  // Article headers
+      /^Chapter\s+\d+/i,                  // Chapter headers
+      /^[A-Z][A-Z\s]{3,}:/,              // ALL CAPS headers with colon
+      /^[A-Z][a-z]+\s+[A-Z][a-z]+:/,     // Title Case headers with colon
+    ];
+
+    return paragraphStarters.some(pattern => pattern.test(line)) && currentParagraph.length > 0;
+  }
+
+  private static shouldJoinWithPrevious(currentParagraph: string, line: string): boolean {
+    if (!currentParagraph || !line) return false;
+
+    // Don't join if current line looks like a new paragraph
+    if (this.isNewParagraphStart(line, currentParagraph)) return false;
+
+    // Join if previous line ends incompletely
+    const incompleteEndings = [
+      /,$/,                               // Ends with comma
+      /\sand$/,                           // Ends with "and"
+      /\sor$/,                            // Ends with "or"
+      /\sof$/,                            // Ends with "of"
+      /\sto$/,                            // Ends with "to"
+      /\sthe$/,                           // Ends with "the"
+      /\sa$/,                             // Ends with "a"
+      /\san$/,                            // Ends with "an"
+      /\sin$/,                            // Ends with "in"
+      /\sfor$/,                           // Ends with "for"
+      /\swith$/,                          // Ends with "with"
+      /\sby$/,                            // Ends with "by"
+      /\sfrom$/,                          // Ends with "from"
+      /-$/,                               // Ends with hyphen
+      /\sthat$/,                          // Ends with "that"
+      /\swhich$/,                         // Ends with "which"
+      /\swho$/,                           // Ends with "who"
+      /\swhere$/,                         // Ends with "where"
+      /\swhen$/,                          // Ends with "when"
+    ];
+
+    if (incompleteEndings.some(pattern => pattern.test(currentParagraph.trim()))) {
+      return true;
+    }
+
+    // Join if current line starts with lowercase (likely continuation)
+    if (/^[a-z]/.test(line)) return true;
+
+    // Join if current line starts with continuation words
+    const continuationStarters = [
+      /^and\b/i,
+      /^or\b/i,
+      /^but\b/i,
+      /^however\b/i,
+      /^therefore\b/i,
+      /^furthermore\b/i,
+      /^moreover\b/i,
+      /^nevertheless\b/i,
+      /^accordingly\b/i,
+    ];
+
+    return continuationStarters.some(pattern => pattern.test(line));
+  }
+
+  private static shouldEndParagraph(currentLine: string, nextLine: string): boolean {
+    if (!nextLine) return true;
+
+    // End paragraph if next line starts a new paragraph
+    if (this.isNewParagraphStart(nextLine, currentLine)) return true;
+
+    // End paragraph after sentence-ending punctuation if next line starts with capital
+    if (/[.!?]$/.test(currentLine.trim()) && /^[A-Z]/.test(nextLine.trim())) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Conservative helper methods for paragraph reconstruction
+  private static isDefiniteNewParagraph(line: string): boolean {
+    // Only mark as definite new paragraph for very clear indicators
+    const definiteStarters = [
+      /^\d+\./,                           // Numbered paragraphs like "1."
+      /^[A-Z]\./,                         // Lettered paragraphs like "A."
+      /^\([a-z]\)/,                       // Lettered sub-paragraphs like "(a)"
+      /^\([0-9]+\)/,                      // Numbered sub-paragraphs like "(1)"
+      /^WHEREAS\b/i,                      // Contract clauses
+      /^NOW THEREFORE\b/i,                // Contract clauses
+      /^IN WITNESS WHEREOF\b/i,           // Contract clauses
+      /^Section\s+\d+/i,                  // Section headers
+      /^Article\s+\d+/i,                  // Article headers
+      /^Chapter\s+\d+/i,                  // Chapter headers
+    ];
+
+    return definiteStarters.some(pattern => pattern.test(line));
+  }
+
+  private static shouldDefinitelyJoin(currentParagraph: string, line: string): boolean {
+    if (!currentParagraph || !line) return false;
+
+    // Don't join if current line looks like a new paragraph
+    if (this.isDefiniteNewParagraph(line)) return false;
+
+    // Only join if there's very clear evidence lines should be joined
+    const clearJoinIndicators = [
+      /-$/,                               // Previous line ends with hyphen
+      /,$/,                               // Previous line ends with comma
+      /\sand$/,                           // Previous line ends with "and"
+      /\sor$/,                            // Previous line ends with "or"
+    ];
+
+    // Check if previous line has clear join indicator
+    if (clearJoinIndicators.some(pattern => pattern.test(currentParagraph.trim()))) {
+      return true;
+    }
+
+    // Join if current line starts with lowercase (likely continuation)
+    if (/^[a-z]/.test(line)) return true;
+
+    return false;
+  }
+
+  private static shouldDefinitelyEndParagraph(currentParagraph: string, line: string): boolean {
+    // Only end paragraph if we have very strong evidence
+    
+    // End if next line is definitely a new paragraph
+    if (this.isDefiniteNewParagraph(line)) return true;
+
+    // End if current paragraph ends with sentence punctuation and next starts with capital
+    if (/[.!?]$/.test(currentParagraph.trim()) && /^[A-Z]/.test(line.trim())) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private static finalCleanup(text: string): string {
+    return text
+      // Remove excessive line breaks
+      .replace(/\n{3,}/g, '\n\n')
+      // Trim each paragraph
+      .split('\n\n')
+      .map(para => para.trim())
+      .filter(para => para.length > 0)
+      .join('\n\n')
+      // Final trim
+      .trim();
+  }
+
+  public static getLanguageInfo(languageCode: OCRLanguage): LanguageOption | undefined {
+    return SUPPORTED_LANGUAGES.find(lang => lang.code === languageCode);
+  }
+
+  // Enhanced cache statistics for monitoring
+  public static getCacheStats() {
+    return {
+      cachedWorkers: this.workers.size,
+      totalCacheHits: Array.from(this.workers.values()).reduce((sum, cached) => sum + cached.useCount, 0),
+      oldestWorker: this.workers.size > 0 ? Math.min(...Array.from(this.workers.values()).map(cached => cached.lastUsed)) : Infinity,
+      newestWorker: this.workers.size > 0 ? Math.max(...Array.from(this.workers.values()).map(cached => cached.lastUsed)) : -Infinity,
+      // Language detection cache stats
+      languageCacheSize: this.languageCache.size,
+      languageCacheHits: Array.from(this.languageCache.values()).reduce((sum, entry) => sum + entry.hitCount, 0),
+      oldestLanguageCache: this.languageCache.size > 0 ? Math.min(...Array.from(this.languageCache.values()).map(entry => entry.timestamp)) : Infinity,
+      newestLanguageCache: this.languageCache.size > 0 ? Math.max(...Array.from(this.languageCache.values()).map(entry => entry.timestamp)) : -Infinity
+    };
+  }
+
+  // Universal paragraph preservation function for all European languages
+  private static universalParagraphPreservation(text: string): string {
+    // SAFE UNIVERSAL APPROACH: Preserve existing structure while fixing obvious issues
+    const lines = text.split('\n');
+    const result: string[] = [];
+    let currentParagraph = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      // Skip empty lines - they indicate paragraph breaks
+      if (line.length === 0) {
+        // Finish current paragraph if we have one
+        if (currentParagraph.trim()) {
+          result.push(currentParagraph.trim());
+          currentParagraph = '';
+        }
+        continue;
+      }
+
+      // Universal paragraph starters (work across European languages)
+      if (this.isUniversalNewParagraph(line)) {
+        if (currentParagraph.trim()) {
+          result.push(currentParagraph.trim());
+        }
+        currentParagraph = line;
+        continue;
+      }
+
+      // Universal line joining (very conservative)
+      if (currentParagraph && this.shouldUniversallyJoin(currentParagraph, line)) {
+        // Join with previous line (handle hyphenation)
+        currentParagraph += (currentParagraph.endsWith('-') ? '' : ' ') + line;
+      } else {
+        // DEFAULT: Start new paragraph (preserve paragraph breaks)
+        if (currentParagraph.trim()) {
+          result.push(currentParagraph.trim());
+        }
+        currentParagraph = line;
+      }
+    }
+
+    // Add final paragraph
+    if (currentParagraph.trim()) {
+      result.push(currentParagraph.trim());
+    }
+
+    return result.join('\n\n');
+  }
+
+  // Universal paragraph starter detection (language-agnostic)
+  private static isUniversalNewParagraph(line: string): boolean {
+    // Only very obvious paragraph starters that work across languages
+    const universalStarters = [
+      /^\d+\./,                           // Numbered paragraphs like "1."
+      /^[A-Z]\./,                         // Lettered paragraphs like "A."
+      /^\([a-z]\)/,                       // Lettered sub-paragraphs like "(a)"
+      /^\([0-9]+\)/,                      // Numbered sub-paragraphs like "(1)"
+      /^[IVX]+\./,                        // Roman numerals like "I.", "II."
+    ];
+
+    return universalStarters.some(pattern => pattern.test(line));
+  }
+
+  // Universal line joining (very conservative, works across languages)
+  private static shouldUniversallyJoin(currentParagraph: string, line: string): boolean {
+    if (!currentParagraph || !line) return false;
+
+    // Don't join if current line looks like a new paragraph
+    if (this.isUniversalNewParagraph(line)) return false;
+
+    // Only join with very clear universal indicators
+    const universalJoinIndicators = [
+      /-$/,                               // Previous line ends with hyphen (universal)
+      /,$/,                               // Previous line ends with comma (universal)
+    ];
+
+    // Check if previous line has clear join indicator
+    if (universalJoinIndicators.some(pattern => pattern.test(currentParagraph.trim()))) {
+      return true;
+    }
+
+    // Join if current line starts with lowercase (universal continuation)
+    if (/^[a-z]/.test(line)) return true;
+
+    return false;
+  }
+
+  // Universal final cleanup (preserves paragraph structure)
+  private static finalCleanupUniversal(text: string): string {
+    return text
+      // Clean up excessive spaces within lines
+      .replace(/\s{2,}/g, ' ')
+      // Remove excessive line breaks (preserve double breaks for paragraphs)
+      .replace(/\n{3,}/g, '\n\n')
+      // Trim each paragraph
+      .split('\n\n')
+      .map(para => para.trim())
+      .filter(para => para.length > 0)
+      .join('\n\n')
+      // Final trim
+      .trim();
+  }
+
+  // STAGE 1: Gentle universal preservation - preserves paragraph structure for ALL languages
+  private static gentleUniversalPreservation(text: string): string {
+    console.log('🧘 Re-evaluating paragraph preservation...');
+
+    const lines = text.split('\n');
+    const result: string[] = [];
+    let currentParagraph = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      if (line.length === 0) {
+        // Empty line: end of paragraph
+        if (currentParagraph.trim()) {
+          result.push(currentParagraph.trim());
+          currentParagraph = '';
+        }
+        continue;
+      }
+
+      // Detect definitive paragraph starters (numbered sections, legal headers)
+      const definiteParagraphStart = /^[1-9]\d*\.|^[A-Z]\.|^\([a-z]\)|^\([0-9]+\)|^WHEREAS\b|^NOW THEREFORE\b|^IN WITNESS WHEREOF\b/i.test(line);
+
+      // Intelligent line joining logic
+      if (currentParagraph && !definiteParagraphStart) {
+        // Check if we should join this line with the previous paragraph
+        const shouldJoin = this.shouldJoinLines(currentParagraph, line);
+        
+        if (shouldJoin) {
+          currentParagraph += ' ' + line;
+        } else {
+          // Start new paragraph
+          result.push(currentParagraph.trim());
+          currentParagraph = line;
+        }
+      } else {
+        // Definitive paragraph start or first line
+        if (currentParagraph.trim()) {
+          result.push(currentParagraph.trim());
+        }
+        currentParagraph = line;
+      }
+    }
+
+    if (currentParagraph.trim()) {
+      result.push(currentParagraph.trim());
+    }
+    return result.join('\n\n');
+  }
+
+  // ZEN APPROACH: Simple and effective - preserve clear paragraph breaks, join everything else
+  private static shouldJoinLines(currentParagraph: string, line: string): boolean {
+    if (!currentParagraph || !line) return false;
+
+    // DON'T join if current line is clearly a new paragraph
+    if (this.isDefiniteNewParagraph(line)) {
+      return false;
+    }
+
+    // DON'T join if previous line ends with punctuation and next starts like a new sentence
+    if (this.isPunctuationBreak(currentParagraph, line)) {
+      console.log('🔤 Punctuation break detected - preserving break:', currentParagraph.slice(-20), '|', line.slice(0, 30));
+      return false;
+    }
+
+    // JOIN everything else - simple and effective!
+    console.log('🧘 Zen joining:', currentParagraph.slice(-20), '|', line.slice(0, 30));
+    return true;
+  }
+
+  public static getLanguageInfo(languageCode: OCRLanguage): LanguageOption | undefined {
+    return SUPPORTED_LANGUAGES.find(lang => lang.code === languageCode);
+  }
+}

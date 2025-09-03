@@ -60,7 +60,8 @@
     "check": "npm run lint && npm run test:run",
     "check:strict": "npm run lint -- --max-warnings=0 && npm run test:run",
     "smoke": "vitest run tests/pages tests/services --reporter=verbose",
-    "pack:win": "npm run electron:build:win"
+    "pack:win": "npm run electron:build:win",
+    "changelog:split": "python3 scripts/changelog/split_archive.py"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.0.0",

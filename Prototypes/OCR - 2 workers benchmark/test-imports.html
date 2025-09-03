@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Import Test</title>
+</head>
+<body>
+    <h1>OCR Import Test</h1>
+    <p>Check the browser console for import test results.</p>
+    
+    <script type="module">
+        // Test script to verify OCR function imports
+        console.log('Testing OCR function imports...');
+        
+        try {
+            console.log('Attempting to import SimpleOCRCache...');
+            const module = await import('../../src/services/SimpleOCRCache.ts');
+            console.log('Successfully imported SimpleOCRCache module:', Object.keys(module));
+            
+            // Check if the expected functions are available
+            if (module.prewarmLanguageWorker) {
+                console.log('✅ prewarmLanguageWorker function is available');
+            } else {
+                console.log('❌ prewarmLanguageWorker function is NOT available');
+            }
+            
+            if (module.extractTextWithPrewarmedWorker) {
+                console.log('✅ extractTextWithPrewarmedWorker function is available');
+            } else {
+                console.log('❌ extractTextWithPrewarmedWorker function is NOT available');
+            }
+            
+            console.log('OCR function import test completed successfully');
+        } catch (error) {
+            console.error('Error importing OCR functions:', error);
+        }
+    </script>
+</body>
+</html>

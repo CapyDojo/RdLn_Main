@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RdLn™ Prototypes Index</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #60a5fa;
+            margin-bottom: 30px;
+        }
+        
+        .prototype-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        
+        .prototype-card:hover {
+            transform: translateY(-2px);
+            border-color: #3b82f6;
+        }
+        
+        .prototype-card h2 {
+            margin-top: 0;
+            color: #60a5fa;
+        }
+        
+        .prototype-card p {
+            color: #9ca3af;
+        }
+        
+        .prototype-link {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .prototype-link:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔬 RdLn™ Prototypes Index</h1>
+    
+    <div class="prototype-card">
+        <h2>OCR - 2 Workers Benchmark</h2>
+        <p>Tests the performance difference between processing 2 concurrent OCR operations using 1 prewarmed worker (sequential) vs 2 prewarmed workers (concurrent).</p>
+        <a href="OCR%20-%202%20workers%20benchmark/ocr-2-workers-benchmark.html" class="prototype-link">Launch Benchmark</a>
+        <a href="OCR%20-%202%20workers%20benchmark/test-imports.html" class="prototype-link" style="background: #6b7280; margin-left: 10px;">Test Imports</a>
+        <p style="margin-top: 10px; font-size: 14px;"><a href="OCR%20-%202%20workers%20benchmark/README.md">Documentation</a> | <a href="OCR%20-%202%20workers%20benchmark/TESTING_PLAN.md">Testing Plan</a></p>
+    </div>
+</body>
+</html>

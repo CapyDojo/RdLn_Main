@@ -91,7 +91,12 @@ npm run build
 - Prefer native Windows commands (PowerShell/Batch) for local tasks.
 - Desktop development: `npm run electron:dev`.
 - Windows packaging: `npm run electron:build:win`; app at `dist-electron-new/win-unpacked/RdLn.exe`.
-- Tauri is on hold — avoid `npm run tauri:*` until re-enabled.
+- Tauri is on hold - avoid `npm run tauri:*` until re-enabled.
+
+### OCR Orchestrator Status
+- The legacy OCR Orchestrator has been retired. The `OCROptions.useOrchestrator` flag is now ignored.
+- All OCR requests route through the unified engine (`OCR_Engine`/`OCR_Engine_New`) via `OCRService` and `OCRRouter`.
+- If you see references to orchestrator-specific methods or tests, they have been moved under `src/RetiredCode/`.
 
 ### Helpful Scripts
 - `npm run check`: Runs lint + unit tests.
