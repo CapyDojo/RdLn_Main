@@ -1233,7 +1233,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
               
               {/* Live Processing Rate */}
               <div className="text-xs text-theme-neutral-500">
-                📈 {((progress / 100) / ((Date.now() - startTime) / 1000)).toFixed(1)}% per sec
+                📈 {(progress / ((Date.now() - startTime) / 1000)).toFixed(1)}% per sec
               </div>
             </div>
           )}
