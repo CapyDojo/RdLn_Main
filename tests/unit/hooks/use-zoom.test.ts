@@ -1,24 +1,26 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
-// Mock the ZoomService before importing the hook
-const mockZoomService = {
-  getZoom: vi.fn(),
-  setZoom: vi.fn(),
-  zoomIn: vi.fn(),
-  zoomOut: vi.fn(),
-  resetZoom: vi.fn(),
-  isZoomSupported: vi.fn(),
-  getPlatform: vi.fn(),
-  addListener: vi.fn(),
-};
-
+// Mock the ZoomService with proper factory pattern
 vi.mock('@/services/ZoomService', () => ({
-  ZoomService: mockZoomService
+  ZoomService: {
+    getZoom: vi.fn(),
+    setZoom: vi.fn(),
+    zoomIn: vi.fn(),
+    zoomOut: vi.fn(),
+    resetZoom: vi.fn(),
+    isZoomSupported: vi.fn(),
+    getPlatform: vi.fn(),
+    addListener: vi.fn(),
+  }
 }));
 
-// Now import the hook
+// Import the hook and get the mocked service
 import { useZoom, useZoomLevel } from '@/hooks/useZoom';
+import { ZoomService } from '@/services/ZoomService';
+
+// Type assertion to access mocked methods
+const mockZoomService = ZoomService as any;
 
 describe('useZoom', () => {
   let mockUnsubscribe: ReturnType<typeof vi.fn>;

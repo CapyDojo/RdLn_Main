@@ -153,7 +153,7 @@ describe('File Processing Pipeline Integration', () => {
         expect.fail('Should have thrown an error');
       } catch (error: any) {
         expect(error.code).toBe(ERROR_CODES.UNSUPPORTED_TYPE);
-        expect(error.message).toContain('Invalid file');
+        expect(error.message).toContain('Unsupported file type');
       }
     });
   });
