@@ -89,7 +89,13 @@
       "WebFetch(domain:posthog.com)",
       "WebFetch(domain:us.posthog.com)",
       "mcp__serena__read_memory",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(dir \"C:\\Users\\edsiu\\AppData\\Local\\claude-cli-nodejs\\Cache\\C--temp-RdLn-MVP-Stream\\mcp-logs-context7\")",
+      "Read(C:\\Users\\edsiu\\AppData\\Local\\claude-cli-nodejs\\Cache\\C--temp-RdLn-MVP-Stream\\mcp-logs-context7/**)",
+      "Bash(curl:*)",
+      "Read(C:\\Users\\edsiu/**)",
+      "Read(C:\\Users\\edsiu/**)",
+      "Read(C:\\Users\\edsiu/**)"
     ],
     "deny": [],
     "additionalDirectories": [
