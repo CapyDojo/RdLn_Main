@@ -1,50 +1,63 @@
-# OCR Worker Benchmark: 1 vs 2 Prewarmed Workers
+# OCR Worker Benchmark Prototypes
 
-This prototype benchmarks the performance difference between processing 2 concurrent OCR operations using:
-1. **Single Worker (Sequential)**: Process 2 OCR operations one after another using 1 prewarmed worker
-2. **Dual Worker (Concurrent)**: Process 2 OCR operations simultaneously using 2 prewarmed workers
+This directory contains multiple versions of OCR Worker Benchmarks, demonstrating different approaches to parallel OCR processing.
 
-## Purpose
+## Versions
 
-This test demonstrates the performance benefits of using multiple prewarmed OCR workers for concurrent operations. It helps answer the question: "Does using multiple workers provide a performance benefit for concurrent OCR tasks?"
+### [v2 - Fixed Version](ocr-2-workers-benchmark-v2.html) (`ocr-2-workers-benchmark-v2.html`)
+A corrected version of the original benchmark with:
+- Fixed CSS variables and styling issues
+- Proper event handling with programmatic listeners
+- Corrected string escaping in JavaScript
+- Two test modes:
+  - **Single Worker Test**: Sequential processing with one worker
+  - **Dual Worker Test**: Concurrent processing using Promise.all (may or may not be truly parallel)
 
-## How It Works
+### [v3 - True Parallel Processing](v3-Q3C.html) (`v3-Q3C.html`) - NEW
+An enhanced version with true parallel processing capabilities:
+- Three test modes:
+  - **Single Worker Test**: Sequential processing with one worker
+  - **Dual Worker Test**: Concurrent processing using Promise.all
+  - **True Parallel Test**: Parallel processing with separate worker instances
+- Uses the same tesseract.js configuration as the main application
+- Proper error handling for worker creation and termination
+- Detailed comparison of all three approaches
 
-### Single Worker Test (Sequential)
-- Processes 2 OCR operations one after another
-- Uses 1 prewarmed worker that is reused for both operations
-- Measures the total time for sequential processing
+## Supported Languages
 
-### Dual Worker Test (Concurrent)
-- Processes 2 OCR operations simultaneously using `Promise.all()`
-- Uses 2 prewarmed workers (one per operation)
-- Measures the total time for concurrent processing
+All versions use the same 10 languages as the main OCR engine:
+- `eng` - English 🇪🇳
+- `chi_sim` - Chinese (Simplified) 🇨🇳
+- `chi_tra` - Chinese (Traditional) 🇹🇼
+- `spa` - Spanish 🇪🇸
+- `fra` - French 🇫🇷
+- `deu` - German 🇩🇪
+- `jpn` - Japanese 🇯🇵
+- `kor` - Korean 🇰🇷
+- `ara` - Arabic 🇸🇦
+- `rus` - Russian 🇷🇺
 
-## Setup Instructions
+## How to Use
 
-1. Ensure all project dependencies are installed: `npm install`
-2. Download Tesseract.js assets: `npm run download:tesseract`
-3. Start the development server: `npm run dev`
-4. Navigate to: http://localhost:5173/Prototypes/OCR%20-%202%20workers%20benchmark/ocr-2-workers-benchmark.html
-5. Click "Prewarm OCR Workers" to initialize the OCR workers
-6. Select two image files for each test panel
-7. Run both tests and compare results
+1. Start the development server:
+   ```
+   npm run dev
+   ```
 
-## Expected Results
+2. Access the files through the Vite development server:
+   - v2: `http://localhost:5173/Prototypes/OCR%20-%202%20workers%20benchmark/ocr-2-workers-benchmark-v2.html`
+   - v3: `http://localhost:5173/Prototypes/OCR%20-%202%20workers%20benchmark/v3-Q3C.html`
 
-With 2 prewarmed workers, the concurrent processing should be significantly faster than sequential processing, especially for larger images. The performance gain will depend on:
-- Image size and complexity
-- System capabilities
-- Worker initialization overhead
+3. Prewarm workers using the "Prewarm 10-Language OCR Workers" button
 
-## Technical Details
+4. Select test images and run the benchmarks
 
-This prototype uses the RdLn™ Document Comparison Tool's actual OCR service infrastructure:
-- `SimpleOCRCache` for worker management
-- `extractTextWithPrewarmedWorker` for OCR processing
-- Tesseract.js as the underlying OCR engine
+## Expected Performance Differences
 
-The test makes real calls to the OCR pipeline and provides actual performance measurements with real image files.
+- **v2**: May show minimal improvement in the dual test over single test, depending on the OCR service implementation
+- **v3**: Should show significant performance improvements in the true parallel test due to dedicated worker instances
 
-## Testing
-See [TESTING_PLAN.md](TESTING_PLAN.md) for detailed instructions on how to test this prototype and verify it works with the actual OCR pipeline.
+For detailed information about each version, see:
+- [v2 README](README-v2.md)
+- [v3 README](README-v3.md)
+- [Summary of all versions](SUMMARY.md)

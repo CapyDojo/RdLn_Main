@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCR Worker Benchmark: 1 vs 2 Prewarmed Workers</title>
+    <title>OCR Worker Benchmark v2: 10-Language Workers</title>
     <style>
+        /* CSS variables for consistent styling */
         :root {
             --primary-color: #3b82f6;
             --success-color: #10b981;
@@ -111,7 +112,7 @@
         .file-input {
             margin: 15px 0;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--panel-bg);
             border: 1px solid var(--border-color);
             border-radius: 6px;
             color: #e0e0e0;
@@ -284,20 +285,59 @@
             margin: 10px 0;
             border-radius: 6px;
         }
+        
+        .language-info {
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .language-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .language-tag {
+            background: rgba(96, 165, 250, 0.2);
+            border: 1px solid rgba(96, 165, 250, 0.5);
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
-    <h1>🔬 OCR Worker Benchmark</h1>
-    <div class="subtitle">Testing Performance: 1 vs 2 Prewarmed Workers for Concurrent OCR Operations</div>
+    <h1>🔬 OCR Worker Benchmark v2</h1>
+    <div class="subtitle">Testing Performance: 10-Language Workers (eng, chi_sim, chi_tra, spa, fra, deu, jpn, kor, ara, rus)</div>
 
     <div class="info-panel">
         <h2>ℹ️ Test Description</h2>
         <p>This benchmark tests the performance difference between:</p>
         <ul>
-            <li><strong>Single Worker Test</strong>: Process 2 OCR operations sequentially using 1 prewarmed worker</li>
-            <li><strong>Dual Worker Test</strong>: Process 2 OCR operations concurrently using 2 prewarmed workers</li>
+            <li><strong>Single Worker Test</strong>: Process 2 OCR operations sequentially using 1 prewarmed 10-language worker</li>
+            <li><strong>Dual Worker Test</strong>: Process 2 OCR operations using the same OCR service (may or may not use multiple workers internally)</li>
         </ul>
-        <p>Both tests process the same images to ensure fair comparison. Results show initialization time, processing time, and total execution time.</p>
+        <p>Both tests use the same 10 languages as the main OCR engine: English, Chinese (Simplified), Chinese (Traditional), Spanish, French, German, Japanese, Korean, Arabic, and Russian.</p>
+        
+        <div class="language-info">
+            <strong>Supported Languages:</strong>
+            <div class="language-list">
+                <span class="language-tag">eng (English) 🇪🇳</span>
+                <span class="language-tag">chi_sim (Chinese Simplified) 🇨🇳</span>
+                <span class="language-tag">chi_tra (Chinese Traditional) 🇹🇼</span>
+                <span class="language-tag">spa (Spanish) 🇪🇸</span>
+                <span class="language-tag">fra (French) 🇫🇷</span>
+                <span class="language-tag">deu (German) 🇩🇪</span>
+                <span class="language-tag">jpn (Japanese) 🇯🇵</span>
+                <span class="language-tag">kor (Korean) 🇰🇷</span>
+                <span class="language-tag">ara (Arabic) 🇸🇦</span>
+                <span class="language-tag">rus (Russian) 🇷🇺</span>
+            </div>
+        </div>
     </div>
 
     <div class="legend">
@@ -312,21 +352,21 @@
     </div>
 
     <div class="controls">
-        <button id="prewarm-btn" onclick="prewarmWorkers()">🔥 Prewarm OCR Workers</button>
-        <button id="reset-btn" onclick="resetAll()">🔄 Reset All</button>
+        <button id="prewarm-btn">🔥 Prewarm 10-Language OCR Workers</button>
+        <button id="reset-btn">🔄 Reset All</button>
     </div>
 
     <div class="info-panel">
         <h2>📤 Select Test Images</h2>
         <div>
             <label><strong>Image 1:</strong></label>
-            <input type="file" id="test-file-1" class="file-input" accept="image/*" onchange="previewImage(this, 'preview-1')" />
+            <input type="file" id="test-file-1" class="file-input" accept="image/*" />
             <div id="preview-1"></div>
         </div>
 
         <div>
             <label><strong>Image 2:</strong></label>
-            <input type="file" id="test-file-2" class="file-input" accept="image/*" onchange="previewImage(this, 'preview-2')" />
+            <input type="file" id="test-file-2" class="file-input" accept="image/*" />
             <div id="preview-2"></div>
         </div>
     </div>
@@ -343,22 +383,22 @@
                 <strong>Test Details:</strong>
                 <ul style="margin: 10px 0; padding-left: 20px; font-size: 14px;">
                     <li>✅ 2 OCR operations processed one after another</li>
-                    <li>✅ Uses 1 prewarmed worker (reused for both operations)</li>
+                    <li>✅ Uses 1 prewarmed 10-language worker (reused for both operations)</li>
                     <li>✅ Measures sequential processing time</li>
                 </ul>
             </div>
 
-            <button id="single-test" onclick="runSingleWorkerTest()">🚀 Run Single Worker Test</button>
-            <button id="single-clear" onclick="clearResults('single')">Clear Results</button>
+            <button id="single-test">🚀 Run Single Worker Test</button>
+            <button id="single-clear">Clear Results</button>
 
             <div class="status ready" id="single-status">Ready for Testing</div>
             <div id="single-results" class="results">
-                <div style="color: var(--warning-color); font-weight: bold;">Single Worker Results:</div>
+                <div style="color: #f59e0b; font-weight: bold;">Single Worker Results:</div>
                 <div>Select two images above and click "Run Single Worker Test" to benchmark...</div>
             </div>
             
             <div id="single-ocr-text" style="margin-top: 20px; padding: 15px; background: rgba(0, 0, 0, 0.3); border-radius: 6px; display: none;">
-                <h3 style="color: var(--warning-color); margin-top: 0;">OCR Extracted Text:</h3>
+                <h3 style="color: #f59e0b; margin-top: 0;">OCR Extracted Text:</h3>
                 <div id="single-ocr-content" style="font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; max-height: 200px; overflow-y: auto;"></div>
             </div>
         </div>
@@ -373,23 +413,23 @@
             <div>
                 <strong>Test Details:</strong>
                 <ul style="margin: 10px 0; padding-left: 20px; font-size: 14px;">
-                    <li>✅ 2 OCR operations processed simultaneously</li>
-                    <li>✅ Uses 2 prewarmed workers (one per operation)</li>
+                    <li>✅ 2 OCR operations processed using Promise.all</li>
+                    <li>✅ May or may not use multiple workers internally (depends on OCR service implementation)</li>
                     <li>✅ Measures concurrent processing time</li>
                 </ul>
             </div>
 
-            <button id="dual-test" onclick="runDualWorkerTest()">🚀 Run Dual Worker Test</button>
-            <button id="dual-clear" onclick="clearResults('dual')">Clear Results</button>
+            <button id="dual-test">🚀 Run Dual Worker Test</button>
+            <button id="dual-clear">Clear Results</button>
 
             <div class="status ready" id="dual-status">Ready for Testing</div>
             <div id="dual-results" class="results">
-                <div style="color: var(--success-color); font-weight: bold;">Dual Worker Results:</div>
+                <div style="color: #10b981; font-weight: bold;">Dual Worker Results:</div>
                 <div>Select two images above and click "Run Dual Worker Test" to benchmark...</div>
             </div>
             
             <div id="dual-ocr-text" style="margin-top: 20px; padding: 15px; background: rgba(0, 0, 0, 0.3); border-radius: 6px; display: none;">
-                <h3 style="color: var(--success-color); margin-top: 0;">OCR Extracted Text:</h3>
+                <h3 style="color: #10b981; margin-top: 0;">OCR Extracted Text:</h3>
                 <div id="dual-ocr-content" style="font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; max-height: 200px; overflow-y: auto;"></div>
             </div>
         </div>
@@ -410,15 +450,29 @@
         </tbody>
     </table>
 
-    <script>
+    <script type="module">
         // Test results storage
         let singleWorkerResults = null;
         let dualWorkerResults = null;
+        
+        // Define the 10 languages used in OCR_Engine_New.ts
+        const DETECTION_LANGUAGES = ['eng', 'chi_sim', 'chi_tra', 'spa', 'fra', 'deu', 'jpn', 'kor', 'ara', 'rus'];
+
+        // DOM Elements
+        const prewarmBtn = document.getElementById('prewarm-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const testFile1 = document.getElementById('test-file-1');
+        const testFile2 = document.getElementById('test-file-2');
+        const preview1 = document.getElementById('preview-1');
+        const preview2 = document.getElementById('preview-2');
+        const singleTestBtn = document.getElementById('single-test');
+        const singleClearBtn = document.getElementById('single-clear');
+        const dualTestBtn = document.getElementById('dual-test');
+        const dualClearBtn = document.getElementById('dual-clear');
 
         // Preview image function
-        function previewImage(input, previewId) {
-            const preview = document.getElementById(previewId);
-            preview.innerHTML = '';
+        function previewImage(input, previewElement) {
+            previewElement.innerHTML = '';
             
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -426,82 +480,91 @@
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     img.className = 'test-image-preview';
-                    preview.appendChild(img);
+                    previewElement.appendChild(img);
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        // Prewarm OCR workers
+        // Set up event listeners for file inputs
+        testFile1.addEventListener('change', function() {
+            previewImage(this, preview1);
+        });
+
+        testFile2.addEventListener('change', function() {
+            previewImage(this, preview2);
+        });
+
+        // Prewarm OCR workers with 10 languages
         async function prewarmWorkers() {
-            const button = document.getElementById('prewarm-btn');
-            button.disabled = true;
-            button.textContent = '🔄 Prewarming...';
+            prewarmBtn.disabled = true;
+            prewarmBtn.textContent = '🔄 Prewarming...';
             
             try {
-                // Dynamically import the OCR cache module
-                const { prewarmLanguageWorker } = await import('../../../src/services/SimpleOCRCache.ts');
+                // In a development environment, we can import directly from the source
+                // In a production environment, we would need to use the built version
+                const modulePath = '/src/services/SimpleOCRCache.ts';
+                const { prewarmLanguageWorker } = await import(modulePath);
                 
-                // Prewarm first worker for English
-                await prewarmLanguageWorker(['eng'], (progress) => {
-                    console.log(`Prewarming first worker: ${(progress * 100).toFixed(0)}%`);
+                // Prewarm first worker for 10 languages
+                await prewarmLanguageWorker(DETECTION_LANGUAGES, (progress) => {
+                    console.log(`Prewarming first 10-language worker: ${(progress * 100).toFixed(0)}%`);
                 });
                 
-                // Prewarm second worker for English
-                await prewarmLanguageWorker(['eng'], (progress) => {
-                    console.log(`Prewarming second worker: ${(progress * 100).toFixed(0)}%`);
+                // Prewarm second worker for 10 languages
+                await prewarmLanguageWorker(DETECTION_LANGUAGES, (progress) => {
+                    console.log(`Prewarming second 10-language worker: ${(progress * 100).toFixed(0)}%`);
                 });
                 
-                alert('✅ Both OCR workers prewarmed successfully!');
+                alert('✅ Both 10-language OCR workers prewarmed successfully!');
             } catch (error) {
                 console.error('Error prewarming workers:', error);
                 alert('❌ Error prewarming workers: ' + error.message);
             } finally {
-                button.disabled = false;
-                button.textContent = '🔥 Prewarm OCR Workers';
+                prewarmBtn.disabled = false;
+                prewarmBtn.textContent = '🔥 Prewarm 10-Language OCR Workers';
             }
         }
 
-        // Run single worker test (sequential)
+        // Run single worker test (sequential) with 10 languages
         async function runSingleWorkerTest() {
-            const fileInput1 = document.getElementById('test-file-1');
-            const fileInput2 = document.getElementById('test-file-2');
-            const resultsDiv = document.getElementById('single-results');
-            const statusDiv = document.getElementById('single-status');
-            const button = document.getElementById('single-test');
-            const ocrTextDiv = document.getElementById('single-ocr-text');
-            const ocrContentDiv = document.getElementById('single-ocr-content');
-            
-            if (!fileInput1.files[0] || !fileInput2.files[0]) {
+            if (!testFile1.files[0] || !testFile2.files[0]) {
                 alert('Please select both image files first');
                 return;
             }
             
-            button.disabled = true;
+            singleTestBtn.disabled = true;
+            const statusDiv = document.getElementById('single-status');
+            const resultsDiv = document.getElementById('single-results');
+            const ocrTextDiv = document.getElementById('single-ocr-text');
+            const ocrContentDiv = document.getElementById('single-ocr-content');
+            
             statusDiv.className = 'status testing';
             statusDiv.textContent = 'Testing...';
             resultsDiv.innerHTML = `
-                <div style="color: var(--warning-color); font-weight: bold;">Single Worker Test Running...</div>
-                <div>⏱️ Processing 2 OCR operations sequentially with 1 worker...</div>
+                <div style="color: #f59e0b; font-weight: bold;">Single Worker Test Running...</div>
+                <div>⏱️ Processing 2 OCR operations sequentially with 1 10-language worker...</div>
             `;
             ocrTextDiv.style.display = 'none';
             
             try {
                 const startTime = performance.now();
                 
-                // Dynamically import the OCR cache module
-                const { extractTextWithPrewarmedWorker } = await import('../../../src/services/SimpleOCRCache.ts');
+                // In a development environment, we can import directly from the source
+                // In a production environment, we would need to use the built version
+                const modulePath = '/src/services/SimpleOCRCache.ts';
+                const { extractTextWithPrewarmedWorker } = await import(modulePath);
                 
-                // Process first image
-                resultsDiv.innerHTML += `<div>📦 Processing first image...</div>`;
+                // Process first image with 10 languages
+                resultsDiv.innerHTML += '<div>📦 Processing first image with 10 languages...</div>';
                 const image1StartTime = performance.now();
-                const text1 = await extractTextWithPrewarmedWorker(fileInput1.files[0], ['eng']);
+                const text1 = await extractTextWithPrewarmedWorker(testFile1.files[0], DETECTION_LANGUAGES);
                 const image1Time = performance.now() - image1StartTime;
                 
-                // Process second image
-                resultsDiv.innerHTML += `<div>📦 Processing second image...</div>`;
+                // Process second image with 10 languages
+                resultsDiv.innerHTML += '<div>📦 Processing second image with 10 languages...</div>';
                 const image2StartTime = performance.now();
-                const text2 = await extractTextWithPrewarmedWorker(fileInput2.files[0], ['eng']);
+                const text2 = await extractTextWithPrewarmedWorker(testFile2.files[0], DETECTION_LANGUAGES);
                 const image2Time = performance.now() - image2StartTime;
                 
                 const totalTime = performance.now() - startTime;
@@ -512,71 +575,70 @@
                     image2Time,
                     text1,
                     text2,
-                    text1Length: text1.length,
-                    text2Length: text2.length
+                    text1Length: text1 ? text1.length : 0,
+                    text2Length: text2 ? text2.length : 0
                 };
                 
                 displayResults('single', singleWorkerResults);
                 updateComparisonTable();
                 
                 // Display OCR text results
-                ocrContentDiv.innerHTML = `<strong>Image 1:</strong>
-${text1 || '(No text detected)'}
-
-<strong>Image 2:</strong>
-${text2 || '(No text detected)'}`;
+                const text1Display = text1 || '(No text detected)';
+                const text2Display = text2 || '(No text detected)';
+                ocrContentDiv.innerHTML = '<strong>Image 1:</strong>\n' + text1Display + '\n\n<strong>Image 2:</strong>\n' + text2Display;
                 ocrTextDiv.style.display = 'block';
                 
             } catch (error) {
                 resultsDiv.innerHTML = `
-                    <div style="color: var(--danger-color); font-weight: bold;">❌ Test Failed</div>
+                    <div style="color: #ef4444; font-weight: bold;">❌ Test Failed</div>
                     <div>Error: ${error.message}</div>
                 `;
                 statusDiv.className = 'status error';
                 statusDiv.textContent = 'Error';
             } finally {
-                button.disabled = false;
+                singleTestBtn.disabled = false;
                 statusDiv.className = 'status ready';
                 statusDiv.textContent = 'Ready for Testing';
             }
         }
 
-        // Run dual worker test (concurrent)
+        // Run dual worker test (concurrent) with 10 languages
         async function runDualWorkerTest() {
-            const fileInput1 = document.getElementById('test-file-1');
-            const fileInput2 = document.getElementById('test-file-2');
-            const resultsDiv = document.getElementById('dual-results');
-            const statusDiv = document.getElementById('dual-status');
-            const button = document.getElementById('dual-test');
-            const ocrTextDiv = document.getElementById('dual-ocr-text');
-            const ocrContentDiv = document.getElementById('dual-ocr-content');
-            
-            if (!fileInput1.files[0] || !fileInput2.files[0]) {
+            if (!testFile1.files[0] || !testFile2.files[0]) {
                 alert('Please select both image files first');
                 return;
             }
             
-            button.disabled = true;
+            dualTestBtn.disabled = true;
+            const statusDiv = document.getElementById('dual-status');
+            const resultsDiv = document.getElementById('dual-results');
+            const ocrTextDiv = document.getElementById('dual-ocr-text');
+            const ocrContentDiv = document.getElementById('dual-ocr-content');
+            
             statusDiv.className = 'status testing';
             statusDiv.textContent = 'Testing...';
             resultsDiv.innerHTML = `
-                <div style="color: var(--success-color); font-weight: bold;">Dual Worker Test Running...</div>
-                <div>⏱️ Processing 2 OCR operations concurrently with 2 workers...</div>
+                <div style="color: #10b981; font-weight: bold;">Dual Worker Test Running...</div>
+                <div>⏱️ Processing 2 OCR operations using Promise.all...</div>
             `;
             ocrTextDiv.style.display = 'none';
             
             try {
                 const startTime = performance.now();
                 
-                // Dynamically import the OCR cache module
-                const { extractTextWithPrewarmedWorker } = await import('../../../src/services/SimpleOCRCache.ts');
+                // In a development environment, we can import directly from the source
+                // In a production environment, we would need to use the built version
+                const modulePath = '/src/services/SimpleOCRCache.ts';
+                const { extractTextWithPrewarmedWorker } = await import(modulePath);
                 
-                // Process both images concurrently
-                resultsDiv.innerHTML += `<div>📦 Processing both images concurrently...</div>`;
+                // Process both images concurrently with 10 languages
+                resultsDiv.innerHTML += '<div>📦 Processing both images using Promise.all...</div>';
                 
+                // Using Promise.all to initiate both operations concurrently
+                // Note: Whether this actually runs in parallel depends on the OCR service implementation
                 const [text1, text2] = await Promise.all([
-                    extractTextWithPrewarmedWorker(fileInput1.files[0], ['eng']),
-                    extractTextWithPrewarmedWorker(fileInput2.files[0], ['eng'])
+                    extractTextWithPrewarmedWorker(testFile1.files[0], DETECTION_LANGUAGES),
+                    extractTextWithPrewarmedWorker(testFile2.files[0], DETECTION_LANGUAGES)
                 ]);
                 
                 const totalTime = performance.now() - startTime;
@@ -585,30 +647,28 @@ ${text2 || '(No text detected)'}`;
                     totalTime,
                     text1,
                     text2,
-                    text1Length: text1.length,
-                    text2Length: text2.length
+                    text1Length: text1 ? text1.length : 0,
+                    text2Length: text2 ? text2.length : 0
                 };
                 
                 displayResults('dual', dualWorkerResults);
                 updateComparisonTable();
                 
                 // Display OCR text results
-                ocrContentDiv.innerHTML = `<strong>Image 1:</strong>
-${text1 || '(No text detected)'}
-
-<strong>Image 2:</strong>
-${text2 || '(No text detected)'}`;
+                const text1Display = text1 || '(No text detected)';
+                const text2Display = text2 || '(No text detected)';
+                ocrContentDiv.innerHTML = '<strong>Image 1:</strong>\n' + text1Display + '\n\n<strong>Image 2:</strong>\n' + text2Display;
                 ocrTextDiv.style.display = 'block';
                 
             } catch (error) {
                 resultsDiv.innerHTML = `
-                    <div style="color: var(--danger-color); font-weight: bold;">❌ Test Failed</div>
+                    <div style="color: #ef4444; font-weight: bold;">❌ Test Failed</div>
                     <div>Error: ${error.message}</div>
                 `;
                 statusDiv.className = 'status error';
                 statusDiv.textContent = 'Error';
             } finally {
-                button.disabled = false;
+                dualTestBtn.disabled = false;
                 statusDiv.className = 'status ready';
                 statusDiv.textContent = 'Ready for Testing';
             }
@@ -617,7 +677,7 @@ ${text2 || '(No text detected)'}`;
         // Display results
         function displayResults(type, results) {
             const resultsDiv = document.getElementById(`${type}-results`);
-            const color = type === 'single' ? 'var(--warning-color)' : 'var(--success-color)';
+            const color = type === 'single' ? '#f59e0b' : '#10b981';
             const title = type === 'single' ? 'Single Worker Results' : 'Dual Worker Results';
             
             if (type === 'single') {
@@ -651,7 +711,7 @@ ${text2 || '(No text detected)'}`;
                 resultsDiv.innerHTML = `
                     <div style="color: ${color}; font-weight: bold;">${title}:</div>
                     <div class="metric">
-                        <span>⚡ Total Concurrent Time:</span>
+                        <span>⚡ Total Processing Time:</span>
                         <span class="metric-value">${results.totalTime.toFixed(0)}ms</span>
                     </div>
                     <div class="metric">
@@ -697,9 +757,9 @@ ${text2 || '(No text detected)'}`;
                 <tr>
                     <td>Processing Method</td>
                     <td>Sequential (1 worker)</td>
-                    <td>Concurrent (2 workers)</td>
+                    <td>Concurrent (Promise.all)</td>
                     <td class="${isFaster ? 'improvement' : 'regression'}">
-                        ${isFaster ? '✅ Parallelization Win' : '⚠️ Overhead Detected'}
+                        ${isFaster ? '✅ Potential Parallelization Win' : '⚠️ No Improvement'}
                     </td>
                 </tr>
                 <tr>
@@ -722,7 +782,7 @@ ${text2 || '(No text detected)'}`;
         // Clear results
         function clearResults(type) {
             const resultsDiv = document.getElementById(`${type}-results`);
-            const color = type === 'single' ? 'var(--warning-color)' : 'var(--success-color)';
+            const color = type === 'single' ? '#f59e0b' : '#10b981';
             const title = type === 'single' ? 'Single Worker Results' : 'Dual Worker Results';
             const ocrTextDiv = document.getElementById(`${type}-ocr-text`);
             
@@ -746,12 +806,12 @@ ${text2 || '(No text detected)'}`;
         // Reset all tests
         function resetAll() {
             // Clear file inputs
-            document.getElementById('test-file-1').value = '';
-            document.getElementById('test-file-2').value = '';
+            testFile1.value = '';
+            testFile2.value = '';
             
             // Clear previews
-            document.getElementById('preview-1').innerHTML = '';
-            document.getElementById('preview-2').innerHTML = '';
+            preview1.innerHTML = '';
+            preview2.innerHTML = '';
             
             // Clear results
             clearResults('single');
@@ -768,6 +828,14 @@ ${text2 || '(No text detected)'}`;
             
             alert('🔄 All tests reset');
         }
+
+        // Set up event listeners for buttons
+        prewarmBtn.addEventListener('click', prewarmWorkers);
+        resetBtn.addEventListener('click', resetAll);
+        singleTestBtn.addEventListener('click', runSingleWorkerTest);
+        singleClearBtn.addEventListener('click', () => clearResults('single'));
+        dualTestBtn.addEventListener('click', runDualWorkerTest);
+        dualClearBtn.addEventListener('click', () => clearResults('dual'));
     </script>
 </body>
 </html>

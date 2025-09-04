@@ -1,33 +1,7 @@
-/**
- * Test script to verify OCR function imports
- * This script tests if we can import the OCR functions from the SimpleOCRCache module
- */
+// Test imports to verify they work correctly
+import { createWorker } from 'tesseract.js';
+import { getResourcePaths, getTesseractConfig } from '../../src/config/pathConfig';
 
-// This would be run in the browser context through the Vite dev server
-console.log('Testing OCR function imports...');
-
-// We'll test the import when the page loads
-window.addEventListener('DOMContentLoaded', async () => {
-    try {
-        console.log('Attempting to import SimpleOCRCache...');
-        const module = await import('../../src/services/SimpleOCRCache.ts');
-        console.log('Successfully imported SimpleOCRCache module:', Object.keys(module));
-        
-        // Check if the expected functions are available
-        if (module.prewarmLanguageWorker) {
-            console.log('✅ prewarmLanguageWorker function is available');
-        } else {
-            console.log('❌ prewarmLanguageWorker function is NOT available');
-        }
-        
-        if (module.extractTextWithPrewarmedWorker) {
-            console.log('✅ extractTextWithPrewarmedWorker function is available');
-        } else {
-            console.log('❌ extractTextWithPrewarmedWorker function is NOT available');
-        }
-        
-        console.log('OCR function import test completed successfully');
-    } catch (error) {
-        console.error('Error importing OCR functions:', error);
-    }
-});
+console.log('✅ All imports successful');
+console.log('✅ Tesseract.js version:', createWorker);
+console.log('✅ Path config functions available');

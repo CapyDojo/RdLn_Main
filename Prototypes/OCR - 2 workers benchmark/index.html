@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RdLn™ Prototypes Index</title>
+    <title>RdLn™ OCR Benchmark Prototypes</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -53,6 +53,7 @@
             border-radius: 6px;
             font-weight: bold;
             margin-top: 10px;
+            margin-right: 10px;
         }
         
         .prototype-link:hover {
@@ -61,14 +62,21 @@
     </style>
 </head>
 <body>
-    <h1>🔬 RdLn™ Prototypes Index</h1>
+    <h1>🔬 RdLn™ OCR Benchmark Prototypes</h1>
     
     <div class="prototype-card">
-        <h2>OCR - 2 Workers Benchmark</h2>
-        <p>Tests the performance difference between processing 2 concurrent OCR operations using 1 prewarmed worker (sequential) vs 2 prewarmed workers (concurrent).</p>
-        <a href="OCR%20-%202%20workers%20benchmark/ocr-2-workers-benchmark.html" class="prototype-link">Launch Benchmark</a>
-        <a href="OCR%20-%202%20workers%20benchmark/test-imports.html" class="prototype-link" style="background: #6b7280; margin-left: 10px;">Test Imports</a>
-        <p style="margin-top: 10px; font-size: 14px;"><a href="OCR%20-%202%20workers%20benchmark/README.md">Documentation</a> | <a href="OCR%20-%202%20workers%20benchmark/TESTING_PLAN.md">Testing Plan</a></p>
+        <h2>OCR - 2 Workers Benchmark v1</h2>
+        <p>Tests the performance difference between processing 2 concurrent OCR operations using 1 prewarmed worker (sequential) vs 2 prewarmed workers (concurrent). Uses English language only.</p>
+        <a href="ocr-2-workers-benchmark.html" class="prototype-link">Launch Benchmark v1</a>
+        <a href="test-imports.html" class="prototype-link" style="background: #6b7280;">Test Imports</a>
+        <p style="margin-top: 10px; font-size: 14px;"><a href="README.md">Documentation</a> | <a href="TESTING_PLAN.md">Testing Plan</a></p>
+    </div>
+    
+    <div class="prototype-card">
+        <h2>OCR - 2 Workers Benchmark v2</h2>
+        <p>Tests the performance difference using 10-language workers (eng, chi_sim, chi_tra, spa, fra, deu, jpn, kor, ara, rus) to match the main OCR engine.</p>
+        <a href="ocr-2-workers-benchmark-v2.html" class="prototype-link">Launch Benchmark v2</a>
+        <p style="margin-top: 10px; font-size: 14px;"><a href="README.md">Documentation</a></p>
     </div>
 </body>
 </html>
