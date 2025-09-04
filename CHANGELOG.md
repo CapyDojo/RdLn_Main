@@ -1,7 +1,7 @@
 
 # Changelog
 
-All notable changes to this project are documented here. This file follows the Keep a Changelog conventions with dated releases and compare links. For full implementation write‑ups and deep dives, see the docs/features directory.
+All notable changes to this project are documented here. This file follows the Keep a Changelog conventions. For full implementation write‑ups and deep dives, see the docs/features directory.
 
 ## [Unreleased]
 
@@ -200,10 +200,9 @@ This fix resolves a critical regression that was preventing users from seeing OC
 
 We welcome contributions to improve the document comparison algorithm and user experience. Please refer to our development guidelines and test suite when proposing changes.
 
-[Unreleased]: https://github.com/CapyDojo/RdLn_Main/compare/v0.6.3...HEAD
-[0.6.2]: https://github.com/CapyDojo/RdLn_Main/compare/v0.6.1...v0.6.2
-[0.6.1]: https://github.com/CapyDojo/RdLn_Main/compare/v0.6.0...v0.6.1
-[0.6.0]: https://github.com/CapyDojo/RdLn_Main/compare/v0.5.28...v0.6.0
+
+
+
 
 ## License
 
