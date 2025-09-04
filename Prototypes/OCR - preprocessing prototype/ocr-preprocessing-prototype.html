@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OCR Prototype (PNG) — With/Without Preprocessing</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; color: #222; }
+      .row { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+      .col { flex: 1 1 320px; min-width: 280px; }
+      .panel { border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fafafa; }
+      .label { display: inline-block; font-weight: 600; margin-bottom: 6px; }
+      .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 8px 0 12px; }
+      .btn { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; background: white; cursor: pointer; }
+      .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      .bar { width: 100%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+      .bar > div { height: 100%; background: linear-gradient(90deg,#4caf50,#81c784); width: 0%; transition: width 120ms linear; }
+      textarea { width: 100%; min-height: 180px; resize: vertical; }
+      canvas, img { max-width: 100%; height: auto; border: 1px solid #eee; border-radius: 4px; background: #fff; }
+      .small { color: #666; font-size: 12px; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.min.js"></script>
+  </head>
+  <body>
+    <h1>OCR Prototype (PNG)</h1>
+    <p class="small">Test OCR with and without simple preprocessing. Uses local assets if available; falls back to CDN.</p>
+
+    <div class="panel">
+      <div class="controls">
+        <label class="btn" for="file">Choose .png</label>
+        <input id="file" type="file" accept="image/png" style="display:none" />
+
+        <label><input id="preprocess" type="checkbox" /> Enable preprocessing</label>
+        <label><input id="useCdn" type="checkbox" /> Force CDN assets</label>
+        <select id="lang">
+          <option value="eng" selected>English (eng)</option>
+          <option value="spa">Spanish (spa)</option>
+          <option value="fra">French (fra)</option>
+          <option value="deu">German (deu)</option>
+          <option value="chi_sim">Chinese Simplified (chi_sim)</option>
+          <option value="chi_tra">Chinese Traditional (chi_tra)</option>
+          <option value="jpn">Japanese (jpn)</option>
+          <option value="kor">Korean (kor)</option>
+          <option value="ara">Arabic (ara)</option>
+          <option value="rus">Russian (rus)</option>
+        </select>
+        <button id="run" class="btn" disabled>Run OCR</button>
+        <button id="reset" class="btn">Reset</button>
+      </div>
+      <div class="bar"><div id="pbar"></div></div>
+      <div class="small mono" id="status">Idle</div>
+    </div>
+
+    <div class="row" style="margin-top: 12px;">
+      <div class="col">
+        <div class="panel">
+          <div class="label">Original</div>
+          <img id="origImg" alt="original preview" />
+        </div>
+      </div>
+      <div class="col">
+        <div class="panel">
+          <div class="label">Preprocessed (preview)</div>
+          <canvas id="canvas"></canvas>
+          <div class="small" id="prepInfo"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 12px;">
+      <div class="col">
+        <div class="panel">
+          <div class="label">Extracted Text</div>
+          <textarea id="out"></textarea>
+          <div class="small" id="timing"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Local asset defaults (relative to this HTML under public/)
+      const LOCAL = {
+        workerPath: './tesseract/worker.min.js',
+        corePath: './tesseract', // directory (SIMD auto-detect)
+        langPath: './tessdata/'  // trailing slash recommended
+      };
+      // CDN fallbacks (v6)
+      const CDN = {
+        workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/worker.min.js',
+        corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0', // directory
+        langPath: 'https://tessdata.projectnaptha.com/4.0.0/'
+      };
+
+      const els = {
+        file: document.getElementById('file'),
+        run: document.getElementById('run'),
+        reset: document.getElementById('reset'),
+        preprocess: document.getElementById('preprocess'),
+        useCdn: document.getElementById('useCdn'),
+        lang: document.getElementById('lang'),
+        pbar: document.getElementById('pbar'),
+        status: document.getElementById('status'),
+        out: document.getElementById('out'),
+        origImg: document.getElementById('origImg'),
+        canvas: document.getElementById('canvas'),
+        prepInfo: document.getElementById('prepInfo'),
+        timing: document.getElementById('timing')
+      };
+
+      let currentBlob = null;
+      let worker = null;
+
+      els.file.addEventListener('change', () => {
+        const f = els.file.files && els.file.files[0];
+        els.run.disabled = !f;
+        if (!f) return;
+        const url = URL.createObjectURL(f);
+        els.origImg.src = url;
+        // Clear outputs
+        els.out.value = '';
+        els.pbar.style.width = '0%';
+        els.status.textContent = 'File selected: ' + (f.name || 'PNG');
+      });
+
+      els.reset.addEventListener('click', () => {
+        els.file.value = '';
+        els.origImg.removeAttribute('src');
+        els.canvas.width = 0; els.canvas.height = 0;
+        els.prepInfo.textContent = '';
+        els.out.value = '';
+        els.timing.textContent = '';
+        els.pbar.style.width = '0%';
+        els.status.textContent = 'Idle';
+        els.run.disabled = true;
+        if (currentBlob) { URL.revokeObjectURL(currentBlob); currentBlob = null; }
+      });
+
+      function setProgress(p, text) {
+        els.pbar.style.width = Math.max(0, Math.min(100, Math.round(p * 100))) + '%';
+        if (text) els.status.textContent = text;
+      }
+
+      function getPaths() {
+        return els.useCdn.checked ? CDN : LOCAL;
+      }
+
+      async function ensureWorker(langs) {
+        if (worker) return worker;
+        const paths = getPaths();
+        const mkLogger = (m) => {
+          if (m && typeof m.progress === 'number') {
+            setProgress(0.2 + m.progress * 0.75, `OCR: ${m.status || 'processing'} (${Math.round(m.progress*100)}%)`);
+          }
+        };
+        // Try local first, then CDN
+        try {
+          worker = await Tesseract.createWorker(langs, 1, {
+            logger: mkLogger,
+            workerPath: paths.workerPath,
+            corePath: paths.corePath,
+            langPath: paths.langPath,
+          });
+        } catch (e) {
+          if (paths === CDN) throw e;
+          const fb = CDN;
+          worker = await Tesseract.createWorker(langs, 1, {
+            logger: mkLogger,
+            workerPath: fb.workerPath,
+            corePath: fb.corePath,
+            langPath: fb.langPath,
+          });
+        }
+        // Conservative default
+        try { await worker.setParameters({ classify_enable_learning: '0' }); } catch {}
+        return worker;
+      }
+
+      function preprocessImageToCanvas(imgEl) {
+        const c = els.canvas;
+        const ctx = c.getContext('2d');
+        // Scale to a reasonable size for OCR (longest side ~1200px)
+        const maxSide = 1200;
+        const ratio = Math.min(1, maxSide / Math.max(imgEl.naturalWidth, imgEl.naturalHeight));
+        const w = Math.max(1, Math.round(imgEl.naturalWidth * ratio));
+        const h = Math.max(1, Math.round(imgEl.naturalHeight * ratio));
+        c.width = w; c.height = h;
+        ctx.drawImage(imgEl, 0, 0, w, h);
+
+        // Get pixels
+        let img = ctx.getImageData(0, 0, w, h);
+        let d = img.data;
+
+        // Grayscale + mild contrast
+        const contrast = 1.2; // 20% boost
+        const intercept = 0; // brightness offset
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i+1], b = d[i+2];
+          let y = (0.299*r + 0.587*g + 0.114*b);
+          y = (y - 128) * contrast + 128 + intercept;
+          y = y < 0 ? 0 : y > 255 ? 255 : y;
+          d[i] = d[i+1] = d[i+2] = y;
+        }
+        ctx.putImageData(img, 0, 0);
+
+        // Light blur to reduce noise
+        try {
+          ctx.filter = 'blur(0.6px)';
+          ctx.drawImage(c, 0, 0);
+          ctx.filter = 'none';
+        } catch {}
+
+        // Adaptive-ish threshold (simple local average approximation)
+        img = ctx.getImageData(0, 0, w, h);
+        d = img.data;
+        const block = 15, C = 2;
+        // Very naive pass: compute a global mean as a fallback
+        let sum = 0; let cnt = 0;
+        for (let i = 0; i < d.length; i += 4) { sum += d[i]; cnt++; }
+        const globalMean = sum / Math.max(1, cnt);
+        const thresh = globalMean - C;
+        for (let i = 0; i < d.length; i += 4) {
+          const v = d[i] < thresh ? 0 : 255;
+          d[i] = d[i+1] = d[i+2] = v;
+        }
+        ctx.putImageData(img, 0, 0);
+
+        els.prepInfo.textContent = `Preprocess: grayscale + contrast + light blur + threshold | ${w}x${h}`;
+        return c;
+      }
+
+      async function toBlobFromCanvas(canvas) {
+        return new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/png'));
+      }
+
+      els.run.addEventListener('click', async () => {
+        const file = els.file.files && els.file.files[0];
+        if (!file) return;
+        els.out.value = '';
+        els.timing.textContent = '';
+        setProgress(0.05, 'Starting...');
+        const t0 = performance.now();
+        const lang = els.lang.value || 'eng';
+
+        let inputBlob = file;
+        if (els.preprocess.checked) {
+          // Ensure image element loaded (origImg), then preprocess into canvas and get blob
+          await new Promise((res) => {
+            if (els.origImg.complete && els.origImg.naturalWidth) return res();
+            els.origImg.onload = () => res();
+            els.origImg.onerror = () => res();
+          });
+          setProgress(0.1, 'Preprocessing image...');
+          const canvas = preprocessImageToCanvas(els.origImg);
+          inputBlob = await toBlobFromCanvas(canvas);
+        } else {
+          // Clear preview canvas if not using preprocessing
+          els.canvas.width = 0; els.canvas.height = 0; els.prepInfo.textContent = '';
+        }
+
+        try {
+          const w = await ensureWorker([lang]);
+          setProgress(0.2, 'Initializing OCR...');
+          const result = await w.recognize(inputBlob);
+          els.out.value = result?.data?.text || '';
+          setProgress(1, 'Done');
+          const t1 = performance.now();
+          els.timing.textContent = `Time: ${(t1 - t0).toFixed(0)} ms`;
+        } catch (err) {
+          console.error(err);
+          els.status.textContent = 'Error: ' + (err && err.message ? err.message : String(err));
+          setProgress(0);
+        }
+      });
+    </script>
+  </body>
+  </html>
+
