@@ -3,7 +3,7 @@
 
 All notable changes to this project are documented here. This file follows the Keep a Changelog conventions. For full implementation write‑ups and deep dives, see the docs/features directory.
 
-## [Unreleased]
+## [Unreleased]\n\n### Features\n\n### Refactoring\n\n### Chore\n\n### Contents\n- 0.6.5 - 2025-09-05\n- 0.6.4 - 2025-09-05\n- 0.6.3 - 2025-09-03\n- 0.6.2 - 2025-09-02\n- 0.6.1 - 2025-09-01\n- 0.6.0 - 2025-08-30
 
 ### Features
 
@@ -225,3 +225,19 @@ We welcome contributions to improve the document comparison algorithm and user e
 ## License
 
 This project is proprietary software owned by RdLn Team. See LICENSE file for full terms and conditions.
+
+
+
+## [0.6.5] - 2025-09-05
+
+### UI: Beta Card Positioning & Spacing
+- Status bar moved into main scroll container; now scrolls with content instead of staying fixed under the header.
+- Added \position\ prop to \StatusBar\ (\'fixed' | 'static'\) to control behavior; app now uses \static\ in main.
+- Adjusted z-order to align with input/output panels; no overlaying during scroll.
+- Tightened spacing and made the card content-fit (\inline-flex\, \whitespace-nowrap\, \max-w-full\ with safe horizontal overflow).
+- Tuned top padding of main to sit the bar just below header (currently \pt-[7.5rem]\), with consistent bottom clearance.
+
+### Notes
+- No changes to comparison logic or OCR pipelines.
+- Visual-only update; safe across themes and responsive breakpoints.
+
