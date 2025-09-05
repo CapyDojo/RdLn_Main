@@ -11,12 +11,21 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Tesseract.js core assets
+// Align core assets with tesseract.js v6.x used in package.json
+const CORE_VER = '6.0.1';
+const JS_VER = '6.0.1';
+
+// Tesseract.js core assets (include .wasm and .wasm.js wrappers)
 const TESSERACT_CORE_ASSETS = {
-  'tesseract-core.wasm.js': 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core.wasm.js',
-  'tesseract-core-simd.wasm.js': 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js',
-  'tesseract-core-lstm.wasm.js': 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-lstm.wasm.js',
-  'worker.min.js': 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js'
+  'tesseract-core.wasm.js': `https://cdn.jsdelivr.net/npm/tesseract.js-core@${CORE_VER}/tesseract-core.wasm.js`,
+  'tesseract-core.wasm': `https://cdn.jsdelivr.net/npm/tesseract.js-core@${CORE_VER}/tesseract-core.wasm`,
+  'tesseract-core-simd.wasm.js': `https://cdn.jsdelivr.net/npm/tesseract.js-core@${CORE_VER}/tesseract-core-simd.wasm.js`,
+  'tesseract-core-simd.wasm': `https://cdn.jsdelivr.net/npm/tesseract.js-core@${CORE_VER}/tesseract-core-simd.wasm`,
+  'tesseract-core-lstm.wasm.js': `https://cdn.jsdelivr.net/npm/tesseract.js-core@${CORE_VER}/tesseract-core-lstm.wasm.js`,
+  'tesseract-core-lstm.wasm': `https://cdn.jsdelivr.net/npm/tesseract.js-core@${CORE_VER}/tesseract-core-lstm.wasm`,
+  'tesseract-core-simd-lstm.wasm.js': `https://cdn.jsdelivr.net/npm/tesseract.js-core@${CORE_VER}/tesseract-core-simd-lstm.wasm.js`,
+  'tesseract-core-simd-lstm.wasm': `https://cdn.jsdelivr.net/npm/tesseract.js-core@${CORE_VER}/tesseract-core-simd-lstm.wasm`,
+  'worker.min.js': `https://cdn.jsdelivr.net/npm/tesseract.js@${JS_VER}/dist/worker.min.js`
 };
 
 // Additional language files (beyond what's already in public/tessdata)

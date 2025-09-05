@@ -183,6 +183,7 @@ module.exports = {
   
   // Build artifacts
   artifactName: '${productName}-${version}-${arch}.${ext}',
+  electronVersion: '37.2.5',
   
   // Build hooks
   beforeBuild: async (context) => {

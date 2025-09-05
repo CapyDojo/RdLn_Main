@@ -31,8 +31,10 @@ async function processElectronHTML() {
       throw new Error('Could not find asset references in built index.html');
     }
     
-    const jsAsset = jsMatch[1];
-    const cssAsset = cssMatch[1];
+    // Normalize asset paths for Electron file:// protocol (avoid leading slash)
+    const normalize = (p) => (p.startsWith('/') ? `./${p.slice(1)}` : p);
+    const jsAsset = normalize(jsMatch[1]);
+    const cssAsset = normalize(cssMatch[1]);
     
     console.log(`📄 Found JS asset: ${jsAsset}`);
     console.log(`🎨 Found CSS asset: ${cssAsset}`);
