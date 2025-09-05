@@ -10,6 +10,7 @@ import type { Worker as TesseractWorker } from 'tesseract.js';
 import { OCRLanguage } from '../types/ocr-types';
 import { getResourcePaths } from '../config/pathConfig';
 import { DETECTION_LANGUAGES } from '../config/ocrConfig';
+import { appConfig } from '../config/appConfig';
 
 // Type definitions
 interface SimpleCachedWorker {
@@ -31,7 +32,7 @@ export class SimpleOCRCache {
   // Set language worker
   static setLanguageWorker(languages: OCRLanguage[], worker: TesseractWorker) {
     const key = this.getWorkerKey(languages);
-    console.log(`[OCR_DEBUG] 💾 Caching worker for ${languages.join(',')} with key: ${key}`);
+    if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 💾 Caching worker for ${languages.join(',')} with key: ${key}`);
     this.languageWorkers.set(key, {
       worker,
       lastUsed: Date.now(),
@@ -48,11 +49,11 @@ export class SimpleOCRCache {
     if (cached) {
       cached.lastUsed = Date.now();
       cached.useCount++;
-      console.log(`[OCR_DEBUG] 🔍 Retrieved cached worker for ${languages.join(',')}. Use count: ${cached.useCount}`);
+      if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔍 Retrieved cached worker for ${languages.join(',')}. Use count: ${cached.useCount}`);
       return cached.worker;
     }
     
-    console.log(`[OCR_DEBUG] 🔍 No cached worker found for ${languages.join(',')}`);
+    if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔍 No cached worker found for ${languages.join(',')}`);
     return null;
   }
   
@@ -91,7 +92,7 @@ export async function prewarmLanguageWorker(languages: OCRLanguage[] = ['eng'], 
     }
     
     console.log(`🔥 Prewarming language worker for: ${languages.join(',')}`);
-    console.log(`[OCR_DEBUG] 🔧 Starting prewarm process for languages: ${languages.join(',')}`);
+    if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔧 Starting prewarm process for languages: ${languages.join(',')}`);
 
     // Use centralized resource paths to match runtime configuration
     const paths = await getResourcePaths();
@@ -118,7 +119,7 @@ export async function prewarmLanguageWorker(languages: OCRLanguage[] = ['eng'], 
     // Store in simple cache
     SimpleOCRCache.setLanguageWorker(languages, worker);
     console.log(`✅ Language worker for ${languages.join(',')} prewarmed successfully`);
-    console.log(`[OCR_DEBUG] 🔧 Prewarm process completed for languages: ${languages.join(',')}`);
+    if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔧 Prewarm process completed for languages: ${languages.join(',')}`);
     return true;
   } catch (error) {
     console.error(`❌ Failed to prewarm language worker for ${languages.join(',')}:`, error);
@@ -228,4 +229,3 @@ export async function extractTextWithPrewarmedWorker(imageFile: File | Blob, lan
     return result.data.text;
   }
 }
-

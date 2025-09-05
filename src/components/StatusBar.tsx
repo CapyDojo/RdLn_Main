@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlayCircle, HelpCircle } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
 import { CustomTooltip } from './CustomTooltip';
 import { getRecommendedSample } from '../utils/sampleData';
+import { appConfig } from '../config/appConfig';
+import { OCRWorkerPool } from '../services/OCRWorkerPool';
 
 // Beta countdown component
 const BetaBadge: React.FC = () => {
@@ -16,7 +18,7 @@ const BetaBadge: React.FC = () => {
   }
   
   return (
-    <div className="beta-badge px-3 py-1 rounded-md text-xs font-medium border text-center"
+    <div className="beta-badge px-3 py-1 rounded-md text-xs font-medium border text-center whitespace-nowrap"
          style={{
            backdropFilter: 'blur(10px)',
            lineHeight: '1.2'
@@ -33,15 +35,42 @@ interface StatusBarProps extends BaseComponentProps {
   isProcessing?: boolean;
   /** Callback to start the onboarding tour */
   onStartTour?: () => void;
+  /** Positioning mode: fixed (overlay) or static (scrolls with content) */
+  position?: 'fixed' | 'static';
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({ 
   onLoadSample, 
   isProcessing = false,
   onStartTour,
+  position = 'fixed',
   style, 
   className 
 }) => {
+  const [poolDisplay, setPoolDisplay] = useState<{ total: number; busy: number } | null>(null);
+
+  // Lightweight pool status indicator (dev only; guarded by feature flag)
+  useEffect(() => {
+    if (!appConfig.features.ENABLE_MULTIWORKER_OCR) return;
+    let timer: number | null = null;
+    const tick = () => {
+      try {
+        const stats = OCRWorkerPool.getPoolStats();
+        // Use the first pool (10-language) if present
+        const firstKey = Object.keys(stats)[0];
+        if (firstKey) {
+          setPoolDisplay({ total: stats[firstKey].total, busy: stats[firstKey].busy });
+        } else {
+          setPoolDisplay({ total: 0, busy: 0 });
+        }
+      } catch {
+        // ignore
+      }
+    };
+    tick();
+    timer = window.setInterval(tick, 1000) as unknown as number;
+    return () => { if (timer) window.clearInterval(timer); };
+  }, []);
   const handleQuickDemo = () => {
     if (onLoadSample) {
       const sample = getRecommendedSample();
@@ -54,10 +83,9 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       onStartTour();
     }
   };
-  return (
-    <div 
-      className={`status-bar overflow-visible ${className || ''}`} 
-      style={{
+  // Compute container styles based on positioning mode
+  const containerStyle: React.CSSProperties = position === 'fixed'
+    ? {
         position: 'fixed',
         top: '8.3rem', // Position further below the header 
         left: '50%',
@@ -67,13 +95,36 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         minWidth: '320px',
         width: '95vw',
         paddingLeft: '0.75rem',
-        paddingRight: '0.75rem',
+        paddingRight: '0.75rem'
+      }
+    : {
+        // Static mode: scrolls with content in normal flow and fits content width
+        position: 'static',
+        transform: 'none',
+        display: 'flex',
+        justifyContent: 'center',
+        width: 'auto'
+      };
+
+  return (
+    <div 
+      className={`status-bar overflow-visible ${position === 'static' ? 'mx-auto' : ''} ${className || ''}`} 
+      style={{
+        ...containerStyle,
         ...style
       }}
     >
-      <div className="glass-panel rounded-lg px-4 py-2 transition-all duration-300 overflow-visible">
-        <div className="flex items-center justify-center gap-3 overflow-visible">
+      <div className="glass-panel inline-flex rounded-lg px-4 py-2 transition-all duration-300 overflow-visible max-w-full overflow-x-auto">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 overflow-visible whitespace-nowrap">
           <BetaBadge />
+          {(appConfig.env.IS_DEVELOPMENT && appConfig.features.ENABLE_MULTIWORKER_OCR) && (
+            <div className="px-3 py-1 rounded-md text-xs font-medium border text-center whitespace-nowrap"
+                 style={{ backdropFilter: 'blur(10px)', lineHeight: '1.2', borderColor: 'rgba(16,185,129,0.7)' }}>
+              <span>
+                OCR Parallel: {poolDisplay ? `${poolDisplay.busy}/${poolDisplay.total}` : '-'}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             {onLoadSample && (
               <CustomTooltip content="Try RdLn instantly!">

@@ -6,20 +6,38 @@ All notable changes to this project are documented here. This file follows the K
 ## [Unreleased]
 
 ### Features
-- **Prototyping**: Added OCR worker benchmarking and preprocessing prototypes to explore performance improvements.
 
 ### Refactoring
-- **Testing**: Overhauled the test suite, improving integration and unit tests.
 
 ### Chore
-- **Cleanup**: Removed obsolete HTML files.
-- **Config**: Updated local settings.
 
 ### Contents
-- 0.6.3 — 2025-09-03
-- 0.6.2 — 2025-09-02
-- 0.6.1 — 2025-09-01
-- 0.6.0 — 2025-08-30
+- 0.6.4 - 2025-09-05
+- 0.6.3 - 2025-09-03
+- 0.6.2 - 2025-09-02
+- 0.6.1 - 2025-09-01
+- 0.6.0 - 2025-08-30
+
+
+## [0.6.4] - 2025-09-05
+
+### 🚀 Feature: Parallel OCR in Production (2‑Worker Pool)
+- Enabled true parallel OCR using a dedicated 2‑worker pool for the 10‑language set (eng, chi_sim, chi_tra, spa, fra, deu, jpn, kor, ara, rus).
+- Prewarms both workers on app start (when enabled) and records metrics for acquire wait and recognize durations.
+- Falls back to existing single‑worker path automatically on pool errors.
+
+### 🔧 Refactoring / Integration
+- Engine: `OCR_Engine_New` now acquires from `OCRWorkerPool` when the feature flag is enabled; otherwise uses the existing cached worker path.
+- App: Prewarms the pool during initialization; terminates both the pool and single‑worker caches on unmount.
+- UI: Added a small pool status indicator (busy/total) in the StatusBar for development only; no production UI changes.
+- Logging: Removed global console override; gated all `[OCR_DEBUG]` logs locally behind `appConfig.dev.LOGGING.ENABLED` for clean production consoles.
+- Cleanup: Removed an unused variable in the pool prewarm effect and simplified cleanup.
+
+### 🧪 Prototyping
+- Added a parallel 2‑worker benchmark prototype: `Prototypes/OCR - 2 workers benchmark/ocr-2-workers-benchmark-v3-codex.html` (non‑production).
+
+### 🧱 Safety & Compatibility
+- No breaking changes to `OCRService` or hook APIs; multiworker is enabled via feature flag (now on in production) with automatic fallback.
 
 
 ## [0.6.3] - 2025-09-03

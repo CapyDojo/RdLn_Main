@@ -13,6 +13,9 @@ import { OCROptions, OCRLanguage, OCRProgressCallback } from '../types/ocr-types
 import { createWorker, type Worker as TesseractWorker } from 'tesseract.js';
 import { getResourcePaths } from '../config/pathConfig';
 import { SimpleOCRCache } from './SimpleOCRCache';
+import { appConfig } from '../config/appConfig';
+import { OCRWorkerPool } from './OCRWorkerPool';
+import { recordMetric } from './PerformanceMonitor';
 
 export interface NewEngineExtractOptions extends OCROptions {
   signal?: AbortSignal;
@@ -52,15 +55,58 @@ export class OCR_Engine_New {
         ? options.languages
         : DETECTION_LANGUAGES;
 
+      // If multiworker feature is enabled, use the pool for true parallelism
+      if (appConfig.features.ENABLE_MULTIWORKER_OCR === true) {
+        try {
+          const poolSize = appConfig.cache.OCR.MULTIWORKER_POOL_SIZE || 2;
+          await OCRWorkerPool.ensurePool(languages, poolSize);
+
+          // Report start
+          if (onProgress) {
+            this.report(onProgress, 0.0, { phase: 'text_extraction', description: 'Extracting text...' });
+          }
+
+          const lease = await OCRWorkerPool.acquire(languages, {
+            onProgress: (p: number) => {
+              this.report(onProgress, p, { phase: 'text_extraction', description: 'Extracting text...' });
+            },
+            timeoutMs: 30_000
+          });
+          let result: any;
+          try {
+            const tStart = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+            result = await (lease.worker as any).recognize(imageFile, {}, { blocks: true, text: true });
+            const tEnd = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+            try { recordMetric('ocr.recognize.ms', tEnd - tStart, 'ocr', { mode: 'pool' }); } catch {}
+          } finally {
+            await lease.release(false);
+          }
+
+          const rawText = result.data.text || '';
+          const joined = rawText;
+          const correction = this.aggressiveCJKWhitespaceRemoval(joined);
+          this.report(onProgress, 1.0, { phase: 'text_extraction', description: 'OCR complete' });
+          return {
+            text: correction.text,
+            confidence: result.data.confidence,
+            paragraphs: correction.cleanedParagraphs,
+            meta: { whitespaceRemoved: correction.whitespaceRemoved, iterations: correction.iterations }
+          };
+        } catch (poolError) {
+          console.warn('[OCR] Multiworker pool path failed, falling back to single-worker path:', poolError);
+          // Fall through to single-worker logic below
+        }
+      }
+
       // Try a prewarmed worker first
-      console.log(`[OCR_DEBUG] 🔍 Checking for prewarmed worker for languages: ${languages.join(',')}`);
+      if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔍 Checking for prewarmed worker for languages: ${languages.join(',')}`);
       let worker = SimpleOCRCache.getLanguageWorker(languages) as TesseractWorker | null;
       if (worker) {
-        console.log(`[OCR_DEBUG] ✅ Using prewarmed worker for languages: ${languages.join(',')}`);
+        if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] ✅ Using prewarmed worker for languages: ${languages.join(',')}`);
         // Note: Cannot update logger on existing worker due to DataCloneError
         // Progress callback will be handled during recognition if needed
       } else {
-        console.log(`[OCR_DEBUG] ❌ No prewarmed worker found for languages: ${languages.join(',')}, creating new worker`);
+        if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] ❌ No prewarmed worker found for languages: ${languages.join(',')}, creating new worker`);
         const resourcePaths = await getResourcePaths();
         const mkLogger = (cb?: OCRProgressCallback) => (m: any) => {
           // Only report real Tesseract progress during text recognition
@@ -82,9 +128,9 @@ export class OCR_Engine_New {
 
         try {
           worker = await createWorker(languages, 1, primary);
-          console.log(`[OCR_DEBUG] 🔧 Created new primary worker for languages: ${languages.join(',')}`);
+          if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔧 Created new primary worker for languages: ${languages.join(',')}`);
         } catch (e) {
-          console.log(`[OCR_DEBUG] 🔧 Falling back to default paths for worker for languages: ${languages.join(',')}`);
+          if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔧 Falling back to default paths for worker for languages: ${languages.join(',')}`);
           const fallback = {
             logger: mkLogger(onProgress),
             workerPath: './tesseract/worker.min.js',
@@ -92,7 +138,7 @@ export class OCR_Engine_New {
             langPath: './tessdata/'
           };
           worker = await createWorker(languages, 1, fallback);
-          console.log(`[OCR_DEBUG] 🔧 Created fallback worker for languages: ${languages.join(',')}`);
+          if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔧 Created fallback worker for languages: ${languages.join(',')}`);
         }
 
         // Conservative defaults
@@ -100,7 +146,7 @@ export class OCR_Engine_New {
 
         // Cache for reuse
         SimpleOCRCache.setLanguageWorker(languages, worker);
-        console.log(`[OCR_DEBUG] 💾 Cached new worker for languages: ${languages.join(',')}`);
+        if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 💾 Cached new worker for languages: ${languages.join(',')}`);
       }
 
       // Use paragraph mode for better text structure

@@ -95,6 +95,8 @@ export const CACHE_CONFIG = {
     CLEANUP_INTERVAL_MS: 5 * 60 * 1000, // 5 minutes
     LANGUAGE_CACHE_EXPIRY_MS: 30 * 60 * 1000, // 30 minutes
     MAX_LANGUAGE_CACHE_ENTRIES: 50,
+    // Multi-worker pool sizing (applies when feature flag enabled)
+    MULTIWORKER_POOL_SIZE: 2,
   },
 
   // General Cache Settings
@@ -175,6 +177,8 @@ export const FEATURE_FLAGS = {
   // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
   // Gate to enable the new one-stop OCR engine (detect+extract in one call)
   ENABLE_NEW_OCR_ENGINE: true,
+  // 20250904 - Multiworker OCR pool (two prewarmed workers for parallelism)
+  ENABLE_MULTIWORKER_OCR: true,
   
   // Production Features
   AUTO_SCROLL_ENABLED: IS_PRODUCTION, // Only enabled in production

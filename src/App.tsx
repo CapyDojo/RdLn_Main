@@ -39,6 +39,8 @@ import DocxTestPage from './pages/DocxTestPage';
 import OCRCacheTestPage from './pages/OCRCacheTestPage';
 // Import prewarming functions and cache
 import { prewarmLanguageWorker, SimpleOCRCache } from './services/SimpleOCRCache';
+import { OCRWorkerPool } from './services/OCRWorkerPool';
+import { appConfig } from './config/appConfig';
 import { DETECTION_LANGUAGES } from './config/ocrConfig';
 import './styles/resize-overrides.css';
 
@@ -56,6 +58,8 @@ function AppContent({
   onTogglePerformanceDemo
 }: AppContentProps) {
   useTheme(); // For theme context initialization
+
+  // (Debug logs are handled locally in services via appConfig.dev.LOGGING.ENABLED)
 
   // Get experimental features to check if results overlay is enabled
   const { features } = useExperimentalFeatures();
@@ -80,6 +84,20 @@ function AppContent({
   const [shouldStartTour, setShouldStartTour] = useState(false);
 
   const comparisonInterfaceRef = React.useRef<{ loadSampleData?: (original: string, revised: string, autoRun: boolean) => void }>(null);
+
+  // Prewarm multiworker OCR pool (behind feature flag)
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!appConfig.features.ENABLE_MULTIWORKER_OCR) return;
+        const size = appConfig.cache.OCR.MULTIWORKER_POOL_SIZE || 2;
+        await OCRWorkerPool.ensurePool([...DETECTION_LANGUAGES], size);
+      } catch (e) {
+        console.warn('⚠️ OCRWorkerPool prewarm failed:', e);
+      }
+    })();
+    return () => { };
+  }, []);
 
   // Check beta agreement acceptance on mount
   useEffect(() => {
@@ -110,10 +128,15 @@ function AppContent({
       try {
         console.log('🔥 Starting OCR prewarming...');
         
-        // Prewarm the primary multilingual worker (unified approach)
-        await prewarmLanguageWorker([...DETECTION_LANGUAGES], (progress) => {
-          console.log( `?? OCR worker progress: ${Math.round(progress * 100)}%`); 
-        });
+        if (!appConfig.features.ENABLE_MULTIWORKER_OCR) {
+          // Prewarm the primary multilingual worker (unified approach)
+          await prewarmLanguageWorker([...DETECTION_LANGUAGES], (progress) => {
+            console.log( `?? OCR worker progress: ${Math.round(progress * 100)}%`); 
+          });
+        } else {
+          // Pool prewarming handled in separate effect
+          console.log('?? Multiworker OCR enabled: skipping single-worker prewarm');
+        }
         
         // Optionally prewarm common language workers
         // await prewarmLanguageWorker(['eng'], (progress) => {
@@ -158,6 +181,7 @@ function AppContent({
   useEffect(() => {
     return () => {
       SimpleOCRCache.terminateAll();
+      OCRWorkerPool.terminateAll();
       
     };
   }, []);
@@ -252,18 +276,21 @@ function AppContent({
           </div>
         </div>
       )}
-      {!shouldHideHeader && (
-        <StatusBar 
-          onLoadSample={(originalText, revisedText, autoRun) => {
-            if (comparisonInterfaceRef.current && comparisonInterfaceRef.current.loadSampleData) {
-              comparisonInterfaceRef.current.loadSampleData(originalText, revisedText, autoRun);
-            }
-          }}
-          isProcessing={false}
-          onStartTour={handleStartTour}
-        />
-      )}
-      <main className={`flex-1 overflow-y-auto ${shouldHideHeader ? "pt-0" : "pt-56"}`}>
+      <main className={`flex-1 overflow-y-auto ${shouldHideHeader ? "pt-0" : "pt-[7.5rem]"}`}>
+        {!shouldHideHeader && (
+          <div className="flex justify-center px-3 mt-0 mb-6 md:mb-8">
+            <StatusBar 
+              position="static"
+              onLoadSample={(originalText, revisedText, autoRun) => {
+                if (comparisonInterfaceRef.current && comparisonInterfaceRef.current.loadSampleData) {
+                  comparisonInterfaceRef.current.loadSampleData(originalText, revisedText, autoRun);
+                }
+              }}
+              isProcessing={false}
+              onStartTour={handleStartTour}
+            />
+          </div>
+        )}
         <ComparisonInterface
           ref={comparisonInterfaceRef}
           showAdvancedOcrCard={showAdvancedOcrCard}
