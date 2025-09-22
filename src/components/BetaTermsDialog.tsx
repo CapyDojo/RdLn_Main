@@ -212,7 +212,7 @@ export const BetaTermsDialog: React.FC<BetaTermsDialogProps> = ({ isOpen, onClos
               <strong>Contact:</strong> <a href="mailto:kai@rdln.io" className="text-blue-400 hover:text-blue-300 underline transition-colors">kai@rdln.io</a> for questions or concerns about these beta terms.
             </p>
             <p className="text-xs opacity-60 mt-1">
-              Last updated: Sep 2025
+              Last updated: Oct 2025
             </p>
           </div>
         </div>
