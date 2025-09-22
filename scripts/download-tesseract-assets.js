@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Align core assets with tesseract.js v6.x used in package.json
-const CORE_VER = '6.0.1';
+const CORE_VER = '6.0.0';
 const JS_VER = '6.0.1';
 
 // Tesseract.js core assets (include .wasm and .wasm.js wrappers)
@@ -78,51 +78,74 @@ const TESSDATA_OUTPUT_DIR = path.join(__dirname, '../public/tessdata');
 function downloadFile(url, outputPath) {
   return new Promise(async (resolve, reject) => {
     console.log(`  📄 Downloading: ${path.basename(outputPath)}`);
-    
     const fsSync = await import('fs');
     const file = fsSync.createWriteStream(outputPath);
-    
-    https.get(url, (response) => {
-      if (response.statusCode !== 200) {
-        reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage} for ${url}`));
+
+    const doRequest = (currentUrl, redirects = 0) => {
+      if (redirects > 5) {
+        reject(new Error(`Too many redirects for ${currentUrl}`));
         return;
       }
-      
-      const totalSize = parseInt(response.headers['content-length'] || '0');
-      let downloadedSize = 0;
-      
-      response.on('data', (chunk) => {
-        downloadedSize += chunk.length;
-        if (totalSize > 0) {
-          const progress = ((downloadedSize / totalSize) * 100).toFixed(1);
-          process.stdout.write(`\\r    Progress: ${progress}% (${(downloadedSize / 1024 / 1024).toFixed(1)}MB)`);
+      https.get(currentUrl, (response) => {
+        // Follow redirects
+        if (response.statusCode && [301, 302, 303, 307, 308].includes(response.statusCode)) {
+          const loc = response.headers.location;
+          if (loc) {
+            response.resume(); // drain
+            return doRequest(loc, redirects + 1);
+          }
         }
+
+        if (response.statusCode !== 200) {
+          try { file.close(); } catch {}
+          try { fs.unlink(outputPath).catch(() => {}); } catch {}
+          reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage} for ${currentUrl}`));
+          return;
+        }
+
+        const totalSize = parseInt(response.headers['content-length'] || '0');
+        let downloadedSize = 0;
+
+        response.on('data', (chunk) => {
+          downloadedSize += chunk.length;
+          if (totalSize > 0) {
+            const progress = ((downloadedSize / totalSize) * 100).toFixed(1);
+            process.stdout.write(`\r    Progress: ${progress}% (${(downloadedSize / 1024 / 1024).toFixed(1)}MB)`);
+          }
+        });
+
+        response.pipe(file);
+
+        file.on('finish', async () => {
+          file.close();
+          process.stdout.write('\n');
+          console.log(`    ✅ Downloaded: ${path.basename(outputPath)}`);
+          resolve();
+        });
+        
+        file.on('error', async (error) => {
+          try { await fs.unlink(outputPath); } catch {}
+          reject(error);
+        });
+      }).on('error', async (err) => {
+        try { file.close(); } catch {}
+        try { await fs.unlink(outputPath); } catch {}
+        reject(err);
       });
-      
-      response.pipe(file);
-      
-      file.on('finish', () => {
-        file.close();
-        process.stdout.write('\\n');
-        console.log(`    ✅ Downloaded: ${path.basename(outputPath)}`);
-        resolve();
-      });
-      
-      file.on('error', async (error) => {
-        try {
-          await fs.unlink(outputPath);
-        } catch {}
-        reject(error);
-      });
-    }).on('error', reject);
+    };
+
+    doRequest(url);
   });
 }
 
 // Check if file exists
 async function fileExists(filePath) {
   try {
-    await fs.access(filePath);
-    return true;
+    const stat = await fs.stat(filePath);
+    if (stat.size > 0) return true;
+    // Clean up zero-length placeholder
+    try { await fs.unlink(filePath); } catch {}
+    return false;
   } catch {
     return false;
   }
@@ -247,9 +270,16 @@ async function downloadTesseractAssets() {
   }
 }
 
-// Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  downloadTesseractAssets();
+// Run if called directly (cross-platform robust check)
+try {
+  const isDirect = process.argv[1] &&
+    path.resolve(process.argv[1]).toLowerCase() === fileURLToPath(import.meta.url).toLowerCase();
+  if (isDirect) {
+    downloadTesseractAssets();
+  }
+} catch {
+  // Fallback: attempt to run when invoked directly
+  if (process.argv[1]) downloadTesseractAssets();
 }
 
 export { downloadTesseractAssets };
