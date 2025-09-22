@@ -5,12 +5,12 @@ declare global {
   interface Window {
     electronAPI?: {
       handleFileDrop: (filePath: string) => Promise<File>;
-      getPlatform: () => string;
+      getPlatform: () => Promise<string>;
       getAppVersion: () => Promise<string>;
-      readFile: (filePath: string) => Promise<Buffer>;
+      readFile: (filePath: string) => Promise<{ buffer: number[]; name: string; type: string }>;
       fileExists: (filePath: string) => Promise<boolean>;
-      getResourcePath: (relativePath: string) => string;
-      setZoomFactor: (factor: number) => Promise<void>;
+      getResourcePath: (relativePath: string) => Promise<string>;
+      setZoomFactor: (factor: number) => Promise<number>;
       getZoomFactor: () => Promise<number>;
       notifyZoomChange: (factor: number) => void;
     };

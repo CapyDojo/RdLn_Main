@@ -83,6 +83,12 @@ export async function getResourcePaths() {
 
   const env = await detectEnvironment();
 
+  // Optional explicit overrides provided by the host page (e.g., Electron template)
+  // If present, these take precedence to avoid variant auto-selection issues.
+  const userCfg = (typeof window !== 'undefined' && (window as any).TESSERACT_CONFIG)
+    ? (window as any).TESSERACT_CONFIG as Partial<{ langPath: string; workerPath: string; corePath: string }>
+    : null;
+
   // Base URLs for different environments - Updated for v6.0.1 with SIMD support
   const baseUrls = {
     electron: '', // Electron uses file protocol
@@ -100,10 +106,13 @@ export async function getResourcePaths() {
                   || (typeof navigator !== 'undefined' && (navigator as any).onLine === false);
 
   if (env.isElectron || forceLocal) {
+    // Prefer explicit overrides if provided via window.TESSERACT_CONFIG
+    // This helps packaged Electron builds avoid missing variant files
+    // by pointing directly at the known-present shim (e.g., tesseract-core.wasm.js).
     resourcePaths = {
-      langPath: './tessdata',
-      workerPath: './tesseract/worker.min.js',
-      corePath: './tesseract', // Directory path for SIMD auto-detection in Electron
+      langPath: userCfg?.langPath ?? './tessdata',
+      workerPath: userCfg?.workerPath ?? './tesseract/worker.min.js',
+      corePath: userCfg?.corePath ?? './tesseract', // Default to directory (auto-select) if no override
       baseUrl: baseUrls.electron
     };
   } else if (env.isWebDeployment) {

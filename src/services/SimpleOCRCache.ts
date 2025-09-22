@@ -96,8 +96,18 @@ export async function prewarmLanguageWorker(languages: OCRLanguage[] = ['eng'], 
 
     // Use centralized resource paths to match runtime configuration
     const paths = await getResourcePaths();
+    let coreLogged = false;
     const workerOptions = {
       logger: (m: any) => {
+        if (!coreLogged && m?.status === 'loading tesseract core') {
+          coreLogged = true;
+          try {
+            const core = paths.corePath || '';
+            const auto = !core.endsWith('.wasm.js');
+            const label = auto ? 'auto-select (directory)' : `explicit (${core.split('/').pop()})`;
+            console.info(`[OCR] Tesseract core: ${label} at ${core}${auto ? ' — SIMD/LSTM expected if supported' : ''}`);
+          } catch {}
+        }
         if (m.status === 'recognizing text' && typeof m.progress === 'number') {
           const progress = Math.round(m.progress * 100);
           if (onProgress) onProgress(progress / 100);

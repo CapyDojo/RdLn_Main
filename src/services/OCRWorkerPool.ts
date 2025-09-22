@@ -32,7 +32,17 @@ function now() { return Date.now(); }
 
 async function create10LangWorker(langs: OCRLanguage[], id: string, onLog?: (m: any) => void): Promise<TesseractWorker> {
   const paths = await getResourcePaths();
+  let coreLogged = false;
   const logger = (m: any) => {
+    if (!coreLogged && m?.status === 'loading tesseract core') {
+      coreLogged = true;
+      try {
+        const core = paths.corePath || '';
+        const auto = !core.endsWith('.wasm.js');
+        const label = auto ? 'auto-select (directory)' : `explicit (${core.split('/').pop()})`;
+        console.info(`[OCR] Tesseract core: ${label} at ${core}${auto ? ' — SIMD/LSTM expected if supported' : ''}`);
+      } catch {}
+    }
     // Only forward recognition progress and only if a callback is assigned to this worker id
     if (m?.status === 'recognizing text' && typeof m.progress === 'number') {
       const cb = progressCallbacks.get(id);

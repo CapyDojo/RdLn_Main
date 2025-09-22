@@ -108,7 +108,17 @@ export class OCR_Engine_New {
       } else {
         if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] ❌ No prewarmed worker found for languages: ${languages.join(',')}, creating new worker`);
         const resourcePaths = await getResourcePaths();
+        let coreLogged = false;
         const mkLogger = (cb?: OCRProgressCallback) => (m: any) => {
+          if (!coreLogged && m?.status === 'loading tesseract core') {
+            coreLogged = true;
+            try {
+              const core = resourcePaths.corePath || '';
+              const auto = !core.endsWith('.wasm.js');
+              const label = auto ? 'auto-select (directory)' : `explicit (${core.split('/').pop()})`;
+              console.info(`[OCR] Tesseract core: ${label} at ${core}${auto ? ' — SIMD/LSTM expected if supported' : ''}`);
+            } catch {}
+          }
           // Only report real Tesseract progress during text recognition
           if (m?.status === 'recognizing text' && typeof m.progress === 'number') {
             // Pass real progress directly (0.0 to 1.0)
@@ -134,7 +144,8 @@ export class OCR_Engine_New {
           const fallback = {
             logger: mkLogger(onProgress),
             workerPath: './tesseract/worker.min.js',
-            corePath: './tesseract', // Directory path for SIMD auto-detection
+            // Prefer directory to allow SIMD/LSTM auto-selection when variants are bundled
+            corePath: './tesseract',
             langPath: './tessdata/'
           };
           worker = await createWorker(languages, 1, fallback);

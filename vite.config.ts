@@ -6,7 +6,7 @@ export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), ['REACT_APP_', 'VITE_']);
   
   // Use absolute paths for web deployment (Netlify), relative for Electron
-  const isElectronBuild = env.ELECTRON_BUILD === 'true';
+  const isElectronBuild = env.ELECTRON_BUILD === 'true' || process.env.ELECTRON_BUILD === 'true';
   const base = isElectronBuild ? './' : '/';
 
   // Get environment variables from process.env (for Netlify) or loaded env
@@ -19,11 +19,16 @@ export default defineConfig(({ command, mode }) => {
                       process.env.POSTHOG_HOST || env.POSTHOG_HOST || '';
 
   return {
-    plugins: [react()],
+    plugins: [react({
+      // Ensure automatic JSX runtime for all builds
+      jsxRuntime: 'automatic'
+    })],
     define: {
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || env.NODE_ENV || mode || 'development'),
+      'process.env.NODE_ENV': JSON.stringify(isElectronBuild ? 'production' : (process.env.NODE_ENV || env.NODE_ENV || mode || 'development')),
       'process.env.REACT_APP_POSTHOG_API_KEY': JSON.stringify(postHogApiKey),
       'process.env.REACT_APP_POSTHOG_HOST': JSON.stringify(postHogHost),
+      // Ensure React is in production mode for Electron builds
+      '__DEV__': JSON.stringify(!isElectronBuild && mode !== 'production'),
     },
     optimizeDeps: {
       exclude: ['lucide-react'],
@@ -40,6 +45,12 @@ export default defineConfig(({ command, mode }) => {
     base,
     build: {
       assetsDir: 'assets',
+      // Ensure proper minification for production
+      minify: isElectronBuild ? 'terser' : 'esbuild',
+      // Valid esbuild targets: use 'esnext' for Electron, stable 'es2018' for web
+      target: isElectronBuild ? 'esnext' : 'es2018',
+      // Sourcemap for debugging if needed
+      sourcemap: false,
       rollupOptions: {
         external: (id) => {
           // Handle optional rollup native dependencies
@@ -47,11 +58,35 @@ export default defineConfig(({ command, mode }) => {
           return false;
         },
         output: {
-          assetFileNames: 'assets/[name]-[hash][extname]',
+          assetFileNames: (assetInfo) => {
+            // Special handling for Electron assets
+            if (isElectronBuild) {
+              if (assetInfo.name?.endsWith('.woff2') || assetInfo.name?.endsWith('.woff')) {
+                return 'fonts/[name][extname]';
+              }
+              if (assetInfo.name?.endsWith('.traineddata')) {
+                return 'tessdata/[name][extname]';
+              }
+              if (assetInfo.name?.includes('tesseract')) {
+                return 'tesseract/[name][extname]';
+              }
+            }
+            return 'assets/[name]-[hash][extname]';
+          },
           chunkFileNames: 'assets/[name]-[hash].js',
           entryFileNames: 'assets/[name]-[hash].js',
         },
       },
+      // Enhanced asset inclusion for Electron
+      assetsInclude: isElectronBuild ? [
+        '**/*.woff2',
+        '**/*.woff', 
+        '**/*.ttf',
+        '**/*.traineddata',
+        '**/*.wasm.js',
+        '**/*.worker.js'
+      ] : undefined,
+      copyPublicDir: true,
     },
   };
 });

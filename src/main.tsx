@@ -148,7 +148,7 @@ if (process.env.NODE_ENV === 'development' && !ENABLE_DEV_LOGS) {
   };
 }
 
-// Conditional StrictMode - only in development
+// Conditional StrictMode - only in development, never in Electron builds
 const AppWithProvider = (
   <ThemeProvider>
     <FontSizeProvider>
@@ -159,8 +159,10 @@ const AppWithProvider = (
   </ThemeProvider>
 );
 
+const shouldUseStrictMode = process.env.NODE_ENV === 'development' && !isElectron();
+
 createRoot(document.getElementById('root')!).render(
-  process.env.NODE_ENV === 'development' 
+  shouldUseStrictMode 
     ? <StrictMode>{AppWithProvider}</StrictMode>
     : AppWithProvider
 );
