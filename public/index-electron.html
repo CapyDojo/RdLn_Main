@@ -2,6 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    
+    <!-- Enhanced Content Security Policy for Electron -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: blob:;
+      font-src 'self' data:;
+      connect-src 'self';
+      worker-src 'self' blob:;
+      child-src 'none';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+    " />
+    
     <link rel="icon" type="image/png" href="./images/rdln-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RdLn - Professional Text Comparison Redlining with OCR</title>
@@ -50,8 +67,10 @@
       // Override Tesseract.js configuration for offline mode
       window.TESSERACT_CONFIG = {
         langPath: './tessdata/',
-        corePath: './tesseract/',
-        workerPath: './tesseract/worker.min.js'
+        // Use directory path to enable SIMD/LSTM auto-selection when variants are present
+        corePath: './tesseract',
+        workerPath: './tesseract/worker.min.js',
+        preferLocal: true
       };
     </script>
   </body>

@@ -37,11 +37,43 @@
         console.timeEnd('⚛️  REACT-LOAD');
         console.log('✅ RENDERER: Window fully loaded at', new Date().toISOString());
       });
+
+      // Minimal crash reporter for early failures (helps when bundle fails to load)
+      window.addEventListener('error', (e) => {
+        try {
+          const msg = e?.error?.stack || e?.message || 'Unknown renderer error';
+          console.error('❌ RENDERER ERROR:', msg);
+          const el = document.getElementById('early-error');
+          if (el) {
+            el.textContent = String(msg);
+            el.parentElement?.classList.remove('hidden');
+          }
+        } catch {}
+      });
+
+      window.addEventListener('unhandledrejection', (e) => {
+        try {
+          const msg = (e?.reason && (e.reason.stack || e.reason.message)) || 'Unhandled promise rejection';
+          console.error('❌ RENDERER PROMISE REJECTION:', msg);
+          const el = document.getElementById('early-error');
+          if (el) {
+            el.textContent = String(msg);
+            el.parentElement?.classList.remove('hidden');
+          }
+        } catch {}
+      });
     </script>
     <!-- ASSETS_PLACEHOLDER -->
   </head>
 <body style="background: linear-gradient(135deg, #1c1917 0%, #292524 100%);">
     <div id="root"></div>
+    <!-- Early error surface for white-screen debugging in packaged builds -->
+    <div id="early-error-wrap" class="hidden" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:99999;">
+      <div style="max-width:780px;width:90%;background:#111827;color:#f9fafb;border:1px solid #374151;border-radius:12px;padding:16px;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial">
+        <div style="font-weight:600;margin-bottom:8px;">Renderer error</div>
+        <pre id="early-error" style="white-space:pre-wrap;word-wrap:break-word;margin:0;font-size:12px;line-height:1.4"></pre>
+      </div>
+    </div>
     
     <!-- Electron-specific scripts -->
     <script>
@@ -67,8 +99,10 @@
       // Override Tesseract.js configuration for offline mode
       window.TESSERACT_CONFIG = {
         langPath: './tessdata/',
-        corePath: './tesseract/tesseract-core.wasm.js',
-        workerPath: './tesseract/worker.min.js'
+        // Use directory path to enable SIMD/LSTM auto-selection when variants are present
+        corePath: './tesseract',
+        workerPath: './tesseract/worker.min.js',
+        preferLocal: true
       };
     </script>
   </body>

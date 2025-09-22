@@ -40,8 +40,9 @@ async function processElectronHTML() {
     console.log(`🎨 Found CSS asset: ${cssAsset}`);
     
     // Create asset HTML
-    const assetsHTML = `    <script type="module" crossorigin src="${jsAsset}"></script>
-    <link rel="stylesheet" crossorigin href="${cssAsset}">`;
+    // Note: omit crossorigin for file:// protocol to avoid CORS issues in Electron
+    const assetsHTML = `    <script type="module" src="${jsAsset}"></script>
+    <link rel="stylesheet" href="${cssAsset}">`;
     
     // Replace placeholder with actual assets
     const processedHTML = template.replace('<!-- ASSETS_PLACEHOLDER -->', assetsHTML);

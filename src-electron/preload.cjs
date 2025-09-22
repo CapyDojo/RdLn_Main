@@ -1,20 +1,65 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// Security: Define allowed IPC channels
+const ALLOWED_CHANNELS = [
+  'read-file',
+  'file-exists', 
+  'get-platform',
+  'get-app-version',
+  'get-resource-path',
+  'set-zoom-factor',
+  'get-zoom-factor'
+];
+
+// Security: Validate IPC channel
+function validateChannel(channel) {
+  if (!ALLOWED_CHANNELS.includes(channel)) {
+    throw new Error(`Unauthorized IPC channel: ${channel}`);
+  }
+}
+
+// Security: Sanitize file paths
+function sanitizeFilePath(filePath) {
+  if (typeof filePath !== 'string') {
+    throw new Error('File path must be a string');
+  }
+  
+  // Prevent path traversal attacks
+  if (filePath.includes('..') || filePath.includes('~')) {
+    throw new Error('Invalid file path');
+  }
+  
+  return filePath;
+}
+
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
-  // File drop handling - use IPC to main process
+  // File drop handling - use IPC to main process with security validation
   handleFileDrop: async (filePath) => {
     try {
-      const fileData = await ipcRenderer.invoke('read-file', filePath);
+      const sanitizedPath = sanitizeFilePath(filePath);
+      validateChannel('read-file');
       
-      // Create File object from the received data
-      const blob = new Blob([fileData.buffer], { type: fileData.type });
-      const file = new File([blob], fileData.name, { type: fileData.type });
+      const fileData = await ipcRenderer.invoke('read-file', sanitizedPath);
+      
+      // Validate file data
+      if (!fileData || !fileData.buffer || !fileData.name) {
+        throw new Error('Invalid file data received');
+      }
+      
+      // Create File object from the received data (ensure DOM constructors exist)
+      const BlobCtor = (typeof window !== 'undefined' && window.Blob) ? window.Blob : Blob;
+      const FileCtor = (typeof window !== 'undefined' && window.File) ? window.File : null;
+      const blob = new BlobCtor([Uint8Array.from(fileData.buffer)], { type: fileData.type });
+      const file = FileCtor
+        ? new FileCtor([blob], fileData.name, { type: fileData.type })
+        // Fallback: return a File-like object if File constructor isn't available
+        : Object.assign(blob, { name: fileData.name, lastModified: Date.now() });
       
       // Dispatch custom event to React app
       const event = new CustomEvent('electron-file-drop', {
-        detail: { file, filePath }
+        detail: { file, filePath: sanitizedPath }
       });
       document.dispatchEvent(event);
       
@@ -25,24 +70,52 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
-  // Platform detection
-  getPlatform: () => ipcRenderer.invoke('get-platform'),
+  // Platform detection with validation
+  getPlatform: () => {
+    validateChannel('get-platform');
+    return ipcRenderer.invoke('get-platform');
+  },
   
-  // App info
-  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  // App info with validation
+  getAppVersion: () => {
+    validateChannel('get-app-version');
+    return ipcRenderer.invoke('get-app-version');
+  },
   
-  // File system access for OCR assets - use IPC
-  readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
+  // File system access for OCR assets - use IPC with validation
+  readFile: (filePath) => {
+    const sanitizedPath = sanitizeFilePath(filePath);
+    validateChannel('read-file');
+    return ipcRenderer.invoke('read-file', sanitizedPath);
+  },
   
-  // Check if file exists - use IPC
-  fileExists: (filePath) => ipcRenderer.invoke('file-exists', filePath),
+  // Check if file exists - use IPC with validation
+  fileExists: (filePath) => {
+    const sanitizedPath = sanitizeFilePath(filePath);
+    validateChannel('file-exists');
+    return ipcRenderer.invoke('file-exists', sanitizedPath);
+  },
   
-  // Get resource path for bundled assets - use IPC
-  getResourcePath: (relativePath) => ipcRenderer.invoke('get-resource-path', relativePath),
+  // Get resource path for bundled assets - use IPC with validation
+  getResourcePath: (relativePath) => {
+    const sanitizedPath = sanitizeFilePath(relativePath);
+    validateChannel('get-resource-path');
+    return ipcRenderer.invoke('get-resource-path', sanitizedPath);
+  },
   
-  // Native zoom functionality - replaces CSS zoom for better coordinate handling
-  setZoomFactor: (factor) => ipcRenderer.invoke('set-zoom-factor', factor),
-  getZoomFactor: () => ipcRenderer.invoke('get-zoom-factor'),
+  // Native zoom functionality with validation
+  setZoomFactor: (factor) => {
+    if (typeof factor !== 'number' || factor <= 0 || factor > 5) {
+      throw new Error('Invalid zoom factor');
+    }
+    validateChannel('set-zoom-factor');
+    return ipcRenderer.invoke('set-zoom-factor', factor);
+  },
+  
+  getZoomFactor: () => {
+    validateChannel('get-zoom-factor');
+    return ipcRenderer.invoke('get-zoom-factor');
+  },
   
   // Zoom change notification for dropdown positioning
   notifyZoomChange: (zoomLevel) => {

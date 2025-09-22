@@ -9,6 +9,8 @@ module.exports = {
   appId: 'com.rdln.desktop',
   productName: 'RdLn',
   copyright: 'Copyright © 2025 RdLn Team',
+  // Disable asar to avoid asar integrity update requiring winCodeSign
+  asar: false,
   
   // Build directories
   directories: {

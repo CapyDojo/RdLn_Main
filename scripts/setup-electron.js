@@ -5,6 +5,8 @@
 
 import { downloadFonts } from './download-fonts.js';
 import { downloadTesseractAssets } from './download-tesseract-assets.js';
+import { SetupVerifier } from './setup-verification.js';
+import { AssetManager } from './asset-manager.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -45,22 +47,35 @@ async function setupElectron() {
     console.log('\n📄 Step 4: Preparing HTML for Electron...');
     await prepareElectronHTML();
     
-    // Step 6: Create setup verification
-    console.log('\n✅ Step 5: Verifying setup...');
-    await verifySetup();
+    // Step 5: Prepare assets for build
+    console.log('\n📦 Step 5: Preparing assets...');
+    const assetManager = new AssetManager();
+    await assetManager.prepareForBuild();
+    
+    // Step 6: Final verification
+    console.log('\n✅ Step 6: Running comprehensive verification...');
+    const verifier = new SetupVerifier();
+    const result = await verifier.runFullVerification();
+    
+    if (!result.success) {
+      console.error('\n❌ Setup verification failed!');
+      console.error('Please fix the errors above before proceeding.');
+      process.exit(1);
+    }
     
     console.log('\n🎉 Electron setup completed successfully!');
     console.log('\n📋 Available commands:');
-    console.log('   npm run electron:dev      - Start development server');
-    console.log('   npm run electron:build    - Build for all platforms');
-    console.log('   npm run electron:build:win - Build for Windows only');
-    console.log('   npm run prepare:electron  - Re-download all assets');
+    console.log('   npm run electron:dev        - Start development server');
+    console.log('   npm run electron:build:win  - Build for Windows');
+    console.log('   npm run verify:setup        - Run setup verification');
+    console.log('   npm run prepare:assets      - Prepare assets for build');
     
     console.log('\n🔧 Next steps:');
     console.log('1. Run: npm run electron:dev');
     console.log('2. Test drag & drop functionality');
     console.log('3. Test OCR with local assets');
     console.log('4. Build production: npm run electron:build:win');
+    console.log('5. Check asset integrity: npm run verify:assets');
     
   } catch (error) {
     console.error('❌ Electron setup failed:', error);
@@ -159,58 +174,11 @@ export { postBuild };
   console.log('✅ Created post-build script');
 }
 
+// Legacy verification function - replaced by SetupVerifier class
 async function verifySetup() {
-  const requiredFiles = [
-    'src-electron/main.js',
-    'src-electron/preload.js', 
-    'src-electron/builder.config.js',
-    'public/fonts', // Directory
-    'public/tesseract', // Directory
-    'public/tessdata', // Directory
-    'public/index-electron.html'
-  ];
-  
-  const results = [];
-  
-  for (const file of requiredFiles) {
-    const fullPath = path.join(__dirname, '..', file);
-    try {
-      const stats = await fs.stat(fullPath);
-      if (stats.isDirectory()) {
-        const files = await fs.readdir(fullPath);
-        results.push(`✅ ${file}/ (${files.length} files)`);
-      } else {
-        results.push(`✅ ${file}`);
-      }
-    } catch {
-      results.push(`❌ ${file} - MISSING`);
-    }
-  }
-  
-  console.log('📋 Setup verification:');
-  results.forEach(result => console.log(`   ${result}`));
-  
-  // Check total asset size
-  let totalSize = 0;
-  const assetDirs = ['public/fonts', 'public/tesseract', 'public/tessdata'];
-  
-  for (const dir of assetDirs) {
-    try {
-      const files = await fs.readdir(path.join(__dirname, '..', dir));
-      for (const file of files) {
-        const stats = await fs.stat(path.join(__dirname, '..', dir, file));
-        totalSize += stats.size;
-      }
-    } catch (error) {
-      console.warn(`⚠️  Could not read ${dir}:`, error.message);
-    }
-  }
-  
-  console.log(`📊 Total asset size: ${(totalSize / 1024 / 1024).toFixed(1)}MB`);
-  
-  if (totalSize < 10 * 1024 * 1024) { // Less than 10MB
-    console.warn('⚠️  Asset size seems low - run npm run download:all if OCR fails');
-  }
+  console.log('ℹ️  Legacy verification - use SetupVerifier class for comprehensive checks');
+  const verifier = new SetupVerifier();
+  return await verifier.runFullVerification();
 }
 
 // Run if called directly

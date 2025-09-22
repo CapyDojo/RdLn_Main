@@ -5,7 +5,48 @@ console.log('⏱️  STARTUP: Process started at', new Date().toISOString());
 const { app, BrowserWindow, Menu, screen, ipcMain } = require('electron');
 const fs = require('fs').promises;
 const path = require('path');
+const os = require('os');
 const isDev = process.env.NODE_ENV === 'development';
+
+// --- minimal file logger for packaged diagnostics ---
+let __logPath = null;
+let __logReady = false;
+const __logQueue = [];
+async function __initLogger() {
+  try {
+    let base = null;
+    try { base = app.getPath('userData'); } catch { base = null; }
+    // Allow forcing temp logging for diagnostics
+    if (process.env.RDLN_LOG_TO_TEMP === '1') {
+      base = os.tmpdir();
+    }
+    if (!base) { base = os.tmpdir(); }
+    __logPath = path.join(base, 'rdln-electron.log');
+    await fs.writeFile(__logPath, `\n=== RdLn Electron Log start ${new Date().toISOString()} ===\n`, { flag: 'a' });
+    __logReady = true;
+    while (__logQueue.length) {
+      const m = __logQueue.shift();
+      await fs.writeFile(__logPath, m + "\n", { flag: 'a' });
+    }
+  } catch (_) {
+    // best-effort
+  }
+}
+function __writeLog(message) {
+  const line = `[${new Date().toISOString()}] ${message}`;
+  if (__logReady && __logPath) {
+    fs.writeFile(__logPath, line + "\n", { flag: 'a' }).catch(() => {});
+  } else {
+    __logQueue.push(line);
+  }
+}
+app.on('ready', __initLogger);
+process.on('uncaughtException', (err) => {
+  try { __writeLog(`uncaughtException: ${err?.stack || err}`); } catch {}
+});
+process.on('unhandledRejection', (reason) => {
+  try { __writeLog(`unhandledRejection: ${reason?.stack || reason}`); } catch {}
+});
 
 console.time('📦 MODULE-IMPORTS');
 console.timeEnd('📦 MODULE-IMPORTS');
@@ -232,6 +273,29 @@ app.on('web-contents-created', (event, contents) => {
   contents.on('new-window', (event, navigationUrl) => {
     event.preventDefault();
   });
+});
+
+// Attach logging to any created BrowserWindow
+app.on('browser-window-created', (event, win) => {
+  try {
+    win.webContents.on('console-message', (e, level, message, line, sourceId) => {
+      __writeLog(`renderer console[${level}]: ${message} (${sourceId}:${line})`);
+    });
+    win.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      __writeLog(`did-fail-load: code=${errorCode} desc=${errorDescription} url=${validatedURL} main=${isMainFrame}`);
+    });
+    win.webContents.on('crashed', () => {
+      __writeLog('renderer crashed');
+    });
+    win.webContents.on('render-process-gone', (e, details) => {
+      __writeLog(`render-process-gone: ${JSON.stringify(details)}`);
+    });
+    win.on('unresponsive', () => {
+      __writeLog('window unresponsive');
+    });
+  } catch (_) {
+    // ignore
+  }
 });
 
 // Create application menu (optional)
