@@ -65,3 +65,9 @@ test-osd-first-principles.html
 .serena/cache/
 .kiro/
 scripts/*.ps1
+
+# Gemini generated files
+.qoder/
+ELECTRON_BUILD_SYSTEM_REPORT.md
+builder.log
+debug-jsx-issue.md
