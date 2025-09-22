@@ -8,7 +8,7 @@ import { OCRWorkerPool } from '../services/OCRWorkerPool';
 
 // Beta countdown component
 const BetaBadge: React.FC = () => {
-  const BETA_EXPIRY_DATE = new Date('2025-09-18T23:59:59.999Z');
+  const BETA_EXPIRY_DATE = new Date('2025-10-18T23:59:59.999Z');
   const currentDate = new Date();
   const daysRemaining = Math.ceil((BETA_EXPIRY_DATE.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
   

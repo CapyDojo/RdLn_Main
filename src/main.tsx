@@ -26,7 +26,7 @@ import { DEV_CONFIG } from './config/appConfig';
 document.title = 'RdLn™ Beta - Professional Text Comparison Redlining with OCR';
 
 // BETA EXPIRY CHECK: Hard block expiry for beta version
-const BETA_EXPIRY_DATE = new Date('2025-09-18T23:59:59.999Z');
+const BETA_EXPIRY_DATE = new Date('2025-10-18T23:59:59.999Z');
 const currentDate = new Date();
 
 // Check for developer bypass
@@ -66,7 +66,7 @@ if (currentDate > BETA_EXPIRY_DATE && !isDeveloperMode) {
       ">
         <h1 style="margin: 0 0 20px 0; font-size: 2.5em; font-weight: 300;">RdLn™ Beta Expired</h1>
         <p style="margin: 0 0 20px 0; font-size: 1.2em; line-height: 1.6; opacity: 0.9;">
-          This beta version of RdLn™ expired on September 18, 2025.
+          This beta version of RdLn™ expired on October 18, 2025.
         </p>
         <p style="margin: 0 0 30px 0; font-size: 1em; line-height: 1.6; opacity: 0.7;">
           Thank you for testing RdLn™! Please contact the development team for the latest version.
