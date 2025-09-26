@@ -1,8 +1,8 @@
-// PERFORMANCE PROFILING: Start timing the entire app startup
+﻿// PERFORMANCE PROFILING: Start timing the entire app startup
 console.time('🚀 TOTAL-APP-STARTUP');
 console.log('⏱️  STARTUP: Process started at', new Date().toISOString());
 
-const { app, BrowserWindow, Menu, screen, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, screen, ipcMain, protocol } = require('electron');
 const fs = require('fs').promises;
 const path = require('path');
 const os = require('os');
@@ -41,6 +41,74 @@ function __writeLog(message) {
   }
 }
 app.on('ready', __initLogger);
+
+const ASSET_PROTOCOL = 'rdln';
+
+protocol.registerSchemesAsPrivileged([{ scheme: ASSET_PROTOCOL, privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }]);
+
+async function registerAssetProtocol() {
+  if (!protocol || typeof protocol.handle !== 'function') {
+    return;
+  }
+
+  const distRoot = path.join(__dirname, '../dist');
+  const resourceRoots = {
+    tesseract: path.join(distRoot, 'tesseract'),
+    tessdata: path.join(distRoot, 'tessdata')
+  };
+
+  const resolveUnderRoot = (root, requestPath) => {
+    const normalized = path
+      .normalize(requestPath || '.')
+      .replace(/^(\.\.(\\|\/))+/, '');
+    const resolved = path.join(root, normalized);
+    if (!resolved.startsWith(root)) {
+      throw new Error('Path traversal attempt rejected');
+    }
+    return resolved;
+  };
+
+  try {
+    await protocol.handle(ASSET_PROTOCOL, async request => {
+      try {
+        const url = new URL(request.url);
+        const resourceRoot = resourceRoots[url.hostname];
+        if (!resourceRoot) {
+          __writeLog('[protocol] Unknown host for url: ' + request.url);
+          return new Response('Not Found', { status: 404 });
+        }
+
+        const relativePath = url.pathname.replace(/^\//, '');
+        const filePath = resolveUnderRoot(resourceRoot, relativePath);
+        __writeLog('[protocol] Serving ' + request.url + ' -> ' + filePath);
+        const fileBuffer = await fs.readFile(filePath);
+        const ext = path.extname(filePath).toLowerCase();
+        const contentTypes = {
+          '.js': 'application/javascript',
+          '.mjs': 'application/javascript',
+          '.cjs': 'application/javascript',
+          '.json': 'application/json',
+          '.wasm': 'application/wasm',
+          '.traineddata': 'application/octet-stream'
+        };
+
+        return new Response(fileBuffer, {
+          status: 200,
+          headers: {
+            'Content-Type': contentTypes[ext] || 'application/octet-stream'
+          }
+        });
+      } catch (error) {
+        __writeLog('[protocol] Asset fetch failed: ' + (error && error.stack ? error.stack : String(error)));
+        return new Response('Not Found', { status: 404 });
+      }
+    });
+    __writeLog('[protocol] Registered ' + ASSET_PROTOCOL + ':// handler');
+  } catch (error) {
+    __writeLog('[protocol] Failed to register handler: ' + (error && error.stack ? error.stack : String(error)));
+  }
+}
+
 process.on('uncaughtException', (err) => {
   try { __writeLog(`uncaughtException: ${err?.stack || err}`); } catch {}
 });
@@ -244,13 +312,15 @@ function createWindow() {
 }
 
 // App event handlers
-console.time('🔧 APP-READY-WAIT');
-console.log('⏱️  APP: Waiting for app.whenReady() at', new Date().toISOString());
+console.time('APP-READY-WAIT');
+console.log('APP: Waiting for app.whenReady() at', new Date().toISOString());
 
-app.whenReady().then(() => {
-  console.timeEnd('🔧 APP-READY-WAIT');
-  console.log('⏱️  APP: app.whenReady() fired at', new Date().toISOString());
-  
+app.whenReady().then(async () => {
+  console.timeEnd('APP-READY-WAIT');
+  console.log('APP: app.whenReady() fired at', new Date().toISOString());
+
+  await registerAssetProtocol();
+
   createWindow();
 
   // Handle app activation (macOS)
@@ -259,6 +329,7 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+
 });
 
 // Quit when all windows are closed
@@ -450,6 +521,9 @@ ipcMain.handle('get-zoom-factor', () => {
   return currentZoomFactor;
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   createMenu();
 });
+
+
+

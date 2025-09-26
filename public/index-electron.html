@@ -10,8 +10,8 @@
       style-src 'self' 'unsafe-inline';
       img-src 'self' data: blob:;
       font-src 'self' data:;
-      connect-src 'self';
-      worker-src 'self' blob:;
+      connect-src 'self' rdln:;
+      worker-src 'self' blob: rdln:;
       child-src 'none';
       object-src 'none';
       base-uri 'self';
@@ -66,12 +66,13 @@
       
       // Override Tesseract.js configuration for offline mode
       window.TESSERACT_CONFIG = {
-        langPath: './tessdata/',
+        langPath: 'rdln://tessdata/',
         // Use directory path to enable SIMD/LSTM auto-selection when variants are present
-        corePath: './tesseract',
-        workerPath: './tesseract/worker.min.js',
+        corePath: 'rdln://tesseract',
+        workerPath: 'rdln://tesseract/worker.min.js',
         preferLocal: true
       };
     </script>
   </body>
 </html>
+

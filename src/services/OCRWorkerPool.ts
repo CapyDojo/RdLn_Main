@@ -30,6 +30,13 @@ function langKey(langs: OCRLanguage[]): LangKey {
 
 function now() { return Date.now(); }
 
+function isLocalPath(input?: string | null) {
+  if (!input) {
+    return false;
+  }
+  return input.startsWith('rdln://') || input.startsWith('./') || input.startsWith('file://');
+}
+
 async function create10LangWorker(langs: OCRLanguage[], id: string, onLog?: (m: any) => void): Promise<TesseractWorker> {
   const paths = await getResourcePaths();
   let coreLogged = false;
@@ -53,11 +60,14 @@ async function create10LangWorker(langs: OCRLanguage[], id: string, onLog?: (m: 
     if (appConfig.dev.LOGGING.ENABLED && onLog) onLog(m);
   };
 
+  const useLocalAssets = isLocalPath(paths.workerPath) || isLocalPath(paths.langPath);
   const worker = await createWorker(langs, 1, {
     logger,
     workerPath: paths.workerPath,
     corePath: paths.corePath,
     langPath: paths.langPath.endsWith('/') ? paths.langPath : paths.langPath + '/',
+    workerBlobURL: useLocalAssets ? false : undefined,
+    gzip: useLocalAssets ? false : undefined
   } as any);
 
   try { await worker.setParameters({ classify_enable_learning: '0' }); } catch {}
@@ -240,3 +250,4 @@ export class OCRWorkerPool {
     return stats;
   }
 }
+

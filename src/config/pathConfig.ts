@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Centralized Path Configuration Service
  * 
  * Single source of truth for all environment-specific path resolution.
@@ -41,7 +41,8 @@ async function detectEnvironment(): Promise<typeof cachedEnvironment> {
     // Electron detection
     const windowElectron = typeof window !== 'undefined' && (window as any).isElectron === true;
     const processElectron = typeof process !== 'undefined' && (process as any).versions && (process as any).versions.electron;
-    checks.isElectron = !!(windowElectron || processElectron);
+    const navigatorElectron = typeof navigator !== 'undefined' && typeof navigator.userAgent === 'string' && navigator.userAgent.toLowerCase().includes('electron');
+    checks.isElectron = !!(windowElectron || processElectron || navigatorElectron);
 
     // Web deployment detection (production web)
     if (typeof window !== 'undefined') {
@@ -105,14 +106,18 @@ export async function getResourcePaths() {
   const forceLocal = (typeof window !== 'undefined' && (window as any).TESSERACT_CONFIG && (window as any).TESSERACT_CONFIG.preferLocal === true)
                   || (typeof navigator !== 'undefined' && (navigator as any).onLine === false);
 
+  if (DEV_CONFIG.LOGGING.ENABLED || env.isElectron) {
+    console.log('[pathConfig] env', env);
+  }
+
   if (env.isElectron || forceLocal) {
     // Prefer explicit overrides if provided via window.TESSERACT_CONFIG
     // This helps packaged Electron builds avoid missing variant files
     // by pointing directly at the known-present shim (e.g., tesseract-core.wasm.js).
     resourcePaths = {
-      langPath: userCfg?.langPath ?? './tessdata',
-      workerPath: userCfg?.workerPath ?? './tesseract/worker.min.js',
-      corePath: userCfg?.corePath ?? './tesseract', // Default to directory (auto-select) if no override
+      langPath: userCfg?.langPath ?? 'rdln://tessdata/',
+      workerPath: userCfg?.workerPath ?? 'rdln://tesseract/worker.min.js',
+      corePath: userCfg?.corePath ?? 'rdln://tesseract', // Default to directory (auto-select) if no override
       baseUrl: baseUrls.electron
     };
   } else if (env.isWebDeployment) {

@@ -19,56 +19,76 @@
     <!-- Electron environment flag -->
     <script>
       // PERFORMANCE PROFILING: Track renderer process startup
-      console.time('🎨 RENDERER-INIT');
-      console.log('⏱️  RENDERER: Script execution started at', new Date().toISOString());
-      
+      console.time('dYZ" RENDERER-INIT');
+      console.log('??  RENDERER: Script execution started at', new Date().toISOString());
+
       window.isElectron = true;
       window.isOffline = true;
-      
-      // Track when DOM content is loaded
+
       document.addEventListener('DOMContentLoaded', () => {
-        console.timeEnd('🎨 RENDERER-INIT');
-        console.time('⚛️  REACT-LOAD');
-        console.log('⏱️  RENDERER: DOMContentLoaded at', new Date().toISOString());
-      });
-      
-      // Track when everything is loaded
-      window.addEventListener('load', () => {
-        console.timeEnd('⚛️  REACT-LOAD');
-        console.log('✅ RENDERER: Window fully loaded at', new Date().toISOString());
+        console.timeEnd('dYZ" RENDERER-INIT');
+        console.time('??  REACT-LOAD');
+        console.log('??  RENDERER: DOMContentLoaded at', new Date().toISOString());
       });
 
-      // Minimal crash reporter for early failures (helps when bundle fails to load)
+      window.addEventListener('load', () => {
+        console.timeEnd('??  REACT-LOAD');
+        console.log('? RENDERER: Window fully loaded at', new Date().toISOString());
+      });
+
+      const hideRendererOverlay = () => {
+        const wrap = document.getElementById('early-error-wrap');
+        if (wrap && !wrap.classList.contains('hidden')) {
+          wrap.classList.add('hidden');
+        }
+        const pre = document.getElementById('early-error');
+        if (pre && pre.textContent) {
+          pre.textContent = '';
+        }
+      };
+
+      const showRendererOverlay = () => { /* overlay disabled */ };
+
+      const shouldIgnoreRendererMessage = (msg) => {
+        return !!msg && /Parameter not found:/i.test(msg);
+      };
+
+      const processRendererMessage = (msg) => {
+        if (shouldIgnoreRendererMessage(msg)) {
+          hideRendererOverlay();
+          return;
+        }
+        showRendererOverlay(msg);
+      };
+
       window.addEventListener('error', (e) => {
         try {
           const msg = e?.error?.stack || e?.message || 'Unknown renderer error';
-          console.error('❌ RENDERER ERROR:', msg);
-          const el = document.getElementById('early-error');
-          if (el) {
-            el.textContent = String(msg);
-            el.parentElement?.classList.remove('hidden');
-          }
-        } catch {}
+          processRendererMessage(msg);
+        } catch (err) {
+          console.error('Renderer error handler failed', err);
+        }
       });
 
       window.addEventListener('unhandledrejection', (e) => {
         try {
-          const msg = (e?.reason && (e.reason.stack || e.reason.message)) || 'Unhandled promise rejection';
-          console.error('❌ RENDERER PROMISE REJECTION:', msg);
-          const el = document.getElementById('early-error');
-          if (el) {
-            el.textContent = String(msg);
-            el.parentElement?.classList.remove('hidden');
-          }
-        } catch {}
+          const reason = e?.reason;
+          const msg = reason && (reason.stack || reason.message) || 'Unhandled promise rejection';
+          processRendererMessage(msg);
+        } catch (err) {
+          console.error('Renderer rejection handler failed', err);
+        }
       });
+
+      document.addEventListener('DOMContentLoaded', hideRendererOverlay);
+      hideRendererOverlay();
     </script>
     <!-- ASSETS_PLACEHOLDER -->
   </head>
 <body style="background: linear-gradient(135deg, #1c1917 0%, #292524 100%);">
     <div id="root"></div>
     <!-- Early error surface for white-screen debugging in packaged builds -->
-    <div id="early-error-wrap" class="hidden" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:99999;">
+    <div id="early-error-wrap" class="hidden" style="display:none!important; position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:99999;">
       <div style="max-width:780px;width:90%;background:#111827;color:#f9fafb;border:1px solid #374151;border-radius:12px;padding:16px;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial">
         <div style="font-weight:600;margin-bottom:8px;">Renderer error</div>
         <pre id="early-error" style="white-space:pre-wrap;word-wrap:break-word;margin:0;font-size:12px;line-height:1.4"></pre>
@@ -98,12 +118,13 @@
       
       // Override Tesseract.js configuration for offline mode
       window.TESSERACT_CONFIG = {
-        langPath: './tessdata/',
+        langPath: 'rdln://tessdata/',
         // Use directory path to enable SIMD/LSTM auto-selection when variants are present
-        corePath: './tesseract',
-        workerPath: './tesseract/worker.min.js',
+        corePath: 'rdln://tesseract',
+        workerPath: 'rdln://tesseract/worker.min.js',
         preferLocal: true
       };
     </script>
   </body>
 </html>
+

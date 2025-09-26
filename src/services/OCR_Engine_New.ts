@@ -28,6 +28,13 @@ export interface NewEngineExtractResult {
   meta?: { whitespaceRemoved: number; iterations: number };
 }
 
+function isLocalPath(path?: string | null) {
+  if (!path) {
+    return false;
+  }
+  return path.startsWith('rdln://') || path.startsWith('./') || path.startsWith('file://');
+}
+
 // Global registry for job-specific progress callbacks
 const jobProgressCallbacks = new Map<string, any>();
 // Track which operation is expecting which job
@@ -129,11 +136,14 @@ export class OCR_Engine_New {
           }
         };
 
+        const primaryUseLocal = isLocalPath(resourcePaths.workerPath) || isLocalPath(resourcePaths.langPath);
         const primary = {
           logger: mkLogger(onProgress),
           workerPath: resourcePaths.workerPath,
           corePath: resourcePaths.corePath,
-          langPath: resourcePaths.langPath.endsWith('/') ? resourcePaths.langPath : resourcePaths.langPath + '/'
+          langPath: resourcePaths.langPath.endsWith('/') ? resourcePaths.langPath : resourcePaths.langPath + '/',
+          workerBlobURL: primaryUseLocal ? false : undefined,
+          gzip: primaryUseLocal ? false : undefined
         };
 
         try {
@@ -141,12 +151,15 @@ export class OCR_Engine_New {
           if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔧 Created new primary worker for languages: ${languages.join(',')}`);
         } catch (e) {
           if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔧 Falling back to default paths for worker for languages: ${languages.join(',')}`);
+          const fallbackUseLocal = isLocalPath(resourcePaths.workerPath) || isLocalPath(resourcePaths.langPath);
           const fallback = {
             logger: mkLogger(onProgress),
-            workerPath: './tesseract/worker.min.js',
+            workerPath: resourcePaths.workerPath,
             // Prefer directory to allow SIMD/LSTM auto-selection when variants are bundled
-            corePath: './tesseract',
-            langPath: './tessdata/'
+            corePath: resourcePaths.corePath,
+            langPath: resourcePaths.langPath.endsWith('/') ? resourcePaths.langPath : resourcePaths.langPath + '/',
+            workerBlobURL: fallbackUseLocal ? false : undefined,
+            gzip: fallbackUseLocal ? false : undefined
           };
           worker = await createWorker(languages, 1, fallback);
           if (appConfig.dev.LOGGING.ENABLED) console.log(`[OCR_DEBUG] 🔧 Created fallback worker for languages: ${languages.join(',')}`);
