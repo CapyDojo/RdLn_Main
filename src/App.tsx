@@ -408,8 +408,122 @@ function App() {
   const [showAdvancedOcrCardState, setShowAdvancedOcrCardState] = useState(false);
   const [showPerformanceDemoCardState, setShowPerformanceDemoCardState] = useState(false);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.fetch !== 'function') {
+      return;
+    }
+
+    const originalFetch = window.fetch.bind(window);
+
+    if ((window as any).isElectron === true) {
+      // Provide fetch shim so Tesseract assets load from the packaged filesystem.
+      const electronApi = (window as any).electronAPI;
+      const localAssetCache = new Map<string, Uint8Array>();
+
+      const extractLocalAssetPath = (rawUrl: string): string | null => {
+        if (!rawUrl) {
+          return null;
+        }
+
+        const stripPrefix = (value: string) => value.replace(/^([.\\/])+/u, '');
+        const tryRelative = (value: string) => {
+          const trimmed = stripPrefix(value);
+          return trimmed.startsWith('tessdata/') || trimmed.startsWith('tesseract/') ? trimmed : null;
+        };
+
+        try {
+          const absoluteUrl = new URL(rawUrl, window.location.href);
+          const normalizedPath = decodeURIComponent(absoluteUrl.pathname).replace(/\\/g, '/');
+          const markers = ['/tessdata/', '/tesseract/'];
+
+          for (const marker of markers) {
+            const index = normalizedPath.lastIndexOf(marker);
+            if (index !== -1) {
+              return normalizedPath.slice(index + 1);
+            }
+          }
+        } catch {
+          // Fall back to relative path parsing when URL constructor fails
+          return tryRelative(rawUrl);
+        }
+
+        return tryRelative(rawUrl);
+      };
+
+      const loadLocalAsset = async (assetPath: string): Promise<Uint8Array | null> => {
+        if (!electronApi?.getResourcePath || !electronApi?.readFile) {
+          return null;
+        }
+
+        if (localAssetCache.has(assetPath)) {
+          return localAssetCache.get(assetPath) ?? null;
+        }
+
+        try {
+          const resolvedPath = await electronApi.getResourcePath(assetPath);
+          const fileResult: any = await electronApi.readFile(resolvedPath);
+          const rawBuffer: any = Array.isArray(fileResult) ? fileResult : fileResult?.buffer;
+
+          if (!rawBuffer) {
+            return null;
+          }
+
+          const binary = rawBuffer instanceof Uint8Array ? rawBuffer : Uint8Array.from(rawBuffer as ArrayLike<number>);
+          localAssetCache.set(assetPath, binary);
+          return binary;
+        } catch (error) {
+          console.warn('[Electron] Failed to load local asset via IPC fetch shim:', error);
+          return null;
+        }
+      };
+
+      window.fetch = async (...args) => {
+        try {
+          const [resource] = args;
+          const url = typeof resource === 'string'
+            ? resource
+            : resource instanceof Request
+              ? resource.url
+              : resource?.url;
+
+          if (typeof url === 'string') {
+            if (url.includes('posthog')) {
+              return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+            }
+
+            const assetPath = extractLocalAssetPath(url);
+            if (assetPath) {
+              const binary = await loadLocalAsset(assetPath);
+              if (binary) {
+                return new Response(binary, {
+                  status: 200,
+                  headers: { 'Content-Type': 'application/octet-stream' }
+                });
+              }
+            }
+          }
+        } catch (electronFetchError) {
+          console.warn('[Electron] Local fetch interception failed, falling back to native fetch:', electronFetchError);
+        }
+
+        return originalFetch(...args);
+      };
+
+      return () => {
+        window.fetch = originalFetch;
+      };
+    }
+  }, []);
+
   // Initialize analytics on app start
   useEffect(() => {
+    const isElectronRuntime = (typeof window !== 'undefined' && (window as any).isElectron === true) || (typeof process !== 'undefined' && !!(process as any).versions?.electron);
+    const isOfflineRuntime = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (isElectronRuntime || isOfflineRuntime) {
+      console.log('Analytics: disabled for Electron/offline runtime');
+      return;
+    }
+
     // Initialize PostHog analytics
     // Try VITE_ prefixed variables first, then REACT_APP_ for compatibility
     const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY || 
@@ -560,3 +674,4 @@ function App() {
 }
 
 export default App;
+
