@@ -608,3 +608,9 @@ export class OCR_CacheManager_New {
     if (DEV_CONFIG.DEBUGGING.OCR_DEBUG) console.log('🧹 All OCR workers terminated and caches cleared');
   }
 }
+
+
+
+
+
+
