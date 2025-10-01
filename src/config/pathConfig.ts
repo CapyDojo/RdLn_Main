@@ -121,9 +121,9 @@ export async function getResourcePaths() {
       baseUrl: baseUrls.electron
     };
   } else if (env.isWebDeployment) {
-    // Production web deployment - use local assets to avoid CORS issues
+    // Production web deployment - use local assets to avoid CORS and 404 issues
     resourcePaths = {
-      langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+      langPath: '/tessdata', // Use local language files to avoid CDN 404 errors
       workerPath: '/tesseract/worker.min.js', // Use local worker to avoid CORS
       corePath: '/tesseract', // Use local core files with SIMD auto-detection
       baseUrl: baseUrls.cdn_base
