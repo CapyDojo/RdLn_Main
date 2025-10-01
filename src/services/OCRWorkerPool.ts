@@ -34,7 +34,17 @@ function isLocalPath(input?: string | null) {
   if (!input) {
     return false;
   }
-  return input.startsWith('rdln://') || input.startsWith('./') || input.startsWith('file://');
+  const normalized = input.trim();
+  if (!normalized) {
+    return false;
+  }
+  return (
+    normalized.startsWith('rdln://') ||
+    normalized.startsWith('./') ||
+    normalized.startsWith('/') ||
+    normalized.startsWith('file://') ||
+    /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])/i.test(normalized)
+  );
 }
 
 async function create10LangWorker(langs: OCRLanguage[], id: string, onLog?: (m: any) => void): Promise<TesseractWorker> {

@@ -129,11 +129,11 @@ export async function getResourcePaths() {
       baseUrl: baseUrls.cdn_base
     };
   } else {
-    // Local development - use CDN v6.0.1 with SIMD for parity and speed
+    // Local development - serve worker/core from same-origin to avoid cross-origin worker restrictions
     resourcePaths = {
-      langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-      workerPath: baseUrls.cdn_worker,
-      corePath: baseUrls.cdn_core, // Directory path enables SIMD auto-detection
+      langPath: '/tessdata',
+      workerPath: '/tesseract/worker.min.js',
+      corePath: '/tesseract', // Directory path enables SIMD auto-detection
       baseUrl: baseUrls.cdn_base
     };
   }

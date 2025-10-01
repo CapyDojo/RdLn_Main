@@ -32,7 +32,17 @@ function isLocalPath(path?: string | null) {
   if (!path) {
     return false;
   }
-  return path.startsWith('rdln://') || path.startsWith('./') || path.startsWith('file://');
+  const normalized = path.trim();
+  if (!normalized) {
+    return false;
+  }
+  return (
+    normalized.startsWith('rdln://') ||
+    normalized.startsWith('./') ||
+    normalized.startsWith('/') ||
+    normalized.startsWith('file://') ||
+    /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])/i.test(normalized)
+  );
 }
 
 // Global registry for job-specific progress callbacks
