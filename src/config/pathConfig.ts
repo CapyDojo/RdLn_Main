@@ -121,11 +121,11 @@ export async function getResourcePaths() {
       baseUrl: baseUrls.electron
     };
   } else if (env.isWebDeployment) {
-    // Production web deployment - use CDN v6.0.1 with SIMD auto-detection
+    // Production web deployment - use local assets to avoid CORS issues
     resourcePaths = {
       langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-      workerPath: baseUrls.cdn_worker,
-      corePath: baseUrls.cdn_core, // Directory path enables SIMD auto-detection
+      workerPath: '/tesseract/worker.min.js', // Use local worker to avoid CORS
+      corePath: '/tesseract', // Use local core files with SIMD auto-detection
       baseUrl: baseUrls.cdn_base
     };
   } else {
