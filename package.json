@@ -75,7 +75,9 @@
     "check:strict": "npm run lint -- --max-warnings=0 && npm run test:run",
     "smoke": "vitest run tests/pages tests/services --reporter=verbose",
     "pack:win": "npm run electron:build:win",
-    "changelog:split": "python3 scripts/changelog/split_archive.py"
+    "changelog:split": "python3 scripts/changelog/split_archive.py",
+    "preelectron:build": "node scripts/check-preload-line-endings.js",
+    "preelectron:build:win": "node scripts/check-preload-line-endings.js"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.0.0",
