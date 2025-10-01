@@ -95,7 +95,8 @@
       "Bash(curl:*)",
       "Read(C:\\Users\\edsiu/**)",
       "Read(C:\\Users\\edsiu/**)",
-      "Read(C:\\Users\\edsiu/**)"
+      "Read(C:\\Users\\edsiu/**)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "additionalDirectories": [

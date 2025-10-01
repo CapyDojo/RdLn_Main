@@ -6,6 +6,7 @@ dist/
 build/
 dist-electron/
 dist-electron-new/
+dist-electron-v0.6.1/
 
 # Test results and coverage
 test-results/
