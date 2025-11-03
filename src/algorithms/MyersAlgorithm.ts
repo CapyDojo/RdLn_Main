@@ -173,7 +173,8 @@ export class MyersAlgorithm {
   private static isStartOfDate(text: string, index: number): boolean {
     // Look for date patterns: MM/DD/YYYY, DD-MM-YYYY, etc.
     const remaining = text.slice(index);
-    return /^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}/.test(remaining);
+    // Dates like MM/DD/YYYY, DD-MM-YY, etc. Use simple separators: '/', '.', '-'
+    return /^\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}/.test(remaining);
   }
 
   private static extractDate(text: string, startIndex: number): { token: string, endIndex: number } {
@@ -183,7 +184,7 @@ export class MyersAlgorithm {
     // Extract the date pattern
     while (i < text.length) {
       const char = text[i];
-      if (/[\d\/\-\.]/.test(char)) {
+      if (/[\d/.-]/.test(char)) {
         token += char;
         i++;
       } else {
@@ -1832,7 +1833,7 @@ export class MyersAlgorithm {
     }
 
     // Convert to our format and calculate stats
-    let coreChanges: DiffChange[] = diff.map((change, index) => ({
+    const coreChanges: DiffChange[] = diff.map((change, index) => ({
       type: change.type as 'added' | 'removed' | 'unchanged' | 'changed',
       content: change.content,
       originalContent: change.originalContent,
