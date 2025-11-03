@@ -6,7 +6,8 @@ const { app, BrowserWindow, Menu, screen, ipcMain, protocol } = require('electro
 const fs = require('fs').promises;
 const path = require('path');
 const os = require('os');
-const isDev = process.env.NODE_ENV === 'development';
+// Treat non-packaged runs as development; also honor NODE_ENV
+const isDev = process.env.NODE_ENV === 'development' || (typeof app !== 'undefined' && !app.isPackaged);
 
 // --- minimal file logger for packaged diagnostics ---
 let __logPath = null;
@@ -163,9 +164,18 @@ function createWindow() {
   console.log('⏱️  LOAD: Starting to load HTML at', new Date().toISOString());
   
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
-    // Open DevTools in development
-    mainWindow.webContents.openDevTools();
+    // In dev, load Vite server with simple retry until it’s ready
+    const devUrl = 'http://localhost:5173';
+    const tryLoad = async (attempt = 1) => {
+      try {
+        await mainWindow.loadURL(devUrl);
+        mainWindow.webContents.openDevTools();
+      } catch (e) {
+        const delay = Math.min(1500, 200 * attempt);
+        setTimeout(() => tryLoad(attempt + 1), delay);
+      }
+    };
+    tryLoad();
   } else {
     const htmlPath = path.join(__dirname, '../dist/index-electron.html');
     console.log('⏱️  LOAD: Loading HTML from:', htmlPath);
@@ -524,6 +534,5 @@ ipcMain.handle('get-zoom-factor', () => {
 app.whenReady().then(async () => {
   createMenu();
 });
-
 
 
