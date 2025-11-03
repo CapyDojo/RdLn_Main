@@ -3,7 +3,7 @@ import { ThemeSelector } from './ThemeSelector';
 import { FontSizeSelector } from './FontSizeSelector';
 import { BaseComponentProps } from '../types/components';
 
-interface HeaderProps extends BaseComponentProps {}
+type HeaderProps = BaseComponentProps;
 
 export const Header: React.FC<HeaderProps> = ({ 
   style, 

@@ -67,7 +67,7 @@ export const calculateCrescentPosition = (
 ): CascadePosition => {
   const { baseLeftOffset, downwardStep, maxLeftwardStep } = LAYOUT_CONFIG;
   
-  let y = index * downwardStep;
+  const y = index * downwardStep;
 
   const center = (totalItems - 1) / 2;
   const distanceFromCenter = Math.abs(index - center);
@@ -76,7 +76,7 @@ export const calculateCrescentPosition = (
   const parabolicValue = 1 - Math.pow(distanceFromCenter / maxDistance, 2);
   const maxLeftwardDrift = center * maxLeftwardStep;
 
-  let x = baseLeftOffset + (parabolicValue * maxLeftwardDrift);
+  const x = baseLeftOffset + (parabolicValue * maxLeftwardDrift);
 
   const distanceFromMid = Math.abs(index - (totalItems - 1) / 2);
   const scaleVariation = 1 - (distanceFromMid * 0.008);

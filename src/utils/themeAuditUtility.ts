@@ -252,13 +252,14 @@ export function generateAuditConsoleReport(): void {
 
   console.log('');
   console.log('✅ Compliant Themes:');
-  auditReport.themesNeedingFixes.length < auditReport.totalThemes &&
+  if (auditReport.themesNeedingFixes.length < auditReport.totalThemes) {
     Object.values(themeDefinitions).forEach(theme => {
       const audit = auditThemeHoverImplementation(theme);
       if (audit.hoverImplementationStatus === 'complete') {
         console.log(`   ✓ ${audit.displayName} (${audit.themeName})`);
       }
     });
+  }
 
   console.groupEnd();
 }

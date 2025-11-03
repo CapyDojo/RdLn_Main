@@ -84,7 +84,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     document.body.style.background = themeConfig.background || '';
     // Force repaint to ensure gradients are rendered
     requestAnimationFrame(() => {
-      document.body.clientWidth; // Trigger reflow
+      void document.body.clientWidth; // Trigger reflow
     });
   }, [currentTheme]);
 
