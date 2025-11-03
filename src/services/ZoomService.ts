@@ -45,7 +45,7 @@ class ZoomServiceImpl implements ZoomServiceInterface {
     const platform = this.getPlatform();
     
     switch (platform) {
-      case 'electron':
+      case 'electron': {
         // For Electron, check if there's an existing zoom from body style (migration case)
         const bodyZoom = document.body.style.zoom;
         if (bodyZoom && bodyZoom !== '1' && bodyZoom !== '') {
@@ -55,13 +55,13 @@ class ZoomServiceImpl implements ZoomServiceInterface {
           }
         }
         break;
-        
-      case 'tauri':
+      }
+      case 'tauri': {
         // Tauri zoom level needs to be queried if available
         this.currentZoom = 1.0; // Default, actual level will be synced
         break;
-        
-      case 'web':
+      }
+      case 'web': {
         // Check for existing transform scale
         const transform = document.body.style.transform;
         const scaleMatch = transform.match(/scale\(([^)]+)\)/);
@@ -69,6 +69,7 @@ class ZoomServiceImpl implements ZoomServiceInterface {
           this.currentZoom = parseFloat(scaleMatch[1]) || 1.0;
         }
         break;
+      }
     }
   }
 

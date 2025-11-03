@@ -203,8 +203,8 @@ export const useScrollSync = ({
         return visibleElement || null;
       };
 
-      let input1Element = findScrollableElement('original');
-      let input2Element = findScrollableElement('revised');
+      const input1Element = findScrollableElement('original');
+      const input2Element = findScrollableElement('revised');
 
       // Determine if we are in the "Option C" layout for the legacy return value
       const isOptionC = input1Element === document.querySelector('[data-panel-id="original"] .glass-panel-inner-content');

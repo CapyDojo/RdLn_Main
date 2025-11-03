@@ -219,7 +219,7 @@ export class FilingCabinetPerformanceMonitor {
       
       // Force style recalculation
       testElement.style.transform = 'translateY(-1px)';
-      testElement.offsetHeight; // Force reflow
+      void testElement.offsetHeight; // Force reflow
       testElement.style.transform = 'translateY(0px)';
       
       const end = performance.now();

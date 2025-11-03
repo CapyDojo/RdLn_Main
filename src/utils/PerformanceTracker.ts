@@ -225,7 +225,7 @@ export class PerformanceTracker {
       resourceSavings: number;
     };
   } {
-    let testsToCompare = testIds 
+    const testsToCompare = testIds 
       ? this.testResults.filter(t => testIds.includes(t.testId))
       : this.testResults;
     
