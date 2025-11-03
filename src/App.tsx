@@ -415,9 +415,9 @@ function App() {
 
     const originalFetch = window.fetch.bind(window);
 
-    if ((window as any).isElectron === true) {
+    if (window.isElectron === true) {
       // Provide fetch shim so Tesseract assets load from the packaged filesystem.
-      const electronApi = (window as any).electronAPI;
+      const electronApi = window.electronAPI;
       const localAssetCache = new Map<string, Uint8Array>();
 
       const extractLocalAssetPath = (rawUrl: string): string | null => {
@@ -461,14 +461,17 @@ function App() {
 
         try {
           const resolvedPath = await electronApi.getResourcePath(assetPath);
-          const fileResult: any = await electronApi.readFile(resolvedPath);
-          const rawBuffer: any = Array.isArray(fileResult) ? fileResult : fileResult?.buffer;
+          const fileResult = await electronApi.readFile(resolvedPath);
+
+          const rawBuffer = (Array.isArray(fileResult)
+            ? (fileResult as number[])
+            : fileResult?.buffer) as number[] | undefined;
 
           if (!rawBuffer) {
             return null;
           }
 
-          const binary = rawBuffer instanceof Uint8Array ? rawBuffer : Uint8Array.from(rawBuffer as ArrayLike<number>);
+          const binary = Uint8Array.from(rawBuffer);
           localAssetCache.set(assetPath, binary);
           return binary;
         } catch (error) {
@@ -517,7 +520,8 @@ function App() {
 
   // Initialize analytics on app start
   useEffect(() => {
-    const isElectronRuntime = (typeof window !== 'undefined' && (window as any).isElectron === true) || (typeof process !== 'undefined' && !!(process as any).versions?.electron);
+    const isElectronRuntime = (typeof window !== 'undefined' && window.isElectron === true) ||
+      (typeof process !== 'undefined' && !!(process as unknown as { versions?: { electron?: string } }).versions?.electron);
     const isOfflineRuntime = typeof navigator !== 'undefined' && navigator.onLine === false;
     if (isElectronRuntime || isOfflineRuntime) {
       console.log('Analytics: disabled for Electron/offline runtime');
@@ -674,4 +678,3 @@ function App() {
 }
 
 export default App;
-
