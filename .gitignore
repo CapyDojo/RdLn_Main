@@ -71,4 +71,11 @@ scripts/*.ps1
 .qoder/
 ELECTRON_BUILD_SYSTEM_REPORT.md
 builder.log
-debug-jsx-issue.md
+debug-jsx-issue.mdPrototypes/
+prototypesdocx_list_parser_CC_Sprint/
+Prototypes/docx_list_parser_CC_Sprint - BACKUP A/
+*.log
+public/asset-manifest.json
+public/asset-report.json
+public/tesseract-download-report.json
+eslint.json
