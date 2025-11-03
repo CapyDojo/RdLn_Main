@@ -6,9 +6,7 @@ import { setupPerformanceDebugUtils } from '../utils/performanceDebugUtils';
 import { appConfig } from '../config/appConfig';
 import { useExperimentalFeatures, useHasActiveExperimentalFeatures } from '../contexts/ExperimentalLayoutContext';
 
-interface DeveloperModeCardProps extends BaseComponentProps {
-  // All functionality moved to Developer Dashboard
-}
+type DeveloperModeCardProps = BaseComponentProps;
 
 export const DeveloperModeCard: React.FC<DeveloperModeCardProps> = ({
   style,

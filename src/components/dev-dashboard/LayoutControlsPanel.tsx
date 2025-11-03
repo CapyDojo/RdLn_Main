@@ -3,9 +3,7 @@ import { Layout, Monitor, Info } from 'lucide-react';
 import { useLayout, LayoutMode } from '../../contexts/LayoutContext';
 import { BaseComponentProps } from '../../types/components';
 
-interface LayoutControlsPanelProps extends BaseComponentProps {
-  // Optional props for future expansion
-}
+type LayoutControlsPanelProps = BaseComponentProps;
 
 export const LayoutControlsPanel: React.FC<LayoutControlsPanelProps> = ({
   style,

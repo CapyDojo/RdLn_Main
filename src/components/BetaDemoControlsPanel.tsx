@@ -34,11 +34,13 @@ interface BetaDemoControlsPanelProps extends BaseComponentProps {
 export const BetaDemoControlsPanel: React.FC<BetaDemoControlsPanelProps> = ({
   onLoadSample,
   isProcessing,
-  hasContent,
+  hasContent: _hasContent,
   style,
   className,
   ...props
 }) => {
+  // Silence unused prop while keeping it off the DOM
+  void _hasContent;
   const handleQuickDemo = () => {
     const sample = getRecommendedSample();
     onLoadSample(sample.originalText, sample.revisedText, true); // Auto-run comparison

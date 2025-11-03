@@ -5,9 +5,7 @@ import { BaseComponentProps } from '../../types/components';
 import { CancellationTestPanel } from './CancellationTestPanel';
 import { MemoryTestPanel } from './MemoryTestPanel';
 
-interface ExperimentalFeaturesPanelProps extends BaseComponentProps {
-  // Optional props for future expansion
-}
+type ExperimentalFeaturesPanelProps = BaseComponentProps;
 
 export const ExperimentalFeaturesPanel: React.FC<ExperimentalFeaturesPanelProps> = ({
   style,

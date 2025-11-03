@@ -5,9 +5,7 @@ import { BaseComponentProps } from '../../types/components';
 import { setupPerformanceDebugUtils } from '../../utils/performanceDebugUtils';
 import { appConfig } from '../../config/appConfig';
 
-interface PerformanceMonitoringPanelProps extends BaseComponentProps {
-  // Optional props for future expansion
-}
+type PerformanceMonitoringPanelProps = BaseComponentProps;
 
 export const PerformanceMonitoringPanel: React.FC<PerformanceMonitoringPanelProps> = ({
   style,
@@ -177,4 +175,3 @@ export const PerformanceMonitoringPanel: React.FC<PerformanceMonitoringPanelProp
     </div>
   );
 };
-
