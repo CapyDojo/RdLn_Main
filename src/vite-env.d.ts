@@ -21,6 +21,6 @@ declare global {
       corePath?: string;
       workerPath?: string;
     };
-    __TAURI__?: any;
+    __TAURI__?: unknown;
   }
 }
