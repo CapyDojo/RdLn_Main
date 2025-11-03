@@ -26,11 +26,13 @@ interface ChunkingProgressIndicatorProps extends BaseComponentProps {
 export const ChunkingProgressIndicator: React.FC<ChunkingProgressIndicatorProps> = ({
   progress,
   stage,
-  isChunking,
+  isChunking: _isChunking,
   enabled = true, // SAFE: Default enabled, easy to disable
   className,
   style
 }) => {
+  // Silence unused prop without behavior change
+  void _isChunking;
   // TESTING: Show component when enabled and progress > 0, regardless of isChunking state
   // ROLLBACK: Easy disable
   if (!enabled || progress === 0) {

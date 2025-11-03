@@ -111,7 +111,7 @@ export function analyzeRenderingStrategy(
   let mode: RenderingMode;
   let reasoning: string;
   let estimatedRenderTime: number;
-  let recommendations: string[] = [];
+  const recommendations: string[] = [];
   
   // Emergency fallback for massive change sets (only when system protection is enabled)
   if (changeCount > RENDERING_THRESHOLDS.MASSIVE_CHANGES_THRESHOLD * 2 && systemProtectionEnabled !== false) {

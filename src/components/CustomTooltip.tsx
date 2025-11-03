@@ -80,7 +80,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
           transform: undefined
         };
 
-      case 'left':
+      case 'left': {
         // For precise alignment: tooltip's top-right corner touches element's bottom-left corner
         // Use actual tooltip width if available, otherwise estimate
         let tooltipWidth = 285; // Default fallback
@@ -104,6 +104,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
           left: rect.right - tooltipWidth, // Position tooltip so its right edge aligns with element's right edge
           transform: undefined
         };
+      }
 
       case 'right':
         return {

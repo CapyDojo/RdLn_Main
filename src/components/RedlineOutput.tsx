@@ -632,11 +632,12 @@ const generateHTMLString = (changes: DiffChange[], enableCleanup: boolean = true
           html += `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
         }
         break;
-      case 'changed':
+      case 'changed': {
         const originalContent = change.originalContent || '';
         const revisedContent = change.revisedContent || '';
         html += renderChangedContentWithWhitespaceLogic(originalContent, revisedContent, escapeHTML, enableCleanup);
         break;
+      }
       default:
         html += `<span>${escapeHTML(change.content)}</span>`;
         break;
@@ -750,10 +751,11 @@ const renderSingleChange = (change: DiffChange, enableCleanup: boolean = true) =
         return `<span></span>`; // Render nothing for removed whitespace
       }
       return `<span style="background: linear-gradient(135deg, #fef7f7 0%, #fde2e2 100%); color: #991b1b; border: 1px solid #dc2626; border-radius: 10px; text-decoration: line-through; text-decoration-color: #b91c1c; text-decoration-thickness: 2px; font-weight: 500; padding: 3.6px 5px; margin: 1.5px 1.5px; ">${escapeHTML(change.content)}</span>`;
-    case 'changed':
+    case 'changed': {
       const originalContent = change.originalContent || '';
       const revisedContent = change.revisedContent || '';
       return renderChangedContentWithWhitespaceLogic(originalContent, revisedContent, escapeHTML, enableCleanup);
+    }
     default:
       return `<span>${escapeHTML(change.content)}</span>`;
   }
@@ -811,4 +813,3 @@ const generateSemanticHTMLString = (changes: DiffChange[], enableCleanup: boolea
 
 // Main component export
 export const RedlineOutput = React.memo(RedlineOutputBase);
-
