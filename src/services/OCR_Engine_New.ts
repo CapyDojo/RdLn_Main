@@ -396,6 +396,7 @@ export class OCR_Engine_New {
       
       // Handle Cyrillic script line breaks
       // Remove single newlines between Cyrillic characters to reconstruct paragraphs
+      // eslint-disable-next-line no-misleading-character-class
       processed = processed.replace(new RegExp(`(${cyrillic})\\n(${cyrillic})`, 'g'), '$1 $2');
       
       // Handle Arabic script line breaks
