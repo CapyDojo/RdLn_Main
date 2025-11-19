@@ -1,6 +1,17 @@
 # DOCX List Parser MVP
 
+**Version 1.1.0** - Now with pre-processing for corporate documents!
+
 A minimal viable prototype for parsing DOCX files with faithful list numbering reproduction, replicating MS Word's "copy-paste as plain text" behavior.
+
+## 🆕 What's New in v1.1.0
+
+- ✅ **Automatic sanitization** of negative indentation values
+- ✅ **Blackstone-Micron NDA** document now parses successfully
+- ✅ **Corporate documents with tables** work correctly
+- ✅ **Enhanced warnings** explain document quirks clearly
+
+See [VERSION_1.1_SUMMARY.md](VERSION_1.1_SUMMARY.md) for complete details.
 
 ## Quick Start
 
@@ -114,6 +125,33 @@ See [MVP_PLAN.md](MVP_PLAN.md) for:
 - Complete timeline and milestones
 - Risk assessment
 - RdLn integration plan
+
+## Version 1.1.0 Documentation
+
+### Implementation Guides
+- **[VERSION_1.1_SUMMARY.md](VERSION_1.1_SUMMARY.md)** - Quick overview and testing guide
+- **[NEGATIVE_INDENT_FIX.md](NEGATIVE_INDENT_FIX.md)** - Technical implementation details
+- **[BLACKSTONE_MICRON_ANALYSIS.md](BLACKSTONE_MICRON_ANALYSIS.md)** - Root cause investigation
+- **[CHANGELOG.md](CHANGELOG.md)** - Complete version history
+
+### Testing Tools
+- **diagnose-docx.js** - Quick DOCX structure diagnostic
+- **diagnose-detailed.js** - Deep numbering and indent analysis
+- **test-blackstone.js** - Automated test for Blackstone-Micron document
+
+### Testing the Fix
+
+```bash
+# Interactive demo
+npm run dev
+# Upload: input files/Blackstone - Micron (NDA) - FN.docx
+
+# Command-line diagnostic
+node diagnose-detailed.js "input files/Blackstone - Micron (NDA) - FN.docx"
+
+# Automated test
+node test-blackstone.js
+```
 
 ## License
 

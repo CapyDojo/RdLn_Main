@@ -111,10 +111,11 @@ export class NumberingFallback {
    * Post-process text to replace bullets with calculated numbers
    *
    * This is a simpler approach that fixes the output after conversion.
+   * IMPROVED: Now detects multiple bullet types and preserves bullets when appropriate.
    *
    * @param text - Converted text with bullets
    * @param hasNumberingErrors - Whether numbering errors occurred
-   * @returns Text with bullets replaced by numbers
+   * @returns Text with bullets replaced by numbers where appropriate
    */
   static postProcessText(text: string, hasNumberingErrors: boolean): string {
     if (!hasNumberingErrors) {
@@ -127,29 +128,50 @@ export class NumberingFallback {
     const lines = text.split('\n');
     const processedLines: string[] = [];
 
+    // Multiple bullet patterns to detect
+    const bulletPatterns = [
+      { regex: /^(\s*)•\s+(.*)$/, char: '•' },      // Standard bullet
+      { regex: /^(\s*)◦\s+(.*)$/, char: '◦' },      // Circle bullet
+      { regex: /^(\s*)▪\s+(.*)$/, char: '▪' },      // Square bullet
+      { regex: /^(\s*)○\s+(.*)$/, char: '○' },      // Hollow circle
+      { regex: /^(\s*)▫\s+(.*)$/, char: '▫' },      // Hollow square
+      { regex: /^(\s*)-\s+(.*)$/, char: '-' },       // Hyphen bullet
+      { regex: /^(\s*)·\s+(.*)$/, char: '·' },       // Middle dot
+      { regex: /^(\s*)➢\s+(.*)$/, char: '➢' },      // Arrow bullet
+    ];
+
     for (const line of lines) {
-      // Check if line starts with bullet (possibly with indentation)
-      const bulletMatch = line.match(/^(\s*)•\s+(.*)$/);
+      let matched = false;
 
-      if (bulletMatch) {
-        const indent = bulletMatch[1];
-        const content = bulletMatch[2];
+      // Try each bullet pattern
+      for (const pattern of bulletPatterns) {
+        const match = line.match(pattern.regex);
+        if (match) {
+          const indent = match[1];
+          const content = match[2];
 
-        // Calculate indentation level (4 spaces = 1 level)
-        const level = Math.floor(indent.length / 4);
+          // Calculate indentation level (4 spaces = 1 level)
+          const level = Math.floor(indent.length / 4);
 
-        // Get default numbering for this level
-        // Use numId: 0 for all (they all failed with same ID)
-        const number = this.getDefaultNumbering(0, level);
+          // STRATEGY: Only convert standard bullet (•) to numbers
+          // Preserve other bullet types as they may be intentional
+          if (pattern.char === '•') {
+            // This is likely a failed numbered list - convert to number
+            const number = this.getDefaultNumbering(0, level);
+            processedLines.push(`${indent}${number} ${content}`);
+          } else {
+            // Preserve other bullet types (user likely intended bullets)
+            processedLines.push(line);
+          }
 
-        // Reconstruct line with number
-        processedLines.push(`${indent}${number} ${content}`);
-      } else {
+          matched = true;
+          break;
+        }
+      }
+
+      if (!matched) {
         // Not a list item, keep as-is
         processedLines.push(line);
-
-        // If this is a non-list paragraph, it might break list continuation
-        // For now, we'll keep simple and not reset counters
       }
     }
 
@@ -158,6 +180,7 @@ export class NumberingFallback {
 
   /**
    * Analyze text to detect list patterns
+   * IMPROVED: Now detects all bullet types
    *
    * @param text - Text to analyze
    * @returns Statistics about list items found
@@ -171,8 +194,11 @@ export class NumberingFallback {
     let bulletCount = 0;
     const levels = new Set<number>();
 
+    // Detect all bullet types
+    const bulletPattern = /^(\s*)([•◦▪○▫\-·➢])\s+/;
+
     for (const line of lines) {
-      const bulletMatch = line.match(/^(\s*)•\s+/);
+      const bulletMatch = line.match(bulletPattern);
       if (bulletMatch) {
         bulletCount++;
         const level = Math.floor(bulletMatch[1].length / 4);
