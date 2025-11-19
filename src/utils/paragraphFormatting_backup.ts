@@ -143,7 +143,7 @@ export function formatPastedText(text: string): string {
     return false;
   };
 
-  let reconstructedLines: string[] = [];
+  const reconstructedLines: string[] = [];
   let currentParagraph = lines[0];
 
   for (let i = 1; i < lines.length; i++) {

@@ -13,7 +13,7 @@ export const reconstructParagraphs_A = (text: string): string => {
   // First, handle definitions globally, as they can be buried mid-paragraph after a paste.
   // This regex looks for a capitalized term followed by 'means' or 'has the meaning'.
   const definitionRegex = /([A-Z][A-Za-z\s]*\s(?:means|has the meaning))/g;
-  let processedText = text.replace(definitionRegex, '\n\n$1');
+  const processedText = text.replace(definitionRegex, '\n\n$1');
 
   // Now, process line-by-line for structural markers and keywords.
   const markerRegex = /^(?:\d+(?:\.\d+)*\.?|\([a-zA-Z0-9]+\)|[\*\-•])\s+/;
