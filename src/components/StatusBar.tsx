@@ -8,21 +8,21 @@ import { OCRWorkerPool } from '../services/OCRWorkerPool';
 
 // Beta countdown component
 const BetaBadge: React.FC = () => {
-  const BETA_EXPIRY_DATE = new Date('2025-11-16T23:59:59.999Z');
+  const BETA_EXPIRY_DATE = new Date('2026-01-17T23:59:59.999Z');
   const currentDate = new Date();
   const daysRemaining = Math.ceil((BETA_EXPIRY_DATE.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
-  
+
   // Only show if beta hasn't expired
   if (currentDate > BETA_EXPIRY_DATE) {
     return null;
   }
-  
+
   return (
     <div className="beta-badge px-3 py-1 rounded-md text-xs font-medium border text-center whitespace-nowrap"
-         style={{
-           backdropFilter: 'blur(10px)',
-           lineHeight: '1.2'
-         }}>
+      style={{
+        backdropFilter: 'blur(10px)',
+        lineHeight: '1.2'
+      }}>
       <span>Limited Beta v.0.6.0 ({daysRemaining} days remaining)</span>
     </div>
   );
@@ -39,13 +39,13 @@ interface StatusBarProps extends BaseComponentProps {
   position?: 'fixed' | 'static';
 }
 
-export const StatusBar: React.FC<StatusBarProps> = ({ 
-  onLoadSample, 
+export const StatusBar: React.FC<StatusBarProps> = ({
+  onLoadSample,
   isProcessing = false,
   onStartTour,
   position = 'fixed',
-  style, 
-  className 
+  style,
+  className
 }) => {
   const [poolDisplay, setPoolDisplay] = useState<{ total: number; busy: number } | null>(null);
 
@@ -86,29 +86,29 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   // Compute container styles based on positioning mode
   const containerStyle: React.CSSProperties = position === 'fixed'
     ? {
-        position: 'fixed',
-        top: '8.3rem', // Position further below the header 
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 9998, // Just below header's 9999
-        maxWidth: '360px', // Match ComparisonInterface container
-        minWidth: '320px',
-        width: '95vw',
-        paddingLeft: '0.75rem',
-        paddingRight: '0.75rem'
-      }
+      position: 'fixed',
+      top: '8.3rem', // Position further below the header 
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 9998, // Just below header's 9999
+      maxWidth: '360px', // Match ComparisonInterface container
+      minWidth: '320px',
+      width: '95vw',
+      paddingLeft: '0.75rem',
+      paddingRight: '0.75rem'
+    }
     : {
-        // Static mode: scrolls with content in normal flow and fits content width
-        position: 'static',
-        transform: 'none',
-        display: 'flex',
-        justifyContent: 'center',
-        width: 'auto'
-      };
+      // Static mode: scrolls with content in normal flow and fits content width
+      position: 'static',
+      transform: 'none',
+      display: 'flex',
+      justifyContent: 'center',
+      width: 'auto'
+    };
 
   return (
-    <div 
-      className={`status-bar overflow-visible ${position === 'static' ? 'mx-auto' : ''} ${className || ''}`} 
+    <div
+      className={`status-bar overflow-visible ${position === 'static' ? 'mx-auto' : ''} ${className || ''}`}
       style={{
         ...containerStyle,
         ...style
@@ -119,7 +119,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           <BetaBadge />
           {(appConfig.env.IS_DEVELOPMENT && appConfig.features.ENABLE_MULTIWORKER_OCR) && (
             <div className="px-3 py-1 rounded-md text-xs font-medium border text-center whitespace-nowrap"
-                 style={{ backdropFilter: 'blur(10px)', lineHeight: '1.2', borderColor: 'rgba(16,185,129,0.7)' }}>
+              style={{ backdropFilter: 'blur(10px)', lineHeight: '1.2', borderColor: 'rgba(16,185,129,0.7)' }}>
               <span>
                 OCR Parallel: {poolDisplay ? `${poolDisplay.busy}/${poolDisplay.total}` : '-'}
               </span>

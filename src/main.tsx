@@ -26,12 +26,12 @@ import { DEV_CONFIG } from './config/appConfig';
 document.title = 'RdLn™ Beta - Professional Text Comparison Redlining with OCR';
 
 // BETA EXPIRY CHECK: Hard block expiry for beta version
-const BETA_EXPIRY_DATE = new Date('2025-11-16T23:59:59.999Z');
+const BETA_EXPIRY_DATE = new Date('2026-01-17T23:59:59.999Z');
 const currentDate = new Date();
 
 // Check for developer bypass
-const isDeveloperMode = (typeof process !== 'undefined' && process.env?.RDLN_DEV_MODE === 'true') || 
-                       (typeof window !== 'undefined' && window.location?.search?.includes('dev=true'));
+const isDeveloperMode = (typeof process !== 'undefined' && process.env?.RDLN_DEV_MODE === 'true') ||
+  (typeof window !== 'undefined' && window.location?.search?.includes('dev=true'));
 
 if (currentDate > BETA_EXPIRY_DATE && !isDeveloperMode) {
   // Create expiry message element
@@ -66,7 +66,7 @@ if (currentDate > BETA_EXPIRY_DATE && !isDeveloperMode) {
       ">
         <h1 style="margin: 0 0 20px 0; font-size: 2.5em; font-weight: 300;">RdLn™ Beta Expired</h1>
         <p style="margin: 0 0 20px 0; font-size: 1.2em; line-height: 1.6; opacity: 0.9;">
-          This beta version of RdLn™ expired on November 16, 2025.
+          This beta version of RdLn™ expired on January 17, 2026.
         </p>
         <p style="margin: 0 0 30px 0; font-size: 1em; line-height: 1.6; opacity: 0.7;">
           Thank you for testing RdLn™! Please contact the development team for the latest version.
@@ -86,11 +86,11 @@ if (currentDate > BETA_EXPIRY_DATE && !isDeveloperMode) {
       </div>
     </div>
   `;
-  
+
   // Replace entire page content
   document.body.innerHTML = '';
   document.body.appendChild(expiryMessage);
-  
+
   // Prevent any further script execution
   throw new Error('Beta version expired');
 }
@@ -111,7 +111,7 @@ if (process.env.NODE_ENV === 'development' && !ENABLE_DEV_LOGS) {
       s.includes('orchestration:')
     );
   };
-  
+
   console.log = (...args) => {
     // Only show critical app logs
     if (args[0]?.includes?.('🚀') || args[0]?.includes?.('❌')) {
@@ -119,13 +119,13 @@ if (process.env.NODE_ENV === 'development' && !ENABLE_DEV_LOGS) {
     }
     if (isSuppressed(args[0])) return;
   };
-  
+
   console.warn = (...args) => {
     // Suppress Tesseract warnings and other noise
-    if (args[0]?.includes?.('Parameter not found:') || 
-        args[0]?.includes?.('Download the React DevTools') ||
-        args[0]?.includes?.('🎯 CSS OUTPUT RESIZE') ||
-        args[0]?.includes?.('orchestration:')) {
+    if (args[0]?.includes?.('Parameter not found:') ||
+      args[0]?.includes?.('Download the React DevTools') ||
+      args[0]?.includes?.('🎯 CSS OUTPUT RESIZE') ||
+      args[0]?.includes?.('orchestration:')) {
       return;
     }
     originalWarn.apply(console, args);
@@ -162,7 +162,7 @@ const AppWithProvider = (
 const shouldUseStrictMode = process.env.NODE_ENV === 'development' && !isElectron();
 
 createRoot(document.getElementById('root')!).render(
-  shouldUseStrictMode 
+  shouldUseStrictMode
     ? <StrictMode>{AppWithProvider}</StrictMode>
     : AppWithProvider
 );
