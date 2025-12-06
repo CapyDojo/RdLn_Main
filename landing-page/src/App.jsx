@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import LightningCursor from './components/LightningCursor';
+import KintsugiCursor from './components/KintsugiCursor';
 
 function App() {
   const [scrolled, setScrolled] = useState(false);
@@ -52,7 +52,7 @@ function App() {
 
   return (
     <div className="container-fluid">
-      <LightningCursor />
+      <KintsugiCursor />
       <div className="spotlight-overlay"></div>
 
       {/* Background Blobs */}
