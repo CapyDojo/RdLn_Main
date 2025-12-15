@@ -91,7 +91,11 @@ const KintsugiCursor = () => {
             pointsRef.current.push(point);
 
             // --- 2. Branching Logic (Fractals) ---
-            if (dist > 5 && Math.random() < CONFIG.branchChance) {
+            // Dynamic Chance: Higher velocity = More cracks (Stress)
+            // Base chance 0.02 (2%) increases up to 0.15 (15%) at high speed
+            const dynamicBranchChance = Math.min(0.15, 0.02 + velocity * 0.02);
+
+            if (dist > 5 && Math.random() < dynamicBranchChance) {
                 const angle = Math.atan2(dy, dx);
 
                 // Varied angles: Exclude perpendicular (90 deg) angles
@@ -108,9 +112,9 @@ const KintsugiCursor = () => {
 
                 // Length proportional to velocity (ferocity)
                 // Velocity is approx pixels/ms. 5 is fast, 0.5 is slow.
-                // Dynamic range: 50px (tiny) to 800px (massive)
+                // Dynamic range: 75px to 1000px
                 const speedFactor = Math.min(velocity, 10); // Higher cap
-                const length = 50 + (speedFactor * 75) + (Math.random() * 50);
+                const length = 75 + (speedFactor * 90) + (Math.random() * 80);
 
                 const endX = e.clientX + Math.cos(branchAngle) * length;
                 const endY = e.clientY + Math.sin(branchAngle) * length;
@@ -171,27 +175,31 @@ const KintsugiCursor = () => {
 
                 // Draw segments individually for tapering
                 if (branch.path.length > 0) {
+                    // "Healing" Effect: Branch retracts/shrinks back to origin as it dies
+                    // Visible portion matches life % (1.0 = full length, 0.0 = gone)
+                    const lifeRatio = branch.life / branch.maxLife;
+
+                    // We want it to retract faster at the end. 
+                    // Let's use a power curve so it stays visible for a bit then zips back.
+                    const visibleRatio = Math.pow(lifeRatio, 0.5);
+                    const visibleIndexLimit = Math.floor(branch.path.length * visibleRatio);
+
                     // We need to draw segments to support tapering width along the branch
-                    for (let j = 0; j < branch.path.length - 1; j++) {
+                    for (let j = 0; j < visibleIndexLimit && j < branch.path.length - 1; j++) {
                         const pStart = branch.path[j];
                         const pEnd = branch.path[j + 1];
 
                         // Taper: Width decreases from base to tip
-                        const progress = j / (branch.path.length - 1);
-                        const segmentWidth = Math.max(0.5, branch.width * (1 - progress));
+                        const taperFactor = 1 - (j / (branch.path.length - 1));
+
+                        // No Diffusion for branches: Keep them sharp as they retract
+                        const segmentWidth = Math.max(0.5, branch.width * taperFactor);
 
                         ctx.beginPath();
                         ctx.moveTo(pStart.x, pStart.y);
                         ctx.lineTo(pEnd.x, pEnd.y);
 
-                        // 1. Glow/Shadow (Only draw every few segments to save perf?)
-                        // actually, drawing 3 passes per segment is heavy. 
-                        // Let's optimize: Draw WHOLE branch 3 times, but with varying width? 
-                        // Canvas strokes are constant width. We MUST simulate taper.
-
                         // Metallic 3-Pass for Each Segment
-
-                        // 1. Glow
                         ctx.globalAlpha = opacity * 0.5;
                         ctx.strokeStyle = CONFIG.goldGlow;
                         ctx.lineWidth = segmentWidth + 4;
@@ -204,6 +212,7 @@ const KintsugiCursor = () => {
                         ctx.stroke();
 
                         // 3. Core
+                        // Core stays sharp(er) to keep definition inside the diffusion
                         ctx.strokeStyle = CONFIG.goldCore;
                         ctx.lineWidth = Math.max(0.5, segmentWidth * 0.3);
                         ctx.stroke();
