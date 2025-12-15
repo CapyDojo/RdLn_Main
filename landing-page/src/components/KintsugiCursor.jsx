@@ -17,8 +17,8 @@ const KintsugiCursor = () => {
             goldBase: 'rgba(218, 165, 32, 1)',   // Solid Goldenrod
             goldCore: 'rgba(255, 255, 240, 0.9)', // Ivory/White core for shine
             goldGlow: 'rgba(255, 140, 0, 0.3)',   // Dark Orange glow
-            widthBase: 4,
-            widthVar: 3, // How much velocity affects width
+            widthBase: 8,       // Slightly reduced from 12
+            widthVar: 4.5, // How much velocity affects width
             lifeSpan: 50,
             branchChance: 0.08, // Slightly lower chance for cleaner look
             particleChance: 0.3, // Chance per frame to spawn dust
@@ -93,21 +93,38 @@ const KintsugiCursor = () => {
             // --- 2. Branching Logic (Fractals) ---
             if (dist > 5 && Math.random() < CONFIG.branchChance) {
                 const angle = Math.atan2(dy, dx);
-                // Branch roughly perpendicular
-                const branchAngle = angle + (Math.random() < 0.5 ? 1.5 : -1.5) + (Math.random() - 0.5) * 0.5;
-                const length = 50 + Math.random() * 100;
+
+                // Varied angles: Exclude perpendicular (90 deg) angles
+                // We want either "forward-ish" or "backward-ish" but not "sideways T-bone"
+                let offset;
+                if (Math.random() < 0.65) {
+                    // Forward cone: +/- 50 degrees (approx 0.9 rads)
+                    offset = (Math.random() - 0.5) * 1.8;
+                } else {
+                    // Backward cone: +/- 50 degrees from rear
+                    offset = Math.PI + (Math.random() - 0.5) * 1.8;
+                }
+                const branchAngle = angle + offset;
+
+                // Length proportional to velocity (ferocity)
+                // Velocity is approx pixels/ms. 5 is fast, 0.5 is slow.
+                // Dynamic range: 50px (tiny) to 800px (massive)
+                const speedFactor = Math.min(velocity, 10); // Higher cap
+                const length = 50 + (speedFactor * 75) + (Math.random() * 50);
 
                 const endX = e.clientX + Math.cos(branchAngle) * length;
                 const endY = e.clientY + Math.sin(branchAngle) * length;
 
-                // Generate fractal path immediately
-                const path = generateFractalPath(e.clientX, e.clientY, endX, endY, 20);
+                // Generate fractal path immediately - increase displacement based on length
+                // Longer lines = wilder jaggedness (displacement)
+                const displacement = length / 8;
+                const path = generateFractalPath(e.clientX, e.clientY, endX, endY, displacement);
 
                 branchesRef.current.push({
                     path: path,
                     life: 40,
                     maxLife: 40,
-                    width: Math.random() * 2 + 1
+                    width: Math.random() * 5 + 3 // Thick branches (3px to 8px)
                 });
             }
 
@@ -150,34 +167,48 @@ const KintsugiCursor = () => {
                     continue;
                 }
 
-                // Draw entire pre-calculated fractal path
-                ctx.beginPath();
                 const opacity = branch.life / branch.maxLife;
 
+                // Draw segments individually for tapering
                 if (branch.path.length > 0) {
-                    ctx.moveTo(branch.path[0].x, branch.path[0].y);
-                    for (let j = 1; j < branch.path.length; j++) {
-                        ctx.lineTo(branch.path[j].x, branch.path[j].y);
+                    // We need to draw segments to support tapering width along the branch
+                    for (let j = 0; j < branch.path.length - 1; j++) {
+                        const pStart = branch.path[j];
+                        const pEnd = branch.path[j + 1];
+
+                        // Taper: Width decreases from base to tip
+                        const progress = j / (branch.path.length - 1);
+                        const segmentWidth = Math.max(0.5, branch.width * (1 - progress));
+
+                        ctx.beginPath();
+                        ctx.moveTo(pStart.x, pStart.y);
+                        ctx.lineTo(pEnd.x, pEnd.y);
+
+                        // 1. Glow/Shadow (Only draw every few segments to save perf?)
+                        // actually, drawing 3 passes per segment is heavy. 
+                        // Let's optimize: Draw WHOLE branch 3 times, but with varying width? 
+                        // Canvas strokes are constant width. We MUST simulate taper.
+
+                        // Metallic 3-Pass for Each Segment
+
+                        // 1. Glow
+                        ctx.globalAlpha = opacity * 0.5;
+                        ctx.strokeStyle = CONFIG.goldGlow;
+                        ctx.lineWidth = segmentWidth + 4;
+                        ctx.stroke();
+
+                        // 2. Base
+                        ctx.globalAlpha = opacity;
+                        ctx.strokeStyle = CONFIG.goldBase;
+                        ctx.lineWidth = segmentWidth;
+                        ctx.stroke();
+
+                        // 3. Core
+                        ctx.strokeStyle = CONFIG.goldCore;
+                        ctx.lineWidth = Math.max(0.5, segmentWidth * 0.3);
+                        ctx.stroke();
                     }
                 }
-
-                // Metallic 3-Pass for Branches
-                // 1. Glow/Shadow
-                ctx.globalAlpha = opacity * 0.5;
-                ctx.strokeStyle = CONFIG.goldGlow;
-                ctx.lineWidth = branch.width + 4;
-                ctx.stroke();
-
-                // 2. Base
-                ctx.globalAlpha = opacity;
-                ctx.strokeStyle = CONFIG.goldBase;
-                ctx.lineWidth = branch.width;
-                ctx.stroke();
-
-                // 3. Core
-                ctx.strokeStyle = CONFIG.goldCore;
-                ctx.lineWidth = branch.width * 0.3;
-                ctx.stroke();
             }
             ctx.globalAlpha = 1; // Reset
 
@@ -185,40 +216,39 @@ const KintsugiCursor = () => {
             pointsRef.current = pointsRef.current.filter(p => p.age < p.life);
 
             if (pointsRef.current.length > 1) {
-                // We draw the trail in 3 separate passes to ensure proper layering
-                // (Drawing segments individually in one loop causes overlap artifacts)
-
                 // Pass 1: Glow (Underneath)
+                // We keep the glow simple (one path) for performance and "bloom" consistency
+                // Tapering the glow is less critical, but let's try to match the body
                 ctx.shadowBlur = 20;
                 ctx.shadowColor = CONFIG.goldGlow;
                 ctx.strokeStyle = CONFIG.goldGlow;
                 ctx.beginPath();
+                // Draw as one continuous line for the glow to prevent segment artifacts
                 for (let i = 0; i < pointsRef.current.length - 1; i++) {
                     const p1 = pointsRef.current[i];
                     const p2 = pointsRef.current[i + 1];
-                    // Quadratic smooth
                     const midX = (p1.x + p2.x) / 2;
                     const midY = (p1.y + p2.y) / 2;
                     if (i === 0) ctx.moveTo(p1.x, p1.y);
                     ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
-
-                    // Note: Variable width is hard with single pathstroke.
-                    // For the main "liquid" body, we might need segmented drawing for width,
-                    // but for the glow, a single path is faster and looks "bloomy".
                 }
                 ctx.lineCap = 'round';
-                ctx.lineWidth = CONFIG.widthBase + 6; // Wide glow
+                ctx.lineWidth = CONFIG.widthBase + 6;
                 ctx.globalAlpha = 0.4;
                 ctx.stroke();
 
                 // Pass 2 & 3: Liquid Body (Variable Width Segments)
-                // We iterate again to draw variable width segments
-                ctx.shadowBlur = 0; // Off for crisp body
+                ctx.shadowBlur = 0;
 
                 for (let i = 0; i < pointsRef.current.length - 1; i++) {
                     const p1 = pointsRef.current[i];
                     const p2 = pointsRef.current[i + 1];
-                    const opacity = 1 - (p1.age / p1.life);
+
+                    // Inverse Taper: Points start sharp and diffuse/widen as they age
+                    // Start at 40% width, grow to 120% width before dying
+                    const ageProgress = p1.age / p1.life;
+                    const widthMultiplier = 0.4 + (ageProgress * 1.5);
+                    const currentWidth = p1.width * widthMultiplier;
 
                     const midX = (p1.x + p2.x) / 2;
                     const midY = (p1.y + p2.y) / 2;
@@ -229,15 +259,20 @@ const KintsugiCursor = () => {
                     ctx.lineTo(p2.x, p2.y);
 
                     // Base Gold
+                    // Opacity still fades out
+                    const opacity = 1 - ageProgress;
                     ctx.globalAlpha = opacity;
+
                     ctx.strokeStyle = CONFIG.goldBase;
-                    ctx.lineWidth = p1.width;
+                    ctx.lineWidth = Math.max(0.5, currentWidth);
                     ctx.stroke();
 
                     // Core Highlight (The "Shine")
+                    // Core fades faster to look like it's cooling down
                     ctx.globalAlpha = opacity * 0.8;
                     ctx.strokeStyle = CONFIG.goldCore;
-                    ctx.lineWidth = p1.width * 0.4; // Thin center
+                    // Core starts sharp but doesn't widen as much as the base (stays concentrated)
+                    ctx.lineWidth = Math.max(0.5, currentWidth * 0.3);
                     ctx.stroke();
                 }
             }
