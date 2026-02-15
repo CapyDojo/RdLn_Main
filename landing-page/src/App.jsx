@@ -1,10 +1,19 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useControls, folder } from 'leva';
+import ParticleCursor from './components/ParticleCursor';
 import KintsugiCursor from './components/KintsugiCursor';
 
 function App() {
   const [scrolled, setScrolled] = useState(false);
   const [isYearly, setIsYearly] = useState(false);
   const observerRef = useRef(null);
+
+  const { showParticleCursor, showKintsugiCursor } = useControls({
+    'Cursor System': folder({
+      showParticleCursor: { value: true, label: 'Particle Effect' },
+      showKintsugiCursor: { value: false, label: 'Kintsugi Effect' }
+    }, { collapsed: false, order: -100 }) // Force to top
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,7 +61,8 @@ function App() {
 
   return (
     <div className="container-fluid">
-      <KintsugiCursor />
+      {showParticleCursor && <ParticleCursor />}
+      {showKintsugiCursor && <KintsugiCursor />}
       <div className="spotlight-overlay"></div>
 
       {/* Background Blobs */}

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useControls, folder } from 'leva';
 
 const KintsugiCursor = () => {
     const canvasRef = useRef(null);
@@ -7,22 +8,37 @@ const KintsugiCursor = () => {
     const particlesRef = useRef([]);
     const lastPosRef = useRef({ x: 0, y: 0, time: 0 });
 
+    // --- Leva Configuration ---
+    const config = useControls('Kintsugi Options', {
+        'Energy Flash': folder({
+            flashDuration: { value: 4, min: 1, max: 20, step: 1, label: 'Duration (Frames)' },
+            flashBloom: { value: 8, min: 0, max: 30, step: 0.5, label: 'Bloom Radius' },
+            flashOpacity: { value: 0.8, min: 0, max: 1, step: 0.05, label: 'Flash Opacity' },
+            velocityTriggerInfo: { value: 'Higher sensitivity = flashes at lower speeds', editable: false },
+        }),
+        'Kintsugi Physics': folder({
+            widthBase: { value: 8, min: 1, max: 20, step: 0.5, label: 'Stroke Width' },
+            velocitySensitivity: { value: 0.012, min: 0.001, max: 0.05, step: 0.001, label: 'Crack Sensitivity' },
+            branchLife: { value: 40, min: 10, max: 100, step: 1, label: 'Crack Lifespan' },
+            violentThreshold: { value: 5, min: 0, max: 20, step: 0.5, label: 'Violent Speed Threshold' },
+        }),
+        'Palette': folder({
+            goldBase: { value: 'rgba(218, 165, 32, 1)', label: 'Gold Base' },
+            goldCore: { value: 'rgba(255, 255, 240, 0.9)', label: 'Ivory Core' },
+            goldGlow: { value: 'rgba(255, 140, 0, 0.3)', label: 'Orange Glow' },
+        })
+    });
+
+    // Make config accessible to the effect via ref to avoid re-binding event listeners on every change
+    const configRef = useRef(config);
+    useEffect(() => {
+        configRef.current = config;
+    }, [config]);
+
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         let animationFrameId;
-
-        // --- Configuration ---
-        const CONFIG = {
-            goldBase: 'rgba(218, 165, 32, 1)',   // Solid Goldenrod
-            goldCore: 'rgba(255, 255, 240, 0.9)', // Ivory/White core for shine
-            goldGlow: 'rgba(255, 140, 0, 0.3)',   // Dark Orange glow
-            widthBase: 8,       // Slightly reduced from 12
-            widthVar: 4.5, // How much velocity affects width
-            lifeSpan: 50,
-            branchChance: 0.08, // Slightly lower chance for cleaner look
-            particleChance: 0.3, // Chance per frame to spawn dust
-        };
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth;
@@ -70,10 +86,12 @@ const KintsugiCursor = () => {
             const dist = Math.hypot(dx, dy);
             const velocity = dist / dt;
 
+            const cfg = configRef.current; // Real-time config access
+
             // --- 1. Main Trail Logic ---
             // Viscosity: Weighted average for width to simulate liquid
             // Slow = Thick, Fast = Thin
-            const targetWidth = Math.max(1, CONFIG.widthBase - Math.min(velocity * 0.8, CONFIG.widthVar));
+            const targetWidth = Math.max(1, cfg.widthBase - Math.min(velocity * 0.8, 4.5));
 
             // Look at previous point to smooth transitions
             const lastPoint = pointsRef.current[pointsRef.current.length - 1];
@@ -83,7 +101,7 @@ const KintsugiCursor = () => {
                 x: e.clientX,
                 y: e.clientY,
                 age: 0,
-                life: CONFIG.lifeSpan,
+                life: 50,
                 width: width,
                 vx: dx * 0.1, // Momentum for particles
                 vy: dy * 0.1
@@ -92,8 +110,8 @@ const KintsugiCursor = () => {
 
             // --- 2. Branching Logic (Fractals) ---
             // Dynamic Chance: Higher velocity = More cracks (Stress)
-            // Base chance 0.02 (2%) increases up to 0.15 (15%) at high speed
-            const dynamicBranchChance = Math.min(0.15, 0.02 + velocity * 0.02);
+            // Modified mainly by velocitySensitivity from controls
+            const dynamicBranchChance = Math.min(0.35, 0.002 + (velocity * velocity * cfg.velocitySensitivity));
 
             if (dist > 5 && Math.random() < dynamicBranchChance) {
                 const angle = Math.atan2(dy, dx);
@@ -111,29 +129,26 @@ const KintsugiCursor = () => {
                 const branchAngle = angle + offset;
 
                 // Length proportional to velocity (ferocity)
-                // Velocity is approx pixels/ms. 5 is fast, 0.5 is slow.
-                // Dynamic range: 75px to 1000px
-                const speedFactor = Math.min(velocity, 10); // Higher cap
+                const speedFactor = Math.min(velocity, 10);
                 const length = 75 + (speedFactor * 90) + (Math.random() * 80);
 
                 const endX = e.clientX + Math.cos(branchAngle) * length;
                 const endY = e.clientY + Math.sin(branchAngle) * length;
 
-                // Generate fractal path immediately - increase displacement based on length
-                // Longer lines = wilder jaggedness (displacement)
                 const displacement = length / 8;
                 const path = generateFractalPath(e.clientX, e.clientY, endX, endY, displacement);
 
                 branchesRef.current.push({
                     path: path,
-                    life: 40,
-                    maxLife: 40,
-                    width: Math.random() * 5 + 3 // Thick branches (3px to 8px)
+                    life: cfg.branchLife,
+                    maxLife: cfg.branchLife,
+                    width: Math.random() * 5 + 3,
+                    isViolent: velocity > cfg.violentThreshold
                 });
             }
 
             // --- 3. Particle Spawning ---
-            if (Math.random() < CONFIG.particleChance) {
+            if (Math.random() < 0.3) {
                 particlesRef.current.push({
                     x: e.clientX + (Math.random() - 0.5) * 10,
                     y: e.clientY + (Math.random() - 0.5) * 10,
@@ -152,6 +167,7 @@ const KintsugiCursor = () => {
         window.addEventListener('mousemove', handleMouseMove);
 
         const render = () => {
+            const cfg = configRef.current; // Real-time config access
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Common styles for "Liquid Gold"
@@ -161,7 +177,7 @@ const KintsugiCursor = () => {
             // --- Render Branches ---
             // Pass 1: Glow
             ctx.shadowBlur = 15;
-            ctx.shadowColor = CONFIG.goldGlow;
+            ctx.shadowColor = cfg.goldGlow;
 
             for (let i = branchesRef.current.length - 1; i >= 0; i--) {
                 const branch = branchesRef.current[i];
@@ -175,45 +191,38 @@ const KintsugiCursor = () => {
 
                 // Draw segments individually for tapering
                 if (branch.path.length > 0) {
-                    // "Healing" Effect: Branch retracts/shrinks back to origin as it dies
-                    // Visible portion matches life % (1.0 = full length, 0.0 = gone)
+                    // "Healing" Effect
                     const lifeRatio = branch.life / branch.maxLife;
-
-                    // We want it to retract faster at the end. 
-                    // Let's use a power curve so it stays visible for a bit then zips back.
                     const visibleRatio = Math.pow(lifeRatio, 0.5);
                     const visibleIndexLimit = Math.floor(branch.path.length * visibleRatio);
 
-                    // We need to draw segments to support tapering width along the branch
                     for (let j = 0; j < visibleIndexLimit && j < branch.path.length - 1; j++) {
                         const pStart = branch.path[j];
                         const pEnd = branch.path[j + 1];
-
-                        // Taper: Width decreases from base to tip
                         const taperFactor = 1 - (j / (branch.path.length - 1));
-
-                        // No Diffusion for branches: Keep them sharp as they retract
                         const segmentWidth = Math.max(0.5, branch.width * taperFactor);
 
                         ctx.beginPath();
                         ctx.moveTo(pStart.x, pStart.y);
                         ctx.lineTo(pEnd.x, pEnd.y);
 
-                        // Metallic 3-Pass for Each Segment
-                        ctx.globalAlpha = opacity * 0.5;
-                        ctx.strokeStyle = CONFIG.goldGlow;
-                        ctx.lineWidth = segmentWidth + 4;
+                        // Flash Effect: Uses Leva config
+                        const isFresh = branch.maxLife - branch.life < cfg.flashDuration;
+
+                        // 1. Glow
+                        ctx.globalAlpha = isFresh ? cfg.flashOpacity : opacity * 0.5;
+                        ctx.strokeStyle = isFresh ? '#FFFFFF' : cfg.goldGlow;
+                        ctx.lineWidth = segmentWidth + (isFresh ? cfg.flashBloom : 4);
                         ctx.stroke();
 
                         // 2. Base
-                        ctx.globalAlpha = opacity;
-                        ctx.strokeStyle = CONFIG.goldBase;
+                        ctx.globalAlpha = isFresh ? 1.0 : opacity;
+                        ctx.strokeStyle = isFresh ? '#FFFFFF' : cfg.goldBase;
                         ctx.lineWidth = segmentWidth;
                         ctx.stroke();
 
                         // 3. Core
-                        // Core stays sharp(er) to keep definition inside the diffusion
-                        ctx.strokeStyle = CONFIG.goldCore;
+                        ctx.strokeStyle = cfg.goldCore;
                         ctx.lineWidth = Math.max(0.5, segmentWidth * 0.3);
                         ctx.stroke();
                     }
@@ -226,13 +235,10 @@ const KintsugiCursor = () => {
 
             if (pointsRef.current.length > 1) {
                 // Pass 1: Glow (Underneath)
-                // We keep the glow simple (one path) for performance and "bloom" consistency
-                // Tapering the glow is less critical, but let's try to match the body
                 ctx.shadowBlur = 20;
-                ctx.shadowColor = CONFIG.goldGlow;
-                ctx.strokeStyle = CONFIG.goldGlow;
+                ctx.shadowColor = cfg.goldGlow;
+                ctx.strokeStyle = cfg.goldGlow;
                 ctx.beginPath();
-                // Draw as one continuous line for the glow to prevent segment artifacts
                 for (let i = 0; i < pointsRef.current.length - 1; i++) {
                     const p1 = pointsRef.current[i];
                     const p2 = pointsRef.current[i + 1];
@@ -242,19 +248,17 @@ const KintsugiCursor = () => {
                     ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
                 }
                 ctx.lineCap = 'round';
-                ctx.lineWidth = CONFIG.widthBase + 6;
+                ctx.lineWidth = cfg.widthBase + 6;
                 ctx.globalAlpha = 0.4;
                 ctx.stroke();
 
-                // Pass 2 & 3: Liquid Body (Variable Width Segments)
+                // Pass 2 & 3: Liquid Body
                 ctx.shadowBlur = 0;
 
                 for (let i = 0; i < pointsRef.current.length - 1; i++) {
                     const p1 = pointsRef.current[i];
                     const p2 = pointsRef.current[i + 1];
 
-                    // Inverse Taper: Points start sharp and diffuse/widen as they age
-                    // Start at 40% width, grow to 120% width before dying
                     const ageProgress = p1.age / p1.life;
                     const widthMultiplier = 0.4 + (ageProgress * 1.5);
                     const currentWidth = p1.width * widthMultiplier;
@@ -267,20 +271,16 @@ const KintsugiCursor = () => {
                     ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
                     ctx.lineTo(p2.x, p2.y);
 
-                    // Base Gold
-                    // Opacity still fades out
                     const opacity = 1 - ageProgress;
                     ctx.globalAlpha = opacity;
 
-                    ctx.strokeStyle = CONFIG.goldBase;
+                    ctx.strokeStyle = cfg.goldBase;
                     ctx.lineWidth = Math.max(0.5, currentWidth);
                     ctx.stroke();
 
-                    // Core Highlight (The "Shine")
-                    // Core fades faster to look like it's cooling down
+                    // Core Highlight
                     ctx.globalAlpha = opacity * 0.8;
-                    ctx.strokeStyle = CONFIG.goldCore;
-                    // Core starts sharp but doesn't widen as much as the base (stays concentrated)
+                    ctx.strokeStyle = cfg.goldCore;
                     ctx.lineWidth = Math.max(0.5, currentWidth * 0.3);
                     ctx.stroke();
                 }
@@ -295,10 +295,9 @@ const KintsugiCursor = () => {
                     continue;
                 }
 
-                // Physics
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vy += 0.02; // Gravity (heavy gold dust)
+                p.vy += 0.02;
 
                 const opacity = p.life / p.maxLife;
 
@@ -307,7 +306,6 @@ const KintsugiCursor = () => {
                 ctx.fillStyle = p.color;
                 ctx.globalAlpha = opacity;
 
-                // Sparkle effect
                 if (Math.random() < 0.1) {
                     ctx.globalAlpha = 1;
                     ctx.shadowColor = '#fff';
@@ -319,7 +317,6 @@ const KintsugiCursor = () => {
                 ctx.fill();
             }
 
-            // Age points
             pointsRef.current.forEach(p => p.age++);
             animationFrameId = requestAnimationFrame(render);
         };
@@ -331,7 +328,7 @@ const KintsugiCursor = () => {
             window.removeEventListener('mousemove', handleMouseMove);
             cancelAnimationFrame(animationFrameId);
         };
-    }, []);
+    }, []); // Empty dependency array - we use refs for config access
 
     return (
         <canvas
@@ -342,7 +339,7 @@ const KintsugiCursor = () => {
                 left: 0,
                 pointerEvents: 'none',
                 zIndex: 9998,
-                filter: 'drop-shadow(0 0 5px rgba(218, 165, 32, 0.4))' // CSS post-process bloom
+                filter: 'drop-shadow(0 0 5px rgba(218, 165, 32, 0.4))'
             }}
         />
     );
