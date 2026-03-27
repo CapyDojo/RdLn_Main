@@ -6,8 +6,8 @@ After enabling the onboarding tour feature flag, you'll see a **"Take Tour"** bu
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│    Limited Beta v.0.5.0    ┌─────────────┐ ┌──────────┐ │
-│   (19 days remaining)       │ Quick Demo  │ │Take Tour │ │
+│    Open Beta v.0.6.0        ┌─────────────┐ ┌──────────┐ │
+│                             │ Quick Demo  │ │Take Tour │ │
 │                             │      ▶      │ │    ?     │ │
 │                             └─────────────┘ └──────────┘ │
 └─────────────────────────────────────────────────────────┘

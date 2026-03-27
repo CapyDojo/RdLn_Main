@@ -6,24 +6,15 @@ import { getRecommendedSample } from '../utils/sampleData';
 import { appConfig } from '../config/appConfig';
 import { OCRWorkerPool } from '../services/OCRWorkerPool';
 
-// Beta countdown component
+// Beta badge component
 const BetaBadge: React.FC = () => {
-  const BETA_EXPIRY_DATE = new Date('2026-01-17T23:59:59.999Z');
-  const currentDate = new Date();
-  const daysRemaining = Math.ceil((BETA_EXPIRY_DATE.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
-
-  // Only show if beta hasn't expired
-  if (currentDate > BETA_EXPIRY_DATE) {
-    return null;
-  }
-
   return (
     <div className="beta-badge px-3 py-1 rounded-md text-xs font-medium border text-center whitespace-nowrap"
       style={{
         backdropFilter: 'blur(10px)',
         lineHeight: '1.2'
       }}>
-      <span>Limited Beta v.0.6.0 ({daysRemaining} days remaining)</span>
+      <span>Open Beta v.0.6.0</span>
     </div>
   );
 };

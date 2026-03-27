@@ -20,6 +20,7 @@ const KintsugiCursor = () => {
             widthBase: { value: 8, min: 1, max: 20, step: 0.5, label: 'Stroke Width' },
             velocitySensitivity: { value: 0.012, min: 0.001, max: 0.05, step: 0.001, label: 'Crack Sensitivity' },
             branchLife: { value: 40, min: 10, max: 100, step: 1, label: 'Crack Lifespan' },
+            branchLength: { value: 1.0, min: 0.5, max: 3.0, step: 0.1, label: 'Crack Length Multiplier' },
             violentThreshold: { value: 5, min: 0, max: 20, step: 0.5, label: 'Violent Speed Threshold' },
         }),
         'Palette': folder({
@@ -130,7 +131,10 @@ const KintsugiCursor = () => {
 
                 // Length proportional to velocity (ferocity)
                 const speedFactor = Math.min(velocity, 10);
-                const length = 75 + (speedFactor * 90) + (Math.random() * 80);
+                const baseLength = (75 + (speedFactor * 90) + (Math.random() * 80));
+
+                // Apply multiplier from Leva config
+                const length = baseLength * (cfg.branchLength || 1.0);
 
                 const endX = e.clientX + Math.cos(branchAngle) * length;
                 const endY = e.clientY + Math.sin(branchAngle) * length;

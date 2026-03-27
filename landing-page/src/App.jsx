@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useControls, folder } from 'leva';
+import { useControls, folder, Leva } from 'leva';
 import ParticleCursor from './components/ParticleCursor';
 import KintsugiCursor from './components/KintsugiCursor';
 
@@ -61,6 +61,7 @@ function App() {
 
   return (
     <div className="container-fluid">
+      <Leva theme={{ sizes: { rootWidth: '400px' } }} />
       {showParticleCursor && <ParticleCursor />}
       {showKintsugiCursor && <KintsugiCursor />}
       <div className="spotlight-overlay"></div>
