@@ -180,7 +180,7 @@ const processDocxFileForPanel = async (docxPath: string, targetPanel: Element, p
 
         // Dispatch a custom event to the target panel with the extracted content
         const customEvent = new CustomEvent('tauri-docx-processed', {
-            detail: { content: result.content, fileName, panelTitle }
+            detail: { content: result.content, fileName, filePath: docxPath, panelTitle }
         });
 
         targetPanel.dispatchEvent(customEvent);

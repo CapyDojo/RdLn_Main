@@ -6,7 +6,7 @@ import { OCRLanguage } from '../types/ocr-types';
 import { LanguageSettingsDropdown } from './LanguageSettingsDropdown';
 import { CustomTooltip } from './CustomTooltip';
 import { useLayout } from '../contexts/LayoutContext';
-import { BaseComponentProps } from '../types/components';
+import { BaseComponentProps, LocalInputFileSource } from '../types/components';
 import { useComponentPerformance } from '../utils/performanceUtils.tsx';
 import { DEV_CONFIG } from '../config/appConfig';
 import { formatPastedText, formatRtfHtmlPaste } from '../utils/paragraphFormatting';
@@ -26,6 +26,7 @@ interface TextInputPanelProps extends BaseComponentProps {
   disabled?: boolean;
   height?: number;
   iconEmoji?: string;
+  onFileSourceChange?: (source: LocalInputFileSource | null) => void;
 }
 
 export const TextInputPanel: React.FC<TextInputPanelProps> = ({
@@ -36,6 +37,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   disabled = false,
   height = 400,
   iconEmoji,
+  onFileSourceChange,
   style,
   className,
   ...props
@@ -57,6 +59,27 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
   // File processing service
   const fileProcessingService = useRef<FileProcessingService>(new FileProcessingService());
+  const updateFileSource = useCallback((source: LocalInputFileSource | null) => {
+    onFileSourceChange?.(source);
+  }, [onFileSourceChange]);
+
+  const getLocalFileSource = useCallback((file: File, fileType: LocalInputFileSource['fileType']): LocalInputFileSource | null => {
+    if (!window.isElectron) {
+      return null;
+    }
+
+    const fileWithPath = file as File & { path?: string };
+    const filePath = window.electronAPI?.getPathForFile?.(file) || fileWithPath.path || '';
+    if (!filePath) {
+      return null;
+    }
+
+    return {
+      filePath,
+      fileName: file.name || filePath.split(/[\\/]/).pop() || 'document',
+      fileType
+    };
+  }, []);
 
   const toggleAutoFormat = () => setIsAutoFormatEnabled(prev => !prev);
 
@@ -142,6 +165,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         return await extractTextFromImage(imageFile);
       });
 
+      updateFileSource(null);
       onChange(value + (value ? '\n\n' : '') + extractedText);
 
       performanceTracker.trackMetric('ocr_result', {
@@ -178,7 +202,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       // Track OCR failure
       trackEvent.ocrFailed('auto', errorMessage);
     }
-  }, [performanceTracker, extractTextFromImage, value, onChange]);
+  }, [performanceTracker, extractTextFromImage, value, onChange, updateFileSource]);
 
   // Generate unique instance ID for this component
   const instanceId = useRef(`${title}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
@@ -234,7 +258,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     };
 
     const handleDocxProcessed = async (event: CustomEvent) => {
-      const { content, fileName, panelTitle } = event.detail;
+      const { content, fileName, filePath, panelTitle } = event.detail;
 
       // Check if component is still mounted
       if (!isMountedRef.current) {
@@ -267,6 +291,14 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           }, 0);
         } else {
           onChange(content);
+        }
+
+        if (filePath) {
+          updateFileSource({
+            filePath,
+            fileName: fileName || filePath.split(/[\\/]/).pop() || 'document.docx',
+            fileType: 'docx'
+          });
         }
 
         // Double-check if still mounted after async operation
@@ -310,7 +342,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         panelDiv.removeEventListener('tauri-file-error', handleFileError as unknown as EventListener);
       };
     }
-  }, [title]); // ONLY title dependency - nothing else!
+  }, [title, onChange, updateFileSource, performanceTracker]); // Keep deps explicit for file-source updates
 
   // Clear detected languages when content is cleared
   useEffect(() => {
@@ -417,6 +449,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         if (!docxFile) return;
 
         const result = await fileProcessingService.current.processFile(docxFile);
+        const localFileSource = getLocalFileSource(docxFile, 'docx');
 
         const textarea = textareaRef.current;
         if (textarea) {
@@ -438,6 +471,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           onChange(result.content);
         }
 
+        updateFileSource(localFileSource);
         return; // Exit after processing DOCX
       } catch (error: any) {
         console.error('DOCX processing failed:', error);
@@ -456,6 +490,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         if (!pdfFile) return;
 
         const result = await fileProcessingService.current.processFile(pdfFile);
+        updateFileSource(null);
 
         const textarea = textareaRef.current;
         if (textarea) {
@@ -495,6 +530,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         if (!txtFile) return;
 
         const result = await fileProcessingService.current.processFile(txtFile);
+        updateFileSource(null);
 
         const textarea = textareaRef.current;
         if (textarea) {
@@ -532,6 +568,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       // Use intelligent format detection to determine formatting level
       const formatLevel = getFormattingLevel(pasteContext, isAutoFormatEnabled);
 
+      updateFileSource(null);
       let processedText: string;
       switch (formatLevel) {
         case 'PDF_Paste_Format':
@@ -610,7 +647,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         performanceTracker.trackMetric('ocr_error', { error: error.message });
       }
     }
-  }, [performanceTracker, extractTextFromImage, onChange, isAutoFormatEnabled]);
+  }, [performanceTracker, extractTextFromImage, onChange, isAutoFormatEnabled, getLocalFileSource, updateFileSource]);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
@@ -653,6 +690,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     if (docxFile) {
       try {
         const result = await fileProcessingService.current.processFile(docxFile);
+        const localFileSource = getLocalFileSource(docxFile, 'docx');
         const textarea = textareaRef.current;
 
         if (textarea) {
@@ -680,6 +718,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           onChange(result.content);
         }
 
+        updateFileSource(localFileSource);
         return; // Exit after processing DOCX
       } catch (error: any) {
         console.error('DOCX processing failed:', error);
@@ -694,6 +733,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     if (pdfFile) {
       try {
         const result = await fileProcessingService.current.processFile(pdfFile);
+        updateFileSource(null);
         const textarea = textareaRef.current;
 
         if (textarea) {
@@ -735,6 +775,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     if (txtFile) {
       try {
         const result = await fileProcessingService.current.processFile(txtFile);
+        updateFileSource(null);
         const textarea = textareaRef.current;
 
         if (textarea) {
@@ -776,7 +817,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     if (imageFile) {
       await processImageWithOCR(imageFile);
     }
-  }, [performanceTracker, processImageWithOCR, onChange]);
+  }, [performanceTracker, processImageWithOCR, onChange, getLocalFileSource, updateFileSource]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -1118,6 +1159,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           value={value}
           onChange={(e) => {
             const newValue = e.target.value;
+            updateFileSource(null);
             if (onChange.length > 1) {
               (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, false);
             } else {
@@ -1343,3 +1385,5 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 };
 
 export default TextInputPanel;
+
+
