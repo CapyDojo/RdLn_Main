@@ -1,0 +1,10 @@
+{
+  "name": "rdln-word-compare-mock",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Standalone mock RdLn prototype for launching Microsoft Word comparison",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron ."
+  }
+}

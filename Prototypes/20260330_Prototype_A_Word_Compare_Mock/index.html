@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RdLn Mock Prototype - Compare In Word</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail">
+        <div class="rail__brand">
+          <div class="brand__badge">RdLn</div>
+          <div>
+            <p class="eyebrow">Prototype</p>
+            <h1>Word Compare Bridge</h1>
+          </div>
+        </div>
+
+        <div class="rail__panel">
+          <p class="eyebrow">Scope</p>
+          <ul class="rail__list">
+            <li>Windows desktop only</li>
+            <li>DOCX to DOCX only</li>
+            <li>Launches local Word compare</li>
+            <li>Result stays in Word</li>
+          </ul>
+        </div>
+
+        <div class="rail__panel rail__panel--muted">
+          <p class="eyebrow">Notes</p>
+          <p>
+            This mock UI is intentionally separate from the main product. It is for workflow validation only.
+          </p>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Alternative Comparison Path</p>
+            <h2>Launch Microsoft Word as a secondary comparison engine</h2>
+            <p class="hero__copy">
+              Test whether a file-based RdLn workflow should offer a native Word compare action alongside RdLn's own built-in redline engine.
+            </p>
+          </div>
+
+          <div class="hero__status" id="environment-pill">Checking environment</div>
+        </section>
+
+        <section class="grid">
+          <article class="card input-card" id="base-drop-zone" data-drop-target="base">
+            <div class="card__header">
+              <p class="eyebrow">Original</p>
+              <button id="pick-base" class="secondary-button" type="button">Choose DOCX</button>
+            </div>
+            <div class="file-tile">
+              <p id="base-name" class="file-tile__name">No file selected</p>
+              <p id="base-path" class="file-tile__path">Select the original document.</p>
+            </div>
+            <p class="drop-hint">Or drag and drop a DOCX file here.</p>
+          </article>
+
+          <article class="card input-card" id="changed-drop-zone" data-drop-target="changed">
+            <div class="card__header">
+              <p class="eyebrow">Revised</p>
+              <button id="pick-changed" class="secondary-button" type="button">Choose DOCX</button>
+            </div>
+            <div class="file-tile">
+              <p id="changed-name" class="file-tile__name">No file selected</p>
+              <p id="changed-path" class="file-tile__path">Select the revised document.</p>
+            </div>
+            <p class="drop-hint">Or drag and drop a DOCX file here.</p>
+          </article>
+        </section>
+
+        <section class="card action-card">
+          <div class="card__header">
+            <div>
+              <p class="eyebrow">Action</p>
+              <h3>Compare In Word</h3>
+            </div>
+            <div class="action-buttons">
+              <button id="swap-button" class="secondary-button" type="button">Swap Files</button>
+              <button id="compare-button" class="primary-button" type="button">Launch Word Compare</button>
+            </div>
+          </div>
+
+          <p class="action-card__copy">
+            The prototype validates the two DOCX files, then asks Word to create a comparison document in a new window.
+          </p>
+
+          <div id="status-panel" class="status-panel status-panel--neutral">
+            Ready for file selection.
+          </div>
+        </section>
+
+        <section class="grid grid--info">
+          <article class="card info-card">
+            <p class="eyebrow">Why This Exists</p>
+            <p>
+              Some legal users may trust Word's comparison results for file-based workflows and want it as a fallback or cross-check.
+            </p>
+          </article>
+
+          <article class="card info-card">
+            <p class="eyebrow">Out Of Scope</p>
+            <p>
+              No PDF support, no browser support, no result import back into RdLn, and no production error telemetry in this prototype.
+            </p>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>
