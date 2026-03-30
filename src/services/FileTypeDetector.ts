@@ -8,7 +8,7 @@ export class FileTypeDetector {
    */
   static isDocx(file: File): boolean {
     return file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-           file.name.toLowerCase().endsWith('.docx');
+      file.name.toLowerCase().endsWith('.docx');
   }
 
   /**
@@ -16,7 +16,7 @@ export class FileTypeDetector {
    */
   static isDoc(file: File): boolean {
     return file.type === 'application/msword' ||
-           file.name.toLowerCase().endsWith('.doc');
+      file.name.toLowerCase().endsWith('.doc');
   }
 
   /**
@@ -24,7 +24,7 @@ export class FileTypeDetector {
    */
   static isPdf(file: File): boolean {
     return file.type === 'application/pdf' ||
-           file.name.toLowerCase().endsWith('.pdf');
+      file.name.toLowerCase().endsWith('.pdf');
   }
 
   /**
@@ -32,7 +32,7 @@ export class FileTypeDetector {
    */
   static isTxt(file: File): boolean {
     return file.type === 'text/plain' ||
-           file.name.toLowerCase().endsWith('.txt');
+      file.name.toLowerCase().endsWith('.txt');
   }
 
   /**
@@ -45,8 +45,9 @@ export class FileTypeDetector {
     if (this.isTxt(file)) {
       return 'txt';
     }
-    // Note: PDF detection would be implemented here for future support
-    // For now, we're focusing on DOCX and TXT support
+    if (this.isPdf(file)) {
+      return 'pdf-text';
+    }
     return 'unknown';
   }
 }

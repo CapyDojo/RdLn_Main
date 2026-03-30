@@ -13,7 +13,7 @@ import { formatPastedText, formatRtfHtmlPaste } from '../utils/paragraphFormatti
 import { analyzePasteContext, getFormattingLevel } from '../utils/pastePDFdetection';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { FileProcessingService } from '../services/FileProcessingService';
-import { ProcessingResult, ProcessingError } from '../types/file-processing.types';
+
 import { trackEvent } from '../services/AnalyticsService';
 
 // Tauri-specific helpers removed (unused)
@@ -96,8 +96,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <br />
           <span className="text-6xl block" role="img" aria-label="Document">⛶</span>
           <br />
-          <p className="text-lg mt-2 font-sans"><i>Drop files here (supports .DOCX, .PNG, .TXT)<br></br>or paste screenshots (Ctrl+V / Cmd+V)<br></br>for OCR in {supportedLanguages.length} languages</i></p>
-        </div>
+          <p className="text-lg mt-2 font-sans"><i>Drop files here (supports .DOCX, .PDF, .PNG, .TXT)<br></br>or paste screenshots (Ctrl+V / Cmd+V)<br></br>for OCR in {supportedLanguages.length} languages</i></p>
+        </div >
       );
     }
     return (
@@ -109,7 +109,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         <span className="text-6xl mb-3 block" role="img" aria-label="Document">⛶</span>
         <br></br>
         <p className="text-lg font-sans"><i>
-          Drop files here (supports .DOCX, .PNG, .TXT)<br></br>or<br></br>Paste screenshots (Ctrl+V / Cmd+V)<br></br>for OCR in {supportedLanguages.length} languages</i>
+          Drop files here (supports .DOCX, .PDF, .PNG, .TXT)<br></br>or<br></br>Paste screenshots (Ctrl+V / Cmd+V)<br></br>for OCR in {supportedLanguages.length} languages</i>
         </p>
       </div>
     );
@@ -174,7 +174,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         userMessage: userFriendlyMessage,
         instanceId: instanceId.current
       });
-      
+
       // Track OCR failure
       trackEvent.ocrFailed('auto', errorMessage);
     }
@@ -300,14 +300,14 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     // Add event listeners to this panel's div using unique instance ID
     const panelDiv = document.querySelector(`[data-instance-id="${currentInstanceId}"]`);
     if (panelDiv) {
-      panelDiv.addEventListener('tauri-file-processed', handleFileProcessed as EventListener);
-      panelDiv.addEventListener('tauri-docx-processed', handleDocxProcessed as EventListener);
-      panelDiv.addEventListener('tauri-file-error', handleFileError as EventListener);
+      panelDiv.addEventListener('tauri-file-processed', handleFileProcessed as unknown as EventListener);
+      panelDiv.addEventListener('tauri-docx-processed', handleDocxProcessed as unknown as EventListener);
+      panelDiv.addEventListener('tauri-file-error', handleFileError as unknown as EventListener);
 
       return () => {
-        panelDiv.removeEventListener('tauri-file-processed', handleFileProcessed as EventListener);
-        panelDiv.removeEventListener('tauri-docx-processed', handleDocxProcessed as EventListener);
-        panelDiv.removeEventListener('tauri-file-error', handleFileError as EventListener);
+        panelDiv.removeEventListener('tauri-file-processed', handleFileProcessed as unknown as EventListener);
+        panelDiv.removeEventListener('tauri-docx-processed', handleDocxProcessed as unknown as EventListener);
+        panelDiv.removeEventListener('tauri-file-error', handleFileError as unknown as EventListener);
       };
     }
   }, [title]); // ONLY title dependency - nothing else!
@@ -351,7 +351,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     const items = Array.from(e.clipboardData.items);
     const imageItem = items.find(item => item.type.startsWith('image/'));
     const textItem = items.find(item => item.type.startsWith('text/plain'));
-    
+
     // Check for file attachments (including DOCX and TXT)
     const fileItems = items.filter(item => item.kind === 'file');
     const docxFileItem = fileItems.find(item => {
@@ -359,15 +359,23 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       const file = item.getAsFile();
       if (!file) return false;
       return file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-             file.name.toLowerCase().endsWith('.docx');
+        file.name.toLowerCase().endsWith('.docx');
     });
-    
+
+    const pdfFileItem = fileItems.find(item => {
+      // Get the file to check its type
+      const file = item.getAsFile();
+      if (!file) return false;
+      return file.type === 'application/pdf' ||
+        file.name.toLowerCase().endsWith('.pdf');
+    });
+
     const txtFileItem = fileItems.find(item => {
       // Get the file to check its type
       const file = item.getAsFile();
       if (!file) return false;
       return file.type === 'text/plain' ||
-             file.name.toLowerCase().endsWith('.txt');
+        file.name.toLowerCase().endsWith('.txt');
     });
 
     // Get plain text content for analysis
@@ -381,6 +389,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       hasImage: !!imageItem,
       hasText: !!textItem,
       hasDocx: !!docxFileItem,
+      hasPdf: !!pdfFileItem,
       hasTxt: !!txtFileItem,
       itemCount: items.length,
       sourceType: pasteContext.sourceType,
@@ -392,6 +401,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       trackEvent.documentUpload('paste', 'image');
     } else if (docxFileItem) {
       trackEvent.documentUpload('paste', 'docx');
+    } else if (pdfFileItem) {
+      trackEvent.documentUpload('paste', 'pdf');
     } else if (txtFileItem) {
       trackEvent.documentUpload('paste', 'txt');
     } else if (textItem) {
@@ -406,7 +417,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         if (!docxFile) return;
 
         const result = await fileProcessingService.current.processFile(docxFile);
-        
+
         const textarea = textareaRef.current;
         if (textarea) {
           const start = textarea.selectionStart;
@@ -426,13 +437,52 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         } else {
           onChange(result.content);
         }
-        
+
         return; // Exit after processing DOCX
       } catch (error: any) {
         console.error('DOCX processing failed:', error);
         // Show error to user
         alert(error.message || 'Failed to process DOCX file from clipboard. Please try another file.');
         performanceTracker.trackMetric('docx_paste_error', { error: error.message });
+        return;
+      }
+    }
+
+    // Process PDF file if present
+    if (pdfFileItem) {
+      e.preventDefault();
+      try {
+        const pdfFile = pdfFileItem.getAsFile();
+        if (!pdfFile) return;
+
+        const result = await fileProcessingService.current.processFile(pdfFile);
+
+        const textarea = textareaRef.current;
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const newValue = textarea.value.substring(0, start) + result.content + textarea.value.substring(end);
+
+          if (onChange.length > 1) {
+            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
+          } else {
+            onChange(newValue);
+          }
+
+          setTimeout(() => {
+            textarea.setSelectionRange(start + result.content.length, start + result.content.length);
+            textarea.focus();
+          }, 0);
+        } else {
+          onChange(result.content);
+        }
+
+        return; // Exit after processing PDF
+      } catch (error: any) {
+        console.error('PDF processing failed:', error);
+        // Show error to user
+        alert(error.message || 'Failed to process PDF file from clipboard. Please try another file.');
+        performanceTracker.trackMetric('pdf_paste_error', { error: error.message });
         return;
       }
     }
@@ -445,7 +495,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         if (!txtFile) return;
 
         const result = await fileProcessingService.current.processFile(txtFile);
-        
+
         const textarea = textareaRef.current;
         if (textarea) {
           const start = textarea.selectionStart;
@@ -465,7 +515,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         } else {
           onChange(result.content);
         }
-        
+
         return; // Exit after processing TXT
       } catch (error: any) {
         console.error('TXT processing failed:', error);
@@ -567,11 +617,15 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
     const files = Array.from(e.dataTransfer.files);
     const imageFile = files.find(file => file.type.startsWith('image/'));
-    const docxFile = files.find(file => 
+    const docxFile = files.find(file =>
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       file.name.toLowerCase().endsWith('.docx')
     );
-    const txtFile = files.find(file => 
+    const pdfFile = files.find(file =>
+      file.type === 'application/pdf' ||
+      file.name.toLowerCase().endsWith('.pdf')
+    );
+    const txtFile = files.find(file =>
       file.type === 'text/plain' ||
       file.name.toLowerCase().endsWith('.txt')
     );
@@ -580,6 +634,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       fileCount: files.length,
       hasImage: !!imageFile,
       hasDocx: !!docxFile,
+      hasPdf: !!pdfFile,
       hasTxt: !!txtFile
     });
 
@@ -588,6 +643,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       trackEvent.documentUpload('drag_drop', imageFile.type);
     } else if (docxFile) {
       trackEvent.documentUpload('drag_drop', 'docx');
+    } else if (pdfFile) {
+      trackEvent.documentUpload('drag_drop', 'pdf');
     } else if (txtFile) {
       trackEvent.documentUpload('drag_drop', 'txt');
     }
@@ -597,7 +654,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       try {
         const result = await fileProcessingService.current.processFile(docxFile);
         const textarea = textareaRef.current;
-        
+
         if (textarea) {
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
@@ -622,7 +679,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         } else {
           onChange(result.content);
         }
-        
+
         return; // Exit after processing DOCX
       } catch (error: any) {
         console.error('DOCX processing failed:', error);
@@ -633,12 +690,12 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       }
     }
 
-    // Process TXT file if present
-    if (txtFile) {
+    // Process PDF file if present
+    if (pdfFile) {
       try {
-        const result = await fileProcessingService.current.processFile(txtFile);
+        const result = await fileProcessingService.current.processFile(pdfFile);
         const textarea = textareaRef.current;
-        
+
         if (textarea) {
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
@@ -663,7 +720,48 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         } else {
           onChange(result.content);
         }
-        
+
+        return; // Exit after processing PDF
+      } catch (error: any) {
+        console.error('PDF processing failed:', error);
+        // Show error to user
+        alert(error.message || 'Failed to process PDF file. Please try another file.');
+        performanceTracker.trackMetric('pdf_error', { error: error.message });
+        return;
+      }
+    }
+
+    // Process TXT file if present
+    if (txtFile) {
+      try {
+        const result = await fileProcessingService.current.processFile(txtFile);
+        const textarea = textareaRef.current;
+
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const newValue =
+            textarea.value.substring(0, start) +
+            (start > 0 && textarea.value[start - 1] !== '\n' ? '\n\n' : '') +
+            result.content +
+            (end < textarea.value.length && textarea.value[end] !== '\n' ? '\n\n' : '') +
+            textarea.value.substring(end);
+
+          if (onChange.length > 1) {
+            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
+          } else {
+            onChange(newValue);
+          }
+
+          setTimeout(() => {
+            const newCursorPos = start + result.content.length + (start > 0 ? 2 : 0);
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+          }, 0);
+        } else {
+          onChange(result.content);
+        }
+
         return; // Exit after processing TXT
       } catch (error: any) {
         console.error('TXT processing failed:', error);
@@ -714,7 +812,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       jpn: 'JP',
       kor: 'KR',
       ara: 'SA',
-      rus: 'RU'
+      rus: 'RU',
+      osd: 'OSD'
     };
     return abbreviationMap[languageCode] || languageCode.toUpperCase();
   };
@@ -745,11 +844,11 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   // Calculate modal position relative to this panel (getBoundingClientRect handles zoom/scroll automatically)
   const calculateModalPosition = useCallback(() => {
     if (!panelRef.current || !textareaRef.current) return { top: 100, left: 20, width: 400, initialTop: 100, initialLeft: 20 };
-    
+
     // getBoundingClientRect() automatically accounts for zoom and scroll
     const panelRect = panelRef.current.getBoundingClientRect();
     const textareaRect = textareaRef.current.getBoundingClientRect();
-    
+
     return {
       // Final position: below the header
       top: panelRect.top + 80,
@@ -775,7 +874,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       const position = calculateModalPosition();
       setModalPosition(position);
       setModalAnimated(false);
-      
+
       // Trigger animation to final position after a short delay
       setTimeout(() => {
         setModalAnimated(true);
@@ -795,18 +894,18 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     const handleResize = () => {
       // Detect if this is a zoom (window size changed) vs window resize
       const currentSize = { width: window.innerWidth, height: window.innerHeight };
-      const sizeChanged = currentSize.width !== lastWindowSize.current.width || 
-                         currentSize.height !== lastWindowSize.current.height;
-      
+      const sizeChanged = currentSize.width !== lastWindowSize.current.width ||
+        currentSize.height !== lastWindowSize.current.height;
+
       if (sizeChanged) {
         setIsZoomUpdate(true); // Zoom = no animation
         lastWindowSize.current = currentSize;
       } else {
         setIsZoomUpdate(false); // Regular resize = bouncy animation
       }
-      
+
       updateModalPosition();
-      
+
       // Reset zoom flag after update
       setTimeout(() => setIsZoomUpdate(false), 50);
     };
@@ -1117,7 +1216,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
       {/* OCR Progress Modal - Rendered as Portal like tooltips */}
       {isProcessing && currentPhase && createPortal(
-        <div 
+        <div
           className="glass-panel py-1.5 rounded-lg text-xs font-medium bg-theme-neutral-50/95 text-theme-primary-800 shadow-xl backdrop-blur-md border border-theme-neutral-200/50 shadow-theme-primary-900/20 p-5"
           style={{
             position: 'fixed',
@@ -1144,7 +1243,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                 <div className="absolute -inset-1 bg-theme-primary-400/30 rounded-full animate-pulse" />
               </div>
             </div>
-            
+
             <div className="flex-1 min-w-0">
               {/* Progress Information */}
               <div className="flex items-center justify-between mb-2">
@@ -1171,7 +1270,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                   )}
                 </div>
               </div>
-              
+
               {/* Description with Time */}
               <div className="flex items-start justify-between gap-3 mb-4">
                 <p className="text-xs text-theme-neutral-600 leading-relaxed flex-1">
@@ -1181,7 +1280,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                   <div className="flex items-center gap-1.5 bg-theme-neutral-100 px-2 py-1 rounded-md">
                     <div className="w-1.5 h-1.5 bg-theme-primary-500 rounded-full animate-pulse" />
                     <span className="text-xs text-theme-neutral-600 font-mono whitespace-nowrap">
-                      {currentPhase.estimatedTimeRemaining > 60000 ? 
+                      {currentPhase.estimatedTimeRemaining > 60000 ?
                         `~${Math.ceil(currentPhase.estimatedTimeRemaining / 60000)}m` :
                         `~${Math.ceil(currentPhase.estimatedTimeRemaining / 1000)}s`
                       }
@@ -1189,7 +1288,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                   </div>
                 )}
               </div>
-              
+
               {/* Simplified Progress Bar */}
               <div className="relative">
                 {/* Progress Background */}
@@ -1201,7 +1300,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                   >
                     {/* Animated Shimmer Effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-[shimmer_2s_ease-in-out_infinite] rounded-full" />
-                    
+
                     {/* Progress Highlight */}
                     <div className="absolute right-0 top-0 w-3 h-full bg-white/40 rounded-r-full" />
                   </div>
@@ -1209,9 +1308,9 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
               </div>
             </div>
           </div>
-          
+
           {/* Language Detection Results - Removed to simplify UI */}
-          
+
           {/* Smart Performance Dashboard */}
           {startTime && (
             <div className="flex items-center justify-between pt-3 border-t border-theme-neutral-200/50 mt-3">
@@ -1220,17 +1319,16 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                   ⏱️ {Math.ceil((Date.now() - startTime) / 1000)}s elapsed
                 </span>
                 <div className="flex items-center gap-1.5">
-                  <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                    (Date.now() - startTime) < 10000 ? 'bg-green-400' :
+                  <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${(Date.now() - startTime) < 10000 ? 'bg-green-400' :
                     (Date.now() - startTime) < 20000 ? 'bg-yellow-400' : 'bg-orange-400'
-                  }`} />
+                    }`} />
                   <span className="text-xs text-theme-neutral-600 font-medium">
                     {(Date.now() - startTime) < 10000 ? 'Fast' :
-                     (Date.now() - startTime) < 20000 ? 'Normal' : 'Slower than usual'}
+                      (Date.now() - startTime) < 20000 ? 'Normal' : 'Slower than usual'}
                   </span>
                 </div>
               </div>
-              
+
               {/* Live Processing Rate */}
               <div className="text-xs text-theme-neutral-500">
                 📈 {(progress / ((Date.now() - startTime) / 1000)).toFixed(1)}% per sec
