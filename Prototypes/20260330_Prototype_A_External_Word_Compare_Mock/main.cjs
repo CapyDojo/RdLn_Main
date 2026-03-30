@@ -12,7 +12,7 @@ function createWindow() {
     minWidth: 1040,
     minHeight: 720,
     backgroundColor: '#e7ddd0',
-    title: 'RdLn Mock Prototype - Compare In Word',
+    title: 'RdLn Mock Prototype - External Word Compare',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -226,3 +226,4 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
+

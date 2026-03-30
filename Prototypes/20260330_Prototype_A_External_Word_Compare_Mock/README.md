@@ -1,6 +1,6 @@
-# RdLn Mock Prototype: Compare In Word
+# RdLn Mock Prototype: External Word Compare
 
-This is a standalone mock prototype for a possible RdLn feature that offers `Compare in Word` as an alternative path for file-based input workflows.
+This is a standalone mock prototype for a possible RdLn feature that offers `External Word Compare` as an alternative path for file-based input workflows.
 
 ## What it does
 
@@ -61,3 +61,4 @@ This assumes Electron is already available from the repo's installed dependencie
 - stronger Office-version compatibility handling
 - more precise user-facing error states
 - packaging and trust/security review for desktop automation
+

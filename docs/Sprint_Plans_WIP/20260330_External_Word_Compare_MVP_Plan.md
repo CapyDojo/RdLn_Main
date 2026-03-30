@@ -12,10 +12,10 @@ Important repo rules:
 - Tauri is on hold. Do not touch `src-tauri/**`.
 
 Task:
-Implement a guarded MVP for `Compare in Word` in the real Electron app.
+Implement a guarded MVP for `External Word Compare` in the real Electron app.
 
 Goal:
-Add an optional `Compare in Word` action for file-based `.docx` to `.docx` workflows in the Windows Electron app only, behind a feature flag, without affecting RdLn's native comparison pipeline.
+Add an optional `External Word Compare` action for file-based `.docx` to `.docx` workflows in the Windows Electron app only, behind a feature flag, without affecting RdLn's native comparison pipeline.
 
 Strict scope:
 - Windows only
@@ -30,7 +30,7 @@ Strict scope:
 - No changes to Myers/native compare logic
 
 Requirements:
-1. Add a feature flag, recommended name: `ENABLE_COMPARE_IN_WORD`.
+1. Add a feature flag, recommended name: `ENABLE_EXTERNAL_WORD_COMPARE`.
 2. Show the action only when appropriate, or disable it with a clear reason:
    - Electron runtime
    - Windows platform
@@ -58,7 +58,7 @@ Before coding:
 - Confirm how to safely distinguish file inputs from pasted text inputs.
 
 Implementation notes:
-- You may use the standalone prototype at `Prototypes/20260330_Prototype_A_Word_Compare_Mock` as reference only.
+- You may use the standalone prototype at `Prototypes/20260330_Prototype_A_External_Word_Compare_Mock` as reference only.
 - Do not blindly copy prototype structure if it does not fit the app.
 - Prefer the app-owned automation bridge approach from the plan for MVP.
 - Keep the code path modular and reversible.
@@ -79,7 +79,7 @@ Be pragmatic. Keep the implementation narrow.
 
 ---
 
-# 20260330 Compare In Word MVP Plan
+# 20260330 External Word Compare MVP Plan
 
 ## Status
 
@@ -87,7 +87,7 @@ Proposed. Prototype validated in standalone Electron mock app. No production app
 
 ## Objective
 
-Add an optional `Compare in Word` path for file-based `.docx` workflows in the Windows Electron app, without changing RdLn's core native comparison engine.
+Add an optional `External Word Compare` path for file-based `.docx` workflows in the Windows Electron app, without changing RdLn's core native comparison engine.
 
 This feature is intended to:
 
@@ -104,7 +104,7 @@ This is an alternative secondary action for users who have loaded two supported 
 Recommended UX framing:
 
 - Primary: `Compare in RdLn`
-- Secondary: `Compare in Word`
+- Secondary: `External Word Compare`
 - Helper copy: `Launches Microsoft Word on this computer to run Word's native compare.`
 
 ## Recommended MVP Scope
@@ -144,7 +144,7 @@ A narrow first version captures the useful product value while avoiding several 
 
 A standalone prototype was built at:
 
-- `Prototypes/20260330_Prototype_A_Word_Compare_Mock`
+- `Prototypes/20260330_Prototype_A_External_Word_Compare_Mock`
 
 The prototype validated:
 
@@ -165,8 +165,8 @@ Important technical note:
 2. RdLn validates that both inputs are valid local DOCX files.
 3. RdLn displays both compare options:
    - `Compare in RdLn`
-   - `Compare in Word`
-4. User clicks `Compare in Word`.
+   - `External Word Compare`
+4. User clicks `External Word Compare`.
 5. Electron main process validates:
    - both files exist
    - both are `.docx`
@@ -181,7 +181,7 @@ Important technical note:
 
 ### Visibility conditions
 
-Show `Compare in Word` only when:
+Show `External Word Compare` only when:
 
 - app is running in Electron
 - platform is Windows
@@ -194,7 +194,7 @@ Otherwise either hide the action or show a disabled state with exact reason.
 
 Button label:
 
-- `Compare in Word`
+- `External Word Compare`
 
 Helper copy:
 
@@ -202,9 +202,9 @@ Helper copy:
 
 Failure examples:
 
-- `Compare in Word is available only for DOCX files.`
+- `External Word Compare is available only for DOCX files.`
 - `Microsoft Word could not be launched on this computer.`
-- `Choose two different DOCX files to use Compare in Word.`
+- `Choose two different DOCX files to use External Word Compare.`
 
 ### UI placement
 
@@ -318,7 +318,7 @@ Use Option A for MVP and revisit Option B only if the feature proves valuable an
 
 Recommended initial flag:
 
-- `ENABLE_COMPARE_IN_WORD`
+- `ENABLE_EXTERNAL_WORD_COMPARE`
 
 Behavior:
 
@@ -330,7 +330,7 @@ Behavior:
 
 ### Functional
 
-- User can load two DOCX files and choose `Compare in Word`
+- User can load two DOCX files and choose `External Word Compare`
 - RdLn blocks unsupported file types
 - RdLn blocks missing files
 - RdLn blocks same-file input
@@ -371,7 +371,7 @@ Behavior:
 
 ## Open Decisions
 
-1. Should `Compare in Word` be hidden when unavailable, or shown disabled with explanation?
+1. Should `External Word Compare` be hidden when unavailable, or shown disabled with explanation?
 2. Should the feature appear only after both files are selected, or persist as a disabled action until then?
 3. Should launch events/failures be logged to desktop diagnostics from day one?
 4. Should the feature be exposed only in a beta/experimental settings mode initially?
@@ -379,3 +379,5 @@ Behavior:
 ## Recommended Next Step
 
 Move from prototype to a guarded production integration plan for the Electron app only, behind a feature flag, without touching the RdLn native comparison pipeline.
+
+
