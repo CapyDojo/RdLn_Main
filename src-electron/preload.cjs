@@ -1,14 +1,15 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 // Security: Define allowed IPC channels
 const ALLOWED_CHANNELS = [
   'read-file',
-  'file-exists', 
+  'file-exists',
   'get-platform',
   'get-app-version',
   'get-resource-path',
   'set-zoom-factor',
-  'get-zoom-factor'
+  'get-zoom-factor',
+  'compare-in-word'
 ];
 
 // Security: Validate IPC channel
@@ -101,34 +102,34 @@ contextBridge.exposeInMainWorld('electronAPI', {
     validateChannel('get-platform');
     return ipcRenderer.invoke('get-platform');
   },
-  
+
   // App info with validation
   getAppVersion: () => {
     validateChannel('get-app-version');
     return ipcRenderer.invoke('get-app-version');
   },
-  
+
   // File system access for OCR assets - use IPC with validation
   readFile: (filePath) => {
     const sanitizedPath = sanitizeFilePath(filePath);
     validateChannel('read-file');
     return ipcRenderer.invoke('read-file', sanitizedPath);
   },
-  
+
   // Check if file exists - use IPC with validation
   fileExists: (filePath) => {
     const sanitizedPath = sanitizeFilePath(filePath);
     validateChannel('file-exists');
     return ipcRenderer.invoke('file-exists', sanitizedPath);
   },
-  
+
   // Get resource path for bundled assets - use IPC with validation
   getResourcePath: (relativePath) => {
     const sanitizedPath = sanitizeFilePath(relativePath);
     validateChannel('get-resource-path');
     return ipcRenderer.invoke('get-resource-path', sanitizedPath);
   },
-  
+
   // Native zoom functionality with validation
   setZoomFactor: (factor) => {
     if (typeof factor !== 'number' || factor <= 0 || factor > 5) {
@@ -137,12 +138,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
     validateChannel('set-zoom-factor');
     return ipcRenderer.invoke('set-zoom-factor', factor);
   },
-  
+
   getZoomFactor: () => {
     validateChannel('get-zoom-factor');
     return ipcRenderer.invoke('get-zoom-factor');
   },
-  
+
+  getPathForFile: (file) => {
+    try {
+      return webUtils.getPathForFile(file);
+    } catch {
+      return '';
+    }
+  },
+
+  compareInWord: (payload) => {
+    const basePath = sanitizeFilePath(payload?.basePath || '');
+    const changedPath = sanitizeFilePath(payload?.changedPath || '');
+    validateChannel('compare-in-word');
+    return ipcRenderer.invoke('compare-in-word', { basePath, changedPath });
+  },
+
   // Zoom change notification for dropdown positioning
   notifyZoomChange: (zoomLevel) => {
     const event = new CustomEvent('electron-zoom-change', { detail: { zoomLevel } });
@@ -150,12 +166,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   }
 });
 
+contextBridge.exposeInMainWorld('isElectron', true);
+
 // Listen for file drop events from main process
 ipcRenderer.on('file-dropped', (event, filePath) => {
   window.electronAPI.handleFileDrop(filePath);
 });
-
-// Set global flag to indicate Electron environment
-window.isElectron = true;
-
-

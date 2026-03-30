@@ -1,11 +1,12 @@
-﻿// PERFORMANCE PROFILING: Start timing the entire app startup
-console.time('🚀 TOTAL-APP-STARTUP');
-console.log('⏱️  STARTUP: Process started at', new Date().toISOString());
+// PERFORMANCE PROFILING: Start timing the entire app startup
+console.time('?? TOTAL-APP-STARTUP');
+console.log('??  STARTUP: Process started at', new Date().toISOString());
 
 const { app, BrowserWindow, Menu, screen, ipcMain, protocol } = require('electron');
 const fs = require('fs').promises;
 const path = require('path');
 const os = require('os');
+const { spawn } = require('child_process');
 // Treat non-packaged runs as development; also honor NODE_ENV
 const isDev = process.env.NODE_ENV === 'development' || (typeof app !== 'undefined' && !app.isPackaged);
 
@@ -117,28 +118,185 @@ process.on('unhandledRejection', (reason) => {
   try { __writeLog(`unhandledRejection: ${reason?.stack || reason}`); } catch {}
 });
 
-console.time('📦 MODULE-IMPORTS');
-console.timeEnd('📦 MODULE-IMPORTS');
+console.time('?? MODULE-IMPORTS');
+console.timeEnd('?? MODULE-IMPORTS');
 
 let mainWindow;
 let currentZoomFactor = 1.0;
 let handleZoomChange;
 
+function escapeForPowerShell(value) {
+  return String(value).replace(/'/g, "''");
+}
+
+function isDocxPath(filePath) {
+  return path.extname(filePath || '').toLowerCase() === '.docx';
+}
+
+function buildWordCompareScript(basePath, changedPath) {
+  const safeBasePath = escapeForPowerShell(basePath);
+  const safeChangedPath = escapeForPowerShell(changedPath);
+
+  return `
+$ErrorActionPreference = 'Stop'
+$baseFile = '${safeBasePath}'
+$changedFile = '${safeChangedPath}'
+
+if (-not (Test-Path -LiteralPath $baseFile)) { throw 'Original file not found.' }
+if (-not (Test-Path -LiteralPath $changedFile)) { throw 'Revised file not found.' }
+
+$baseItem = Get-Item -LiteralPath $baseFile
+if ($baseItem.IsReadOnly) {
+  $baseItem.IsReadOnly = $false
+}
+
+$wdDoNotSaveChanges = 0
+$wdCompareTargetNew = 2
+
+$word = $null
+$document = $null
+
+try {
+  $word = New-Object -ComObject Word.Application
+  $word.Visible = $true
+  $document = $word.Documents.Open($baseFile, $false, $false)
+  $null = $document.Compare($changedFile, [ref]'RdLn Comparison', [ref]$wdCompareTargetNew, [ref]$true, [ref]$true)
+  $word.ActiveDocument.Saved = 1
+  $document.Close([ref]$wdDoNotSaveChanges)
+}
+finally {
+  if ($document -ne $null) {
+    try { [System.Runtime.InteropServices.Marshal]::ReleaseComObject($document) | Out-Null } catch {}
+  }
+  if ($word -ne $null) {
+    try { [System.Runtime.InteropServices.Marshal]::ReleaseComObject($word) | Out-Null } catch {}
+  }
+  [GC]::Collect()
+  [GC]::WaitForPendingFinalizers()
+}
+`.trim();
+}
+
+async function validateWordComparePaths(basePath, changedPath) {
+  if (process.platform !== 'win32') {
+    return {
+      ok: false,
+      code: 'UNSUPPORTED_PLATFORM',
+      message: 'External Word Compare is available only on Windows.'
+    };
+  }
+
+  if (!basePath || !changedPath) {
+    return {
+      ok: false,
+      code: 'MISSING_FILES',
+      message: 'Choose both an original and revised DOCX file.'
+    };
+  }
+
+  if (!isDocxPath(basePath) || !isDocxPath(changedPath)) {
+    return {
+      ok: false,
+      code: 'UNSUPPORTED_FILE_TYPE',
+      message: 'External Word Compare is available only for DOCX files.'
+    };
+  }
+
+  if (path.resolve(basePath) === path.resolve(changedPath)) {
+    return {
+      ok: false,
+      code: 'SAME_FILE',
+      message: 'Choose two different DOCX files to use External Word Compare.'
+    };
+  }
+
+  try {
+    await fs.access(basePath);
+    await fs.access(changedPath);
+  } catch {
+    return {
+      ok: false,
+      code: 'FILE_NOT_FOUND',
+      message: 'One or both selected files could not be found on disk.'
+    };
+  }
+
+  return { ok: true };
+}
+
+async function launchWordCompare(basePath, changedPath) {
+  const validation = await validateWordComparePaths(basePath, changedPath);
+  if (!validation.ok) {
+    return validation;
+  }
+
+  return await new Promise(resolve => {
+    const script = buildWordCompareScript(basePath, changedPath);
+    const child = spawn('powershell.exe', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-Command',
+      script
+    ], {
+      windowsHide: true
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', chunk => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr.on('data', chunk => {
+      stderr += chunk.toString();
+    });
+
+    child.on('error', error => {
+      resolve({
+        ok: false,
+        code: 'WORD_COMPARE_START_FAILED',
+        message: `Microsoft Word could not be launched: ${error.message}`
+      });
+    });
+
+    child.on('close', code => {
+      if (code === 0) {
+        resolve({
+          ok: true,
+          code: 'WORD_COMPARE_LAUNCHED',
+          message: 'Microsoft Word comparison launched successfully.'
+        });
+        return;
+      }
+
+      const detail = (stderr || stdout || '').trim();
+      resolve({
+        ok: false,
+        code: 'WORD_COMPARE_FAILED',
+        message: detail || 'Microsoft Word could not be launched on this computer.'
+      });
+    });
+  });
+}
+
 function createWindow() {
-  console.time('🖥️  WINDOW-CREATION');
-  console.log('⏱️  WINDOW: createWindow() called at', new Date().toISOString());
+  console.time('???  WINDOW-CREATION');
+  console.log('??  WINDOW: createWindow() called at', new Date().toISOString());
   
   // Get primary display dimensions
-  console.time('📐 SCREEN-DETECTION');
+  console.time('?? SCREEN-DETECTION');
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
-  console.timeEnd('📐 SCREEN-DETECTION');
+  console.timeEnd('?? SCREEN-DETECTION');
   
   // Calculate window size - use 90% of screen width and full height minus taskbar
   const windowWidth = Math.min(1400, Math.floor(screenWidth * 0.9));
   const windowHeight = Math.floor(screenHeight * 0.95);
   
   // Create the browser window
-  console.time('🏗️  BROWSERWINDOW-INIT');
+  console.time('???  BROWSERWINDOW-INIT');
   mainWindow = new BrowserWindow({
     width: windowWidth,
     height: windowHeight,
@@ -157,14 +315,14 @@ function createWindow() {
     titleBarStyle: 'default',
     show: false // Don't show until ready
   });
-  console.timeEnd('🏗️  BROWSERWINDOW-INIT');
+  console.timeEnd('???  BROWSERWINDOW-INIT');
 
   // Load the app
-  console.time('📄 HTML-LOADING');
-  console.log('⏱️  LOAD: Starting to load HTML at', new Date().toISOString());
+  console.time('?? HTML-LOADING');
+  console.log('??  LOAD: Starting to load HTML at', new Date().toISOString());
   
   if (isDev) {
-    // In dev, load Vite server with simple retry until it’s ready
+    // In dev, load Vite server with simple retry until it�s ready
     const devUrl = 'http://localhost:5173';
     const tryLoad = async (attempt = 1) => {
       try {
@@ -178,23 +336,23 @@ function createWindow() {
     tryLoad();
   } else {
     const htmlPath = path.join(__dirname, '../dist/index-electron.html');
-    console.log('⏱️  LOAD: Loading HTML from:', htmlPath);
+    console.log('??  LOAD: Loading HTML from:', htmlPath);
     mainWindow.loadFile(htmlPath);
   }
 
   // Track when DOM is ready
   mainWindow.webContents.once('dom-ready', () => {
-    console.timeEnd('📄 HTML-LOADING');
-    console.time('⚡ DOM-TO-READY-TO-SHOW');
-    console.log('⏱️  DOM: DOM ready at', new Date().toISOString());
+    console.timeEnd('?? HTML-LOADING');
+    console.time('? DOM-TO-READY-TO-SHOW');
+    console.log('??  DOM: DOM ready at', new Date().toISOString());
   });
 
   // Show window when ready to prevent visual flash
   mainWindow.once('ready-to-show', () => {
-    console.timeEnd('⚡ DOM-TO-READY-TO-SHOW');
-    console.timeEnd('🖥️  WINDOW-CREATION');
-    console.timeEnd('🚀 TOTAL-APP-STARTUP');
-    console.log('✅ READY: Window visible at', new Date().toISOString());
+    console.timeEnd('? DOM-TO-READY-TO-SHOW');
+    console.timeEnd('???  WINDOW-CREATION');
+    console.timeEnd('?? TOTAL-APP-STARTUP');
+    console.log('? READY: Window visible at', new Date().toISOString());
     mainWindow.show();
   });
 
@@ -231,7 +389,7 @@ function createWindow() {
       }));
     `);
     
-    console.log('🔍 Native Electron zoom level:', currentZoomFactor);
+    console.log('?? Native Electron zoom level:', currentZoomFactor);
   };
 
   mainWindow.webContents.on('dom-ready', () => {
@@ -243,14 +401,14 @@ function createWindow() {
       // Listen for zoom changes from main process
       document.addEventListener('electron-zoom-change', (event) => {
         rendererZoomLevel = event.detail.zoomLevel;
-        console.log('🔍 Renderer zoom level updated:', rendererZoomLevel);
+        console.log('?? Renderer zoom level updated:', rendererZoomLevel);
       });
       
       // Sync initial zoom level
       if (typeof electronAPI !== 'undefined' && electronAPI.getZoomFactor) {
         electronAPI.getZoomFactor().then(factor => {
           rendererZoomLevel = factor;
-          console.log('🔍 Initial renderer zoom level:', rendererZoomLevel);
+          console.log('?? Initial renderer zoom level:', rendererZoomLevel);
         });  
       }
       
@@ -531,8 +689,17 @@ ipcMain.handle('get-zoom-factor', () => {
   return currentZoomFactor;
 });
 
+ipcMain.handle('compare-in-word', async (event, payload) => {
+  const basePath = payload?.basePath || '';
+  const changedPath = payload?.changedPath || '';
+  return await launchWordCompare(basePath, changedPath);
+});
+
 app.whenReady().then(async () => {
   createMenu();
 });
+
+
+
 
 
