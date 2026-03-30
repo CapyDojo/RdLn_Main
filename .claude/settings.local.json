@@ -96,7 +96,17 @@
       "Read(C:\\Users\\edsiu/**)",
       "Read(C:\\Users\\edsiu/**)",
       "Read(C:\\Users\\edsiu/**)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(npm init -y)",
+      "Bash(npm install:*)",
+      "Bash(dir:*)",
+      "Bash(npm info:*)",
+      "Read(//tmp/shotpath/**)",
+      "Bash(nul)",
+      "Bash(findstr:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "additionalDirectories": [

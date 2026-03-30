@@ -6,10 +6,9 @@ All notable changes to this project are documented here. This file follows the K
 ## [Unreleased]
 
 ### Features
-
-### Refactoring
-
-### Chore
+- **PDF & DOCX Support**: Added native support for dragging and dropping or pasting PDF and DOCX files directly into the input panels.
+- **PDF Text Extraction**: Enabled direct text extraction from PDF files using `pdfjs-dist` (local worker).
+- **Docx Processing**: Enhanced DOCX processing reliability.
 
 ### Contents
 - 0.6.5 - 2025-09-05
