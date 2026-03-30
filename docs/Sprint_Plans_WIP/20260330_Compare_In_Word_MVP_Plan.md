@@ -1,3 +1,84 @@
+# Coding Agent Execution Prompt
+
+Implement the sprint plan in this document.
+
+Important repo rules:
+- Read and follow [Agent_Rules.md](C:/temp/RdLn_MVP_Stream/docs/DevRules/Agent_Rules.md) and [DEVELOPMENT_GUIDELINES.md](C:/temp/RdLn_MVP_Stream/docs/DevRules/DEVELOPMENT_GUIDELINES.md) first.
+- Prefer native Windows commands.
+- Do not run `git clean -fdx`.
+- Do not start the dev server in chat.
+- Do not modify `src/algorithms/MyersAlgorithm.ts`.
+- Keep changes minimal, surgical, and non-regressive.
+- Tauri is on hold. Do not touch `src-tauri/**`.
+
+Task:
+Implement a guarded MVP for `Compare in Word` in the real Electron app.
+
+Goal:
+Add an optional `Compare in Word` action for file-based `.docx` to `.docx` workflows in the Windows Electron app only, behind a feature flag, without affecting RdLn's native comparison pipeline.
+
+Strict scope:
+- Windows only
+- Electron only
+- DOCX to DOCX only
+- File-based inputs only
+- Launch local Microsoft Word compare
+- Result stays in Word
+- No web app support
+- No PDF support
+- No import of Word result back into RdLn
+- No changes to Myers/native compare logic
+
+Requirements:
+1. Add a feature flag, recommended name: `ENABLE_COMPARE_IN_WORD`.
+2. Show the action only when appropriate, or disable it with a clear reason:
+   - Electron runtime
+   - Windows platform
+   - both inputs are real local files
+   - both files are `.docx`
+3. Implement Electron-side validation for:
+   - both files exist
+   - both are `.docx`
+   - files are different
+4. Implement the desktop launch path in the Electron layer only.
+5. Keep Word-specific launch logic isolated from the web runtime path.
+6. Ensure failure to launch Word does not break the app.
+7. Use plain-English success/failure messages.
+8. Preserve existing RdLn compare behavior completely.
+
+Architecture guidance:
+- Renderer/UI collects intent and displays action/state.
+- Preload exposes minimal safe API.
+- Electron main process owns validation and launch.
+- Keep Word integration out of `useComparison` and out of the native result pipeline.
+
+Before coding:
+- Inspect current file-input flow and identify where file metadata/path is currently tracked.
+- Find the best existing UI location for a secondary compare action in the file-based workflow.
+- Confirm how to safely distinguish file inputs from pasted text inputs.
+
+Implementation notes:
+- You may use the standalone prototype at `Prototypes/20260330_Prototype_A_Word_Compare_Mock` as reference only.
+- Do not blindly copy prototype structure if it does not fit the app.
+- Prefer the app-owned automation bridge approach from the plan for MVP.
+- Keep the code path modular and reversible.
+
+Testing/verification:
+- Run targeted verification where feasible without starting the dev server in chat.
+- At minimum, run syntax/type/lint checks relevant to changed files if possible.
+- If full runtime verification requires the app to be launched externally, say exactly what the user should test manually.
+
+Deliverables:
+- Implemented feature-flagged MVP
+- concise summary of what changed
+- file references for key changes
+- any risks or limitations remaining
+- exact manual QA steps for the user to run externally
+
+Be pragmatic. Keep the implementation narrow.
+
+---
+
 # 20260330 Compare In Word MVP Plan
 
 ## Status
