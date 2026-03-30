@@ -71,7 +71,8 @@ scripts/*.ps1
 .qoder/
 ELECTRON_BUILD_SYSTEM_REPORT.md
 builder.log
-debug-jsx-issue.mdPrototypes/
+debug-jsx-issue.md
+Prototypes/ExtDiff-master/
 *.log
 public/asset-manifest.json
 public/asset-report.json
