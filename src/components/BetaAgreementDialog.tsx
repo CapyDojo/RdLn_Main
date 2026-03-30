@@ -89,9 +89,13 @@ export const BetaAgreementDialog: React.FC<BetaAgreementDialogProps> = ({ onAcce
     const acceptanceData = {
       accepted: true,
       timestamp: new Date().toISOString(),
-      version: '0.6.0'
+      version: '0.6.0',
+      analyticsConsent: true
     };
     localStorage.setItem('rdln_beta_terms_accepted', JSON.stringify(acceptanceData));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('rdln:betaAccepted'));
+    }
     onAccept();
   };
 

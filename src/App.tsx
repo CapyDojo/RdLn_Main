@@ -528,66 +528,94 @@ function App() {
       return;
     }
 
-    // Initialize PostHog analytics
-    // Try VITE_ prefixed variables first, then REACT_APP_ for compatibility
-    const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY || 
-                           (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_API_KEY) || 
-                           'your-posthog-api-key';
-    const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 
-                        (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_HOST) || 
-                        'https://us.posthog.com';
-    const NODE_ENV = (typeof process !== 'undefined' && process.env?.NODE_ENV) || 'development';
-    
-    if (POSTHOG_API_KEY && POSTHOG_API_KEY !== 'your-posthog-api-key') {
-      // Only initialize if not already initialized (handles React Strict Mode)
-      if (!analyticsService.isInitialized()) {
-        console.log('📊 Analytics: Initializing PostHog with:', {
-          apiKey: POSTHOG_API_KEY ? 'KEY_PRESENT' : 'MISSING',
-          apiHost: POSTHOG_HOST,
-          enableInDevelopment: false,
-          capturePageviews: true,
-          captureClicks: false
-        });
-        
-        analyticsService.initialize({
-          apiKey: POSTHOG_API_KEY,
-          apiHost: POSTHOG_HOST,
-          enableInDevelopment: false, // Disable tracking in development
-          capturePageviews: true,
-          captureClicks: false // Privacy-focused: only track explicit events
-        });
-
-        // Track initial app load with delay to ensure initialization is complete
-        setTimeout(() => {
-          console.log('📊 Analytics: Sending app_loaded event');
-          analyticsService.track('app_loaded', {
-            version: '0.6.0',
-            environment: NODE_ENV
-          });
-          // Send a test event to verify events are being captured
-          console.log('📊 Analytics: Sending test_event');
-          analyticsService.track('test_event', {
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent
-          });
-        }, 1000); // Increased delay to 1000ms to ensure initialization is complete
+    const hasBetaConsent = () => {
+      try {
+        const betaAcceptance = localStorage.getItem('rdln_beta_terms_accepted');
+        if (!betaAcceptance) return false;
+        const acceptanceData = JSON.parse(betaAcceptance);
+        return acceptanceData?.accepted === true && acceptanceData?.version === '0.6.0';
+      } catch (error) {
+        console.log('Analytics: beta consent check error:', error);
+        return false;
       }
-    } else {
-      // PostHog not configured - analytics disabled
-      console.log('📊 Analytics: Disabled (no API key configured)');
-    }
+    };
+
+    const NODE_ENV = (typeof process !== 'undefined' && process.env?.NODE_ENV) || 'development';
+
+    const tryInitializeAnalytics = () => {
+      if (!hasBetaConsent()) {
+        console.log('📊 Analytics: Waiting for beta consent');
+        return;
+      }
+
+      // Initialize PostHog analytics
+      // Try VITE_ prefixed variables first, then REACT_APP_ for compatibility
+      const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY || 
+                             (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_API_KEY) || 
+                             'your-posthog-api-key';
+      const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 
+                          (typeof process !== 'undefined' && process.env?.REACT_APP_POSTHOG_HOST) || 
+                          'https://us.posthog.com';
+      
+      if (POSTHOG_API_KEY && POSTHOG_API_KEY !== 'your-posthog-api-key') {
+        // Only initialize if not already initialized (handles React Strict Mode)
+        if (!analyticsService.isInitialized()) {
+          console.log('📊 Analytics: Initializing PostHog with:', {
+            apiKey: POSTHOG_API_KEY ? 'KEY_PRESENT' : 'MISSING',
+            apiHost: POSTHOG_HOST,
+            enableInDevelopment: false,
+            capturePageviews: true,
+            captureClicks: false
+          });
+          
+          analyticsService.initialize({
+            apiKey: POSTHOG_API_KEY,
+            apiHost: POSTHOG_HOST,
+            enableInDevelopment: false, // Disable tracking in development
+            capturePageviews: true,
+            captureClicks: false // Privacy-focused: only track explicit events
+          });
+
+          // Track initial app load with delay to ensure initialization is complete
+          setTimeout(() => {
+            console.log('📊 Analytics: Sending app_loaded event');
+            analyticsService.track('app_loaded', {
+              version: '0.6.0',
+              environment: NODE_ENV
+            });
+            // Send a test event to verify events are being captured
+            console.log('📊 Analytics: Sending test_event');
+            analyticsService.track('test_event', {
+              timestamp: new Date().toISOString(),
+              userAgent: navigator.userAgent
+            });
+          }, 1000); // Increased delay to 1000ms to ensure initialization is complete
+        }
+      } else {
+        // PostHog not configured - analytics disabled
+        console.log('📊 Analytics: Disabled (no API key configured)');
+      }
+    };
+
+    tryInitializeAnalytics();
 
     // Set up proper shutdown handler for window close
     const handleBeforeUnload = () => {
       analyticsService.shutdown();
     };
 
+    const handleBetaAccepted = () => {
+      tryInitializeAnalytics();
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('rdln:betaAccepted', handleBetaAccepted);
 
     // Don't shut down analytics on unmount in development (React Strict Mode)
     // Only shut down in production or when the window is actually closing
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('rdln:betaAccepted', handleBetaAccepted);
       if (NODE_ENV === 'production') {
         analyticsService.shutdown();
       }
