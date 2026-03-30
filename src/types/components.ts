@@ -24,6 +24,12 @@ export interface BaseComponentProps {
   };
 }
 
+export interface LocalInputFileSource {
+  filePath: string;
+  fileName: string;
+  fileType: 'docx' | 'pdf' | 'txt' | 'image' | 'unknown';
+}
+
 /**
  * Enhanced hook return pattern with better error handling and status tracking
  * SSMR: Provides consistent interface while maintaining flexibility
