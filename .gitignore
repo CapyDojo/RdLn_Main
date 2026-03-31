@@ -69,6 +69,7 @@ scripts/*.ps1
 
 # Gemini generated files
 .qoder/
+.qwen/
 ELECTRON_BUILD_SYSTEM_REPORT.md
 builder.log
 debug-jsx-issue.md
