@@ -24,12 +24,12 @@ Add an optional `Launch Microsoft Word for Native Compare` action for file-based
 Strict scope:
 - Windows only
 - Electron only
-- DOCX to DOCX only
+- DOCX to DOCX as the supported path; local PDF inputs may be enabled for experimental testing
 - File-based inputs only
 - Launch local Microsoft Word compare
 - Result stays in Word
 - No web app support
-- No PDF support
+- No browser/PDF rendering promise inside RdLn; any PDF-involved Word launch is experimental only
 - No import of Word result back into RdLn
 - No changes to Myers/native compare logic
 
@@ -126,9 +126,12 @@ Final external Electron QA still pending.
 
 ### Follow-On Polish Tasks
 
-- `EWC-UX-08` Outstanding: Adjust linked source filename presentation so the UI grows to fit the full filename with no truncation in visible UI. Wrapping is acceptable.
-- `EWC-UX-09` Outstanding: Remove inline Word-action status and disabled messaging from the UI. Keep disabled explanations in tooltip/state logic only.
+- `EWC-UX-08` Completed: Adjusted linked source filename presentation so the UI grows to fit the full filename with no truncation in visible UI. Wrapping is acceptable.
+- `EWC-UX-09` Completed: Removed the entire inline Word-action helper/status layer from the UI, including ready, launching, success, and disabled text. Explanations now remain in tooltip/state logic only.
 - `EWC-UX-10` Parked: Revisit the edited/disconnected provenance state model. The disconnected indicator should not disappear after continued typing, but the desired long-term behavior needs more refinement before implementation.
+- `EWC-UX-11` Outstanding: Treat file-based document imports as panel-replacement actions rather than text-insertion actions. This should apply to DOCX, PDF, and TXT file imports via drag/drop and clipboard file paste.
+- `EWC-MVP-11` Outstanding: Expand launch eligibility to allow local PDF inputs for experimental testing in Microsoft Word native compare.
+- `EWC-UX-12` Outstanding: Add explicit experimental warning copy whenever a Word native compare launch includes one or more PDF inputs.
 
 ## UX Polish Execution Brief
 
@@ -136,7 +139,7 @@ Implement the UX polish pass for the existing Electron-only Word integration fea
 
 Core product direction:
 - Canonical feature label: `Launch Microsoft Word for Native Compare`
-- This remains Windows + Electron + DOCX-only + file-based-only
+- This remains Windows + Electron + file-based-only, with DOCX as the trusted path and local PDF inputs eligible for experimental testing
 - Result stays in Microsoft Word
 - RdLn native compare remains unchanged
 
@@ -229,12 +232,15 @@ Verification:
 ## Follow-On Decisions
 
 - `EWC-UX-08`: Linked source filenames are legally significant and should remain fully visible in the UI. The presentation may grow vertically or horizontally as needed. Wrapping is acceptable; truncation in visible UI is not.
-- `EWC-UX-09`: Inline Word-action status and disabled helper text is not desired. Disabled explanations should live in tooltip/state handling only, so the current inline UI needs to be removed.
+- `EWC-UX-09`: Inline Word-action helper/status text is not desired. This includes the current ready, launching, success, and disabled inline messages. Explanations should live in tooltip/state handling only.
 - `EWC-UX-10`: The edited/disconnected state needs a more deliberate persistence model and is intentionally parked for now rather than patched narrowly.
+- `EWC-UX-11`: File-based document imports should behave as document imports, not text insertions. DOCX, PDF, and TXT file imports via drag/drop or clipboard file paste should replace the entire panel content rather than inserting at the caret. Plain-text paste and OCR-derived text insertion should continue to insert at the current selection.
+- `EWC-MVP-11`: Local PDF inputs should be eligible for `Launch Microsoft Word for Native Compare` for experimental testing, even though DOCX remains the trusted path.
+- `EWC-UX-12`: Any Word native compare launch involving one or more PDF files should present explicit experimental-warning copy because Word may convert PDFs before comparing and the results can be lossy or inconsistent.
 
 ## Objective
 
-Add an optional `Launch Microsoft Word for Native Compare` path for file-based `.docx` workflows in the Windows Electron app, without changing RdLn's core native comparison engine.
+Add an optional `Launch Microsoft Word for Native Compare` path for file-based document workflows in the Windows Electron app, without changing RdLn's core native comparison engine.
 
 This feature is intended to:
 
@@ -246,7 +252,7 @@ This feature is intended to:
 
 This is not a replacement for RdLn compare.
 
-This is an alternative secondary action for users who have loaded two supported Word documents and want to compare them using locally installed Microsoft Word.
+This is an alternative secondary action for users who have loaded two supported local documents and want to compare them using locally installed Microsoft Word.
 
 Recommended UX framing:
 
@@ -260,7 +266,8 @@ Recommended UX framing:
 
 - Windows only
 - Electron app only
-- `.docx` to `.docx` only
+- `.docx` to `.docx` as the supported path
+- local `.pdf` inputs eligible for experimental testing in Word native compare
 - File-based inputs only
 - Launch local Microsoft Word compare
 - Keep comparison result in Word
@@ -270,7 +277,6 @@ Recommended UX framing:
 ### Out of scope
 
 - Web app support
-- `.pdf` support
 - pasted text converted to temp files for Word compare
 - importing Word comparison result back into RdLn
 - macOS support
@@ -286,6 +292,8 @@ A narrow first version captures the useful product value while avoiding several 
 - web browsers cannot reliably launch local Word compare
 - round-tripping Word output back into RdLn adds significant complexity
 - Office automation behavior may vary across installations and enterprise environments
+
+For that reason, DOCX remains the trusted path and any PDF-involved launch should be treated as explicitly experimental.
 
 ## Prototype Learnings
 
@@ -308,15 +316,15 @@ Important technical note:
 
 ## Proposed User Flow
 
-1. User loads two `.docx` files into Original and Revised.
-2. RdLn validates that both inputs are valid local DOCX files.
+1. User loads two supported local files into Original and Revised.
+2. RdLn validates that both inputs are valid local files in the allowed Word-launch set.
 3. RdLn displays both compare options:
    - `Compare`
    - `Launch Microsoft Word for Native Compare`
 4. User clicks `Launch Microsoft Word for Native Compare`.
 5. Electron main process validates:
    - both files exist
-   - both are `.docx`
+   - both are in the allowed launch set
    - files are different
    - feature is enabled
    - platform is Windows desktop
@@ -333,7 +341,7 @@ Show `Launch Microsoft Word for Native Compare` only when:
 - app is running in Electron
 - platform is Windows
 - both inputs came from actual local files
-- both inputs are `.docx`
+- both inputs are in the allowed Word-launch set
 
 Otherwise either hide the action or show a disabled state with exact reason.
 
@@ -349,9 +357,10 @@ Helper copy:
 
 Failure examples:
 
-- `Only DOCX files are supported for Word native compare.`
+- `Only supported local DOCX or PDF files can be used for Word native compare.`
 - `RdLn could not launch Microsoft Word. Please try again.`
 - `Choose two different DOCX files to continue.`
+- `Experimental: Microsoft Word may convert PDF files before comparing. Results can vary.`
 
 ### UI placement
 
@@ -442,7 +451,7 @@ Use Option A for MVP and revisit Option B only if the feature proves valuable an
 ### Product risks
 
 - users may confuse Word output with RdLn output
-- users may expect PDF support immediately
+- users may over-trust PDF support or assume Word preserves PDF fidelity
 - users may assume the feature works in browser/web mode
 - users may expect RdLn to import and render the Word redline automatically
 
@@ -454,7 +463,7 @@ Use Option A for MVP and revisit Option B only if the feature proves valuable an
 ## Risk Mitigations
 
 - release behind a feature flag
-- scope to DOCX only
+- keep DOCX as the trusted path and treat PDF-involved launches as explicitly experimental
 - scope to Windows Electron only
 - keep output in Word only
 - provide plain-English validation and failure messages
@@ -477,7 +486,7 @@ Behavior:
 
 ### Functional
 
-- User can load two DOCX files and choose `Launch Microsoft Word for Native Compare`
+- User can load two supported local files and choose `Launch Microsoft Word for Native Compare`
 - RdLn blocks unsupported file types
 - RdLn blocks missing files
 - RdLn blocks same-file input
@@ -486,9 +495,10 @@ Behavior:
 
 ### UX
 
-- Feature is clearly labeled as external Word compare
+- Feature is clearly labeled as `Launch Microsoft Word for Native Compare`
 - User gets an understandable status message for success or failure
 - Action appears only when relevant or is clearly disabled with reason
+- PDF-involved launches are explicitly labeled as experimental
 
 ### Safety
 
@@ -501,7 +511,7 @@ Behavior:
 
 - feature flag implemented
 - Electron-only integration path implemented
-- UI integrated into file-based DOCX workflow
+- UI integrated into file-based document workflow
 - validation and error handling implemented
 - manual QA on Windows with local Word installed
 - manual QA on Windows without usable Word launch path
@@ -511,10 +521,11 @@ Behavior:
 
 1. Valid `.docx` + `.docx` launches Word compare.
 2. Same file selected twice is blocked.
-3. Non-DOCX input hides or disables the action.
+3. Unsupported file combinations hide or disable the action.
 4. Missing or moved file is blocked with clear message.
 5. Feature hidden or unavailable in unsupported runtime contexts.
 6. Failure to launch Word produces user-safe error copy.
+7. PDF-involved launch paths show experimental warning copy before launch.
 
 ## Open Decisions
 
