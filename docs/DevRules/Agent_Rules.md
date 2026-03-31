@@ -210,7 +210,20 @@ When working on features during a sprint (identified by YYYYMMDD date prefix):
 • Completion notes with key accomplishments
 3. Archive Management: If individual documentation files are created during development (for detailed investigation or complex implementations), immediately consolidate their content into the central document and move the individual files to a [YYYYMMDD]_sprint archive folder to maintain a clean documentation structure.
 4. Update Central Document: Always update the central planning document's progress tracking, status summaries, and next priority sections when features are completed or status changes occur.
-5. Documentation Location: Keep the central planning document in the appropriate subfolder (/docs/future-features/, /docs/experimental-features/, etc.) and archive folders directly under /docs/ for easy reference.
+5. Documentation Location: Active sprint planning documents should normally live in `docs/Sprint_Plans_WIP/`. Once a sprint is completed, move or mirror the authoritative final sprint document into `docs/Sprint_Plans_Completed/` if appropriate. Use other `/docs/**` subfolders only when a document is not serving as the active sprint source of truth.
+6. Execution Prompt At Top: Start the sprint document with a short coding-agent execution prompt that tells the agent how to use the file, what section to read first, and what not to re-implement.
+7. Task Tracker Required: Every active sprint document must contain a dedicated task tracker section with stable task IDs and explicit statuses. Do not rely on loose bullet lists alone.
+8. Task ID Convention: Use stable grouped task IDs such as:
+• `ABC-MVP-01`, `ABC-MVP-02` for core implementation
+• `ABC-UX-01`, `ABC-UX-02` for UX/polish work
+• `ABC-QA-01`, `ABC-QA-02` for verification work
+Use a short feature prefix that remains stable throughout the sprint.
+9. Status Discipline: Each actionable task must be marked with a clear status such as `Completed`, `Outstanding`, or `Blocked`. Update statuses in place rather than duplicating the same task elsewhere in the doc.
+10. Separation Of Completed vs Outstanding Work: The sprint document must make it easy for a new agent to distinguish what is already done from what remains to be done. If part of the sprint has already shipped, reflect that directly in the task tracker and summary sections.
+11. Separate Execution Sections When Needed: If the sprint evolves from MVP build-out to polish/refinement, keep one central document but add clearly separated execution sections, and explicitly map them to the relevant task ID groups.
+12. Naming Cleanup Requirement: When a feature is renamed mid-sprint, update the central sprint document so the narrative sections reflect the approved current wording. If an old name remains, it should be only where historically or operationally necessary, such as a rename task description.
+13. QA Tracking Requirement: Include explicit QA tasks in the task tracker and mark them complete only after external/manual verification has actually occurred.
+14. Agent Instruction Style: The central sprint document should be executable by reference. A future agent should be able to act on instructions like “execute this md” or “complete EWC-UX-01 to EWC-UX-07” without ambiguity.
 
 This approach ensures a single authoritative source of truth while preserving detailed implementation history in organized archives.
 

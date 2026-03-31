@@ -91,7 +91,8 @@ In progress.
 
 Standalone prototype validated.
 Core production MVP implemented and manually validated in Electron dev.
-UX polish pass still outstanding.
+UX polish implementation completed.
+Final external Electron QA still pending.
 
 ## Task Tracker
 
@@ -110,18 +111,24 @@ UX polish pass still outstanding.
 
 ### UX Polish Tasks
 
-- `EWC-UX-01` Outstanding: Rename live UX from `External Word Compare` to `Launch Microsoft Word for Native Compare`
-- `EWC-UX-02` Outstanding: Apply hide-vs-disable behavior refinement
-- `EWC-UX-03` Outstanding: Add linked source chips near input headers
-- `EWC-UX-04` Outstanding: Add edited/disconnected inline messaging after manual text edits
-- `EWC-UX-05` Outstanding: Improve helper/status copy near the Word action
-- `EWC-UX-06` Outstanding: Add first-use confirmation modal with persistence
-- `EWC-UX-07` Outstanding: Refine success/failure copy to approved final wording
+- `EWC-UX-01` Completed: Renamed live UX from `External Word Compare` to `Launch Microsoft Word for Native Compare`
+- `EWC-UX-02` Completed: Applied hide-vs-disable behavior refinement
+- `EWC-UX-03` Completed: Added linked source chips near input headers
+- `EWC-UX-04` Completed: Added edited/disconnected inline messaging after manual text edits
+- `EWC-UX-05` Completed: Improved helper/status copy near the Word action
+- `EWC-UX-06` Completed: Added first-use confirmation modal with persistence
+- `EWC-UX-07` Completed: Refined success/failure copy to approved final wording
 
 ### QA Tasks
 
 - `EWC-QA-01` Completed: Core manual validation completed in Electron dev
-- `EWC-QA-02` Outstanding: Run final polish QA in Electron after UX updates
+- `EWC-QA-02` Blocked: Run final polish QA in Electron after UX updates and confirm manually
+
+### Follow-On Polish Tasks
+
+- `EWC-UX-08` Outstanding: Adjust linked source filename presentation so the UI grows to fit the full filename with no truncation in visible UI. Wrapping is acceptable.
+- `EWC-UX-09` Outstanding: Remove inline Word-action status and disabled messaging from the UI. Keep disabled explanations in tooltip/state logic only.
+- `EWC-UX-10` Parked: Revisit the edited/disconnected provenance state model. The disconnected indicator should not disappear after continued typing, but the desired long-term behavior needs more refinement before implementation.
 
 ## UX Polish Execution Brief
 
@@ -218,6 +225,12 @@ Verification:
 - Do not start the dev server in chat
 - Provide exact manual QA steps for external Electron testing
 - Mark `EWC-QA-02` complete only after external QA confirms the polish pass works as intended
+
+## Follow-On Decisions
+
+- `EWC-UX-08`: Linked source filenames are legally significant and should remain fully visible in the UI. The presentation may grow vertically or horizontally as needed. Wrapping is acceptable; truncation in visible UI is not.
+- `EWC-UX-09`: Inline Word-action status and disabled helper text is not desired. Disabled explanations should live in tooltip/state handling only, so the current inline UI needs to be removed.
+- `EWC-UX-10`: The edited/disconnected state needs a more deliberate persistence model and is intentionally parked for now rather than patched narrowly.
 
 ## Objective
 
