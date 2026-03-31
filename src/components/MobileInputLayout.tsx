@@ -13,6 +13,10 @@ interface MobileInputLayoutProps extends BaseComponentProps {
   onRevisedTextChange: (value: string, isPasteAction?: boolean) => void;
   onOriginalFileSourceChange: (source: LocalInputFileSource | null) => void;
   onRevisedFileSourceChange: (source: LocalInputFileSource | null) => void;
+  originalFileSource: LocalInputFileSource | null;
+  revisedFileSource: LocalInputFileSource | null;
+  originalDisconnectedFileSource: LocalInputFileSource | null;
+  revisedDisconnectedFileSource: LocalInputFileSource | null;
   panelResizeHandlers: {
     handleMouseDown: (e: React.MouseEvent) => void;
     desktopInputPanelsRef: React.RefObject<HTMLDivElement>;
@@ -30,6 +34,10 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
   onRevisedTextChange,
   onOriginalFileSourceChange,
   onRevisedFileSourceChange,
+  originalFileSource,
+  revisedFileSource,
+  originalDisconnectedFileSource,
+  revisedDisconnectedFileSource,
   panelResizeHandlers,
   mobileResizeHandleRef,
   style,
@@ -47,6 +55,8 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
             value={originalText}
             onChange={onOriginalTextChange}
             onFileSourceChange={onOriginalFileSourceChange}
+            linkedFileSource={originalFileSource}
+            disconnectedFileSource={originalDisconnectedFileSource}
             placeholder="Enter text, drop files, or paste screenshots here..."
             disabled={isProcessing}
             height={panelHeight}
@@ -101,6 +111,8 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
             value={revisedText}
             onChange={onRevisedTextChange}
             onFileSourceChange={onRevisedFileSourceChange}
+            linkedFileSource={revisedFileSource}
+            disconnectedFileSource={revisedDisconnectedFileSource}
             placeholder="Enter text, drop files, or paste screenshots here..."
             disabled={isProcessing}
             height={panelHeight}

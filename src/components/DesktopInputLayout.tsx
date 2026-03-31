@@ -20,6 +20,10 @@ interface DesktopInputLayoutProps extends BaseComponentProps {
   /** Callback for file source changes */
   onOriginalFileSourceChange: (source: LocalInputFileSource | null) => void;
   onRevisedFileSourceChange: (source: LocalInputFileSource | null) => void;
+  originalFileSource: LocalInputFileSource | null;
+  revisedFileSource: LocalInputFileSource | null;
+  originalDisconnectedFileSource: LocalInputFileSource | null;
+  revisedDisconnectedFileSource: LocalInputFileSource | null;
   /** Panel resize handlers from hook */
   panelResizeHandlers: {
     handleMouseDown: (e: React.MouseEvent) => void;
@@ -42,6 +46,10 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
   onRevisedTextChange,
   onOriginalFileSourceChange,
   onRevisedFileSourceChange,
+  originalFileSource,
+  revisedFileSource,
+  originalDisconnectedFileSource,
+  revisedDisconnectedFileSource,
   panelResizeHandlers,
   desktopResizeHandleRef,
   style,
@@ -59,6 +67,8 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
             value={originalText}
             onChange={onOriginalTextChange}
             onFileSourceChange={onOriginalFileSourceChange}
+            linkedFileSource={originalFileSource}
+            disconnectedFileSource={originalDisconnectedFileSource}
             placeholder="Enter text, drop files, or paste screenshots here..."
             disabled={isProcessing}
             height={panelHeight}
@@ -72,6 +82,8 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
             value={revisedText}
             onChange={onRevisedTextChange}
             onFileSourceChange={onRevisedFileSourceChange}
+            linkedFileSource={revisedFileSource}
+            disconnectedFileSource={revisedDisconnectedFileSource}
             placeholder="Enter text, drop files, or paste screenshots here..."
             disabled={isProcessing}
             height={panelHeight}

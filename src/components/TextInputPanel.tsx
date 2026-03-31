@@ -27,6 +27,8 @@ interface TextInputPanelProps extends BaseComponentProps {
   height?: number;
   iconEmoji?: string;
   onFileSourceChange?: (source: LocalInputFileSource | null) => void;
+  linkedFileSource?: LocalInputFileSource | null;
+  disconnectedFileSource?: LocalInputFileSource | null;
 }
 
 export const TextInputPanel: React.FC<TextInputPanelProps> = ({
@@ -38,6 +40,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   height = 400,
   iconEmoji,
   onFileSourceChange,
+  linkedFileSource = null,
+  disconnectedFileSource = null,
   style,
   className,
   ...props
@@ -1007,15 +1011,43 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       data-panel-title={title}
       data-instance-id={instanceId.current}
     >
-      <div className="glass-panel-header-footer px-4 py-3 flex items-center justify-between relative">
+      <div className="glass-panel-header-footer px-4 py-3 flex items-start justify-between relative">
         <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-theme-neutral-300 to-transparent"></div>
-        <div className="flex items-center gap-2">
-          {iconEmoji ? (
-            <span className="text-3.5xl" role="img" aria-label="Input panel">{iconEmoji}</span>
-          ) : (
-            <FileText className="w-5 h-5 text-theme-primary-900" />
-          )}
-          <h3 className="!text-2.5xl font-semibold text-theme-primary-900">{title}</h3>
+        <div className="flex items-start gap-2">
+          <div className="pt-1">
+            {iconEmoji ? (
+              <span className="text-3.5xl" role="img" aria-label="Input panel">{iconEmoji}</span>
+            ) : (
+              <FileText className="w-5 h-5 text-theme-primary-900" />
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <h3 className="!text-2.5xl font-semibold text-theme-primary-900">{title}</h3>
+            {linkedFileSource && (
+              <div
+                className="inline-flex max-w-[20rem] items-center gap-2 rounded-full border border-theme-primary-200/70 bg-theme-primary-50/90 px-3 py-1 text-xs font-medium text-theme-primary-900"
+                title={`Linked source file: ${linkedFileSource.fileName}`}
+              >
+                <FileText className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{title.replace(/&nbsp;|\s+/g, ' ').trim()}: {linkedFileSource.fileName}</span>
+              </div>
+            )}
+            {!linkedFileSource && disconnectedFileSource && (
+              <div className="max-w-[20rem] space-y-2">
+                <div
+                  className="inline-flex max-w-full items-center gap-2 rounded-full border border-amber-300/80 bg-amber-50/95 px-3 py-1 text-xs font-medium text-amber-900"
+                  title={`Edited after import: ${disconnectedFileSource.fileName}`}
+                >
+                  <FileText className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{title.replace(/&nbsp;|\s+/g, ' ').trim()}: {disconnectedFileSource.fileName}</span>
+                  <span className="rounded-full bg-amber-200/90 px-2 py-0.5 text-[10px] uppercase tracking-wide">Edited</span>
+                </div>
+                <div className="text-xs leading-5 text-amber-900">
+                  Text was edited in RdLn. Word native compare requires the original local DOCX files.
+                </div>
+              </div>
+            )}
+          </div>
           <div className="relative">
             <CustomTooltip
               content={`Enable when pasting broken PDF paragraphs. \n\n RdLn will fix them for you!\n`}
