@@ -251,6 +251,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     setRevisedDisconnectedFileSource(null);
     setWordCompareFeedback(null);
   }, []);
+  const isWordCompareEligibleFileType = (fileType: LocalInputFileSource['fileType']) =>
+    fileType === 'docx' || fileType === 'pdf';
   const getCompareInWordDisabledReason = () => {
     if (!FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE) {
       return 'Word native compare is currently disabled.';
@@ -271,13 +273,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       return 'Microsoft Word is launching...';
     }
     if (!originalFileSource || !revisedFileSource) {
-      return 'Load both sides from local DOCX files to use Word native compare.';
+      return 'Load both sides from local DOCX or PDF files to use Word native compare.';
     }
-    if (originalFileSource.fileType !== 'docx' || revisedFileSource.fileType !== 'docx') {
-      return 'Only DOCX files are supported for Word native compare.';
+    if (!isWordCompareEligibleFileType(originalFileSource.fileType) || !isWordCompareEligibleFileType(revisedFileSource.fileType)) {
+      return 'Only supported local DOCX or PDF files can be used for Word native compare.';
     }
     if (originalFileSource.filePath === revisedFileSource.filePath) {
-      return 'Choose two different DOCX files to continue.';
+      return 'Choose two different DOCX or PDF files to continue.';
     }
     return null;
   };

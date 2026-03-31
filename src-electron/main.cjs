@@ -133,6 +133,14 @@ function isDocxPath(filePath) {
   return path.extname(filePath || '').toLowerCase() === '.docx';
 }
 
+function isPdfPath(filePath) {
+  return path.extname(filePath || '').toLowerCase() === '.pdf';
+}
+
+function isWordCompareEligiblePath(filePath) {
+  return isDocxPath(filePath) || isPdfPath(filePath);
+}
+
 function buildWordCompareScript(basePath, changedPath) {
   const safeBasePath = escapeForPowerShell(basePath);
   const safeChangedPath = escapeForPowerShell(changedPath);
@@ -190,15 +198,15 @@ async function validateWordComparePaths(basePath, changedPath) {
     return {
       ok: false,
       code: 'MISSING_FILES',
-      message: 'Choose both an original and revised DOCX file.'
+      message: 'Choose both an original and revised DOCX or PDF file.'
     };
   }
 
-  if (!isDocxPath(basePath) || !isDocxPath(changedPath)) {
+  if (!isWordCompareEligiblePath(basePath) || !isWordCompareEligiblePath(changedPath)) {
     return {
       ok: false,
       code: 'UNSUPPORTED_FILE_TYPE',
-      message: 'Only DOCX files are supported for Word native compare.'
+      message: 'Only supported local DOCX or PDF files can be used for Word native compare.'
     };
   }
 
@@ -206,7 +214,7 @@ async function validateWordComparePaths(basePath, changedPath) {
     return {
       ok: false,
       code: 'SAME_FILE',
-      message: 'Choose two different DOCX files to continue.'
+      message: 'Choose two different DOCX or PDF files to continue.'
     };
   }
 

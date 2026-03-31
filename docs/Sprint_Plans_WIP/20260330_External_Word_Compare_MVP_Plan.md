@@ -130,7 +130,7 @@ Final external Electron QA still pending.
 - `EWC-UX-09` Completed: Removed the entire inline Word-action helper/status layer from the UI, including ready, launching, success, and disabled text. Explanations now remain in tooltip/state logic only.
 - `EWC-UX-10` Parked: Revisit the edited/disconnected provenance state model. The disconnected indicator should not disappear after continued typing, but the desired long-term behavior needs more refinement before implementation.
 - `EWC-UX-11` Completed: File-based document imports now replace the entire panel content rather than inserting at the caret. This applies to DOCX, PDF, and TXT file imports via drag/drop and clipboard file paste.
-- `EWC-MVP-11` Outstanding: Expand launch eligibility to allow local PDF inputs for experimental testing in Microsoft Word native compare.
+- `EWC-MVP-11` Completed: Expanded launch eligibility to allow local PDF inputs for experimental testing in Microsoft Word native compare.
 - `EWC-UX-12` Outstanding: Add explicit experimental warning copy whenever a Word native compare launch includes one or more PDF inputs.
 
 ## UX Polish Execution Brief

@@ -2,8 +2,8 @@
 
 import { ProcessingResult, ProcessingError, ERROR_CODES } from '../types/file-processing.types';
 
-// Use a dynamic import if needed, but for now we'll import top level to ensure worker setup
-import * as pdfjsLib from 'pdfjs-dist';
+// Use the legacy build for better Electron/older-Chromium compatibility.
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 // Try standard Vite worker import pattern
 // Note: In some environments this might need adjustment, but ?worker is standard Vite
@@ -15,7 +15,7 @@ try {
     // This works best with `pdfjs-dist` in modern bundlers
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    import('pdfjs-dist/build/pdf.worker.mjs?url').then((module) => {
+    import('pdfjs-dist/legacy/build/pdf.worker.mjs?url').then((module) => {
         workerSrc = module.default;
         pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
     });
