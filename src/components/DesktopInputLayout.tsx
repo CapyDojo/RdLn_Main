@@ -1,7 +1,7 @@
 import React from 'react';
 import { GripHorizontal } from 'lucide-react';
 import { TextInputPanel } from './TextInputPanel';
-import { BaseComponentProps } from '../types/components';
+import { BaseComponentProps, LocalInputFileSource } from '../types/components';
 import { getTextMetrics } from '../utils/textMetrics';
 
 interface DesktopInputLayoutProps extends BaseComponentProps {
@@ -17,6 +17,9 @@ interface DesktopInputLayoutProps extends BaseComponentProps {
   onOriginalTextChange: (value: string, isPasteAction?: boolean) => void;
   /** Callback for revised text changes */
   onRevisedTextChange: (value: string, isPasteAction?: boolean) => void;
+  /** Callback for file source changes */
+  onOriginalFileSourceChange: (source: LocalInputFileSource | null) => void;
+  onRevisedFileSourceChange: (source: LocalInputFileSource | null) => void;
   /** Panel resize handlers from hook */
   panelResizeHandlers: {
     handleMouseDown: (e: React.MouseEvent) => void;
@@ -29,15 +32,6 @@ interface DesktopInputLayoutProps extends BaseComponentProps {
 
 /**
  * Desktop Input Layout Component
- * 
- * Handles the side-by-side desktop layout with resize handle below both panels.
- * Extracted from ComparisonInterface for better modularity and mobile customization.
- * 
- * Features:
- * - Side-by-side input panels with shared resize handle
- * - Character and word count display in resize handle
- * - Hover effects for visual feedback
- * - Integrated with useResizeHandlers hook
  */
 export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
   originalText,
@@ -46,6 +40,8 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
   panelHeight,
   onOriginalTextChange,
   onRevisedTextChange,
+  onOriginalFileSourceChange,
+  onRevisedFileSourceChange,
   panelResizeHandlers,
   desktopResizeHandleRef,
   style,
@@ -53,6 +49,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
 }) => {
   const originalMetrics = getTextMetrics(originalText);
   const revisedMetrics = getTextMetrics(revisedText);
+
   return (
     <div className={`hidden lg:block ${className || ''}`} style={style}>
       <div ref={panelResizeHandlers.desktopInputPanelsRef} className="grid grid-cols-2 gap-6">
@@ -61,18 +58,20 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
             title="Original&nbsp;"
             value={originalText}
             onChange={onOriginalTextChange}
+            onFileSourceChange={onOriginalFileSourceChange}
             placeholder="Enter text, drop files, or paste screenshots here..."
             disabled={isProcessing}
             height={panelHeight}
             iconEmoji="📄"
           />
         </div>
-        
+
         <div data-input-panel data-panel-id="revised">
           <TextInputPanel
             title="Revised&nbsp;"
             value={revisedText}
             onChange={onRevisedTextChange}
+            onFileSourceChange={onRevisedFileSourceChange}
             placeholder="Enter text, drop files, or paste screenshots here..."
             disabled={isProcessing}
             height={panelHeight}
@@ -80,36 +79,29 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
           />
         </div>
       </div>
-      
-      {/* Desktop Handle - Below both panels */}
+
       <div className="flex justify-center mb-2">
         <div className="glass-panel bg-theme-neutral-200/60 hover:bg-theme-neutral-300/70 transition-all duration-300 backdrop-blur-md border border-theme-neutral-300/30 shadow-sm hover:shadow-md px-2 py-1">
-          {/* Desktop layout: horizontal */}
           <div className="flex items-center gap-4">
-            {/* Original metrics */}
             <div className="text-xs text-theme-neutral-600 whitespace-nowrap">
               <span className="font-medium">  Original:</span> {originalMetrics.characters.toLocaleString()} chars, {originalMetrics.words.toLocaleString()} words
             </div>
-            
-            {/* Resize handle grip */}
+
             <div
               data-resize-handle="input-panels"
               ref={desktopResizeHandleRef}
               className="flex items-center justify-center w-12 h-7 cursor-row-resize touch-none select-none"
               onMouseDown={panelResizeHandlers.handleMouseDown}
               onMouseEnter={() => {
-                // Apply hover effects to input panels - same as handle bar
                 const inputPanels = document.querySelectorAll('[data-input-panel] .glass-panel');
                 inputPanels.forEach(panel => {
                   const element = panel as HTMLElement;
-                  // Apply same hover state as the handle bar
                   element.classList.add('hover-from-handle');
                   element.style.transform = 'translateY(-1px)';
                   element.style.transition = 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)';
                 });
               }}
               onMouseLeave={() => {
-                // Remove hover effects from input panels
                 const inputPanels = document.querySelectorAll('[data-input-panel] .glass-panel');
                 inputPanels.forEach(panel => {
                   const element = panel as HTMLElement;
@@ -121,8 +113,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
             >
               <GripHorizontal className="w-6 h-6 text-theme-neutral-700" />
             </div>
-            
-            {/* Revised metrics */}
+
             <div className="text-xs text-theme-neutral-600 whitespace-nowrap">
               <span className="font-medium">Revised:</span> {revisedMetrics.characters.toLocaleString()} chars, {revisedMetrics.words.toLocaleString()} words
             </div>

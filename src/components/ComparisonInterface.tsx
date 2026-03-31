@@ -11,7 +11,7 @@
  */
 
 import React, { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { DEV_CONFIG, UI_CONFIG } from '../config/appConfig';
+import { DEV_CONFIG, FEATURE_FLAGS, UI_CONFIG } from '../config/appConfig';
 import { AlertCircle } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
 import { useUndoHistory } from '../hooks/useUndoHistory';
@@ -49,7 +49,7 @@ import { useMobileTabInterface } from '../hooks/useMobileTabInterface';
 import { useResultsOverlay } from '../hooks/useResultsOverlay';
 import { useAutoScroll } from '../hooks/useAutoScroll';
 
-import { BaseComponentProps } from '../types/components';
+import { BaseComponentProps, LocalInputFileSource } from '../types/components';
 
 interface ComparisonInterfaceProps extends BaseComponentProps {
   showAdvancedOcrCard?: boolean;
@@ -127,6 +127,11 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   // State to trigger comparison after sample data is loaded
   const [autoRunTrigger, setAutoRunTrigger] = useState(false);
+  const [originalFileSource, setOriginalFileSource] = useState<LocalInputFileSource | null>(null);
+  const [revisedFileSource, setRevisedFileSource] = useState<LocalInputFileSource | null>(null);
+  const [electronPlatform, setElectronPlatform] = useState<string | null>(null);
+  const [isLaunchingWordCompare, setIsLaunchingWordCompare] = useState(false);
+  const [wordCompareFeedback, setWordCompareFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // State to store output-based stats (overrides algorithm-generated stats)
   const [outputBasedStats, setOutputBasedStats] = useState<import('../types').ComparisonStats | null>(null);
@@ -145,6 +150,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   // Define scoped sample loader so it can be passed as a prop and exposed via ref
   const loadSampleData = (originalText: string, revisedText: string, autoRun: boolean = false) => {
+    setOriginalFileSource(null);
+    setRevisedFileSource(null);
+    setWordCompareFeedback(null);
     setOriginalText(originalText);
     setRevisedText(revisedText);
 
@@ -180,6 +188,114 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     }
   }, [originalText, revisedText, onContentChange, canUndo, clearUndoState]);
 
+  useEffect(() => {
+    let isMounted = true;
+    const detectPlatform = async () => {
+      if (!window.electronAPI || !window.isElectron) {
+        if (isMounted) {
+          setElectronPlatform(null);
+        }
+        return;
+      }
+      try {
+        const platform = await window.electronAPI.getPlatform();
+        if (isMounted) {
+          setElectronPlatform(platform);
+        }
+      } catch {
+        if (isMounted) {
+          setElectronPlatform(null);
+        }
+      }
+    };
+    detectPlatform();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+  const handleOriginalTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
+    if (!isPasteAction) {
+      setOriginalFileSource(null);
+    }
+    setWordCompareFeedback(null);
+    setOriginalText(value, isPasteAction);
+  }, [setOriginalText]);
+  const handleRevisedTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
+    if (!isPasteAction) {
+      setRevisedFileSource(null);
+    }
+    setWordCompareFeedback(null);
+    setRevisedText(value, isPasteAction);
+  }, [setRevisedText]);
+  const handleOriginalFileSourceChange = React.useCallback((source: LocalInputFileSource | null) => {
+    setOriginalFileSource(source);
+    setWordCompareFeedback(null);
+  }, []);
+  const handleRevisedFileSourceChange = React.useCallback((source: LocalInputFileSource | null) => {
+    setRevisedFileSource(source);
+    setWordCompareFeedback(null);
+  }, []);
+  const getCompareInWordDisabledReason = () => {
+    if (!FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE) {
+      return 'External Word Compare is currently disabled.';
+    }
+    if (!window.electronAPI || !window.isElectron) {
+      return 'External Word Compare is available only in the Windows Electron app.';
+    }
+    if (electronPlatform === null) {
+      return 'Checking desktop environment...';
+    }
+    if (electronPlatform !== 'win32') {
+      return 'External Word Compare is available only on Windows.';
+    }
+    if (isProcessing) {
+      return 'Wait for the current comparison to finish.';
+    }
+    if (isLaunchingWordCompare) {
+      return 'Launching Microsoft Word...';
+    }
+    if (!originalFileSource || !revisedFileSource) {
+      return 'Load both sides from local DOCX files to use External Word Compare.';
+    }
+    if (originalFileSource.fileType !== 'docx' || revisedFileSource.fileType !== 'docx') {
+      return 'External Word Compare is available only for DOCX files.';
+    }
+    if (originalFileSource.filePath === revisedFileSource.filePath) {
+      return 'Choose two different DOCX files to use External Word Compare.';
+    }
+    return null;
+  };
+  const compareInWordDisabledReason = getCompareInWordDisabledReason();
+  const handleCompareInWord = React.useCallback(async () => {
+    const disabledReason = getCompareInWordDisabledReason();
+    if (disabledReason) {
+      setWordCompareFeedback({ type: 'error', message: disabledReason });
+      return;
+    }
+    if (!originalFileSource || !revisedFileSource || !window.electronAPI) {
+      setWordCompareFeedback({ type: 'error', message: 'External Word Compare is not available for the current inputs.' });
+      return;
+    }
+    setWordCompareFeedback(null);
+    setIsLaunchingWordCompare(true);
+    try {
+      const result = await window.electronAPI.compareInWord({
+        basePath: originalFileSource.filePath,
+        changedPath: revisedFileSource.filePath
+      });
+      setWordCompareFeedback({
+        type: result.ok ? 'success' : 'error',
+        message: result.message
+      });
+    } catch (error) {
+      setWordCompareFeedback({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Microsoft Word could not be launched on this computer.'
+      });
+    } finally {
+      setIsLaunchingWordCompare(false);
+    }
+  }, [electronPlatform, isLaunchingWordCompare, isProcessing, originalFileSource, revisedFileSource]);
   // Scroll lock state from dedicated context (production-ready)
   const { isScrollLocked, toggleScrollLock } = useScrollLock();
 
@@ -383,8 +499,12 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   // Performance-aware handlers - Define BEFORE useEffect that references them
   const handleSwapContent = usePerformanceAwareHandler(() => {
     const tempOriginal = originalText;
+    const tempOriginalFileSource = originalFileSource;
     setOriginalText(revisedText);
     setRevisedText(tempOriginal);
+    setOriginalFileSource(revisedFileSource);
+    setRevisedFileSource(tempOriginalFileSource);
+    setWordCompareFeedback(null);
 
     // Track swap metrics
     performanceTracker.trackMetric('content_swap', {
@@ -400,6 +520,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       saveClearState(originalText, revisedText);
     }
 
+    setOriginalFileSource(null);
+    setRevisedFileSource(null);
+    setWordCompareFeedback(null);
     resetComparison();
 
     // Track reset metrics
@@ -415,6 +538,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     if (clearedState) {
       setOriginalText(clearedState.originalText);
       setRevisedText(clearedState.revisedText);
+      setOriginalFileSource(null);
+      setRevisedFileSource(null);
+      setWordCompareFeedback(null);
       // Results are not restored - user needs to re-compare if needed
     }
   }, 'undo_clear', performanceTracker);
@@ -435,6 +561,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     const session = loadSession(sessionId);
     if (session) {
       // Load the session content into the input fields
+      setOriginalFileSource(null);
+      setRevisedFileSource(null);
+      setWordCompareFeedback(null);
       setOriginalText(session.originalText);
       setRevisedText(session.revisedText);
 
@@ -565,6 +694,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     // Track load test operation
     await performanceTracker.trackOperation('load_test', async () => {
       // SSMR: Clear inputs first to prevent persistence issues
+      setOriginalFileSource(null);
+      setRevisedFileSource(null);
+      setWordCompareFeedback(null);
       setOriginalText('');
       setRevisedText('');
 
@@ -737,8 +869,10 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           revisedText={revisedText}
           isProcessing={isProcessing}
           panelHeight={panelHeight}
-          onOriginalTextChange={(value: string, isPasteAction?: boolean) => setOriginalText(value, isPasteAction)}
-          onRevisedTextChange={(value: string, isPasteAction?: boolean) => setRevisedText(value, isPasteAction)}
+          onOriginalTextChange={handleOriginalTextChange}
+          onRevisedTextChange={handleRevisedTextChange}
+          onOriginalFileSourceChange={handleOriginalFileSourceChange}
+          onRevisedFileSourceChange={handleRevisedFileSourceChange}
           panelResizeHandlers={panelResizeHandlers}
           desktopResizeHandleRef={desktopResizeHandleRef}
         />
@@ -749,8 +883,10 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           revisedText={revisedText}
           isProcessing={isProcessing}
           panelHeight={panelHeight}
-          onOriginalTextChange={(value: string, isPasteAction?: boolean) => setOriginalText(value, isPasteAction)}
-          onRevisedTextChange={(value: string, isPasteAction?: boolean) => setRevisedText(value, isPasteAction)}
+          onOriginalTextChange={handleOriginalTextChange}
+          onRevisedTextChange={handleRevisedTextChange}
+          onOriginalFileSourceChange={handleOriginalFileSourceChange}
+          onRevisedFileSourceChange={handleRevisedFileSourceChange}
           panelResizeHandlers={panelResizeHandlers}
           mobileResizeHandleRef={mobileResizeHandleRef}
         />
@@ -762,9 +898,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           isScrollLocked={isScrollLocked}
           systemProtectionEnabled={systemProtectionEnabled}
           isProcessing={isProcessing}
+          isLaunchingWordCompare={isLaunchingWordCompare}
           originalText={originalText}
           revisedText={revisedText}
           onCompare={() => handleCompareDocuments()}
+          onCompareInWord={handleCompareInWord}
+          compareInWordDisabledReason={compareInWordDisabledReason}
+          showCompareInWord={FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
           onToggleScrollLock={toggleScrollLock}
@@ -780,9 +920,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           quickCompareEnabled={quickCompareEnabled}
           isScrollLocked={isScrollLocked}
           isProcessing={isProcessing}
+          isLaunchingWordCompare={isLaunchingWordCompare}
           originalText={originalText}
           revisedText={revisedText}
           onCompare={() => handleCompareDocuments()}
+          onCompareInWord={handleCompareInWord}
+          compareInWordDisabledReason={compareInWordDisabledReason}
+          showCompareInWord={FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
           onToggleScrollLock={toggleScrollLock}
@@ -808,6 +952,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
 
 
+
+      {wordCompareFeedback && (
+        <div className={`mt-3 flex items-center gap-2 text-sm ${wordCompareFeedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+          <AlertCircle className="w-4 h-4" />
+          {wordCompareFeedback.message}
+        </div>
+      )}
 
       {(result || isProcessing) && (
         <div className="output-section" style={{ display: getPanelVisibility('output') }}>
@@ -964,3 +1115,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     </div>
   );
 });
+
+
+
+
+

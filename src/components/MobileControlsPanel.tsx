@@ -1,50 +1,39 @@
 import React from 'react';
-import { Play, Trash2, ArrowLeftRight, Zap, ZapOff, Lock, Undo } from 'lucide-react';
+import { Play, Trash2, ArrowLeftRight, Zap, ZapOff, Lock, Undo, FileText } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
 import { CustomTooltip } from './CustomTooltip';
 
 interface MobileControlsPanelProps extends BaseComponentProps {
-  /** Whether Quick Compare is enabled */
   quickCompareEnabled: boolean;
-  /** Whether scroll lock is active */
   isScrollLocked: boolean;
-  /** Whether currently processing */
   isProcessing: boolean;
-  /** Original text content */
+  isLaunchingWordCompare?: boolean;
   originalText: string;
-  /** Revised text content */
   revisedText: string;
-  /** Callback for compare button */
   onCompare: () => void;
-  /** Callback for toggle quick compare */
+  onCompareInWord?: () => void;
+  compareInWordDisabledReason?: string | null;
+  showCompareInWord?: boolean;
   onToggleQuickCompare: () => void;
-  /** Callback for swap content */
   onSwapContent: () => void;
-  /** Callback for toggle scroll lock */
   onToggleScrollLock: () => void;
-  /** Callback for reset comparison */
   onResetComparison: () => void;
-  /** Whether undo is available */
   canUndo?: boolean;
-  /** Callback for undo action */
   onUndo?: () => void;
-  /** Content length for smart clear warnings */
   contentLength?: number;
 }
 
-/**
- * Mobile Controls Panel Component
- * 
- * Contains all the control buttons for mobile layout with horizontal arrangement.
- * Extracted from ComparisonInterface for better modularity and reusability.
- */
 export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
   quickCompareEnabled,
   isScrollLocked,
   isProcessing,
+  isLaunchingWordCompare = false,
   originalText,
   revisedText,
   onCompare,
+  onCompareInWord,
+  compareInWordDisabledReason = null,
+  showCompareInWord = false,
   onToggleQuickCompare,
   onSwapContent,
   onToggleScrollLock,
@@ -55,17 +44,14 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
   style,
   className
 }) => {
+  const compareInWordTooltip = compareInWordDisabledReason || (isLaunchingWordCompare ? 'Launching Microsoft Word...' : 'External Word Compare');
+
   return (
     <div style={style} className={className}>
-      {/* Mobile Controls - Enhanced with all operation buttons */}
       <div className="lg:hidden text-center">
         <div className="inline-flex flex-wrap justify-center items-center gap-3 mt-4">
-          {/* Compare Button - Only show when live compare is disabled */}
           {!quickCompareEnabled && (
-            <CustomTooltip 
-              content={isProcessing ? 'Processing comparison...' : 'Compare documents'}
-              shortcut="Alt+Enter"
-            >
+            <CustomTooltip content={isProcessing ? 'Processing comparison...' : 'Compare documents'} shortcut="Alt+Enter">
               <button
                 data-compare-button
                 onClick={onCompare}
@@ -77,18 +63,28 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
               </button>
             </CustomTooltip>
           )}
-          
-          {/* Live Compare Toggle */}
-          <CustomTooltip 
-            content={quickCompareEnabled ? 'Live Compare mode - ON' : 'Live Compare mode - OFF'}
-            shortcut="Alt+L"
-          >
+
+          {showCompareInWord && onCompareInWord && (
+            <CustomTooltip content={compareInWordTooltip}>
+              <button
+                data-compare-in-word-button-mobile
+                onClick={onCompareInWord}
+                disabled={isProcessing || isLaunchingWordCompare || !!compareInWordDisabledReason}
+                className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-theme-accent-700 text-white rounded-lg hover:bg-theme-accent-800 disabled:bg-theme-neutral-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+              >
+                <FileText className="w-4 h-4" />
+                <span>{isLaunchingWordCompare ? 'Launching...' : 'External Word'}</span>
+              </button>
+            </CustomTooltip>
+          )}
+
+          <CustomTooltip content={quickCompareEnabled ? 'Live Compare mode - ON' : 'Live Compare mode - OFF'} shortcut="Alt+L">
             <button
               data-live-compare-toggle
               onClick={onToggleQuickCompare}
               className={`enhanced-button flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 shadow-lg relative overflow-visible ${
-                quickCompareEnabled 
-                  ? 'bg-theme-accent-500 text-white hover:bg-theme-accent-600' 
+                quickCompareEnabled
+                  ? 'bg-theme-accent-500 text-white hover:bg-theme-accent-600'
                   : 'bg-theme-neutral-300 text-theme-neutral-700 hover:bg-theme-neutral-400'
               }`}
             >
@@ -99,12 +95,8 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
               )}
             </button>
           </CustomTooltip>
-          
-          {/* Swap Content Button */}
-          <CustomTooltip 
-            content="Swap panels"
-            shortcut="Alt+W"
-          >
+
+          <CustomTooltip content="Swap panels" shortcut="Alt+W">
             <button
               data-swap-content-button-mobile
               onClick={onSwapContent}
@@ -115,18 +107,14 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
               <span>Swap</span>
             </button>
           </CustomTooltip>
-          
-          {/* Scroll Lock Button */}
-          <CustomTooltip 
-            content={isScrollLocked ? 'Scroll Lock - ON' : 'Scroll Lock - OFF'}
-            shortcut="Alt+D"
-          >
+
+          <CustomTooltip content={isScrollLocked ? 'Scroll Lock - ON' : 'Scroll Lock - OFF'} shortcut="Alt+D">
             <button
               data-scroll-lock-toggle
               onClick={onToggleScrollLock}
               className={`enhanced-button flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 shadow-lg relative overflow-visible ${
-                isScrollLocked 
-                  ? 'bg-theme-primary-500 text-white hover:bg-theme-primary-600' 
+                isScrollLocked
+                  ? 'bg-theme-primary-500 text-white hover:bg-theme-primary-600'
                   : 'bg-theme-neutral-300 text-theme-neutral-700 hover:bg-theme-neutral-400'
               }`}
             >
@@ -139,14 +127,10 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
           </CustomTooltip>
         </div>
       </div>
-      
-      {/* Prominent Undo Button - Show when undo is available */}
+
       {canUndo && onUndo && (
         <div className="lg:hidden flex justify-center mt-4">
-          <CustomTooltip 
-            content="Undo last clear"
-            shortcut="Ctrl+Z"
-          >
+          <CustomTooltip content="Undo last clear" shortcut="Ctrl+Z">
             <button
               data-undo-button
               onClick={onUndo}
@@ -159,12 +143,11 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
           </CustomTooltip>
         </div>
       )}
-      
-      {/* Enhanced Mobile Clear Button - Larger touch target, better visual prominence */}
+
       <div className="lg:hidden flex justify-center mt-6">
-        <CustomTooltip 
-          content={contentLength > 1000 
-            ? `Clear all content (${Math.floor(contentLength/1000)}k chars) - Undo available` 
+        <CustomTooltip
+          content={contentLength > 1000
+            ? `Clear all content (${Math.floor(contentLength/1000)}k chars) - Undo available`
             : 'Clear all content and reset comparison - Undo available'}
           shortcut="Alt+Del"
         >
@@ -181,3 +164,4 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
     </div>
   );
 };
+

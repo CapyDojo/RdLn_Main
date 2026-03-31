@@ -1,55 +1,42 @@
 import React from 'react';
-import { Play, Trash2, ArrowLeftRight, Zap, ZapOff, Lock, Undo } from 'lucide-react';
+import { Play, Trash2, ArrowLeftRight, Zap, ZapOff, Lock, Undo, FileText } from 'lucide-react';
 import { BaseComponentProps } from '../types/components';
 import { CustomTooltip } from './CustomTooltip';
 
 interface DesktopControlsPanelProps extends BaseComponentProps {
-  /** Whether Quick Compare is enabled */
   quickCompareEnabled: boolean;
-  /** Whether scroll lock is active */
   isScrollLocked: boolean;
-  /** Whether system protection is enabled */
   systemProtectionEnabled: boolean;
-  /** Whether currently processing */
   isProcessing: boolean;
-  /** Original text content */
+  isLaunchingWordCompare?: boolean;
   originalText: string;
-  /** Revised text content */
   revisedText: string;
-  /** Callback for compare button */
   onCompare: () => void;
-  /** Callback for toggle quick compare */
+  onCompareInWord?: () => void;
+  compareInWordDisabledReason?: string | null;
+  showCompareInWord?: boolean;
   onToggleQuickCompare: () => void;
-  /** Callback for swap content */
   onSwapContent: () => void;
-  /** Callback for toggle scroll lock */
   onToggleScrollLock: () => void;
-  /** Callback for toggle system protection */
   onToggleSystemProtection: () => void;
-  /** Callback for reset comparison */
   onResetComparison: () => void;
-  /** Whether undo is available */
   canUndo?: boolean;
-  /** Callback for undo action */
   onUndo?: () => void;
-  /** Content length for smart clear warnings */
   contentLength?: number;
 }
 
-/**
- * Desktop Controls Panel Component
- * 
- * Contains all the control buttons for desktop layout positioned in the center.
- * Extracted from ComparisonInterface for better modularity and reusability.
- */
 export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
   quickCompareEnabled,
   isScrollLocked,
   systemProtectionEnabled,
   isProcessing,
+  isLaunchingWordCompare = false,
   originalText,
   revisedText,
   onCompare,
+  onCompareInWord,
+  compareInWordDisabledReason = null,
+  showCompareInWord = false,
   onToggleQuickCompare,
   onSwapContent,
   onToggleScrollLock,
@@ -61,15 +48,13 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
   style,
   className
 }) => {
+  const compareInWordTooltip = compareInWordDisabledReason || (isLaunchingWordCompare ? 'Launching Microsoft Word...' : 'External Word Compare');
+
   return (
     <div className={`hidden lg:flex absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 ${className || ''}`} style={style}>
       <div className="flex flex-col gap-3">
-        {/* Compare Button - Only show when live compare is disabled */}
         {!quickCompareEnabled && (
-          <CustomTooltip 
-            content={isProcessing ? 'Processing...' : 'Compare'}
-            shortcut="Alt+Enter"
-          >
+          <CustomTooltip content={isProcessing ? 'Processing...' : 'Compare'} shortcut="Alt+Enter">
             <button
               data-compare-button
               onClick={onCompare}
@@ -83,18 +68,30 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
             </button>
           </CustomTooltip>
         )}
-        
-        {/* Live Compare Toggle */}
-        <CustomTooltip 
-          content={quickCompareEnabled ? 'Live Compare mode - ON' : 'Live Compare mode - OFF'}
-          shortcut="Alt+L"
-        >
+
+        {showCompareInWord && onCompareInWord && (
+          <CustomTooltip content={compareInWordTooltip}>
+            <button
+              data-compare-in-word-button
+              onClick={onCompareInWord}
+              disabled={isProcessing || isLaunchingWordCompare || !!compareInWordDisabledReason}
+              className="enhanced-button flex items-center justify-center w-12 h-12 bg-theme-accent-700 text-white rounded-full hover:bg-theme-accent-800 disabled:bg-theme-neutral-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl relative"
+            >
+              <FileText className="w-5 h-5" />
+              {isLaunchingWordCompare && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-theme-accent-300 rounded-full animate-pulse"></div>
+              )}
+            </button>
+          </CustomTooltip>
+        )}
+
+        <CustomTooltip content={quickCompareEnabled ? 'Live Compare mode - ON' : 'Live Compare mode - OFF'} shortcut="Alt+L">
           <button
             data-live-compare-toggle
             onClick={onToggleQuickCompare}
             className={`enhanced-button flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl relative ${
-              quickCompareEnabled 
-                ? 'bg-theme-accent-500 text-white hover:bg-theme-accent-600' 
+              quickCompareEnabled
+                ? 'bg-theme-accent-500 text-white hover:bg-theme-accent-600'
                 : 'bg-theme-neutral-300 text-theme-neutral-700 hover:bg-theme-neutral-400'
             }`}
           >
@@ -104,12 +101,8 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
             )}
           </button>
         </CustomTooltip>
-        
-        {/* Swap Content Button */}
-        <CustomTooltip 
-          content="Swap panels"
-          shortcut="Alt+W"
-        >
+
+        <CustomTooltip content="Swap panels" shortcut="Alt+W">
           <button
             data-swap-content-button
             onClick={onSwapContent}
@@ -119,18 +112,14 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
             <ArrowLeftRight className="w-5 h-5" />
           </button>
         </CustomTooltip>
-        
-        {/* Scroll Lock Button */}
-        <CustomTooltip 
-          content={isScrollLocked ? 'Lock scroll between input and output panels - ON' : 'Lock scroll between input and output panels - OFF'}
-          shortcut="Alt+D"
-        >
+
+        <CustomTooltip content={isScrollLocked ? 'Lock scroll between input and output panels - ON' : 'Lock scroll between input and output panels - OFF'} shortcut="Alt+D">
           <button
             data-scroll-lock-toggle
             onClick={onToggleScrollLock}
             className={`enhanced-button flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl relative ${
-              isScrollLocked 
-                ? 'bg-theme-primary-500 text-white hover:bg-theme-primary-600' 
+              isScrollLocked
+                ? 'bg-theme-primary-500 text-white hover:bg-theme-primary-600'
                 : 'bg-theme-neutral-300 text-theme-neutral-700 hover:bg-theme-neutral-400'
             }`}
           >
@@ -140,27 +129,9 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
             )}
           </button>
         </CustomTooltip>
-        
-        {/* System Protection Toggle for stress testing - HIDDEN FOR BETA */}
-        {/* <button
-          data-system-protection-toggle
-          onClick={onToggleSystemProtection}
-          className={`enhanced-button flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl text-lg ${
-            systemProtectionEnabled 
-              ? 'bg-green-600 text-white hover:bg-green-700' 
-              : 'bg-red-600 text-white hover:bg-red-700'
-          }`}
-          title={systemProtectionEnabled ? 'System protection enabled - safe mode with resource limits' : 'System protection disabled - stress testing mode (may crash browser!)'}
-        >
-          🛡️
-        </button> */}
-        
-        {/* Prominent Undo Button - Show when undo is available */}
+
         {canUndo && onUndo && (
-          <CustomTooltip 
-            content="Undo last clear"
-            shortcut="Ctrl+Z"
-          >
+          <CustomTooltip content="Undo last clear" shortcut="Ctrl+Z">
             <button
               data-undo-button
               onClick={onUndo}
@@ -171,14 +142,12 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
             </button>
           </CustomTooltip>
         )}
-        
-        {/* Spacer to separate dangerous action */}
+
         <div className="h-4"></div>
-        
-        {/* Enhanced Clear Button - Larger hit-box, better visual prominence */}
-        <CustomTooltip 
-          content={contentLength > 1000 
-            ? `Clear all (${Math.floor(contentLength/1000)}k chars)` 
+
+        <CustomTooltip
+          content={contentLength > 1000
+            ? `Clear all (${Math.floor(contentLength/1000)}k chars)`
             : 'Clear all content'}
           shortcut="Alt+Del"
         >
@@ -194,3 +163,4 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
     </div>
   );
 };
+
