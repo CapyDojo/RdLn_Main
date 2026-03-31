@@ -1025,21 +1025,21 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
             <h3 className="!text-2.5xl font-semibold text-theme-primary-900">{title}</h3>
             {linkedFileSource && (
               <div
-                className="inline-flex max-w-[20rem] items-center gap-2 rounded-full border border-theme-primary-200/70 bg-theme-primary-50/90 px-3 py-1 text-xs font-medium text-theme-primary-900"
+                className="inline-flex max-w-full items-start gap-2 rounded-2xl border border-theme-primary-200/70 bg-theme-primary-50/90 px-3 py-2 text-xs font-medium leading-5 text-theme-primary-900"
                 title={`Linked source file: ${linkedFileSource.fileName}`}
               >
-                <FileText className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{title.replace(/&nbsp;|\s+/g, ' ').trim()}: {linkedFileSource.fileName}</span>
+                <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span className="break-all">{title.replace(/&nbsp;|\s+/g, ' ').trim()}: {linkedFileSource.fileName}</span>
               </div>
             )}
             {!linkedFileSource && disconnectedFileSource && (
-              <div className="max-w-[20rem] space-y-2">
+              <div className="max-w-full space-y-2">
                 <div
-                  className="inline-flex max-w-full items-center gap-2 rounded-full border border-amber-300/80 bg-amber-50/95 px-3 py-1 text-xs font-medium text-amber-900"
+                  className="inline-flex max-w-full items-start gap-2 rounded-2xl border border-amber-300/80 bg-amber-50/95 px-3 py-2 text-xs font-medium leading-5 text-amber-900"
                   title={`Edited after import: ${disconnectedFileSource.fileName}`}
                 >
-                  <FileText className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{title.replace(/&nbsp;|\s+/g, ' ').trim()}: {disconnectedFileSource.fileName}</span>
+                  <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span className="break-all">{title.replace(/&nbsp;|\s+/g, ' ').trim()}: {disconnectedFileSource.fileName}</span>
                   <span className="rounded-full bg-amber-200/90 px-2 py-0.5 text-[10px] uppercase tracking-wide">Edited</span>
                 </div>
                 <div className="text-xs leading-5 text-amber-900">
