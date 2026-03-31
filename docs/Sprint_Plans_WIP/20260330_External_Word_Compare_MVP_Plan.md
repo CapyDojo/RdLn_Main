@@ -1,6 +1,10 @@
 # Coding Agent Execution Prompt
 
-Implement the sprint plan in this document.
+Read the status tracking section in this document first.
+
+- If the task is to continue the original MVP implementation, execute only tasks marked `Outstanding` in the `Task Tracker`.
+- If the task is to perform the UX refinement pass, execute the `EWC-UX-*` tasks only unless a dependency explicitly requires otherwise.
+- Do not re-implement tasks already marked `Completed` unless required to support the requested scope.
 
 Important repo rules:
 - Read and follow [Agent_Rules.md](C:/temp/RdLn_MVP_Stream/docs/DevRules/Agent_Rules.md) and [DEVELOPMENT_GUIDELINES.md](C:/temp/RdLn_MVP_Stream/docs/DevRules/DEVELOPMENT_GUIDELINES.md) first.
@@ -12,10 +16,10 @@ Important repo rules:
 - Tauri is on hold. Do not touch `src-tauri/**`.
 
 Task:
-Implement a guarded MVP for `External Word Compare` in the real Electron app.
+Implement a guarded MVP for `Launch Microsoft Word for Native Compare` in the real Electron app.
 
 Goal:
-Add an optional `External Word Compare` action for file-based `.docx` to `.docx` workflows in the Windows Electron app only, behind a feature flag, without affecting RdLn's native comparison pipeline.
+Add an optional `Launch Microsoft Word for Native Compare` action for file-based `.docx` to `.docx` workflows in the Windows Electron app only, behind a feature flag, without affecting RdLn's native comparison pipeline.
 
 Strict scope:
 - Windows only
@@ -79,15 +83,145 @@ Be pragmatic. Keep the implementation narrow.
 
 ---
 
-# 20260330 External Word Compare MVP Plan
+# 20260330 Launch Microsoft Word for Native Compare MVP Plan
 
 ## Status
 
-Proposed. Prototype validated in standalone Electron mock app. No production app integration yet.
+In progress.
+
+Standalone prototype validated.
+Core production MVP implemented and manually validated in Electron dev.
+UX polish pass still outstanding.
+
+## Task Tracker
+
+### MVP Tasks
+
+- `EWC-MVP-01` Completed: Standalone Electron prototype created and validated at `Prototypes/20260330_Prototype_A_External_Word_Compare_Mock`
+- `EWC-MVP-02` Completed: Production feature flag introduced as `ENABLE_EXTERNAL_WORD_COMPARE`
+- `EWC-MVP-03` Completed: Electron-only launch path implemented in `src-electron/main.cjs`
+- `EWC-MVP-04` Completed: Secure preload bridge implemented in `src-electron/preload.cjs`
+- `EWC-MVP-05` Completed: Windows/Electron/DOCX/local-file gating implemented in app UI
+- `EWC-MVP-06` Completed: Local file source tracking implemented for DOCX input flows
+- `EWC-MVP-07` Completed: Source metadata preserved across swap operations
+- `EWC-MVP-08` Completed: Compare action integrated into desktop and mobile controls
+- `EWC-MVP-09` Completed: Electron detection bug fixed for dev with `contextBridge.exposeInMainWorld('isElectron', true)`
+- `EWC-MVP-10` Completed: Core feature manually verified working in `npm run electron:dev`
+
+### UX Polish Tasks
+
+- `EWC-UX-01` Outstanding: Rename live UX from `External Word Compare` to `Launch Microsoft Word for Native Compare`
+- `EWC-UX-02` Outstanding: Apply hide-vs-disable behavior refinement
+- `EWC-UX-03` Outstanding: Add linked source chips near input headers
+- `EWC-UX-04` Outstanding: Add edited/disconnected inline messaging after manual text edits
+- `EWC-UX-05` Outstanding: Improve helper/status copy near the Word action
+- `EWC-UX-06` Outstanding: Add first-use confirmation modal with persistence
+- `EWC-UX-07` Outstanding: Refine success/failure copy to approved final wording
+
+### QA Tasks
+
+- `EWC-QA-01` Completed: Core manual validation completed in Electron dev
+- `EWC-QA-02` Outstanding: Run final polish QA in Electron after UX updates
+
+## UX Polish Execution Brief
+
+Implement the UX polish pass for the existing Electron-only Word integration feature.
+
+Core product direction:
+- Canonical feature label: `Launch Microsoft Word for Native Compare`
+- This remains Windows + Electron + DOCX-only + file-based-only
+- Result stays in Microsoft Word
+- RdLn native compare remains unchanged
+
+Required UX changes:
+
+`EWC-UX-01` Rename visible UI copy
+- Replace current visible feature wording with:
+  - Full label: `Launch Microsoft Word for Native Compare`
+  - Short/mobile label: `Word Compare`
+- Update tooltips, helper text, success text, and disabled text to use `Word native compare` phrasing where appropriate
+- Keep internal implementation names only if changing them would create unnecessary churn, but user-facing copy should match the new naming
+
+`EWC-UX-02` Hide vs disable behavior
+- Hide the feature entirely when:
+  - feature flag is off
+  - not running in Electron
+  - not on Windows
+- Show disabled with explanation when:
+  - one or both sides do not have valid local DOCX sources
+  - same file is loaded on both sides
+  - compare is currently processing
+  - Word launch is in progress
+
+`EWC-UX-03` Add source chips for linked DOCX files
+- Show compact source chips beneath or near each input panel header
+- Format:
+  - `Original: {filename}`
+  - `Revised: {filename}`
+- Show only when that side has a valid linked local DOCX source
+- Truncate long names visually if needed, but preserve full name in tooltip/title
+- Keep styling aligned with the current app UI language
+
+`EWC-UX-04` Add edited/disconnected messaging
+- If a DOCX source was imported and then the user manually edits the text, show inline messaging explaining why Word native compare is no longer available
+- Use this approved copy:
+  - `Text was edited in RdLn. Word native compare requires the original local DOCX files.`
+- This should be tied to the actual source-disconnect behavior, not shown generically
+
+`EWC-UX-05` Improve helper / status copy near the Word action
+- Add a small inline helper/status line near the Word action when the feature is visible
+- Use these approved copy patterns as appropriate:
+  - `Opens Microsoft Word on this computer and runs Word’s native compare.`
+  - `Ready to launch Word native compare.`
+  - `Microsoft Word is launching...`
+  - `Microsoft Word opened with a native comparison.`
+
+`EWC-UX-06` Add first-use confirmation modal
+- Before first launch only, show a confirmation modal
+- Use:
+  - Title: `Launch Microsoft Word for Native Compare?`
+  - Body: `RdLn will open Microsoft Word on this computer and run Word’s native compare using your two source DOCX files. The comparison result will open in Word, not inside RdLn.`
+  - Checkbox: `Don’t show this again`
+  - Buttons: `Launch Word`, `Cancel`
+- Persist the dismissal choice appropriately in existing local storage patterns/config if feasible
+- Keep this implementation narrow and local
+
+`EWC-UX-07` Refine success and failure copy
+- Prefer plain-English messages over raw technical messages
+- Use these approved strings where they fit:
+  - `Microsoft Word opened with a native comparison.`
+  - `RdLn could not launch Microsoft Word. Please try again.`
+  - `Microsoft Word does not appear to be installed on this computer.`
+  - `One or both source files could not be found.`
+  - `Only DOCX files are supported for Word native compare.`
+  - `Choose two different DOCX files to continue.`
+
+Implementation notes:
+- The Electron detection fix in `src-electron/preload.cjs` is already working; preserve it
+- The source tracking bug fix across DOCX import paths is already working; build on it, do not regress it
+- Keep Word integration out of the native compare pipeline
+- Reuse existing UI patterns/components where sensible rather than introducing a large new framework
+
+Likely files to inspect:
+- `src/components/ComparisonInterface.tsx`
+- `src/components/DesktopControlsPanel.tsx`
+- `src/components/MobileControlsPanel.tsx`
+- `src/components/TextInputPanel.tsx`
+- `src/components/DesktopInputLayout.tsx`
+- `src/components/MobileInputLayout.tsx`
+- `src/config/appConfig.ts`
+- `src-electron/main.cjs`
+- `src-electron/preload.cjs`
+
+Verification:
+- Run targeted lint/syntax/type checks on changed files where feasible
+- Do not start the dev server in chat
+- Provide exact manual QA steps for external Electron testing
+- Mark `EWC-QA-02` complete only after external QA confirms the polish pass works as intended
 
 ## Objective
 
-Add an optional `External Word Compare` path for file-based `.docx` workflows in the Windows Electron app, without changing RdLn's core native comparison engine.
+Add an optional `Launch Microsoft Word for Native Compare` path for file-based `.docx` workflows in the Windows Electron app, without changing RdLn's core native comparison engine.
 
 This feature is intended to:
 
@@ -103,9 +237,9 @@ This is an alternative secondary action for users who have loaded two supported 
 
 Recommended UX framing:
 
-- Primary: `Compare in RdLn`
-- Secondary: `External Word Compare`
-- Helper copy: `Launches Microsoft Word on this computer to run Word's native compare.`
+- Primary: `Compare`
+- Secondary: `Launch Microsoft Word for Native Compare`
+- Helper copy: `Opens Microsoft Word on this computer and runs Word's native compare.`
 
 ## Recommended MVP Scope
 
@@ -164,9 +298,9 @@ Important technical note:
 1. User loads two `.docx` files into Original and Revised.
 2. RdLn validates that both inputs are valid local DOCX files.
 3. RdLn displays both compare options:
-   - `Compare in RdLn`
-   - `External Word Compare`
-4. User clicks `External Word Compare`.
+   - `Compare`
+   - `Launch Microsoft Word for Native Compare`
+4. User clicks `Launch Microsoft Word for Native Compare`.
 5. Electron main process validates:
    - both files exist
    - both are `.docx`
@@ -181,7 +315,7 @@ Important technical note:
 
 ### Visibility conditions
 
-Show `External Word Compare` only when:
+Show `Launch Microsoft Word for Native Compare` only when:
 
 - app is running in Electron
 - platform is Windows
@@ -194,17 +328,17 @@ Otherwise either hide the action or show a disabled state with exact reason.
 
 Button label:
 
-- `External Word Compare`
+- `Launch Microsoft Word for Native Compare`
 
 Helper copy:
 
-- `Uses Microsoft Word on this computer to generate a native Word comparison.`
+- `Opens Microsoft Word on this computer and runs Word's native compare.`
 
 Failure examples:
 
-- `External Word Compare is available only for DOCX files.`
-- `Microsoft Word could not be launched on this computer.`
-- `Choose two different DOCX files to use External Word Compare.`
+- `Only DOCX files are supported for Word native compare.`
+- `RdLn could not launch Microsoft Word. Please try again.`
+- `Choose two different DOCX files to continue.`
 
 ### UI placement
 
@@ -330,7 +464,7 @@ Behavior:
 
 ### Functional
 
-- User can load two DOCX files and choose `External Word Compare`
+- User can load two DOCX files and choose `Launch Microsoft Word for Native Compare`
 - RdLn blocks unsupported file types
 - RdLn blocks missing files
 - RdLn blocks same-file input
@@ -371,7 +505,7 @@ Behavior:
 
 ## Open Decisions
 
-1. Should `External Word Compare` be hidden when unavailable, or shown disabled with explanation?
+1. Should `Launch Microsoft Word for Native Compare` be hidden when unavailable, or shown disabled with explanation?
 2. Should the feature appear only after both files are selected, or persist as a disabled action until then?
 3. Should launch events/failures be logged to desktop diagnostics from day one?
 4. Should the feature be exposed only in a beta/experimental settings mode initially?
