@@ -283,15 +283,6 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   };
   const compareInWordDisabledReason = getCompareInWordDisabledReason();
   const showWordCompareAction = FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE && !!window.electronAPI && !!window.isElectron && electronPlatform === 'win32';
-  const compareInWordStatusMessage = !showWordCompareAction
-    ? null
-    : wordCompareFeedback?.type === 'success'
-      ? 'Microsoft Word opened with a native comparison.'
-      : isLaunchingWordCompare
-        ? 'Microsoft Word is launching...'
-        : compareInWordDisabledReason || (originalFileSource && revisedFileSource
-          ? 'Ready to launch Word native compare.'
-          : 'Opens Microsoft Word on this computer and runs Word\'s native compare.');
   const launchCompareInWord = React.useCallback(async () => {
     const disabledReason = getCompareInWordDisabledReason();
     if (disabledReason) {
@@ -963,7 +954,6 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onCompare={() => handleCompareDocuments()}
           onCompareInWord={handleCompareInWord}
           compareInWordDisabledReason={compareInWordDisabledReason}
-          compareInWordStatusMessage={compareInWordStatusMessage}
           showCompareInWord={showWordCompareAction}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
@@ -986,7 +976,6 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onCompare={() => handleCompareDocuments()}
           onCompareInWord={handleCompareInWord}
           compareInWordDisabledReason={compareInWordDisabledReason}
-          compareInWordStatusMessage={compareInWordStatusMessage}
           showCompareInWord={showWordCompareAction}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}

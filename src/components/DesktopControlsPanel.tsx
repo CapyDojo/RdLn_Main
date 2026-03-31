@@ -14,7 +14,6 @@ interface DesktopControlsPanelProps extends BaseComponentProps {
   onCompare: () => void;
   onCompareInWord?: () => void;
   compareInWordDisabledReason?: string | null;
-  compareInWordStatusMessage?: string | null;
   showCompareInWord?: boolean;
   onToggleQuickCompare: () => void;
   onSwapContent: () => void;
@@ -37,7 +36,6 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
   onCompare,
   onCompareInWord,
   compareInWordDisabledReason = null,
-  compareInWordStatusMessage = null,
   showCompareInWord = false,
   onToggleQuickCompare,
   onSwapContent,
@@ -85,12 +83,6 @@ export const DesktopControlsPanel: React.FC<DesktopControlsPanelProps> = ({
               )}
             </button>
           </CustomTooltip>
-        )}
-
-        {showCompareInWord && compareInWordStatusMessage && (
-          <div className="max-w-[11rem] text-center text-[11px] leading-4 text-theme-neutral-700">
-            {compareInWordStatusMessage}
-          </div>
         )}
 
         <CustomTooltip content={quickCompareEnabled ? 'Live Compare mode - ON' : 'Live Compare mode - OFF'} shortcut="Alt+L">

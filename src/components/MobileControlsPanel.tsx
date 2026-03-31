@@ -13,7 +13,6 @@ interface MobileControlsPanelProps extends BaseComponentProps {
   onCompare: () => void;
   onCompareInWord?: () => void;
   compareInWordDisabledReason?: string | null;
-  compareInWordStatusMessage?: string | null;
   showCompareInWord?: boolean;
   onToggleQuickCompare: () => void;
   onSwapContent: () => void;
@@ -34,7 +33,6 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
   onCompare,
   onCompareInWord,
   compareInWordDisabledReason = null,
-  compareInWordStatusMessage = null,
   showCompareInWord = false,
   onToggleQuickCompare,
   onSwapContent,
@@ -128,11 +126,6 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
             </button>
           </CustomTooltip>
         </div>
-        {showCompareInWord && compareInWordStatusMessage && (
-          <div className="mt-3 text-center text-xs leading-5 text-theme-neutral-700">
-            {compareInWordStatusMessage}
-          </div>
-        )}
       </div>
 
       {canUndo && onUndo && (
