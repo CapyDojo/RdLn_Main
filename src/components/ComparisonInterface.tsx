@@ -11,7 +11,7 @@
  */
 
 import React, { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { DEV_CONFIG, FEATURE_FLAGS, UI_CONFIG } from '../config/appConfig';
+import { DEV_CONFIG, FEATURE_FLAGS, STORAGE_CONFIG, UI_CONFIG } from '../config/appConfig';
 import { AlertCircle } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
 import { useUndoHistory } from '../hooks/useUndoHistory';
@@ -129,9 +129,19 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   const [autoRunTrigger, setAutoRunTrigger] = useState(false);
   const [originalFileSource, setOriginalFileSource] = useState<LocalInputFileSource | null>(null);
   const [revisedFileSource, setRevisedFileSource] = useState<LocalInputFileSource | null>(null);
+  const [originalDisconnectedFileSource, setOriginalDisconnectedFileSource] = useState<LocalInputFileSource | null>(null);
+  const [revisedDisconnectedFileSource, setRevisedDisconnectedFileSource] = useState<LocalInputFileSource | null>(null);
   const [electronPlatform, setElectronPlatform] = useState<string | null>(null);
   const [isLaunchingWordCompare, setIsLaunchingWordCompare] = useState(false);
   const [wordCompareFeedback, setWordCompareFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showWordCompareConfirm, setShowWordCompareConfirm] = useState(false);
+  const [skipWordCompareConfirm, setSkipWordCompareConfirm] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_CONFIG.KEYS.WORD_NATIVE_COMPARE_CONFIRM_DISMISSED) === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   // State to store output-based stats (overrides algorithm-generated stats)
   const [outputBasedStats, setOutputBasedStats] = useState<import('../types').ComparisonStats | null>(null);
@@ -152,6 +162,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   const loadSampleData = (originalText: string, revisedText: string, autoRun: boolean = false) => {
     setOriginalFileSource(null);
     setRevisedFileSource(null);
+    setOriginalDisconnectedFileSource(null);
+    setRevisedDisconnectedFileSource(null);
     setWordCompareFeedback(null);
     setOriginalText(originalText);
     setRevisedText(revisedText);
@@ -215,65 +227,79 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   }, []);
   const handleOriginalTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
     if (!isPasteAction) {
+      setOriginalDisconnectedFileSource(originalFileSource?.fileType === 'docx' ? originalFileSource : null);
       setOriginalFileSource(null);
     }
     setWordCompareFeedback(null);
     setOriginalText(value, isPasteAction);
-  }, [setOriginalText]);
+  }, [originalFileSource, setOriginalText]);
   const handleRevisedTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
     if (!isPasteAction) {
+      setRevisedDisconnectedFileSource(revisedFileSource?.fileType === 'docx' ? revisedFileSource : null);
       setRevisedFileSource(null);
     }
     setWordCompareFeedback(null);
     setRevisedText(value, isPasteAction);
-  }, [setRevisedText]);
+  }, [revisedFileSource, setRevisedText]);
   const handleOriginalFileSourceChange = React.useCallback((source: LocalInputFileSource | null) => {
     setOriginalFileSource(source);
+    setOriginalDisconnectedFileSource(null);
     setWordCompareFeedback(null);
   }, []);
   const handleRevisedFileSourceChange = React.useCallback((source: LocalInputFileSource | null) => {
     setRevisedFileSource(source);
+    setRevisedDisconnectedFileSource(null);
     setWordCompareFeedback(null);
   }, []);
   const getCompareInWordDisabledReason = () => {
     if (!FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE) {
-      return 'External Word Compare is currently disabled.';
+      return 'Word native compare is currently disabled.';
     }
     if (!window.electronAPI || !window.isElectron) {
-      return 'External Word Compare is available only in the Windows Electron app.';
+      return 'This feature is available only in the Windows desktop app.';
     }
     if (electronPlatform === null) {
       return 'Checking desktop environment...';
     }
     if (electronPlatform !== 'win32') {
-      return 'External Word Compare is available only on Windows.';
+      return 'This feature is available only in the Windows desktop app.';
     }
     if (isProcessing) {
       return 'Wait for the current comparison to finish.';
     }
     if (isLaunchingWordCompare) {
-      return 'Launching Microsoft Word...';
+      return 'Microsoft Word is launching...';
     }
     if (!originalFileSource || !revisedFileSource) {
-      return 'Load both sides from local DOCX files to use External Word Compare.';
+      return 'Load both sides from local DOCX files to use Word native compare.';
     }
     if (originalFileSource.fileType !== 'docx' || revisedFileSource.fileType !== 'docx') {
-      return 'External Word Compare is available only for DOCX files.';
+      return 'Only DOCX files are supported for Word native compare.';
     }
     if (originalFileSource.filePath === revisedFileSource.filePath) {
-      return 'Choose two different DOCX files to use External Word Compare.';
+      return 'Choose two different DOCX files to continue.';
     }
     return null;
   };
   const compareInWordDisabledReason = getCompareInWordDisabledReason();
-  const handleCompareInWord = React.useCallback(async () => {
+  const showWordCompareAction = FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE && !!window.electronAPI && !!window.isElectron && electronPlatform === 'win32';
+  const compareInWordStatusMessage = !showWordCompareAction
+    ? null
+    : wordCompareFeedback?.type === 'success'
+      ? 'Microsoft Word opened with a native comparison.'
+      : isLaunchingWordCompare
+        ? 'Microsoft Word is launching...'
+        : compareInWordDisabledReason || (originalFileSource && revisedFileSource
+          ? 'Ready to launch Word native compare.'
+          : 'Opens Microsoft Word on this computer and runs Word\'s native compare.');
+  const launchCompareInWord = React.useCallback(async () => {
     const disabledReason = getCompareInWordDisabledReason();
     if (disabledReason) {
       setWordCompareFeedback({ type: 'error', message: disabledReason });
       return;
     }
     if (!originalFileSource || !revisedFileSource || !window.electronAPI) {
-      setWordCompareFeedback({ type: 'error', message: 'External Word Compare is not available for the current inputs.' });
+      setWordCompareFeedback({ type: 'error', message: 'Word native compare is not available for the current inputs.' });
       return;
     }
     setWordCompareFeedback(null);
@@ -290,12 +316,26 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     } catch (error) {
       setWordCompareFeedback({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Microsoft Word could not be launched on this computer.'
+        message: error instanceof Error ? error.message : 'RdLn could not launch Microsoft Word. Please try again.'
       });
     } finally {
       setIsLaunchingWordCompare(false);
     }
-  }, [electronPlatform, isLaunchingWordCompare, isProcessing, originalFileSource, revisedFileSource]);
+  }, [originalFileSource, revisedFileSource]);
+  const handleCompareInWord = React.useCallback(async () => {
+    const disabledReason = getCompareInWordDisabledReason();
+    if (disabledReason) {
+      setWordCompareFeedback({ type: 'error', message: disabledReason });
+      return;
+    }
+
+    if (!skipWordCompareConfirm) {
+      setShowWordCompareConfirm(true);
+      return;
+    }
+
+    await launchCompareInWord();
+  }, [launchCompareInWord, skipWordCompareConfirm]);
   // Scroll lock state from dedicated context (production-ready)
   const { isScrollLocked, toggleScrollLock } = useScrollLock();
 
@@ -500,10 +540,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   const handleSwapContent = usePerformanceAwareHandler(() => {
     const tempOriginal = originalText;
     const tempOriginalFileSource = originalFileSource;
+    const tempOriginalDisconnectedFileSource = originalDisconnectedFileSource;
     setOriginalText(revisedText);
     setRevisedText(tempOriginal);
     setOriginalFileSource(revisedFileSource);
     setRevisedFileSource(tempOriginalFileSource);
+    setOriginalDisconnectedFileSource(revisedDisconnectedFileSource);
+    setRevisedDisconnectedFileSource(tempOriginalDisconnectedFileSource);
     setWordCompareFeedback(null);
 
     // Track swap metrics
@@ -522,6 +565,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
     setOriginalFileSource(null);
     setRevisedFileSource(null);
+    setOriginalDisconnectedFileSource(null);
+    setRevisedDisconnectedFileSource(null);
     setWordCompareFeedback(null);
     resetComparison();
 
@@ -540,6 +585,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       setRevisedText(clearedState.revisedText);
       setOriginalFileSource(null);
       setRevisedFileSource(null);
+      setOriginalDisconnectedFileSource(null);
+      setRevisedDisconnectedFileSource(null);
       setWordCompareFeedback(null);
       // Results are not restored - user needs to re-compare if needed
     }
@@ -563,6 +610,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       // Load the session content into the input fields
       setOriginalFileSource(null);
       setRevisedFileSource(null);
+      setOriginalDisconnectedFileSource(null);
+      setRevisedDisconnectedFileSource(null);
       setWordCompareFeedback(null);
       setOriginalText(session.originalText);
       setRevisedText(session.revisedText);
@@ -696,6 +745,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       // SSMR: Clear inputs first to prevent persistence issues
       setOriginalFileSource(null);
       setRevisedFileSource(null);
+      setOriginalDisconnectedFileSource(null);
+      setRevisedDisconnectedFileSource(null);
       setWordCompareFeedback(null);
       setOriginalText('');
       setRevisedText('');
@@ -873,6 +924,10 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onRevisedTextChange={handleRevisedTextChange}
           onOriginalFileSourceChange={handleOriginalFileSourceChange}
           onRevisedFileSourceChange={handleRevisedFileSourceChange}
+          originalFileSource={originalFileSource}
+          revisedFileSource={revisedFileSource}
+          originalDisconnectedFileSource={originalDisconnectedFileSource}
+          revisedDisconnectedFileSource={revisedDisconnectedFileSource}
           panelResizeHandlers={panelResizeHandlers}
           desktopResizeHandleRef={desktopResizeHandleRef}
         />
@@ -887,6 +942,10 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onRevisedTextChange={handleRevisedTextChange}
           onOriginalFileSourceChange={handleOriginalFileSourceChange}
           onRevisedFileSourceChange={handleRevisedFileSourceChange}
+          originalFileSource={originalFileSource}
+          revisedFileSource={revisedFileSource}
+          originalDisconnectedFileSource={originalDisconnectedFileSource}
+          revisedDisconnectedFileSource={revisedDisconnectedFileSource}
           panelResizeHandlers={panelResizeHandlers}
           mobileResizeHandleRef={mobileResizeHandleRef}
         />
@@ -904,7 +963,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onCompare={() => handleCompareDocuments()}
           onCompareInWord={handleCompareInWord}
           compareInWordDisabledReason={compareInWordDisabledReason}
-          showCompareInWord={FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE}
+          compareInWordStatusMessage={compareInWordStatusMessage}
+          showCompareInWord={showWordCompareAction}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
           onToggleScrollLock={toggleScrollLock}
@@ -926,7 +986,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onCompare={() => handleCompareDocuments()}
           onCompareInWord={handleCompareInWord}
           compareInWordDisabledReason={compareInWordDisabledReason}
-          showCompareInWord={FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE}
+          compareInWordStatusMessage={compareInWordStatusMessage}
+          showCompareInWord={showWordCompareAction}
           onToggleQuickCompare={toggleQuickCompare}
           onSwapContent={handleSwapContent}
           onToggleScrollLock={toggleScrollLock}
@@ -936,6 +997,61 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           contentLength={originalText.length + revisedText.length}
         />
       </div>
+
+      {showWordCompareConfirm && (
+        <div className="fixed inset-0 z-[10020] flex items-center justify-center bg-theme-neutral-950/55 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-theme-neutral-200/70 bg-white/95 p-6 shadow-2xl">
+            <h2 className="text-xl font-semibold text-theme-primary-900">Launch Microsoft Word for Native Compare?</h2>
+            <p className="mt-3 text-sm leading-6 text-theme-neutral-700">
+              RdLn will open Microsoft Word on this computer and run Word&apos;s native compare using your two source DOCX files. The comparison result will open in Word, not inside RdLn.
+            </p>
+            <label className="mt-4 flex items-center gap-3 text-sm text-theme-neutral-800">
+              <input
+                type="checkbox"
+                checked={skipWordCompareConfirm}
+                onChange={(event) => setSkipWordCompareConfirm(event.target.checked)}
+                className="h-4 w-4 rounded border-theme-neutral-300 text-theme-primary-700 focus:ring-theme-primary-500"
+              />
+              <span>Don&apos;t show this again</span>
+            </label>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowWordCompareConfirm(false);
+                  try {
+                    setSkipWordCompareConfirm(localStorage.getItem(STORAGE_CONFIG.KEYS.WORD_NATIVE_COMPARE_CONFIRM_DISMISSED) === 'true');
+                  } catch {
+                    setSkipWordCompareConfirm(false);
+                  }
+                }}
+                className="rounded-lg border border-theme-neutral-300 px-4 py-2 text-sm font-medium text-theme-neutral-700 transition-colors hover:bg-theme-neutral-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    if (skipWordCompareConfirm) {
+                      localStorage.setItem(STORAGE_CONFIG.KEYS.WORD_NATIVE_COMPARE_CONFIRM_DISMISSED, 'true');
+                    } else {
+                      localStorage.removeItem(STORAGE_CONFIG.KEYS.WORD_NATIVE_COMPARE_CONFIRM_DISMISSED);
+                    }
+                  } catch {
+                    // Ignore localStorage persistence failures
+                  }
+                  setShowWordCompareConfirm(false);
+                  await launchCompareInWord();
+                }}
+                className="rounded-lg bg-theme-accent-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-theme-accent-800"
+              >
+                Launch Word
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {/* Error and Success Messages */}

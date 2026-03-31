@@ -13,6 +13,7 @@ interface MobileControlsPanelProps extends BaseComponentProps {
   onCompare: () => void;
   onCompareInWord?: () => void;
   compareInWordDisabledReason?: string | null;
+  compareInWordStatusMessage?: string | null;
   showCompareInWord?: boolean;
   onToggleQuickCompare: () => void;
   onSwapContent: () => void;
@@ -33,6 +34,7 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
   onCompare,
   onCompareInWord,
   compareInWordDisabledReason = null,
+  compareInWordStatusMessage = null,
   showCompareInWord = false,
   onToggleQuickCompare,
   onSwapContent,
@@ -44,7 +46,7 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
   style,
   className
 }) => {
-  const compareInWordTooltip = compareInWordDisabledReason || (isLaunchingWordCompare ? 'Launching Microsoft Word...' : 'External Word Compare');
+  const compareInWordTooltip = compareInWordDisabledReason || (isLaunchingWordCompare ? 'Microsoft Word is launching...' : 'Launch Microsoft Word for Native Compare');
 
   return (
     <div style={style} className={className}>
@@ -73,7 +75,7 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
                 className="enhanced-button flex items-center gap-2 px-4 py-2.5 bg-theme-accent-700 text-white rounded-lg hover:bg-theme-accent-800 disabled:bg-theme-neutral-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
               >
                 <FileText className="w-4 h-4" />
-                <span>{isLaunchingWordCompare ? 'Launching...' : 'External Word'}</span>
+                <span>{isLaunchingWordCompare ? 'Launching...' : 'Word Compare'}</span>
               </button>
             </CustomTooltip>
           )}
@@ -126,6 +128,11 @@ export const MobileControlsPanel: React.FC<MobileControlsPanelProps> = ({
             </button>
           </CustomTooltip>
         </div>
+        {showCompareInWord && compareInWordStatusMessage && (
+          <div className="mt-3 text-center text-xs leading-5 text-theme-neutral-700">
+            {compareInWordStatusMessage}
+          </div>
+        )}
       </div>
 
       {canUndo && onUndo && (
