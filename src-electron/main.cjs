@@ -182,7 +182,7 @@ async function validateWordComparePaths(basePath, changedPath) {
     return {
       ok: false,
       code: 'UNSUPPORTED_PLATFORM',
-      message: 'External Word Compare is available only on Windows.'
+      message: 'This feature is available only in the Windows desktop app.'
     };
   }
 
@@ -198,7 +198,7 @@ async function validateWordComparePaths(basePath, changedPath) {
     return {
       ok: false,
       code: 'UNSUPPORTED_FILE_TYPE',
-      message: 'External Word Compare is available only for DOCX files.'
+      message: 'Only DOCX files are supported for Word native compare.'
     };
   }
 
@@ -206,7 +206,7 @@ async function validateWordComparePaths(basePath, changedPath) {
     return {
       ok: false,
       code: 'SAME_FILE',
-      message: 'Choose two different DOCX files to use External Word Compare.'
+      message: 'Choose two different DOCX files to continue.'
     };
   }
 
@@ -217,7 +217,7 @@ async function validateWordComparePaths(basePath, changedPath) {
     return {
       ok: false,
       code: 'FILE_NOT_FOUND',
-      message: 'One or both selected files could not be found on disk.'
+      message: 'One or both source files could not be found.'
     };
   }
 
@@ -258,7 +258,7 @@ async function launchWordCompare(basePath, changedPath) {
       resolve({
         ok: false,
         code: 'WORD_COMPARE_START_FAILED',
-        message: `Microsoft Word could not be launched: ${error.message}`
+        message: `RdLn could not launch Microsoft Word. Please try again.`
       });
     });
 
@@ -267,16 +267,23 @@ async function launchWordCompare(basePath, changedPath) {
         resolve({
           ok: true,
           code: 'WORD_COMPARE_LAUNCHED',
-          message: 'Microsoft Word comparison launched successfully.'
+          message: 'Microsoft Word opened with a native comparison.'
         });
         return;
       }
 
       const detail = (stderr || stdout || '').trim();
+      const normalizedDetail = detail.toLowerCase();
+      const missingWord = normalizedDetail.includes('80040154')
+        || normalizedDetail.includes('class not registered')
+        || normalizedDetail.includes('activex component')
+        || normalizedDetail.includes('retrieving the com class factory');
       resolve({
         ok: false,
-        code: 'WORD_COMPARE_FAILED',
-        message: detail || 'Microsoft Word could not be launched on this computer.'
+        code: missingWord ? 'WORD_NOT_AVAILABLE' : 'WORD_COMPARE_FAILED',
+        message: missingWord
+          ? 'Microsoft Word does not appear to be installed on this computer.'
+          : 'RdLn could not launch Microsoft Word. Please try again.'
       });
     });
   });

@@ -116,6 +116,7 @@ export const STORAGE_CONFIG = {
     AUTO_COMPARE_ENABLED: 'rdln-auto-compare-enabled',
     SYSTEM_PROTECTION_ENABLED: 'rdln-system-protection-enabled',
     LAYOUT_PREFERENCE: 'rdln-layout-preference',
+    WORD_NATIVE_COMPARE_CONFIRM_DISMISSED: 'rdln-word-native-compare-confirm-dismissed',
   },
 
   DEFAULTS: {
