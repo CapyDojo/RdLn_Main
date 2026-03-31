@@ -85,6 +85,28 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     };
   }, []);
 
+  const replacePanelContentFromImportedFile = useCallback((
+    content: string,
+    source: LocalInputFileSource | null
+  ) => {
+    if (onChange.length > 1) {
+      (onChange as (value: string, isPasteAction?: boolean) => void)(content, true);
+    } else {
+      onChange(content);
+    }
+
+    updateFileSource(source);
+
+    const textarea = textareaRef.current;
+    if (textarea) {
+      setTimeout(() => {
+        const cursorPosition = content.length;
+        textarea.setSelectionRange(cursorPosition, cursorPosition);
+        textarea.focus();
+      }, 0);
+    }
+  }, [onChange, updateFileSource]);
+
   const toggleAutoFormat = () => setIsAutoFormatEnabled(prev => !prev);
 
   // Removed color sync effect – colors now come from CSS variables via classes
@@ -270,40 +292,14 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       }
 
       try {
-        // Add the extracted content to the textarea
-        const textarea = textareaRef.current;
-        if (textarea) {
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          const newValue =
-            textarea.value.substring(0, start) +
-            (start > 0 && textarea.value[start - 1] !== '\n' ? '\n\n' : '') +
-            content +
-            (end < textarea.value.length && textarea.value[end] !== '\n' ? '\n\n' : '') +
-            textarea.value.substring(end);
-
-          if (onChange.length > 1) {
-            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
-          } else {
-            onChange(newValue);
-          }
-
-          setTimeout(() => {
-            const newCursorPos = start + content.length + (start > 0 ? 2 : 0);
-            textarea.setSelectionRange(newCursorPos, newCursorPos);
-            textarea.focus();
-          }, 0);
-        } else {
-          onChange(content);
-        }
-
-        if (filePath) {
-          updateFileSource({
+        replacePanelContentFromImportedFile(
+          content,
+          filePath ? {
             filePath,
             fileName: fileName || filePath.split(/[\\/]/).pop() || 'document.docx',
             fileType: 'docx'
-          });
-        }
+          } : null
+        );
 
         // Double-check if still mounted after async operation
         if (!isMountedRef.current) {
@@ -346,7 +342,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         panelDiv.removeEventListener('tauri-file-error', handleFileError as unknown as EventListener);
       };
     }
-  }, [title, onChange, updateFileSource, performanceTracker]); // Keep deps explicit for file-source updates
+  }, [title, replacePanelContentFromImportedFile, performanceTracker]); // Keep deps explicit for file-source updates
 
   // Clear detected languages when content is cleared
   useEffect(() => {
@@ -454,28 +450,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
         const result = await fileProcessingService.current.processFile(docxFile);
         const localFileSource = getLocalFileSource(docxFile, 'docx');
-
-        const textarea = textareaRef.current;
-        if (textarea) {
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          const newValue = textarea.value.substring(0, start) + result.content + textarea.value.substring(end);
-
-          if (onChange.length > 1) {
-            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
-          } else {
-            onChange(newValue);
-          }
-
-          setTimeout(() => {
-            textarea.setSelectionRange(start + result.content.length, start + result.content.length);
-            textarea.focus();
-          }, 0);
-        } else {
-          onChange(result.content);
-        }
-
-        updateFileSource(localFileSource);
+        replacePanelContentFromImportedFile(result.content, localFileSource);
         return; // Exit after processing DOCX
       } catch (error: any) {
         console.error('DOCX processing failed:', error);
@@ -494,28 +469,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         if (!pdfFile) return;
 
         const result = await fileProcessingService.current.processFile(pdfFile);
-        updateFileSource(null);
-
-        const textarea = textareaRef.current;
-        if (textarea) {
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          const newValue = textarea.value.substring(0, start) + result.content + textarea.value.substring(end);
-
-          if (onChange.length > 1) {
-            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
-          } else {
-            onChange(newValue);
-          }
-
-          setTimeout(() => {
-            textarea.setSelectionRange(start + result.content.length, start + result.content.length);
-            textarea.focus();
-          }, 0);
-        } else {
-          onChange(result.content);
-        }
-
+        replacePanelContentFromImportedFile(result.content, getLocalFileSource(pdfFile, 'pdf'));
         return; // Exit after processing PDF
       } catch (error: any) {
         console.error('PDF processing failed:', error);
@@ -534,28 +488,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         if (!txtFile) return;
 
         const result = await fileProcessingService.current.processFile(txtFile);
-        updateFileSource(null);
-
-        const textarea = textareaRef.current;
-        if (textarea) {
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          const newValue = textarea.value.substring(0, start) + result.content + textarea.value.substring(end);
-
-          if (onChange.length > 1) {
-            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
-          } else {
-            onChange(newValue);
-          }
-
-          setTimeout(() => {
-            textarea.setSelectionRange(start + result.content.length, start + result.content.length);
-            textarea.focus();
-          }, 0);
-        } else {
-          onChange(result.content);
-        }
-
+        replacePanelContentFromImportedFile(result.content, getLocalFileSource(txtFile, 'txt'));
         return; // Exit after processing TXT
       } catch (error: any) {
         console.error('TXT processing failed:', error);
@@ -651,7 +584,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         performanceTracker.trackMetric('ocr_error', { error: error.message });
       }
     }
-  }, [performanceTracker, extractTextFromImage, onChange, isAutoFormatEnabled, getLocalFileSource, updateFileSource]);
+  }, [performanceTracker, extractTextFromImage, onChange, isAutoFormatEnabled, getLocalFileSource, updateFileSource, replacePanelContentFromImportedFile]);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
@@ -695,34 +628,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       try {
         const result = await fileProcessingService.current.processFile(docxFile);
         const localFileSource = getLocalFileSource(docxFile, 'docx');
-        const textarea = textareaRef.current;
-
-        if (textarea) {
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          const newValue =
-            textarea.value.substring(0, start) +
-            (start > 0 && textarea.value[start - 1] !== '\n' ? '\n\n' : '') +
-            result.content +
-            (end < textarea.value.length && textarea.value[end] !== '\n' ? '\n\n' : '') +
-            textarea.value.substring(end);
-
-          if (onChange.length > 1) {
-            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
-          } else {
-            onChange(newValue);
-          }
-
-          setTimeout(() => {
-            const newCursorPos = start + result.content.length + (start > 0 ? 2 : 0);
-            textarea.setSelectionRange(newCursorPos, newCursorPos);
-            textarea.focus();
-          }, 0);
-        } else {
-          onChange(result.content);
-        }
-
-        updateFileSource(localFileSource);
+        replacePanelContentFromImportedFile(result.content, localFileSource);
         return; // Exit after processing DOCX
       } catch (error: any) {
         console.error('DOCX processing failed:', error);
@@ -737,34 +643,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     if (pdfFile) {
       try {
         const result = await fileProcessingService.current.processFile(pdfFile);
-        updateFileSource(null);
-        const textarea = textareaRef.current;
-
-        if (textarea) {
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          const newValue =
-            textarea.value.substring(0, start) +
-            (start > 0 && textarea.value[start - 1] !== '\n' ? '\n\n' : '') +
-            result.content +
-            (end < textarea.value.length && textarea.value[end] !== '\n' ? '\n\n' : '') +
-            textarea.value.substring(end);
-
-          if (onChange.length > 1) {
-            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
-          } else {
-            onChange(newValue);
-          }
-
-          setTimeout(() => {
-            const newCursorPos = start + result.content.length + (start > 0 ? 2 : 0);
-            textarea.setSelectionRange(newCursorPos, newCursorPos);
-            textarea.focus();
-          }, 0);
-        } else {
-          onChange(result.content);
-        }
-
+        replacePanelContentFromImportedFile(result.content, getLocalFileSource(pdfFile, 'pdf'));
         return; // Exit after processing PDF
       } catch (error: any) {
         console.error('PDF processing failed:', error);
@@ -779,34 +658,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     if (txtFile) {
       try {
         const result = await fileProcessingService.current.processFile(txtFile);
-        updateFileSource(null);
-        const textarea = textareaRef.current;
-
-        if (textarea) {
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          const newValue =
-            textarea.value.substring(0, start) +
-            (start > 0 && textarea.value[start - 1] !== '\n' ? '\n\n' : '') +
-            result.content +
-            (end < textarea.value.length && textarea.value[end] !== '\n' ? '\n\n' : '') +
-            textarea.value.substring(end);
-
-          if (onChange.length > 1) {
-            (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, true);
-          } else {
-            onChange(newValue);
-          }
-
-          setTimeout(() => {
-            const newCursorPos = start + result.content.length + (start > 0 ? 2 : 0);
-            textarea.setSelectionRange(newCursorPos, newCursorPos);
-            textarea.focus();
-          }, 0);
-        } else {
-          onChange(result.content);
-        }
-
+        replacePanelContentFromImportedFile(result.content, getLocalFileSource(txtFile, 'txt'));
         return; // Exit after processing TXT
       } catch (error: any) {
         console.error('TXT processing failed:', error);
@@ -821,7 +673,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     if (imageFile) {
       await processImageWithOCR(imageFile);
     }
-  }, [performanceTracker, processImageWithOCR, onChange, getLocalFileSource, updateFileSource]);
+  }, [performanceTracker, processImageWithOCR, onChange, getLocalFileSource, updateFileSource, replacePanelContentFromImportedFile]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

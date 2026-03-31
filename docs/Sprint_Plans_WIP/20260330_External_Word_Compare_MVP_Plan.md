@@ -129,7 +129,7 @@ Final external Electron QA still pending.
 - `EWC-UX-08` Completed: Adjusted linked source filename presentation so the UI grows to fit the full filename with no truncation in visible UI. Wrapping is acceptable.
 - `EWC-UX-09` Completed: Removed the entire inline Word-action helper/status layer from the UI, including ready, launching, success, and disabled text. Explanations now remain in tooltip/state logic only.
 - `EWC-UX-10` Parked: Revisit the edited/disconnected provenance state model. The disconnected indicator should not disappear after continued typing, but the desired long-term behavior needs more refinement before implementation.
-- `EWC-UX-11` Outstanding: Treat file-based document imports as panel-replacement actions rather than text-insertion actions. This should apply to DOCX, PDF, and TXT file imports via drag/drop and clipboard file paste.
+- `EWC-UX-11` Completed: File-based document imports now replace the entire panel content rather than inserting at the caret. This applies to DOCX, PDF, and TXT file imports via drag/drop and clipboard file paste.
 - `EWC-MVP-11` Outstanding: Expand launch eligibility to allow local PDF inputs for experimental testing in Microsoft Word native compare.
 - `EWC-UX-12` Outstanding: Add explicit experimental warning copy whenever a Word native compare launch includes one or more PDF inputs.
 
@@ -228,6 +228,179 @@ Verification:
 - Do not start the dev server in chat
 - Provide exact manual QA steps for external Electron testing
 - Mark `EWC-QA-02` complete only after external QA confirms the polish pass works as intended
+
+## Follow-On Execution Prompts
+
+Execute these one at a time, in order.
+
+### `EWC-UX-11` Execution Prompt
+
+Implement `EWC-UX-11` only from this sprint plan.
+
+First read and follow:
+- [Agent_Rules.md](C:/temp/RdLn_MVP_Stream/docs/DevRules/Agent_Rules.md)
+- [DEVELOPMENT_GUIDELINES.md](C:/temp/RdLn_MVP_Stream/docs/DevRules/DEVELOPMENT_GUIDELINES.md)
+
+Constraints:
+- Prefer native Windows commands
+- Do not run `git clean -fdx`
+- Do not start the dev server in chat
+- Do not touch `src-tauri/**`
+- Do not modify `src/algorithms/MyersAlgorithm.ts`
+- Keep the current working Electron Word launch path intact
+- Keep changes minimal and non-regressive
+
+Task:
+Implement `EWC-UX-11`: treat file-based imports as document-import actions that replace the entire panel content, rather than text-insertion actions that insert at the current cursor position.
+
+Required behavior changes:
+
+1. These file-based import flows must replace the entire panel content:
+- DOCX drag/drop
+- DOCX clipboard file paste
+- PDF drag/drop
+- PDF clipboard file paste
+- TXT drag/drop
+- TXT clipboard file paste
+
+2. For those file-based import flows:
+- replace the full panel content
+- do not insert at `selectionStart` / `selectionEnd`
+- keep or refresh file provenance where appropriate
+- clear prior disconnected/import state when a new document import replaces the panel
+
+3. Do NOT change these behaviors:
+- plain text paste should still insert at the current selection
+- OCR/image-derived text should still insert at the current selection
+
+Implementation guidance:
+- Focus on `src/components/TextInputPanel.tsx`
+- Prefer creating a narrow helper for “replace panel content from imported file”
+- Reuse it across DOCX/PDF/TXT file import paths
+- Do not widen Word compare eligibility yet
+- Do not add PDF warning UX yet
+- Do not solve the broader `EWC-UX-10` persistence redesign in this pass unless a minimal change is required to keep import state coherent
+
+Important verification goals:
+- file object imports replace the panel
+- plain text paste still inserts at cursor
+- OCR/image insertion still inserts at cursor
+- existing DOCX provenance still works after replace-style import
+- no regression in swap/reset behavior
+
+Likely files:
+- `src/components/TextInputPanel.tsx`
+- `src/components/ComparisonInterface.tsx` only if a minimal provenance-state adjustment is required
+- `src/components/DesktopInputLayout.tsx`
+- `src/components/MobileInputLayout.tsx`
+
+Verification:
+- run targeted lint/syntax checks on changed files
+- do not start the dev server in chat
+- provide exact external manual QA steps
+
+Manual QA should include:
+1. DOCX drag/drop replaces the whole panel instead of inserting at cursor.
+2. DOCX clipboard file paste replaces the whole panel instead of inserting at cursor.
+3. PDF drag/drop replaces the whole panel instead of inserting at cursor.
+4. PDF clipboard file paste replaces the whole panel instead of inserting at cursor.
+5. TXT drag/drop replaces the whole panel instead of inserting at cursor.
+6. TXT clipboard file paste replaces the whole panel instead of inserting at cursor.
+7. Plain text paste still inserts at the cursor.
+8. OCR/image-derived insertion still inserts at the cursor.
+
+Deliverables:
+- implemented `EWC-UX-11`
+- concise summary
+- key file references
+- any remaining limitations
+- manual QA steps
+
+### `EWC-MVP-11` Execution Prompt
+
+Implement `EWC-MVP-11` only after `EWC-UX-11` is complete and manually checked.
+
+Task:
+Expand `Launch Microsoft Word for Native Compare` eligibility to allow local PDF inputs for experimental testing.
+
+Required behavior changes:
+- DOCX + DOCX remains the trusted/supported path
+- PDF + PDF is allowed as experimental
+- DOCX + PDF is allowed as experimental
+- PDF + DOCX is allowed as experimental
+
+Implementation guidance:
+- broaden renderer-side gating in `src/components/ComparisonInterface.tsx`
+- preserve existing supported-context hiding behavior
+- broaden Electron-side validation in `src-electron/main.cjs`
+- keep file existence and same-file checks intact
+- keep plain-English errors
+- do not add the experimental warning copy in this pass; that belongs to `EWC-UX-12`
+
+Likely files:
+- `src/components/ComparisonInterface.tsx`
+- `src-electron/main.cjs`
+- `src-electron/preload.cjs` only if interface changes are required
+
+Verification:
+- run targeted lint/syntax checks on changed files
+- provide exact external manual QA steps
+
+Manual QA should include:
+1. DOCX + DOCX still launches successfully.
+2. PDF + PDF can attempt launch.
+3. DOCX + PDF can attempt launch.
+4. PDF + DOCX can attempt launch.
+5. Same-file validation still blocks.
+6. Missing-file validation still blocks.
+7. Unsupported file combinations remain blocked.
+
+Deliverables:
+- implemented `EWC-MVP-11`
+- concise summary
+- key file references
+- remaining limitations
+- manual QA steps
+
+### `EWC-UX-12` Execution Prompt
+
+Implement `EWC-UX-12` only after `EWC-MVP-11` is complete and manually checked.
+
+Task:
+Add explicit experimental warning copy whenever a Word native compare launch includes one or more PDF inputs.
+
+Required behavior changes:
+- if either side is a PDF, show an explicit experimental warning before launch
+- keep the current confirmation modal if practical
+- branch the modal copy based on file types
+- DOCX-only launches should keep the normal confirmation copy
+
+Approved warning direction:
+- `Experimental: Microsoft Word may convert PDF files before comparing. Results can vary.`
+- keep the explanation that the comparison opens in Word, not in RdLn
+
+Implementation guidance:
+- reuse the existing confirmation modal in `src/components/ComparisonInterface.tsx` if practical
+- avoid creating a second competing modal unless necessary
+- keep warning copy clear and concise
+
+Verification:
+- run targeted lint/syntax checks on changed files
+- provide exact external manual QA steps
+
+Manual QA should include:
+1. DOCX-only launch shows the normal confirmation copy.
+2. PDF + PDF launch shows experimental warning copy.
+3. DOCX + PDF launch shows experimental warning copy.
+4. PDF + DOCX launch shows experimental warning copy.
+5. The rest of the launch flow still behaves as before.
+
+Deliverables:
+- implemented `EWC-UX-12`
+- concise summary
+- key file references
+- remaining limitations
+- manual QA steps
 
 ## Follow-On Decisions
 
