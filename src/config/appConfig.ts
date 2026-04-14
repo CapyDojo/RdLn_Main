@@ -174,7 +174,7 @@ export const FEATURE_FLAGS = {
   ENABLE_PERFORMANCE_DEMO: IS_DEVELOPMENT,
   ENABLE_LAYOUT_EXPERIMENTS: IS_DEVELOPMENT,
   ENABLE_WORD_OPTIMIZED_COPY: true,
-  ENABLE_EXTERNAL_WORD_COMPARE: IS_DEVELOPMENT,
+  ENABLE_EXTERNAL_WORD_COMPARE: true,
   
   // 20250829 - OCR_Engine refactor - code change - Codex/GPT5
   // Gate to enable the new one-stop OCR engine (detect+extract in one call)
