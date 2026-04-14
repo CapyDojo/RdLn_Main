@@ -89,7 +89,7 @@ export const BetaAgreementDialog: React.FC<BetaAgreementDialogProps> = ({ onAcce
     const acceptanceData = {
       accepted: true,
       timestamp: new Date().toISOString(),
-      version: '0.6.0',
+      version: '0.6.3',
       analyticsConsent: true
     };
     localStorage.setItem('rdln_beta_terms_accepted', JSON.stringify(acceptanceData));
@@ -174,7 +174,7 @@ export const BetaAgreementDialog: React.FC<BetaAgreementDialogProps> = ({ onAcce
             <div>
               <h3 className="font-medium mb-2 text-xl">1. BETA SOFTWARE ACKNOWLEDGMENT</h3>
               <p className="text-lg leading-relaxed opacity-90">
-                You acknowledge that RdLn™ (version 0.6.0) is beta software that may contain bugs, 
+                You acknowledge that RdLn™ (version 0.6.3) is beta software that may contain bugs, 
                 errors, or incomplete features. This software is provided for testing purposes only 
                 and is not recommended for production use with critical documents.
               </p>

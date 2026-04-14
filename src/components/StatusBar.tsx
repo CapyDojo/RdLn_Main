@@ -14,7 +14,7 @@ const BetaBadge: React.FC = () => {
         backdropFilter: 'blur(10px)',
         lineHeight: '1.2'
       }}>
-      <span>Open Beta v.0.6.0</span>
+      <span>Open Beta v.0.6.3</span>
     </div>
   );
 };

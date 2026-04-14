@@ -109,7 +109,7 @@ function AppContent({
         } else {
           const acceptanceData = JSON.parse(betaAcceptance);
           // Check if acceptance is for current version
-          if (!acceptanceData.accepted || acceptanceData.version !== '0.6.0') {
+          if (!acceptanceData.accepted || acceptanceData.version !== '0.6.3') {
             setShowBetaAgreement(true);
           }
         }
@@ -533,7 +533,7 @@ function App() {
         const betaAcceptance = localStorage.getItem('rdln_beta_terms_accepted');
         if (!betaAcceptance) return false;
         const acceptanceData = JSON.parse(betaAcceptance);
-        return acceptanceData?.accepted === true && acceptanceData?.version === '0.6.0';
+        return acceptanceData?.accepted === true && acceptanceData?.version === '0.6.3';
       } catch (error) {
         console.log('Analytics: beta consent check error:', error);
         return false;
@@ -580,7 +580,7 @@ function App() {
           setTimeout(() => {
             console.log('📊 Analytics: Sending app_loaded event');
             analyticsService.track('app_loaded', {
-              version: '0.6.0',
+              version: '0.6.3',
               environment: NODE_ENV
             });
             // Send a test event to verify events are being captured

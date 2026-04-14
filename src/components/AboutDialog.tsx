@@ -123,7 +123,7 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({ isOpen, onClose }) => 
             />
             <div>
               <div className="font-medium">RdLn™</div>
-              <div className="text-xs opacity-70">Version 0.6.0 Beta</div>
+              <div className="text-xs opacity-70">Version 0.6.3 Beta</div>
             </div>
           </div>
 
