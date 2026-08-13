@@ -28,6 +28,7 @@ export interface LocalInputFileSource {
   filePath: string;
   fileName: string;
   fileType: 'docx' | 'pdf' | 'txt' | 'image' | 'unknown';
+  importedText?: string;
 }
 
 /**

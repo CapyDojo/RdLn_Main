@@ -153,11 +153,6 @@ $changedFile = '${safeChangedPath}'
 if (-not (Test-Path -LiteralPath $baseFile)) { throw 'Original file not found.' }
 if (-not (Test-Path -LiteralPath $changedFile)) { throw 'Revised file not found.' }
 
-$baseItem = Get-Item -LiteralPath $baseFile
-if ($baseItem.IsReadOnly) {
-  $baseItem.IsReadOnly = $false
-}
-
 $wdDoNotSaveChanges = 0
 $wdCompareTargetNew = 2
 

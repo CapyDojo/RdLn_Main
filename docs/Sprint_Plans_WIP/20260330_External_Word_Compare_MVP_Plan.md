@@ -1,3 +1,9 @@
+# Execution status
+
+**Do not execute this file.** Remaining 0.6.3 work lives in [`20260813_0.6.3_Last_Mile.md`](./20260813_0.6.3_Last_Mile.md). This document is frozen history: completed Word MVP tasks, UX polish record, and original requirements. Keep it for diagnosis. Do not re-implement completed `EWC-*` tasks from here.
+
+---
+
 # Coding Agent Execution Prompt
 
 Read the status tracking section in this document first.

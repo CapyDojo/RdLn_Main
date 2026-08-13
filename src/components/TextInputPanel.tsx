@@ -95,7 +95,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       onChange(content);
     }
 
-    updateFileSource(source);
+    updateFileSource(source ? { ...source, importedText: content } : null);
 
     const textarea = textareaRef.current;
     if (textarea) {
@@ -895,7 +895,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
                   <span className="rounded-full bg-amber-200/90 px-2 py-0.5 text-[10px] uppercase tracking-wide">Edited</span>
                 </div>
                 <div className="text-xs leading-5 text-amber-900">
-                  Text was edited in RdLn. Word native compare requires the original local DOCX files.
+                  Text was edited in RdLn. Word native compare requires the original local source files.
                 </div>
               </div>
             )}
@@ -1043,7 +1043,6 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           value={value}
           onChange={(e) => {
             const newValue = e.target.value;
-            updateFileSource(null);
             if (onChange.length > 1) {
               (onChange as (value: string, isPasteAction?: boolean) => void)(newValue, false);
             } else {

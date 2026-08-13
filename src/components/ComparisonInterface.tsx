@@ -225,34 +225,73 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       isMounted = false;
     };
   }, []);
-  const handleOriginalTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
-    if (!isPasteAction) {
-      setOriginalDisconnectedFileSource(originalFileSource?.fileType === 'docx' ? originalFileSource : null);
-      setOriginalFileSource(null);
+  const isWordCompareEligibleFileType = (fileType: LocalInputFileSource['fileType']) =>
+    fileType === 'docx' || fileType === 'pdf';
+  const reconcileWordFileLink = (
+    value: string,
+    liveSource: LocalInputFileSource | null,
+    disconnectedSource: LocalInputFileSource | null,
+    setLiveSource: React.Dispatch<React.SetStateAction<LocalInputFileSource | null>>,
+    setDisconnectedSource: React.Dispatch<React.SetStateAction<LocalInputFileSource | null>>,
+    isPasteAction?: boolean
+  ) => {
+    const provenance = liveSource ?? disconnectedSource;
+    const canTrack = !!provenance && isWordCompareEligibleFileType(provenance.fileType);
+
+    if (canTrack && provenance.importedText !== undefined && value === provenance.importedText) {
+      setLiveSource(provenance);
+      setDisconnectedSource(null);
+      return;
     }
+
+    if (liveSource && isWordCompareEligibleFileType(liveSource.fileType)) {
+      setDisconnectedSource(liveSource);
+      setLiveSource(null);
+      return;
+    }
+
+    if (!isPasteAction && liveSource) {
+      setLiveSource(null);
+    }
+  };
+  const handleOriginalTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
+    reconcileWordFileLink(
+      value,
+      originalFileSource,
+      originalDisconnectedFileSource,
+      setOriginalFileSource,
+      setOriginalDisconnectedFileSource,
+      isPasteAction
+    );
     setWordCompareFeedback(null);
     setOriginalText(value, isPasteAction);
-  }, [originalFileSource, setOriginalText]);
+  }, [originalDisconnectedFileSource, originalFileSource, setOriginalText]);
   const handleRevisedTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
-    if (!isPasteAction) {
-      setRevisedDisconnectedFileSource(revisedFileSource?.fileType === 'docx' ? revisedFileSource : null);
-      setRevisedFileSource(null);
-    }
+    reconcileWordFileLink(
+      value,
+      revisedFileSource,
+      revisedDisconnectedFileSource,
+      setRevisedFileSource,
+      setRevisedDisconnectedFileSource,
+      isPasteAction
+    );
     setWordCompareFeedback(null);
     setRevisedText(value, isPasteAction);
-  }, [revisedFileSource, setRevisedText]);
+  }, [revisedDisconnectedFileSource, revisedFileSource, setRevisedText]);
   const handleOriginalFileSourceChange = React.useCallback((source: LocalInputFileSource | null) => {
     setOriginalFileSource(source);
-    setOriginalDisconnectedFileSource(null);
+    if (source) {
+      setOriginalDisconnectedFileSource(null);
+    }
     setWordCompareFeedback(null);
   }, []);
   const handleRevisedFileSourceChange = React.useCallback((source: LocalInputFileSource | null) => {
     setRevisedFileSource(source);
-    setRevisedDisconnectedFileSource(null);
+    if (source) {
+      setRevisedDisconnectedFileSource(null);
+    }
     setWordCompareFeedback(null);
   }, []);
-  const isWordCompareEligibleFileType = (fileType: LocalInputFileSource['fileType']) =>
-    fileType === 'docx' || fileType === 'pdf';
   const getCompareInWordDisabledReason = () => {
     if (!FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE) {
       return 'Word native compare is currently disabled.';
@@ -285,6 +324,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   };
   const compareInWordDisabledReason = getCompareInWordDisabledReason();
   const showWordCompareAction = FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE && !!window.electronAPI && !!window.isElectron && electronPlatform === 'win32';
+  const isPdfInWordComparePair = originalFileSource?.fileType === 'pdf' || revisedFileSource?.fileType === 'pdf';
   const launchCompareInWord = React.useCallback(async () => {
     const disabledReason = getCompareInWordDisabledReason();
     if (disabledReason) {
@@ -322,13 +362,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       return;
     }
 
-    if (!skipWordCompareConfirm) {
+    if (!skipWordCompareConfirm || isPdfInWordComparePair) {
       setShowWordCompareConfirm(true);
       return;
     }
 
     await launchCompareInWord();
-  }, [launchCompareInWord, skipWordCompareConfirm]);
+  }, [isPdfInWordComparePair, launchCompareInWord, skipWordCompareConfirm]);
   // Scroll lock state from dedicated context (production-ready)
   const { isScrollLocked, toggleScrollLock } = useScrollLock();
 
@@ -994,8 +1034,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           <div className="w-full max-w-lg rounded-2xl border border-theme-neutral-200/70 bg-white/95 p-6 shadow-2xl">
             <h2 className="text-xl font-semibold text-theme-primary-900">Launch Microsoft Word for Native Compare?</h2>
             <p className="mt-3 text-sm leading-6 text-theme-neutral-700">
-              RdLn will open Microsoft Word on this computer and run Word&apos;s native compare using your two source DOCX files. The comparison result will open in Word, not inside RdLn.
+              RdLn will open Microsoft Word on this computer and run Word&apos;s native compare using your two source files. The comparison result will open in Word, not inside RdLn.
             </p>
+            {isPdfInWordComparePair && (
+              <p className="mt-3 text-sm leading-6 text-amber-900">
+                Experimental: Word&apos;s PDF conversion can lose layout, tables, headers, footnotes, and scanned text. For a reliable official redline, prefer DOCX sources.
+              </p>
+            )}
             <label className="mt-4 flex items-center gap-3 text-sm text-theme-neutral-800">
               <input
                 type="checkbox"
