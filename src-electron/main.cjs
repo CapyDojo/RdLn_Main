@@ -227,6 +227,53 @@ async function validateWordComparePaths(basePath, changedPath) {
   return { ok: true };
 }
 
+const WORD_COMPARE_FAILURE_BUCKETS = [
+  {
+    code: 'WORD_NOT_AVAILABLE',
+    message: 'Microsoft Word does not appear to be installed on this computer.',
+    phrases: ['80040154', 'class not registered', 'activex', 'com class factory']
+  },
+  {
+    code: 'FILE_READ_ONLY',
+    message: 'The original file is marked read-only. Remove that restriction or save a copy, then try again.',
+    phrases: ['read-only', 'readonly', 'access is denied', 'access denied', 'not authorized', '800a1066']
+  },
+  {
+    code: 'FILE_IN_USE',
+    message: 'One of the files is open or locked in another program. Close it and try again.',
+    phrases: ['in use', 'being used by another', 'locked', 'permission denied sharing']
+  },
+  {
+    code: 'FILE_PROTECTED',
+    message: 'Word could not open one of the files because it is password-protected or in Protected View.',
+    phrases: ['password', 'protected view', 'encrypted']
+  },
+  {
+    code: 'FILE_NOT_FOUND',
+    message: 'One or both source files could not be found.',
+    phrases: ['not found', 'cannot find', "couldn't find", 'could not find', 'could not be found']
+  }
+];
+
+function mapWordCompareFailure(detail) {
+  const normalized = String(detail || '').toLowerCase();
+  for (const bucket of WORD_COMPARE_FAILURE_BUCKETS) {
+    if (bucket.phrases.some(phrase => normalized.includes(phrase))) {
+      return {
+        ok: false,
+        code: bucket.code,
+        message: bucket.message
+      };
+    }
+  }
+
+  return {
+    ok: false,
+    code: 'WORD_COMPARE_FAILED',
+    message: 'RdLn could not launch Microsoft Word. Please try again.'
+  };
+}
+
 async function launchWordCompare(basePath, changedPath) {
   const validation = await validateWordComparePaths(basePath, changedPath);
   if (!validation.ok) {
@@ -258,10 +305,11 @@ async function launchWordCompare(basePath, changedPath) {
     });
 
     child.on('error', error => {
+      __writeLog(`[compare-in-word] spawn failed: ${error && error.message ? error.message : String(error)}`);
       resolve({
         ok: false,
         code: 'WORD_COMPARE_START_FAILED',
-        message: `RdLn could not launch Microsoft Word. Please try again.`
+        message: 'RdLn could not launch Microsoft Word. Please try again.'
       });
     });
 
@@ -276,18 +324,8 @@ async function launchWordCompare(basePath, changedPath) {
       }
 
       const detail = (stderr || stdout || '').trim();
-      const normalizedDetail = detail.toLowerCase();
-      const missingWord = normalizedDetail.includes('80040154')
-        || normalizedDetail.includes('class not registered')
-        || normalizedDetail.includes('activex component')
-        || normalizedDetail.includes('retrieving the com class factory');
-      resolve({
-        ok: false,
-        code: missingWord ? 'WORD_NOT_AVAILABLE' : 'WORD_COMPARE_FAILED',
-        message: missingWord
-          ? 'Microsoft Word does not appear to be installed on this computer.'
-          : 'RdLn could not launch Microsoft Word. Please try again.'
-      });
+      __writeLog(`[compare-in-word] non-zero exit ${code}: ${detail || '(empty output)'}`);
+      resolve(mapWordCompareFailure(detail));
     });
   });
 }

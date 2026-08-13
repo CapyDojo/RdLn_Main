@@ -344,12 +344,12 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       });
       setWordCompareFeedback({
         type: result.ok ? 'success' : 'error',
-        message: result.message
+        message: result.message || 'RdLn could not launch Microsoft Word. Please try again.'
       });
-    } catch (error) {
+    } catch {
       setWordCompareFeedback({
         type: 'error',
-        message: error instanceof Error ? error.message : 'RdLn could not launch Microsoft Word. Please try again.'
+        message: 'RdLn could not launch Microsoft Word. Please try again.'
       });
     } finally {
       setIsLaunchingWordCompare(false);
