@@ -1,0 +1,13 @@
+{
+  "name": "rdln-numbering-resolver-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/build-viewer.mjs",
+    "test": "tsc -p tsconfig.json && node --test --test-reporter=spec tests/*.test.mjs",
+    "fixtures": "node scripts/generate-fixtures.mjs",
+    "inspect": "node scripts/inspect.mjs",
+    "verify:word": "tsc -p tsconfig.json && node scripts/verify-word.mjs",
+    "lint": "eslint --config eslint.config.mjs src scripts tests"
+  }
+}

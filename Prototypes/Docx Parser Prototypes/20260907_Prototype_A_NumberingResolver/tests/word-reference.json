@@ -1,0 +1,1186 @@
+{
+    "source":  "Microsoft Word COM: paragraph.Range.ListFormat.ListString",
+    "capturedAt":  "2026-09-07T13:54:17.3632119Z",
+    "wordVersion":  "16.0",
+    "wordBuild":  "16.0.20326",
+    "fixtures":  [
+                     {
+                         "id":  "single-continuation",
+                         "sourceHash":  "590d50d372e9e1c90a8372c0fb14b8095a468e209007e21b69b4f9bf9ce8bb91",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "One\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  4,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Intervening prose\r",
+                                                "label":  "",
+                                                "level":  null,
+                                                "start":  4,
+                                                "end":  22,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Two\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  22,
+                                                "end":  26,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Three\r",
+                                                "label":  "3.",
+                                                "level":  0,
+                                                "start":  26,
+                                                "end":  32,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "three-level-outline",
+                         "sourceHash":  "879f54abc810abaf2210bc4a23b2f35619deb5e86a91624595d10a3f4ca2bd8a",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "(a)",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "(i)",
+                                                "level":  2,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "(ii)",
+                                                "level":  2,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 5\r",
+                                                "label":  "(b)",
+                                                "level":  1,
+                                                "start":  48,
+                                                "end":  60,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 6\r",
+                                                "label":  "(i)",
+                                                "level":  2,
+                                                "start":  60,
+                                                "end":  72,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 7\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  72,
+                                                "end":  84,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 8\r",
+                                                "label":  "(a)",
+                                                "level":  1,
+                                                "start":  84,
+                                                "end":  96,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 9\r",
+                                                "label":  "(i)",
+                                                "level":  2,
+                                                "start":  96,
+                                                "end":  108,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "compound-labels",
+                         "sourceHash":  "9a97c009add4c57a41887df9995f439d2e825318cc654bc652b45676d33e344c",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "1.1",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "1.1.1",
+                                                "level":  2,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "1.2",
+                                                "level":  1,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 5\r",
+                                                "label":  "1.2.1",
+                                                "level":  2,
+                                                "start":  48,
+                                                "end":  60,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 6\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  60,
+                                                "end":  72,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 7\r",
+                                                "label":  "2.1.1",
+                                                "level":  2,
+                                                "start":  72,
+                                                "end":  84,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "never-restart",
+                         "sourceHash":  "79d0930e8f753fbb863510351a487a37540d6397638341ce8b90d4e7e443ced8",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "(a)",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "(b)",
+                                                "level":  1,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "explicit-restart-trigger",
+                         "sourceHash":  "528be9767545e9f0d35bd2889303ed2cff099d8436112e3aa2f9d3337d34596e",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "1.",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "(i)",
+                                                "level":  2,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "2.",
+                                                "level":  1,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 5\r",
+                                                "label":  "(ii)",
+                                                "level":  2,
+                                                "start":  48,
+                                                "end":  60,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 6\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  60,
+                                                "end":  72,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 7\r",
+                                                "label":  "(i)",
+                                                "level":  2,
+                                                "start":  72,
+                                                "end":  84,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "shared-definition-instances",
+                         "sourceHash":  "08056331465cbc2362fadfee72625cf8274a306d38155587b1a99ccc667bdd5e",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "First A\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  8,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "First B\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  8,
+                                                "end":  16,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Second A\r",
+                                                "label":  "3.",
+                                                "level":  0,
+                                                "start":  16,
+                                                "end":  25,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Second B\r",
+                                                "label":  "4.",
+                                                "level":  0,
+                                                "start":  25,
+                                                "end":  34,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "interleaved-parent-restart",
+                         "sourceHash":  "28903650b152a086f451f41daf30354d174b308d61a8919a63db2d4cf28c5893",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "A parent\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  9,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "A child\r",
+                                                "label":  "(a)",
+                                                "level":  1,
+                                                "start":  9,
+                                                "end":  17,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "B parent\r",
+                                                "label":  "I.",
+                                                "level":  0,
+                                                "start":  17,
+                                                "end":  26,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "A next parent\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  26,
+                                                "end":  40,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "B next\r",
+                                                "label":  "II.",
+                                                "level":  0,
+                                                "start":  40,
+                                                "end":  47,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "A new child\r",
+                                                "label":  "(a)",
+                                                "level":  1,
+                                                "start":  47,
+                                                "end":  59,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "start-override",
+                         "sourceHash":  "ac70f41b2a27fc9f0497b594bfdfc69bd410994a386fe71e7371e39827310c45",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "4.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "(c)",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "(d)",
+                                                "level":  1,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "5.",
+                                                "level":  0,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 5\r",
+                                                "label":  "(c)",
+                                                "level":  1,
+                                                "start":  48,
+                                                "end":  60,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "zero-start",
+                         "sourceHash":  "2a879c688d79218e620b555ed7c0780b7a0c30da3727e0b2343cb5c0b7868f41",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Zero\r",
+                                                "label":  "0.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  5,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "One\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  5,
+                                                "end":  9,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "omitted-start",
+                         "sourceHash":  "d4fb789cce9ed814444d7f761f32b29cd71890ae02c3f85792adff34daefa5fb",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "First\r",
+                                                "label":  "0.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  6,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Second\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  6,
+                                                "end":  13,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "level-override",
+                         "sourceHash":  "26372f4be28e8635bfe8ccd7200c92fb7ca8f172203f13a89fcce457ad9dbf04",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "[VIII]",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "[VIII]",
+                                                "level":  1,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "style-inheritance-and-cancellation",
+                         "sourceHash":  "91555df4d0d0fd7a8cc3550dd339aa3812cc54b3f87a3fd5b5fe138b46c5ebc1",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Inherited child\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  16,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Suppressed\r",
+                                                "label":  "",
+                                                "level":  null,
+                                                "start":  16,
+                                                "end":  27,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Next child\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  27,
+                                                "end":  38,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Direct level\r",
+                                                "label":  "3.",
+                                                "level":  0,
+                                                "start":  38,
+                                                "end":  51,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "numbering-style-link",
+                         "sourceHash":  "c2d5369b9e4199d90c17c236daa82f416aa8ef2487bcb6903754ba383a8116e0",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Linked first\r",
+                                                "label":  "I)",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  13,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Linked second\r",
+                                                "label":  "II)",
+                                                "level":  0,
+                                                "start":  13,
+                                                "end":  27,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "legal-numbering",
+                         "sourceHash":  "8c936e19213491f60271b3f0b80c487b46c6bfb0322036b9775571feeb18b97f",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "A",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "A.a",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "1.1.1",
+                                                "level":  2,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "1.1.2",
+                                                "level":  2,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "legal-false",
+                         "sourceHash":  "b8f7ccf9070009eb12b896c4ddbf8ac78b44cd1e17fb22ccb2e4bba22ff83f0a",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "A",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "A.i",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "table-continuation",
+                         "sourceHash":  "28687735866af8b4b074c64ea40a42757340773e0a7e42ff07de94b79ba63976",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Before table\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  13,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Inside table\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  13,
+                                                "end":  26,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Table child\r\u0007",
+                                                "label":  "(a)",
+                                                "level":  1,
+                                                "start":  26,
+                                                "end":  38,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "\r\u0007",
+                                                "label":  "",
+                                                "level":  null,
+                                                "start":  38,
+                                                "end":  39,
+                                                "isTableRowMarker":  true
+                                            },
+                                            {
+                                                "text":  "After table\r",
+                                                "label":  "3.",
+                                                "level":  0,
+                                                "start":  39,
+                                                "end":  51,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "suffix-and-punctuation",
+                         "sourceHash":  "a1d4b7ffbbd455be52d7df3bdcd58f6817b0a9d9209ab21cb59ceeffc3de2b07",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Space\r",
+                                                "label":  "Article 1:",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  6,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Nothing\r",
+                                                "label":  "(1)",
+                                                "level":  0,
+                                                "start":  6,
+                                                "end":  14,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Tab\r",
+                                                "label":  "1)",
+                                                "level":  0,
+                                                "start":  14,
+                                                "end":  18,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "letters-beyond-z",
+                         "sourceHash":  "63701e5df6cb326382c5032645abe8e09a0c4e0821d2bf124a6ccb5d3275d26f",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "z)",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "aa)",
+                                                "level":  0,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "bb)",
+                                                "level":  0,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "cc)",
+                                                "level":  0,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "empty-numbered-paragraph",
+                         "sourceHash":  "a307c205461120f71ec01b1f4385cbc69b0b37452c347cb65e258f8919a0cac4",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  1,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "After empty\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  1,
+                                                "end":  13,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "inline-text-order",
+                         "sourceHash":  "44c5ca6dd90ad27e754271df605e17df117692e5ae2478f3a103a46773c5cb9d",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Beforelink\tafter\u000bline\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  49,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "instance-restart-resume",
+                         "sourceHash":  "6346eaf6d27e10e60a15e3d68eca3e45f549b00c4251e6410369f01886d64310",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "A one\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  6,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "A two\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  6,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "B restart\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  12,
+                                                "end":  22,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "B next\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  22,
+                                                "end":  29,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "A resume\r",
+                                                "label":  "3.",
+                                                "level":  0,
+                                                "start":  29,
+                                                "end":  38,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "B resume\r",
+                                                "label":  "4.",
+                                                "level":  0,
+                                                "start":  38,
+                                                "end":  47,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "both-instances-overridden",
+                         "sourceHash":  "25ddf6996add68beabd47ff15ef96d83d8f159807fc46cc2847b08f0a6f6ccc6",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "A first\r",
+                                                "label":  "4.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  8,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "B first\r",
+                                                "label":  "8.",
+                                                "level":  0,
+                                                "start":  8,
+                                                "end":  16,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "A next\r",
+                                                "label":  "9.",
+                                                "level":  0,
+                                                "start":  16,
+                                                "end":  23,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "B next\r",
+                                                "label":  "10.",
+                                                "level":  0,
+                                                "start":  23,
+                                                "end":  30,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "style-exact-level",
+                         "sourceHash":  "0a04c06be10e43761282d3e38f4e8d0a33c62a04d32dfe1c9616cc1975811b44",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Styled a\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  9,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Styled b\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  9,
+                                                "end":  18,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Explicit root\r",
+                                                "label":  "3.",
+                                                "level":  0,
+                                                "start":  18,
+                                                "end":  32,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "parent-not-yet-used",
+                         "sourceHash":  "c8c4f766d75fe83a3bb3c21a1d3c51b4394cde1110f5baf4273273e4a313bb9f",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "4.3.1",
+                                                "level":  2,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "4.3.2",
+                                                "level":  2,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "5.",
+                                                "level":  0,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "5.3.1",
+                                                "level":  2,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "override-without-nested-start",
+                         "sourceHash":  "f4878d85d71d3346940fafa598cd426c5126dd1d956062b54417e10639f9502e",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "[IV]",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "[IV]",
+                                                "level":  1,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "inherited-style-level",
+                         "sourceHash":  "f0708f4d595db9aa77eacacfeec93ba1b4fae8367a05822b8a571bf753eb70f4",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "First child\r",
+                                                "label":  "(a)",
+                                                "level":  1,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Next child\r",
+                                                "label":  "(b)",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  23,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Direct root\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  23,
+                                                "end":  35,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Restart child\r",
+                                                "label":  "(a)",
+                                                "level":  1,
+                                                "start":  35,
+                                                "end":  49,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "bullets-and-numbers",
+                         "sourceHash":  "5fef1572d15c575f94575a3ce707d3a8e28eb36e4ba0b39d1373c1f5ec4d7be8",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "•",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "•",
+                                                "level":  1,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 5\r",
+                                                "label":  "•",
+                                                "level":  1,
+                                                "start":  48,
+                                                "end":  60,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "none-format",
+                         "sourceHash":  "bb70d5aca647f8a0651dd3b2613256e05e87a7ea33c24382c6ffa9e2fbdac842",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  ".1",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 3\r",
+                                                "label":  "",
+                                                "level":  0,
+                                                "start":  24,
+                                                "end":  36,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 4\r",
+                                                "label":  ".1",
+                                                "level":  1,
+                                                "start":  36,
+                                                "end":  48,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "repeated-and-future-placeholders",
+                         "sourceHash":  "f93f4af54a52d693521ac5c8bba69ad616c3989223378652bfe03c9ee0506cb9",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "Paragraph 1\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  12,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "Paragraph 2\r",
+                                                "label":  "",
+                                                "level":  1,
+                                                "start":  12,
+                                                "end":  24,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "empty-table-cell",
+                         "sourceHash":  "668a124590f47ecce214e064e99b923ffcfe34067a44eab44986b1f6977cfc12",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "\r\u0007",
+                                                "label":  "",
+                                                "level":  null,
+                                                "start":  0,
+                                                "end":  1,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "\r\u0007",
+                                                "label":  "",
+                                                "level":  null,
+                                                "start":  1,
+                                                "end":  2,
+                                                "isTableRowMarker":  true
+                                            },
+                                            {
+                                                "text":  "After empty cell\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  2,
+                                                "end":  19,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "different-definitions",
+                         "sourceHash":  "9dcad6e4f1c7b2d0b1fa2407a24a8b619e74445771b945d74e600507dd2dd127",
+                         "paragraphs":  [
+                                            {
+                                                "text":  "A first\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  0,
+                                                "end":  8,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "B first\r",
+                                                "label":  "1.",
+                                                "level":  0,
+                                                "start":  8,
+                                                "end":  16,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "A second\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  16,
+                                                "end":  25,
+                                                "isTableRowMarker":  false
+                                            },
+                                            {
+                                                "text":  "B second\r",
+                                                "label":  "2.",
+                                                "level":  0,
+                                                "start":  25,
+                                                "end":  34,
+                                                "isTableRowMarker":  false
+                                            }
+                                        ]
+                     }
+                 ]
+}
