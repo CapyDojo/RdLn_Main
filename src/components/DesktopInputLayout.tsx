@@ -9,6 +9,8 @@ interface DesktopInputLayoutProps extends BaseComponentProps {
   originalText: string;
   /** Revised text content */
   revisedText: string;
+  originalFileName?: string | null;
+  revisedFileName?: string | null;
   /** Whether currently processing */
   isProcessing: boolean;
   /** Panel height for fallback React state */
@@ -40,6 +42,8 @@ interface DesktopInputLayoutProps extends BaseComponentProps {
 export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
   originalText,
   revisedText,
+  originalFileName,
+  revisedFileName,
   isProcessing,
   panelHeight,
   onOriginalTextChange,
@@ -64,6 +68,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
         <div data-input-panel data-panel-id="original">
           <TextInputPanel
             title="Original&nbsp;"
+            importedFileName={originalFileName}
             value={originalText}
             onChange={onOriginalTextChange}
             onFileSourceChange={onOriginalFileSourceChange}
@@ -79,6 +84,7 @@ export const DesktopInputLayout: React.FC<DesktopInputLayoutProps> = ({
         <div data-input-panel data-panel-id="revised">
           <TextInputPanel
             title="Revised&nbsp;"
+            importedFileName={revisedFileName}
             value={revisedText}
             onChange={onRevisedTextChange}
             onFileSourceChange={onRevisedFileSourceChange}

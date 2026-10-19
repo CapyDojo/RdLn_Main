@@ -7,6 +7,8 @@ import { getTextMetrics } from '../utils/textMetrics';
 interface MobileInputLayoutProps extends BaseComponentProps {
   originalText: string;
   revisedText: string;
+  originalFileName?: string | null;
+  revisedFileName?: string | null;
   isProcessing: boolean;
   panelHeight: number;
   onOriginalTextChange: (value: string, isPasteAction?: boolean) => void;
@@ -28,6 +30,8 @@ interface MobileInputLayoutProps extends BaseComponentProps {
 export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
   originalText,
   revisedText,
+  originalFileName,
+  revisedFileName,
   isProcessing,
   panelHeight,
   onOriginalTextChange,
@@ -52,6 +56,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
         <div data-input-panel data-panel-id="original" className="mb-0 mobile-top-panel">
           <TextInputPanel
             title="Original&nbsp;"
+            importedFileName={originalFileName}
             value={originalText}
             onChange={onOriginalTextChange}
             onFileSourceChange={onOriginalFileSourceChange}
@@ -108,6 +113,7 @@ export const MobileInputLayout: React.FC<MobileInputLayoutProps> = ({
         <div data-input-panel data-panel-id="revised" className="mt-0 mobile-bottom-panel">
           <TextInputPanel
             title="Revised&nbsp;"
+            importedFileName={revisedFileName}
             value={revisedText}
             onChange={onRevisedTextChange}
             onFileSourceChange={onRevisedFileSourceChange}

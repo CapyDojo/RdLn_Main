@@ -87,6 +87,7 @@ export const useComparison = (saveSessionCallback?: (originalText: string, revis
   
   // Flag to prevent auto-compare interference during manual operations
   const manualOperationRef = useRef(false);
+  const inputImportPendingRef = useRef(false);
   
   // SSMR CHUNKING: Add separate progress tracking for large text processing
   // MODULAR: Separate from existing isProcessing state
@@ -239,6 +240,7 @@ export const useComparison = (saveSessionCallback?: (originalText: string, revis
   }, [state.isProcessing, isCancelling]);
 
   const compareDocuments = useCallback(async (isAutoCompare = false, preserveFocus = true, overrideOriginal?: string, overrideRevised?: string) => {
+    if (isAutoCompare && inputImportPendingRef.current) return;
     // SSMR STEP-BY-STEP: Start performance tracking for the entire comparison operation
     const operationId = `comparison_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
@@ -778,6 +780,7 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
 
   // Simplified auto-compare trigger - handles all real-time updates when enabled
   const triggerAutoCompare = useCallback((originalText: string, revisedText: string, isPasteAction = false) => {
+    if (inputImportPendingRef.current) return;
     // triggerAutoCompare called
     
     // Don't trigger auto-compare if manual operation is in progress
@@ -801,6 +804,7 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
       const delay = 200; // Fast response for all input types
       
       autoCompareTimeoutRef.current = setTimeout(() => {
+        if (inputImportPendingRef.current) return;
         // Double-check that manual operation isn't in progress when timeout fires
         if (manualOperationRef.current) {
           // Auto-compare timeout blocked by manual operation
@@ -892,6 +896,25 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
     });
   }, [quickCompareEnabled, triggerAutoCompare]);
 
+  // Replace a complete imported pair without scheduling a comparison of mixed inputs.
+  const setInputImportPending = useCallback((pending: boolean) => {
+    inputImportPendingRef.current = pending;
+    if (pending && autoCompareTimeoutRef.current) {
+      clearTimeout(autoCompareTimeoutRef.current);
+      autoCompareTimeoutRef.current = null;
+    }
+  }, []);
+
+  const replaceTexts = useCallback((originalText: string, revisedText: string) => {
+    inputImportPendingRef.current = false;
+    // Imports are committed only while idle; retire the prior comparison's cooldown.
+    manualOperationRef.current = false;
+    if (autoCompareTimeoutRef.current) clearTimeout(autoCompareTimeoutRef.current);
+    lastCompareInputRef.current = '';
+    setState(prev => ({ ...prev, originalText, revisedText, result: null, error: null }));
+    if (quickCompareEnabled) triggerAutoCompare(originalText, revisedText, true);
+  }, [quickCompareEnabled, triggerAutoCompare]);
+
   const resetComparison = useCallback(() => {
     // Clear any pending auto-compare
     if (autoCompareTimeoutRef.current) {
@@ -975,6 +998,8 @@ console.debug('🎯 Progress callback setState:', { progress, stage, prevEnabled
     ...state,
     setOriginalText,
     setRevisedText,
+    replaceTexts,
+    setInputImportPending,
     compareDocuments,
     resetComparison,
     quickCompareEnabled,

@@ -29,6 +29,7 @@ interface TextInputPanelProps extends BaseComponentProps {
   onFileSourceChange?: (source: LocalInputFileSource | null) => void;
   linkedFileSource?: LocalInputFileSource | null;
   disconnectedFileSource?: LocalInputFileSource | null;
+  importedFileName?: string | null;
 }
 
 export const TextInputPanel: React.FC<TextInputPanelProps> = ({
@@ -42,6 +43,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
   onFileSourceChange,
   linkedFileSource = null,
   disconnectedFileSource = null,
+  importedFileName = null,
   style,
   className,
   ...props
@@ -875,6 +877,9 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           </div>
           <div className="flex flex-col gap-2">
             <h3 className="!text-2.5xl font-semibold text-theme-primary-900">{title}</h3>
+            {importedFileName && !linkedFileSource && !disconnectedFileSource && (
+              <span className="text-xs text-theme-neutral-600 break-all">{importedFileName}</span>
+            )}
             {linkedFileSource && (
               <div
                 className="inline-flex max-w-full items-start gap-2 rounded-2xl border border-theme-primary-200/70 bg-theme-primary-50/90 px-3 py-2 text-xs font-medium leading-5 text-theme-primary-900"

@@ -15,6 +15,7 @@ import { DEV_CONFIG, FEATURE_FLAGS, STORAGE_CONFIG, UI_CONFIG } from '../config/
 import { AlertCircle } from 'lucide-react';
 import { useComparison } from '../hooks/useComparison';
 import { useUndoHistory } from '../hooks/useUndoHistory';
+import { FilePairSnapshot, useFilePairImport } from '../hooks/useFilePairImport';
 import { useRdLnMemoryContext } from '../contexts/RdLnMemoryContext';
 import { trackEvent } from '../services/AnalyticsService';
 import { RedlineOutput } from './RedlineOutput';
@@ -108,6 +109,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     error,
     setOriginalText,
     setRevisedText,
+    replaceTexts,
+    setInputImportPending,
     compareDocuments,
     resetComparison,
     quickCompareEnabled,
@@ -134,6 +137,24 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   const [electronPlatform, setElectronPlatform] = useState<string | null>(null);
   const [isLaunchingWordCompare, setIsLaunchingWordCompare] = useState(false);
   const [wordCompareFeedback, setWordCompareFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [originalFileName, setOriginalFileName] = useState<string | null>(null);
+  const [revisedFileName, setRevisedFileName] = useState<string | null>(null);
+  const commitFilePair = React.useCallback((next: FilePairSnapshot) => {
+    replaceTexts(next.originalText, next.revisedText);
+    setOriginalFileSource(next.originalFileSource);
+    setRevisedFileSource(next.revisedFileSource);
+    setOriginalDisconnectedFileSource(next.originalDisconnectedFileSource);
+    setRevisedDisconnectedFileSource(next.revisedDisconnectedFileSource);
+    setOriginalFileName(next.originalFileName);
+    setRevisedFileName(next.revisedFileName);
+    setWordCompareFeedback(null);
+  }, [replaceTexts]);
+  const filePairImport = useFilePairImport({
+    originalText, revisedText, originalFileSource, revisedFileSource,
+    originalDisconnectedFileSource, revisedDisconnectedFileSource,
+    originalFileName, revisedFileName
+  }, commitFilePair, isProcessing || isCancelling, setInputImportPending);
+  const invalidateFileImport = filePairImport.invalidate;
   const [showWordCompareConfirm, setShowWordCompareConfirm] = useState(false);
   const [skipWordCompareConfirm, setSkipWordCompareConfirm] = useState(() => {
     try {
@@ -160,6 +181,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   // Define scoped sample loader so it can be passed as a prop and exposed via ref
   const loadSampleData = (originalText: string, revisedText: string, autoRun: boolean = false) => {
+    invalidateFileImport();
+    setOriginalFileName(null);
+    setRevisedFileName(null);
     setOriginalFileSource(null);
     setRevisedFileSource(null);
     setOriginalDisconnectedFileSource(null);
@@ -255,6 +279,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     }
   };
   const handleOriginalTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
+    invalidateFileImport();
+    setOriginalFileName(null);
     reconcileWordFileLink(
       value,
       originalFileSource,
@@ -265,8 +291,10 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     );
     setWordCompareFeedback(null);
     setOriginalText(value, isPasteAction);
-  }, [originalDisconnectedFileSource, originalFileSource, setOriginalText]);
+  }, [originalDisconnectedFileSource, originalFileSource, setOriginalText, invalidateFileImport]);
   const handleRevisedTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
+    invalidateFileImport();
+    setRevisedFileName(null);
     reconcileWordFileLink(
       value,
       revisedFileSource,
@@ -277,21 +305,25 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     );
     setWordCompareFeedback(null);
     setRevisedText(value, isPasteAction);
-  }, [revisedDisconnectedFileSource, revisedFileSource, setRevisedText]);
+  }, [revisedDisconnectedFileSource, revisedFileSource, setRevisedText, invalidateFileImport]);
   const handleOriginalFileSourceChange = React.useCallback((source: LocalInputFileSource | null) => {
+    invalidateFileImport();
+    setOriginalFileName(null);
     setOriginalFileSource(source);
     if (source) {
       setOriginalDisconnectedFileSource(null);
     }
     setWordCompareFeedback(null);
-  }, []);
+  }, [invalidateFileImport]);
   const handleRevisedFileSourceChange = React.useCallback((source: LocalInputFileSource | null) => {
+    invalidateFileImport();
+    setRevisedFileName(null);
     setRevisedFileSource(source);
     if (source) {
       setRevisedDisconnectedFileSource(null);
     }
     setWordCompareFeedback(null);
-  }, []);
+  }, [invalidateFileImport]);
   const getCompareInWordDisabledReason = () => {
     if (!FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE) {
       return 'Word native compare is currently disabled.';
@@ -571,6 +603,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   // Performance-aware handlers - Define BEFORE useEffect that references them
   const handleSwapContent = usePerformanceAwareHandler(() => {
+    invalidateFileImport();
+    setOriginalFileName(revisedFileName);
+    setRevisedFileName(originalFileName);
     const tempOriginal = originalText;
     const tempOriginalFileSource = originalFileSource;
     const tempOriginalDisconnectedFileSource = originalDisconnectedFileSource;
@@ -591,6 +626,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   // Clear content with undo protection
   const handleResetComparison = usePerformanceAwareHandler(() => {
+    invalidateFileImport();
+    setOriginalFileName(null);
+    setRevisedFileName(null);
     // Only save state if there's actually content to save
     if (originalText.trim() || revisedText.trim()) {
       saveClearState(originalText, revisedText);
@@ -612,6 +650,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   // Undo clear action
   const handleUndo = usePerformanceAwareHandler(() => {
+    invalidateFileImport();
+    setOriginalFileName(null);
+    setRevisedFileName(null);
     const clearedState = undoClear();
     if (clearedState) {
       setOriginalText(clearedState.originalText);
@@ -633,6 +674,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   // Wrapped comparison function with auto-save
   const handleCompareDocuments = usePerformanceAwareHandler(async (autoRunOnly?: boolean, manualOperation?: boolean, overrideOriginal?: string, overrideRevised?: string) => {
+    if (filePairImport.isImporting) invalidateFileImport();
     // Run the comparison - autosaving is now handled within compareDocuments via the hook
     await compareDocuments(autoRunOnly, manualOperation, overrideOriginal, overrideRevised);
   }, 'compare_with_autosave', performanceTracker);
@@ -640,6 +682,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   const handleLoadSession = usePerformanceAwareHandler((sessionId: string) => {
     const session = loadSession(sessionId);
     if (session) {
+      invalidateFileImport();
+      setOriginalFileName(null);
+      setRevisedFileName(null);
       // Load the session content into the input fields
       setOriginalFileSource(null);
       setRevisedFileSource(null);
@@ -773,6 +818,9 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   }, [handleCompareDocuments, isProcessing, isCancelling, cancelComparison, features.resultsOverlay, overlayVisible, toggleQuickCompare, handleSwapContent, toggleScrollLock, handleResetComparison, canUndo, handleUndo, originalText, revisedText, handleSaveSession]);
 
   const handleLoadTest = usePerformanceAwareHandler(async (originalText: string, revisedText: string) => {
+    invalidateFileImport();
+    setOriginalFileName(null);
+    setRevisedFileName(null);
     // Track load test operation
     await performanceTracker.trackOperation('load_test', async () => {
       // SSMR: Clear inputs first to prevent persistence issues
@@ -946,12 +994,31 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
       />
 
       {/* Input Section with Centered Swap Button - Enhanced with glassmorphism */}
-      <div className="input-section relative mb-8" style={{ display: getPanelVisibility('input') }}>
+      <div
+        className="input-section relative mb-8"
+        style={{ display: getPanelVisibility('input') }}
+        onDragOver={(event) => {
+          if (event.dataTransfer.types.includes('Files')) event.preventDefault();
+        }}
+        onDropCapture={(event) => {
+          const files = Array.from(event.dataTransfer.files);
+          if (files.length > 1) {
+            event.preventDefault();
+            event.stopPropagation();
+            void filePairImport.importFiles(files);
+          } else if (files.length === 1) {
+            // Let the existing single-file/OCR handler run, cancelling any older pair.
+            invalidateFileImport();
+          }
+        }}
+      >
         {/* Desktop Input Layout Component */}
         <DesktopInputLayout
           originalText={originalText}
           revisedText={revisedText}
           isProcessing={isProcessing}
+          originalFileName={originalFileName}
+          revisedFileName={revisedFileName}
           panelHeight={panelHeight}
           onOriginalTextChange={handleOriginalTextChange}
           onRevisedTextChange={handleRevisedTextChange}
@@ -970,6 +1037,8 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           originalText={originalText}
           revisedText={revisedText}
           isProcessing={isProcessing}
+          originalFileName={originalFileName}
+          revisedFileName={revisedFileName}
           panelHeight={panelHeight}
           onOriginalTextChange={handleOriginalTextChange}
           onRevisedTextChange={handleRevisedTextChange}
@@ -983,6 +1052,26 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           mobileResizeHandleRef={mobileResizeHandleRef}
         />
 
+
+        {filePairImport.feedback && (
+          <div
+            role={filePairImport.feedback.error ? 'alert' : 'status'}
+            aria-busy={filePairImport.isImporting}
+            className="mt-3 flex flex-wrap items-center gap-3 text-sm text-theme-neutral-800"
+          >
+            <span>{filePairImport.feedback.message}</span>
+            {filePairImport.canUndoImport && !filePairImport.isImporting && (
+              <button
+                type="button"
+                onClick={filePairImport.undoImport}
+                disabled={isProcessing || isCancelling}
+                className="underline font-medium disabled:opacity-50"
+              >
+                Undo import
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Consolidated Vertical Controls Panel - Centered between input panels */}
         <DesktopControlsPanel
