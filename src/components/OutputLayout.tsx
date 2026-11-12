@@ -17,6 +17,8 @@ interface OutputLayoutProps extends BaseComponentProps {
   outputHeight: number;
   /** Callback for copy action */
   onCopy: () => void;
+  cleanWhitespace?: boolean;
+  onCleanWhitespaceChange?: (enabled: boolean) => void;
   /** Output resize handlers from hook */
   outputResizeHandlers: {
     handleMouseDown: (e: React.MouseEvent) => void;
@@ -61,6 +63,8 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
   USE_CSS_RESIZE,
   outputHeight,
   onCopy,
+  cleanWhitespace,
+  onCleanWhitespaceChange,
   outputResizeHandlers,
   scrollRef,
   onShowOverlay,
@@ -199,6 +203,8 @@ export const OutputLayout: React.FC<OutputLayoutProps> = ({
       {/* SSMR: Direct RedlineOutput with proper container identity */}
       <div data-output-panel>
         <RedlineOutput
+          cleanWhitespace={cleanWhitespace}
+          onCleanWhitespaceChange={onCleanWhitespaceChange}
           changes={changes} 
           onCopy={onCopy}
           height={USE_CSS_RESIZE ? 9999 : outputHeight} // Height controlled by inner-content CSS

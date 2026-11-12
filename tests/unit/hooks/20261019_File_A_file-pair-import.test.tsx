@@ -15,7 +15,8 @@ const snapshot: FilePairSnapshot = {
   originalFileSource: { filePath: 'C:/old.docx', fileName: 'old.docx', fileType: 'docx', importedText: 'Existing original' },
   revisedFileSource: null,
   originalDisconnectedFileSource: null, revisedDisconnectedFileSource: null,
-  originalFileName: 'old.docx', revisedFileName: null
+  originalFileName: 'old.docx', revisedFileName: null,
+  inputOptions: { originalIsMarkdown: false, revisedIsMarkdown: false, cleanWhitespace: true }
 };
 const file = (name: string, lastModified: number) => Object.assign(new File(['text'], name), { lastModified });
 const deferred = () => {
@@ -66,6 +67,28 @@ describe('two-file import', () => {
     const { result, commit } = setup();
     await act(async () => { await result.current.importFiles([file('new.docx', 200), file('old.pdf', 100)]); });
     expect(commit.mock.calls[0][0].originalFileName).toBe('old.pdf');
+  });
+
+  it.each(['old.txt', 'old.md'])('assigns Markdown origin by date and restores the previous options after importing with %s', async name => {
+    const previous = {
+      ...snapshot,
+      inputOptions: { originalIsMarkdown: false, revisedIsMarkdown: true, cleanWhitespace: true }
+    };
+    const { result, commit, rerender } = setup();
+    rerender({ current: previous, isBusy: false });
+
+    await act(async () => { await result.current.importFiles([file('new.MD', 200), file(name, 100)]); });
+
+    const imported = commit.mock.calls[0][0];
+    expect(imported.originalFileName).toBe(name);
+    expect(imported.revisedFileName).toBe('new.MD');
+    expect(imported.inputOptions).toEqual({
+      originalIsMarkdown: name.endsWith('.md'), revisedIsMarkdown: true, cleanWhitespace: false
+    });
+
+    rerender({ current: imported, isBusy: false });
+    act(() => result.current.undoImport());
+    expect(commit).toHaveBeenLastCalledWith(previous);
   });
 
   it('rejects more than two files before validation or extraction', async () => {

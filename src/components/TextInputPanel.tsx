@@ -13,6 +13,7 @@ import { formatPastedText, formatRtfHtmlPaste } from '../utils/paragraphFormatti
 import { analyzePasteContext, getFormattingLevel } from '../utils/pastePDFdetection';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { FileProcessingService } from '../services/FileProcessingService';
+import { FileTypeDetector } from '../services/FileTypeDetector';
 
 import { trackEvent } from '../services/AnalyticsService';
 
@@ -26,7 +27,7 @@ interface TextInputPanelProps extends BaseComponentProps {
   disabled?: boolean;
   height?: number;
   iconEmoji?: string;
-  onFileSourceChange?: (source: LocalInputFileSource | null) => void;
+  onFileSourceChange?: (source: LocalInputFileSource | null, isMarkdownImport?: boolean) => void;
   linkedFileSource?: LocalInputFileSource | null;
   disconnectedFileSource?: LocalInputFileSource | null;
   importedFileName?: string | null;
@@ -65,8 +66,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
   // File processing service
   const fileProcessingService = useRef<FileProcessingService>(new FileProcessingService());
-  const updateFileSource = useCallback((source: LocalInputFileSource | null) => {
-    onFileSourceChange?.(source);
+  const updateFileSource = useCallback((source: LocalInputFileSource | null, isMarkdownImport?: boolean) => {
+    onFileSourceChange?.(source, isMarkdownImport);
   }, [onFileSourceChange]);
 
   const getLocalFileSource = useCallback((file: File, fileType: LocalInputFileSource['fileType']): LocalInputFileSource | null => {
@@ -89,7 +90,8 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
 
   const replacePanelContentFromImportedFile = useCallback((
     content: string,
-    source: LocalInputFileSource | null
+    source: LocalInputFileSource | null,
+    isMarkdown = false
   ) => {
     if (onChange.length > 1) {
       (onChange as (value: string, isPasteAction?: boolean) => void)(content, true);
@@ -97,7 +99,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       onChange(content);
     }
 
-    updateFileSource(source ? { ...source, importedText: content } : null);
+    updateFileSource(source ? { ...source, importedText: content } : null, isMarkdown);
 
     const textarea = textareaRef.current;
     if (textarea) {
@@ -147,7 +149,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
           <br />
           <span className="text-6xl block" role="img" aria-label="Document">⛶</span>
           <br />
-          <p className="text-lg mt-2 font-sans"><i>Drop files here (supports .DOCX, .PDF, .PNG, .TXT)<br></br>or paste screenshots (Ctrl+V / Cmd+V)<br></br>for OCR in {supportedLanguages.length} languages</i></p>
+          <p className="text-lg mt-2 font-sans"><i>Drop files here (supports .DOCX, .PDF, .PNG, .TXT, .MD)<br></br>or paste screenshots (Ctrl+V / Cmd+V)<br></br>for OCR in {supportedLanguages.length} languages</i></p>
         </div >
       );
     }
@@ -160,7 +162,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         <span className="text-6xl mb-3 block" role="img" aria-label="Document">⛶</span>
         <br></br>
         <p className="text-lg font-sans"><i>
-          Drop files here (supports .DOCX, .PDF, .PNG, .TXT)<br></br>or<br></br>Paste screenshots (Ctrl+V / Cmd+V)<br></br>for OCR in {supportedLanguages.length} languages</i>
+          Drop files here (supports .DOCX, .PDF, .PNG, .TXT, .MD)<br></br>or<br></br>Paste screenshots (Ctrl+V / Cmd+V)<br></br>for OCR in {supportedLanguages.length} languages</i>
         </p>
       </div>
     );
@@ -408,8 +410,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       // Get the file to check its type
       const file = item.getAsFile();
       if (!file) return false;
-      return file.type === 'text/plain' ||
-        file.name.toLowerCase().endsWith('.txt');
+      return FileTypeDetector.isTxt(file);
     });
 
     // Get plain text content for analysis
@@ -490,12 +491,12 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
         if (!txtFile) return;
 
         const result = await fileProcessingService.current.processFile(txtFile);
-        replacePanelContentFromImportedFile(result.content, getLocalFileSource(txtFile, 'txt'));
+        replacePanelContentFromImportedFile(result.content, getLocalFileSource(txtFile, 'txt'), FileTypeDetector.isMarkdown(txtFile));
         return; // Exit after processing TXT
       } catch (error: any) {
         console.error('TXT processing failed:', error);
         // Show error to user
-        alert(error.message || 'Failed to process TXT file from clipboard. Please try another file.');
+        alert(error.message || 'Failed to read the text file from the clipboard. Please try another file.');
         performanceTracker.trackMetric('txt_paste_error', { error: error.message });
         return;
       }
@@ -601,10 +602,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
       file.type === 'application/pdf' ||
       file.name.toLowerCase().endsWith('.pdf')
     );
-    const txtFile = files.find(file =>
-      file.type === 'text/plain' ||
-      file.name.toLowerCase().endsWith('.txt')
-    );
+    const txtFile = files.find(file => FileTypeDetector.isTxt(file));
 
     performanceTracker.trackMetric('drop_operation', {
       fileCount: files.length,
@@ -622,7 +620,7 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     } else if (pdfFile) {
       trackEvent.documentUpload('drag_drop', 'pdf');
     } else if (txtFile) {
-      trackEvent.documentUpload('drag_drop', 'txt');
+      trackEvent.documentUpload('drag_drop', FileTypeDetector.isMarkdown(txtFile) ? 'md' : 'txt');
     }
 
     // Process DOCX file if present
@@ -660,12 +658,12 @@ export const TextInputPanel: React.FC<TextInputPanelProps> = ({
     if (txtFile) {
       try {
         const result = await fileProcessingService.current.processFile(txtFile);
-        replacePanelContentFromImportedFile(result.content, getLocalFileSource(txtFile, 'txt'));
+        replacePanelContentFromImportedFile(result.content, getLocalFileSource(txtFile, 'txt'), FileTypeDetector.isMarkdown(txtFile));
         return; // Exit after processing TXT
       } catch (error: any) {
         console.error('TXT processing failed:', error);
         // Show error to user
-        alert(error.message || 'Failed to process TXT file. Please try another file.');
+        alert(error.message || 'Failed to read the text file. Please try another file.');
         performanceTracker.trackMetric('txt_error', { error: error.message });
         return;
       }

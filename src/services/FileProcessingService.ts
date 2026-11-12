@@ -49,7 +49,7 @@ export class FileProcessingService {
 
       default:
         throw {
-          message: 'Unsupported file type. Please upload a DOCX or TXT file.',
+          message: 'Unsupported file type. Please use a DOCX, PDF, TXT or MD file.',
           code: ERROR_CODES.UNSUPPORTED_TYPE
         } as ProcessingError;
     }
@@ -72,7 +72,7 @@ export class FileProcessingService {
     if (fileType === 'unknown') {
       return {
         valid: false,
-        message: 'Unsupported file type. Please upload a DOCX, PDF, or TXT file.'
+        message: 'Unsupported file type. Please use a DOCX, PDF, TXT or MD file.'
       };
     }
 

@@ -1,6 +1,6 @@
 # Markdown input support — 12 November 2026
 
-**Execution prompt.** Read the scope, behaviour and task tracker before implementing. Use this document to track the sprint. Reuse the existing text reader, two-file import and redline. The app changes and release verification are outstanding.
+**Execution prompt.** Read the scope, behaviour and task tracker before making further changes. Use this document to track the sprint. Markdown input uses the existing text reader, two-file import and redline.
 
 ## Scope
 
@@ -21,19 +21,19 @@ The sprint covers input and the initial **Clean Whitespace** setting. Use the te
 
 | ID | Status | Work |
 | --- | --- | --- |
-| MD-MVP-01 | Outstanding | Recognise `.md` and route single drops, pasted file attachments and pair drops through the TXT reader. |
-| MD-MVP-02 | Outstanding | Track Markdown origin on each side through import, replacement, edits, Swap, Clear and pair-import undo. |
-| MD-UX-01 | Outstanding | Apply the Markdown whitespace default and share the user’s choice across results views. |
-| MD-UX-02 | Outstanding | Update supported-file hints, import errors and the relevant feature documentation. |
-| MD-QA-01 | Outstanding | Cover file detection, source fidelity, pair import and whitespace-setting regressions with targeted tests. |
-| MD-QA-02 | Outstanding | Verify the user flows in a browser and Windows Electron, and capture before/after screenshots. |
-| MD-QA-03 | Outstanding | Run lint, build and repository test checks and record results against the baseline. |
+| MD-MVP-01 | Completed | Recognise `.md` and route single drops, pasted file attachments and pair drops through the TXT reader. |
+| MD-MVP-02 | Completed | Track Markdown origin on each side through import, replacement, edits, Swap, Clear and pair-import undo. |
+| MD-UX-01 | Completed | Apply the Markdown whitespace default and share the user’s choice across results views. |
+| MD-UX-02 | Completed | Update supported-file hints, import errors and the relevant feature documentation. |
+| MD-QA-01 | Completed | Cover file detection, source fidelity, pair import and whitespace-setting regressions with targeted tests. |
+| MD-QA-02 | Completed | Verify the user flows in a browser and Windows Electron, and capture before/after screenshots. |
+| MD-QA-03 | Completed | Run lint, build and repository test checks and record results against the baseline. |
 
 ## Implementation notes
 
 - **MD-MVP-01** — Extend `src/services/FileTypeDetector.ts` so Markdown uses the existing text category and `TxtProcessor`. Reuse the shared detector in the text-file checks in `TextInputPanel.tsx` for paste and drop. `useFilePairImport.ts` already uses the shared detector. Keep the existing document/image priority and pair validation. Prefer a Markdown filename predicate for origin tracking and keep the existing processing result and Word source types.
 - **MD-MVP-02** — Pass Markdown origin to `ComparisonInterface.tsx` when each file import succeeds. Include per-side origin and the current whitespace choice in the pair snapshot so the atomic commit and undo can restore them. Track origin independently of the Electron path and the filename label, which can disappear on edits. Update origin alongside the text in replacement and Swap flows.
-- **MD-UX-01** — Own the Markdown comparison’s whitespace choice in `ComparisonInterface.tsx`, where all results views can use it. Pass it through `OutputLayout.tsx` and the direct `RedlineOutput.tsx` call sites for the overlay and fullscreen views. Reuse the existing toggle and raw display mode. Preserve the existing behaviour of the toggle for ordinary text comparisons.
+- **MD-UX-01** — `ComparisonInterface.tsx` owns the whitespace choice, including the current value for undo, and passes it to the normal, overlay and fullscreen results. The existing toggle switches between clean and raw display. Results views share the choice for all input formats. A new ordinary pair starts with cleanup On.
 - **MD-UX-02** — Update the desktop and mobile drop hints, the two-file unsupported-type message and the file service’s supported-format copy. Describe Markdown as text input in the user-facing docs.
 
 ## Verification
@@ -41,10 +41,18 @@ The sprint covers input and the initial **Clean Whitespace** setting. Use the te
 - **Import** — Cover `.md` and `.MD` with the four file type values above. Exercise a single drop on each side, a pasted file attachment, and both Markdown/Markdown and Markdown/TXT pairs. Verify newer-to-Revised ordering, both filename labels on pair import, whole-pair failure on an unreadable or unsupported second file, and Undo import. Spot-check an existing TXT, DOCX, PDF and image OCR import.
 - **Source redline** — Use samples with a heading marker change, a changed link target, fenced code, a nested list, a two-space hard break and embedded HTML. Verify literal display, visible whitespace highlights with cleanup Off and escaped HTML. Include a Unicode and CRLF import fixture for the text reader.
 - **Toggle and lifecycle** — Verify the first `.md` result defaults to Off and a regular text comparison defaults to On. Turn cleanup back on and check that edits, Swap, manual reruns, Live Compare and switching results views respect that choice. Verify a successful replacement re-evaluates the default, a failed replacement preserves the current choice, and pair-import undo restores the previous choice. Check desktop and mobile layouts plus Electron.
-- **Release checks** — Run `npm run lint`, `npm run test:run` and `npm run build`, plus targeted end-to-end checks for the changed flows. Use the externally started development server for interactive QA per the repository rule. Capture screenshots of literal Markdown and a visible whitespace-only change. Record any existing suite failures separately from new regressions.
+- **Release checks** — Run `npm run lint`, `npm run test:run` and `npm run build`, plus targeted end-to-end checks for the changed flows. Use the production build for isolated QA or an externally started development server for interactive QA. Capture screenshots of literal Markdown and a visible whitespace-only change. Record any existing suite failures separately from new regressions.
 
 ## Investigation and known limitations
 
-- An in-memory prototype accepted `.md` through the TXT reader with all four file type values above and preserved the sample source, including Unicode and CRLF. Direct engine probes found the expected changes in headings, URLs, fences and whitespace. Browser and Electron feature verification remains outstanding.
+- An in-memory prototype accepted `.md` through the TXT reader with all four file type values above and preserved the sample source, including Unicode and CRLF. Direct engine probes found the expected changes in headings, URLs, fences and whitespace.
 - Live Compare deduplicates on trimmed inputs in `src/hooks/useComparison.ts`. An edit confined to the start or end of a file can be skipped until the user runs **Compare** manually. The sprint changes the default display of whitespace differences. The Live Compare scheduling edge case is follow-up work.
 - The targeted pre-change run had 54 passes and five failures across four suites. Four failures were existing Myers assertions and one was a PDF rejection expectation in the file-processing suite. Compare results against the baseline before attributing failures to Markdown input.
+
+## Implementation verification
+
+- The three targeted Vitest files passed all 30 tests, including literal Unicode/CRLF file reads, the file size limit, Markdown pairs and undo snapshots.
+- The production build passed. ESLint reported zero errors and 434 warnings. The full Vitest run passed 210 tests and reproduced the same 18 failures and one suite transform failure as the pre-change run, which passed 203 tests. The app type check stops at the pre-existing `TS1127` in `src/tests/preprocessing-test-utils.ts:60`.
+- Edge verified single drops, pasted attachments, literal and escaped Markdown, the visible two-space change, the default and toggle across fullscreen, edits, Swap and manual/live comparison, pair ordering and Undo, failed pair handling, TXT replacement and the mobile layout. The previous build supplied the before screenshot. The current build passed DOCX, PDF and image OCR drop smoke checks.
+- A Windows Electron harness loaded the production renderer and the app’s preload. It verified both local Markdown file paths, the raw redline and the native Word comparison eligibility guard.
+- Screenshots show the [previous text redline](../../output/playwright/20261112-markdown-before.png), [Markdown input redline](../../output/playwright/20261112-markdown-after.png) and [mobile redline](../../output/playwright/20261112-markdown-mobile.png).

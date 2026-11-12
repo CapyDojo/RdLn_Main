@@ -13,8 +13,8 @@ interface MobileInputLayoutProps extends BaseComponentProps {
   panelHeight: number;
   onOriginalTextChange: (value: string, isPasteAction?: boolean) => void;
   onRevisedTextChange: (value: string, isPasteAction?: boolean) => void;
-  onOriginalFileSourceChange: (source: LocalInputFileSource | null) => void;
-  onRevisedFileSourceChange: (source: LocalInputFileSource | null) => void;
+  onOriginalFileSourceChange: (source: LocalInputFileSource | null, isMarkdownImport?: boolean) => void;
+  onRevisedFileSourceChange: (source: LocalInputFileSource | null, isMarkdownImport?: boolean) => void;
   originalFileSource: LocalInputFileSource | null;
   revisedFileSource: LocalInputFileSource | null;
   originalDisconnectedFileSource: LocalInputFileSource | null;

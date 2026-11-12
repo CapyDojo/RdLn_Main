@@ -47,7 +47,7 @@ RdLn™ is a sophisticated document comparison tool designed for legal professio
 - **MobileInputLayout**: Mobile stacked input layout with vertical resize handle
 - **ProcessingDisplay**: Modularized processing states with progress bars
 - **OutputLayout**: RedlineOutput display with resize handle and stats
-- **TextInputPanel**: Input areas with OCR and drag-drop support
+- **TextInputPanel**: Input areas with OCR and drag-and-drop support. Import `.md` files to compare their Markdown source as text. Clean Whitespace starts off when either input comes from a Markdown file.
 - **RedlineOutput**: Chunked rendering for diff visualization
 - **MyersAlgorithm**: Core comparison engine
 

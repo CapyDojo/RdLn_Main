@@ -29,7 +29,7 @@ export class TxtProcessor {
 
       // Handle other errors
       throw {
-        message: error.message || 'Failed to process TXT file.',
+        message: error.message || 'Failed to process text file.',
         code: ERROR_CODES.TXT_PROCESSING_FAILED,
         details: error
       } as ProcessingError;
@@ -48,7 +48,7 @@ export class TxtProcessor {
       };
       
       reader.onerror = () => {
-        reject(new Error('Failed to read TXT file.'));
+        reject(new Error('Failed to read text file.'));
       };
       
       reader.readAsText(file);

@@ -12,6 +12,11 @@ export interface FilePairSnapshot {
   revisedDisconnectedFileSource: LocalInputFileSource | null;
   originalFileName: string | null;
   revisedFileName: string | null;
+  inputOptions: {
+    originalIsMarkdown: boolean;
+    revisedIsMarkdown: boolean;
+    cleanWhitespace: boolean;
+  };
 }
 
 export const TOO_MANY_FILES_MESSAGE = 'Oops, you dropped more than two files! Drop files individually into your preferred panels, or drop two together and RdLn will place the newer file in Revised.';
@@ -59,7 +64,7 @@ export function useFilePairImport(
       service.current ??= new FileProcessingService();
       for (const file of files) {
         if (FileTypeDetector.getFileCategory(file) === 'unknown') {
-          throw new Error(`${file.name}: Two-file imports support DOCX, PDF and TXT files. Drop images individually for OCR.`);
+          throw new Error(`${file.name}: Two-file imports support DOCX, PDF, TXT and MD files. Drop images individually for OCR.`);
         }
         const validation = service.current.validateFile(file);
         if (!validation.valid) throw new Error(`${file.name}: ${validation.message}`);
@@ -98,6 +103,8 @@ export function useFilePairImport(
         return { filePath, fileName: file.name, fileType, importedText };
       };
       const previous = latest.current.snapshot;
+      const originalIsMarkdown = FileTypeDetector.isMarkdown(original);
+      const revisedIsMarkdown = FileTypeDetector.isMarkdown(revised);
       latest.current.onCommit({
         originalText, revisedText,
         originalFileSource: source(original, originalText),
@@ -105,7 +112,8 @@ export function useFilePairImport(
         originalDisconnectedFileSource: null,
         revisedDisconnectedFileSource: null,
         originalFileName: original.name,
-        revisedFileName: revised.name
+        revisedFileName: revised.name,
+        inputOptions: { originalIsMarkdown, revisedIsMarkdown, cleanWhitespace: !(originalIsMarkdown || revisedIsMarkdown) }
       });
       setUndoSnapshot(previous);
       setFeedback({ error: false, message: orderedByDate

@@ -52,6 +52,8 @@ import { useAutoScroll } from '../hooks/useAutoScroll';
 
 import { BaseComponentProps, LocalInputFileSource } from '../types/components';
 
+const DEFAULT_INPUT_OPTIONS = { originalIsMarkdown: false, revisedIsMarkdown: false, cleanWhitespace: true };
+
 interface ComparisonInterfaceProps extends BaseComponentProps {
   showAdvancedOcrCard?: boolean;
   showPerformanceDemoCard?: boolean;
@@ -139,6 +141,27 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   const [wordCompareFeedback, setWordCompareFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [originalFileName, setOriginalFileName] = useState<string | null>(null);
   const [revisedFileName, setRevisedFileName] = useState<string | null>(null);
+  const [inputOptions, setInputOptions] = useState<FilePairSnapshot['inputOptions']>(DEFAULT_INPUT_OPTIONS);
+  const handleCleanWhitespaceChange = React.useCallback((cleanWhitespace: boolean) => {
+    setInputOptions(current => ({ ...current, cleanWhitespace }));
+  }, []);
+  const updateMarkdownOrigin = React.useCallback((
+    side: 'originalIsMarkdown' | 'revisedIsMarkdown', isMarkdown: boolean, isFileImport = false
+  ) => {
+    setInputOptions(current => {
+      const hadMarkdown = current.originalIsMarkdown || current.revisedIsMarkdown;
+      if (!isFileImport && current[side] === isMarkdown) return current;
+      const next = { ...current, [side]: isMarkdown };
+      const hasMarkdown = next.originalIsMarkdown || next.revisedIsMarkdown;
+      if (isFileImport && hasMarkdown) next.cleanWhitespace = false;
+      if (hadMarkdown && !hasMarkdown) next.cleanWhitespace = true;
+      return next;
+    });
+  }, []);
+  const whitespaceProps = {
+    cleanWhitespace: inputOptions.cleanWhitespace,
+    onCleanWhitespaceChange: handleCleanWhitespaceChange
+  };
   const commitFilePair = React.useCallback((next: FilePairSnapshot) => {
     replaceTexts(next.originalText, next.revisedText);
     setOriginalFileSource(next.originalFileSource);
@@ -147,12 +170,13 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     setRevisedDisconnectedFileSource(next.revisedDisconnectedFileSource);
     setOriginalFileName(next.originalFileName);
     setRevisedFileName(next.revisedFileName);
+    setInputOptions(next.inputOptions);
     setWordCompareFeedback(null);
   }, [replaceTexts]);
   const filePairImport = useFilePairImport({
     originalText, revisedText, originalFileSource, revisedFileSource,
     originalDisconnectedFileSource, revisedDisconnectedFileSource,
-    originalFileName, revisedFileName
+    originalFileName, revisedFileName, inputOptions
   }, commitFilePair, isProcessing || isCancelling, setInputImportPending);
   const invalidateFileImport = filePairImport.invalidate;
   const [showWordCompareConfirm, setShowWordCompareConfirm] = useState(false);
@@ -182,6 +206,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   // Define scoped sample loader so it can be passed as a prop and exposed via ref
   const loadSampleData = (originalText: string, revisedText: string, autoRun: boolean = false) => {
     invalidateFileImport();
+    setInputOptions(DEFAULT_INPUT_OPTIONS);
     setOriginalFileName(null);
     setRevisedFileName(null);
     setOriginalFileSource(null);
@@ -281,6 +306,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   const handleOriginalTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
     invalidateFileImport();
     setOriginalFileName(null);
+    if (!value) updateMarkdownOrigin('originalIsMarkdown', false);
     reconcileWordFileLink(
       value,
       originalFileSource,
@@ -291,10 +317,11 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     );
     setWordCompareFeedback(null);
     setOriginalText(value, isPasteAction);
-  }, [originalDisconnectedFileSource, originalFileSource, setOriginalText, invalidateFileImport]);
+  }, [originalDisconnectedFileSource, originalFileSource, setOriginalText, invalidateFileImport, updateMarkdownOrigin]);
   const handleRevisedTextChange = React.useCallback((value: string, isPasteAction?: boolean) => {
     invalidateFileImport();
     setRevisedFileName(null);
+    if (!value) updateMarkdownOrigin('revisedIsMarkdown', false);
     reconcileWordFileLink(
       value,
       revisedFileSource,
@@ -305,25 +332,27 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     );
     setWordCompareFeedback(null);
     setRevisedText(value, isPasteAction);
-  }, [revisedDisconnectedFileSource, revisedFileSource, setRevisedText, invalidateFileImport]);
-  const handleOriginalFileSourceChange = React.useCallback((source: LocalInputFileSource | null) => {
+  }, [revisedDisconnectedFileSource, revisedFileSource, setRevisedText, invalidateFileImport, updateMarkdownOrigin]);
+  const handleOriginalFileSourceChange = React.useCallback((source: LocalInputFileSource | null, isMarkdownImport?: boolean) => {
     invalidateFileImport();
     setOriginalFileName(null);
+    if (isMarkdownImport !== undefined) updateMarkdownOrigin('originalIsMarkdown', isMarkdownImport, true);
     setOriginalFileSource(source);
     if (source) {
       setOriginalDisconnectedFileSource(null);
     }
     setWordCompareFeedback(null);
-  }, [invalidateFileImport]);
-  const handleRevisedFileSourceChange = React.useCallback((source: LocalInputFileSource | null) => {
+  }, [invalidateFileImport, updateMarkdownOrigin]);
+  const handleRevisedFileSourceChange = React.useCallback((source: LocalInputFileSource | null, isMarkdownImport?: boolean) => {
     invalidateFileImport();
     setRevisedFileName(null);
+    if (isMarkdownImport !== undefined) updateMarkdownOrigin('revisedIsMarkdown', isMarkdownImport, true);
     setRevisedFileSource(source);
     if (source) {
       setRevisedDisconnectedFileSource(null);
     }
     setWordCompareFeedback(null);
-  }, [invalidateFileImport]);
+  }, [invalidateFileImport, updateMarkdownOrigin]);
   const getCompareInWordDisabledReason = () => {
     if (!FEATURE_FLAGS.ENABLE_EXTERNAL_WORD_COMPARE) {
       return 'Word native compare is currently disabled.';
@@ -604,6 +633,11 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   // Performance-aware handlers - Define BEFORE useEffect that references them
   const handleSwapContent = usePerformanceAwareHandler(() => {
     invalidateFileImport();
+    setInputOptions(current => ({
+      ...current,
+      originalIsMarkdown: current.revisedIsMarkdown,
+      revisedIsMarkdown: current.originalIsMarkdown
+    }));
     setOriginalFileName(revisedFileName);
     setRevisedFileName(originalFileName);
     const tempOriginal = originalText;
@@ -627,6 +661,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
   // Clear content with undo protection
   const handleResetComparison = usePerformanceAwareHandler(() => {
     invalidateFileImport();
+    setInputOptions(DEFAULT_INPUT_OPTIONS);
     setOriginalFileName(null);
     setRevisedFileName(null);
     // Only save state if there's actually content to save
@@ -655,6 +690,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     setRevisedFileName(null);
     const clearedState = undoClear();
     if (clearedState) {
+      setInputOptions(DEFAULT_INPUT_OPTIONS);
       setOriginalText(clearedState.originalText);
       setRevisedText(clearedState.revisedText);
       setOriginalFileSource(null);
@@ -683,6 +719,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
     const session = loadSession(sessionId);
     if (session) {
       invalidateFileImport();
+      setInputOptions(DEFAULT_INPUT_OPTIONS);
       setOriginalFileName(null);
       setRevisedFileName(null);
       // Load the session content into the input fields
@@ -819,6 +856,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
 
   const handleLoadTest = usePerformanceAwareHandler(async (originalText: string, revisedText: string) => {
     invalidateFileImport();
+    setInputOptions(DEFAULT_INPUT_OPTIONS);
     setOriginalFileName(null);
     setRevisedFileName(null);
     // Track load test operation
@@ -1219,6 +1257,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
                 onToggleMinimize={(isMinimized) => { if (DEV_CONFIG.DEBUGGING.COMPARISON_DEBUG) console.log('🧪 Sticky Results Panel: Minimize toggled', isMinimized); }}
               >
                 <OutputLayout
+                  {...whitespaceProps}
                   changes={result.changes}
                   stats={outputBasedStats || result.stats}
                   USE_CSS_RESIZE={USE_CSS_RESIZE}
@@ -1236,6 +1275,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
               </StickyResultsPanel>
             ) : (
               <OutputLayout
+                {...whitespaceProps}
                 changes={result.changes}
                 stats={outputBasedStats || result.stats}
                 USE_CSS_RESIZE={USE_CSS_RESIZE}
@@ -1273,6 +1313,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
           onForceClose={forceHideOverlay}
         >
           <RedlineOutput
+            {...whitespaceProps}
             changes={result.changes}
             onCopy={() => { }}
             height={9999} // Full height in overlay
@@ -1310,6 +1351,7 @@ export const ComparisonInterface = forwardRef<ComparisonInterfaceRef, Comparison
             <div className="h-full flex flex-col">
               <div data-output-panel className="flex-1">
                 <RedlineOutput
+                  {...whitespaceProps}
                   changes={result.changes}
                   onCopy={() => { }}
                   height={window.innerHeight}

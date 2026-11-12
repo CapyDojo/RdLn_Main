@@ -24,6 +24,8 @@ interface ChunkData {
 interface RedlineOutputProps extends BaseComponentProps {
   changes: DiffChange[];
   onCopy: () => void;
+  cleanWhitespace?: boolean;
+  onCleanWhitespaceChange?: (enabled: boolean) => void;
   height?: number;
   isProcessing?: boolean;
   processingStatus?: string;
@@ -52,6 +54,8 @@ const { CHUNK_SIZE, ESTIMATED_CHUNK_HEIGHT, INTERSECTION_MARGIN } = UI_CONFIG.RE
 const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   changes,
   onCopy,
+  cleanWhitespace: controlledCleanWhitespace,
+  onCleanWhitespaceChange,
   height = 500,
   isProcessing = false,
   processingStatus = 'Processing...',
@@ -95,13 +99,17 @@ const RedlineOutputBase: React.FC<RedlineOutputProps> = ({
   // Font size context
   const { fontSize } = useFontSize();
 
-  // Whitespace cleanup toggle state - CSS-based approach
-  const [cleanWhitespace, setCleanWhitespace] = React.useState(true);
+  const [localCleanWhitespace, setLocalCleanWhitespace] = React.useState(true);
+  const cleanWhitespace = controlledCleanWhitespace ?? localCleanWhitespace;
 
   // CSS-based toggle handler - no DOM manipulation, just class toggling
   const handleWhitespaceToggle = React.useCallback(() => {
-    setCleanWhitespace(prev => !prev);
-  }, []);
+    if (onCleanWhitespaceChange) {
+      onCleanWhitespaceChange(!cleanWhitespace);
+    } else {
+      setLocalCleanWhitespace(previous => !previous);
+    }
+  }, [cleanWhitespace, onCleanWhitespaceChange]);
 
   // Always render changes directly in clean mode
   const filteredChanges = changes;

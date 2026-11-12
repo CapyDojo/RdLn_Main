@@ -20,8 +20,8 @@ interface DesktopInputLayoutProps extends BaseComponentProps {
   /** Callback for revised text changes */
   onRevisedTextChange: (value: string, isPasteAction?: boolean) => void;
   /** Callback for file source changes */
-  onOriginalFileSourceChange: (source: LocalInputFileSource | null) => void;
-  onRevisedFileSourceChange: (source: LocalInputFileSource | null) => void;
+  onOriginalFileSourceChange: (source: LocalInputFileSource | null, isMarkdownImport?: boolean) => void;
+  onRevisedFileSourceChange: (source: LocalInputFileSource | null, isMarkdownImport?: boolean) => void;
   originalFileSource: LocalInputFileSource | null;
   revisedFileSource: LocalInputFileSource | null;
   originalDisconnectedFileSource: LocalInputFileSource | null;

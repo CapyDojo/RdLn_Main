@@ -28,11 +28,16 @@ export class FileTypeDetector {
   }
 
   /**
-   * Check if file is a TXT file
+   * Check if the file can use the plain-text reader.
    */
   static isTxt(file: File): boolean {
     return file.type === 'text/plain' ||
-      file.name.toLowerCase().endsWith('.txt');
+      file.name.toLowerCase().endsWith('.txt') ||
+      this.isMarkdown(file);
+  }
+
+  static isMarkdown(file: File): boolean {
+    return file.name.toLowerCase().endsWith('.md');
   }
 
   /**
