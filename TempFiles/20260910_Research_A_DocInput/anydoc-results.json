@@ -1,0 +1,1881 @@
+{
+  "package": "@firecrawl/anydoc-wasm@0.2.4",
+  "results": [
+    {
+      "name": "simple-list.doc",
+      "markdown": "This is a simple word document created using Word 97 – SR2.  It contains a paragraph, a list and a paragraph.\n\n1. First item in list\n2. Second item in list\n3. Third item in list\n\nThis is the last paragraph.\n",
+      "document": {
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "This is a simple word document created using Word 97 – SR2.  It contains a paragraph, a list and a paragraph.",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "First item in list",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Second item in list",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Third item in list",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "This is the last paragraph.",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          }
+        ],
+        "notes": [],
+        "assets": []
+      }
+    },
+    {
+      "name": "Lists.doc",
+      "markdown": "# Heading Level 1\n\nThis document has different lists in it for testing\n\n- Unordered list 1\n- UL 2\n- UL 3\n\nNext up is an ordered list:\n\n1. Ordered list 1\n2. OL 2\n3. OL 3\n\nNow for an un-ordered list with a different bullet style:\n\n- Tick 1\n- Tick 2\n\nMulti-level un-ordered list:\n\n- ML 1:1\n\n- ML 1:2\n\n  - ML 2:1\n\n  - ML 2:2\n\n  - ML 2:3\n\n    - ML 3:1\n\n      - ML 4:1\n\n        - ML 5:1\n        - ML 5:2\n\n  - ML 2:4\n\n- ML 1:3\n\nMulti-level ordered list:\n\n1. OL 1\n\n2. OL 2\n\n   - 2.1. OL 2.1\n\n   - 2.2. OL 2.2\n\n          - 2.2.1. OL 2.2.1\n\n          - 2.2.2. OL 2.2.2\n\n                   - 2.2.2.1. OL 2.2.2.1\n\n          - 2.2.3. OL 2.2.3\n\n3. OL 3\n\nFinally we want some indents, to tell the difference\n\nIndented once\n\nIndented twice\n\nIndented three times\n\nThe end!\n",
+      "document": {
+        "blocks": [
+          {
+            "kind": "heading",
+            "level": 1,
+            "content": [
+              {
+                "kind": "text",
+                "text": "Heading Level 1",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "This document has different lists in it for testing",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "bullet",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Unordered list 1",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "UL 2",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "UL 3",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Next up is an ordered list:",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Ordered list 1",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "OL 2",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "OL 3",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Now for an un-ordered list with a different bullet style:",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "bullet",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Tick 1",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Tick 2",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Multi-level un-ordered list:",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "bullet",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "ML 1:1",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "ML 1:2",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "list",
+                      "list": {
+                        "marker": "bullet",
+                        "start": 1,
+                        "items": [
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "ML 2:1",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "ML 2:2",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "ML 2:3",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "kind": "list",
+                                "list": {
+                                  "marker": "bullet",
+                                  "start": 1,
+                                  "items": [
+                                    {
+                                      "blocks": [
+                                        {
+                                          "kind": "paragraph",
+                                          "content": [
+                                            {
+                                              "kind": "text",
+                                              "text": "ML 3:1",
+                                              "style": {
+                                                "bold": false,
+                                                "italic": false,
+                                                "strike": false,
+                                                "code": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "list",
+                                          "list": {
+                                            "marker": "bullet",
+                                            "start": 1,
+                                            "items": [
+                                              {
+                                                "blocks": [
+                                                  {
+                                                    "kind": "paragraph",
+                                                    "content": [
+                                                      {
+                                                        "kind": "text",
+                                                        "text": "ML 4:1",
+                                                        "style": {
+                                                          "bold": false,
+                                                          "italic": false,
+                                                          "strike": false,
+                                                          "code": false
+                                                        }
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "kind": "list",
+                                                    "list": {
+                                                      "marker": "bullet",
+                                                      "start": 1,
+                                                      "items": [
+                                                        {
+                                                          "blocks": [
+                                                            {
+                                                              "kind": "paragraph",
+                                                              "content": [
+                                                                {
+                                                                  "kind": "text",
+                                                                  "text": "ML 5:1",
+                                                                  "style": {
+                                                                    "bold": false,
+                                                                    "italic": false,
+                                                                    "strike": false,
+                                                                    "code": false
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        },
+                                                        {
+                                                          "blocks": [
+                                                            {
+                                                              "kind": "paragraph",
+                                                              "content": [
+                                                                {
+                                                                  "kind": "text",
+                                                                  "text": "ML 5:2",
+                                                                  "style": {
+                                                                    "bold": false,
+                                                                    "italic": false,
+                                                                    "strike": false,
+                                                                    "code": false
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "ML 2:4",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "ML 1:3",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Multi-level ordered list:",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "OL 1",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "OL 2",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "list",
+                      "list": {
+                        "marker": "decimal",
+                        "start": 1,
+                        "items": [
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "OL 2.1",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              }
+                            ],
+                            "markerLabel": "2.1."
+                          },
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "OL 2.2",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "kind": "list",
+                                "list": {
+                                  "marker": "decimal",
+                                  "start": 1,
+                                  "items": [
+                                    {
+                                      "blocks": [
+                                        {
+                                          "kind": "paragraph",
+                                          "content": [
+                                            {
+                                              "kind": "text",
+                                              "text": "OL 2.2.1",
+                                              "style": {
+                                                "bold": false,
+                                                "italic": false,
+                                                "strike": false,
+                                                "code": false
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "markerLabel": "2.2.1."
+                                    },
+                                    {
+                                      "blocks": [
+                                        {
+                                          "kind": "paragraph",
+                                          "content": [
+                                            {
+                                              "kind": "text",
+                                              "text": "OL 2.2.2",
+                                              "style": {
+                                                "bold": false,
+                                                "italic": false,
+                                                "strike": false,
+                                                "code": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "list",
+                                          "list": {
+                                            "marker": "decimal",
+                                            "start": 1,
+                                            "items": [
+                                              {
+                                                "blocks": [
+                                                  {
+                                                    "kind": "paragraph",
+                                                    "content": [
+                                                      {
+                                                        "kind": "text",
+                                                        "text": "OL 2.2.2.1",
+                                                        "style": {
+                                                          "bold": false,
+                                                          "italic": false,
+                                                          "strike": false,
+                                                          "code": false
+                                                        }
+                                                      }
+                                                    ]
+                                                  }
+                                                ],
+                                                "markerLabel": "2.2.2.1."
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ],
+                                      "markerLabel": "2.2.2."
+                                    },
+                                    {
+                                      "blocks": [
+                                        {
+                                          "kind": "paragraph",
+                                          "content": [
+                                            {
+                                              "kind": "text",
+                                              "text": "OL 2.2.3",
+                                              "style": {
+                                                "bold": false,
+                                                "italic": false,
+                                                "strike": false,
+                                                "code": false
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "markerLabel": "2.2.3."
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "markerLabel": "2.2."
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "OL 3",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Finally we want some indents, to tell the difference",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Indented once",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Indented twice",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Indented three times",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "The end!",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          }
+        ],
+        "notes": [],
+        "assets": []
+      }
+    },
+    {
+      "name": "lists-margins.doc",
+      "markdown": "1. Left 0in. First +0in. Tab stops at 0.5in;\n2. Left 0in. First +0.25in; Tab stops at 0.5in;\n3. Left 0in. First +0.7in. Tab stops at 1in;\n4. Left -0.7in; First -0.6in; Tab stops at -1in;\n",
+      "document": {
+        "blocks": [
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Left 0in. First +0in. Tab stops at 0.5in;",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Left 0in. First +0.25in; Tab stops at 0.5in;",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Left 0in. First +0.7in. Tab stops at 1in;",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Left -0.7in; First -0.6in; Tab stops at -1in;",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "notes": [],
+        "assets": []
+      }
+    },
+    {
+      "name": "three-level-outline",
+      "markdown": "1. Paragraph 1\n\n   - (a) Paragraph 2\n\n         - (i) Paragraph 3\n         - (ii) Paragraph 4\n\n   - (b) Paragraph 5\n\n         - (i) Paragraph 6\n\n2. Paragraph 7\n\n   - (a) Paragraph 8\n\n         - (i) Paragraph 9\n",
+      "document": {
+        "blocks": [
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Paragraph 1",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "list",
+                      "list": {
+                        "marker": "lowerAlpha",
+                        "start": 1,
+                        "items": [
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "Paragraph 2",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "kind": "list",
+                                "list": {
+                                  "marker": "lowerRoman",
+                                  "start": 1,
+                                  "items": [
+                                    {
+                                      "blocks": [
+                                        {
+                                          "kind": "paragraph",
+                                          "content": [
+                                            {
+                                              "kind": "text",
+                                              "text": "Paragraph 3",
+                                              "style": {
+                                                "bold": false,
+                                                "italic": false,
+                                                "strike": false,
+                                                "code": false
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "markerLabel": "(i)"
+                                    },
+                                    {
+                                      "blocks": [
+                                        {
+                                          "kind": "paragraph",
+                                          "content": [
+                                            {
+                                              "kind": "text",
+                                              "text": "Paragraph 4",
+                                              "style": {
+                                                "bold": false,
+                                                "italic": false,
+                                                "strike": false,
+                                                "code": false
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "markerLabel": "(ii)"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "markerLabel": "(a)"
+                          },
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "Paragraph 5",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "kind": "list",
+                                "list": {
+                                  "marker": "lowerRoman",
+                                  "start": 1,
+                                  "items": [
+                                    {
+                                      "blocks": [
+                                        {
+                                          "kind": "paragraph",
+                                          "content": [
+                                            {
+                                              "kind": "text",
+                                              "text": "Paragraph 6",
+                                              "style": {
+                                                "bold": false,
+                                                "italic": false,
+                                                "strike": false,
+                                                "code": false
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "markerLabel": "(i)"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "markerLabel": "(b)"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Paragraph 7",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "list",
+                      "list": {
+                        "marker": "lowerAlpha",
+                        "start": 1,
+                        "items": [
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "Paragraph 8",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "kind": "list",
+                                "list": {
+                                  "marker": "lowerRoman",
+                                  "start": 1,
+                                  "items": [
+                                    {
+                                      "blocks": [
+                                        {
+                                          "kind": "paragraph",
+                                          "content": [
+                                            {
+                                              "kind": "text",
+                                              "text": "Paragraph 9",
+                                              "style": {
+                                                "bold": false,
+                                                "italic": false,
+                                                "strike": false,
+                                                "code": false
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "markerLabel": "(i)"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "markerLabel": "(a)"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "notes": [],
+        "assets": []
+      }
+    },
+    {
+      "name": "never-restart",
+      "markdown": "1. Paragraph 1\n\n   - (a) Paragraph 2\n\n2. Paragraph 3\n\n   - (b) Paragraph 4\n",
+      "document": {
+        "blocks": [
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Paragraph 1",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "list",
+                      "list": {
+                        "marker": "lowerAlpha",
+                        "start": 1,
+                        "items": [
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "Paragraph 2",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              }
+                            ],
+                            "markerLabel": "(a)"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Paragraph 3",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "list",
+                      "list": {
+                        "marker": "lowerAlpha",
+                        "start": 2,
+                        "items": [
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "Paragraph 4",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              }
+                            ],
+                            "markerLabel": "(b)"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "notes": [],
+        "assets": []
+      }
+    },
+    {
+      "name": "style-inheritance-and-cancellation",
+      "markdown": "- (a) Inherited child\n\nSuppressed\n\n- - (b) Next child\n\n1. Direct level\n",
+      "document": {
+        "blocks": [
+          {
+            "kind": "list",
+            "list": {
+              "marker": "lowerAlpha",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Inherited child",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "markerLabel": "(a)"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "paragraph",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Suppressed",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "strike": false,
+                  "code": false
+                }
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "bullet",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "list",
+                      "list": {
+                        "marker": "lowerAlpha",
+                        "start": 2,
+                        "items": [
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "Next child",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              }
+                            ],
+                            "markerLabel": "(b)"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Direct level",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "notes": [],
+        "assets": []
+      }
+    },
+    {
+      "name": "legal-numbering",
+      "markdown": "- A Paragraph 1\n\n    - A.a Paragraph 2\n\n          - 1.1.1 Paragraph 3\n          - 1.1.2 Paragraph 4\n",
+      "document": {
+        "blocks": [
+          {
+            "kind": "list",
+            "list": {
+              "marker": "upperAlpha",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Paragraph 1",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "list",
+                      "list": {
+                        "marker": "lowerAlpha",
+                        "start": 1,
+                        "items": [
+                          {
+                            "blocks": [
+                              {
+                                "kind": "paragraph",
+                                "content": [
+                                  {
+                                    "kind": "text",
+                                    "text": "Paragraph 2",
+                                    "style": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "strike": false,
+                                      "code": false
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "kind": "list",
+                                "list": {
+                                  "marker": "lowerRoman",
+                                  "start": 1,
+                                  "items": [
+                                    {
+                                      "blocks": [
+                                        {
+                                          "kind": "paragraph",
+                                          "content": [
+                                            {
+                                              "kind": "text",
+                                              "text": "Paragraph 3",
+                                              "style": {
+                                                "bold": false,
+                                                "italic": false,
+                                                "strike": false,
+                                                "code": false
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "markerLabel": "1.1.1"
+                                    },
+                                    {
+                                      "blocks": [
+                                        {
+                                          "kind": "paragraph",
+                                          "content": [
+                                            {
+                                              "kind": "text",
+                                              "text": "Paragraph 4",
+                                              "style": {
+                                                "bold": false,
+                                                "italic": false,
+                                                "strike": false,
+                                                "code": false
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "markerLabel": "1.1.2"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "markerLabel": "A.a"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "markerLabel": "A"
+                }
+              ]
+            }
+          }
+        ],
+        "notes": [],
+        "assets": []
+      }
+    },
+    {
+      "name": "instance-restart-resume",
+      "markdown": "1. A one\n2. A two\n\n1. B restart\n2. B next\n\n3. A resume\n\n3. B resume\n",
+      "document": {
+        "blocks": [
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "A one",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "A two",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "B restart",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "B next",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 3,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "A resume",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 3,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "B resume",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "notes": [],
+        "assets": []
+      }
+    },
+    {
+      "name": "inherited-style-level",
+      "markdown": "1. First child\n2. Next child\n3. Direct root\n4. Restart child\n",
+      "document": {
+        "blocks": [
+          {
+            "kind": "list",
+            "list": {
+              "marker": "decimal",
+              "start": 1,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "First child",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Next child",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Direct root",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "content": [
+                        {
+                          "kind": "text",
+                          "text": "Restart child",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "strike": false,
+                            "code": false
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "notes": [],
+        "assets": []
+      }
+    }
+  ]
+}

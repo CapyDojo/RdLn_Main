@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@firecrawl/anydoc-wasm": "^0.2.4",
+    "word-extractor": "^1.0.4"
+  }
+}

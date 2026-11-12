@@ -1,0 +1,23 @@
+{
+  "library": "word-extractor@1.0.4",
+  "results": [
+    {
+      "filename": "simple-list.doc",
+      "sha256": "666f851727aeb9013d34586fe3ab5df687a36108ca3eb2ba193954cbd084be70",
+      "signature": "d0cf11e0a1b11ae1",
+      "body": "This is a simple word document created using Word 97 – SR2.  It contains a paragraph, a list and a paragraph.\nFirst item in list\nSecond item in list\nThird item in list\nThis is the last paragraph.\n"
+    },
+    {
+      "filename": "Lists.doc",
+      "sha256": "82b235ece31662a9b1b414f32a556d203261296e22689470a79007f0b29c37fa",
+      "signature": "d0cf11e0a1b11ae1",
+      "body": "Heading Level 1\nThis document has different lists in it for testing\nUnordered list 1\nUL 2\nUL 3\nNext up is an ordered list:\nOrdered list 1\nOL 2\nOL 3\nNow for an un-ordered list with a different bullet style:\nTick 1\nTick 2\nMulti-level un-ordered list:\nML 1:1\nML 1:2\nML 2:1\nML 2:2\nML 2:3\nML 3:1\nML 4:1\nML 5:1\nML 5:2\nML 2:4\nML 1:3\nMulti-level ordered list:\nOL 1\nOL 2\nOL 2.1\nOL 2.2\nOL 2.2.1\nOL 2.2.2\nOL 2.2.2.1\nOL 2.2.3\nOL 3\nFinally we want some indents, to tell the difference\nIndented once\nIndented twice\nIndented three times\nThe end!\n\n"
+    },
+    {
+      "filename": "lists-margins.doc",
+      "sha256": "536c7cb6589a89c632734298b7ac65a103b7fa0ceb9108c2a975ef197a0c175e",
+      "signature": "d0cf11e0a1b11ae1",
+      "body": "Left 0in. First +0in. Tab stops at 0.5in;\nLeft 0in. First +0.25in; Tab stops at 0.5in;\nLeft 0in. First +0.7in. Tab stops at 1in;\nLeft -0.7in; First -0.6in; Tab stops at -1in;\n"
+    }
+  ]
+}

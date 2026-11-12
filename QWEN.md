@@ -180,3 +180,7 @@ As part of development, the following rules and guidelines must be followed:
 11. **Emergency Protocol** - Admit errors, document changes, provide rollback instructions
 12. **Changelog Guidelines** - Document all changes with references
 13. **OCR-Specific Guidelines** - Test with actual images and verify performance
+
+## Qwen Added Memories
+- Git commit naming convention must follow Rule #5 in Agent_Rules.md: YYYYMMDD_COMMIT_[A-Z]_Description (e.g., 20260401_COMMIT_A_Add_qwen_folder_to_gitignore, 20260401_COMMIT_B_Feature_description). A=first commit of day, B=second, etc.
+- Always follow AGENTS.md in all cases - it contains the authoritative project guidelines including commit naming convention (Rule #5: YYYYMMDD_COMMIT_[A-Z]_Description), development rules, and all other project-specific requirements.

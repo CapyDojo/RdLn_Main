@@ -1,0 +1,87 @@
+{
+  "wordVersion": "16.0",
+  "wordBuild": "16.0.20326",
+  "capturedAt": "2026-09-07T13:54:17.3632119Z",
+  "checks": [
+    {
+      "id": "style-inheritance-and-cancellation",
+      "referenceHashMatches": true,
+      "fixturePartsMatch": true,
+      "expected": [
+        {
+          "text": "Inherited child",
+          "label": "1."
+        },
+        {
+          "text": "Suppressed",
+          "label": ""
+        },
+        {
+          "text": "Next child",
+          "label": "2."
+        },
+        {
+          "text": "Direct level",
+          "label": "3."
+        }
+      ],
+      "actualMarkdown": "- (a) Inherited child\n\nSuppressed\n\n- - (b) Next child\n\n1. Direct level\n"
+    },
+    {
+      "id": "instance-restart-resume",
+      "referenceHashMatches": true,
+      "fixturePartsMatch": true,
+      "expected": [
+        {
+          "text": "A one",
+          "label": "1."
+        },
+        {
+          "text": "A two",
+          "label": "2."
+        },
+        {
+          "text": "B restart",
+          "label": "1."
+        },
+        {
+          "text": "B next",
+          "label": "2."
+        },
+        {
+          "text": "A resume",
+          "label": "3."
+        },
+        {
+          "text": "B resume",
+          "label": "4."
+        }
+      ],
+      "actualMarkdown": "1. A one\n2. A two\n\n1. B restart\n2. B next\n\n3. A resume\n\n3. B resume\n"
+    },
+    {
+      "id": "inherited-style-level",
+      "referenceHashMatches": true,
+      "fixturePartsMatch": true,
+      "expected": [
+        {
+          "text": "First child",
+          "label": "(a)"
+        },
+        {
+          "text": "Next child",
+          "label": "(b)"
+        },
+        {
+          "text": "Direct root",
+          "label": "2."
+        },
+        {
+          "text": "Restart child",
+          "label": "(a)"
+        }
+      ],
+      "actualMarkdown": "1. First child\n2. Next child\n3. Direct root\n4. Restart child\n"
+    }
+  ]
+}
